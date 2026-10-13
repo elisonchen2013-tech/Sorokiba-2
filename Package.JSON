@@ -1,0 +1,18 @@
+{
+  "name": "sorokiba2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sorokiba 2 - cidade online 2.5D",
+  "main": "sorokiba2-standalone.js",
+  "scripts": {
+    "start": "node sorokiba2-standalone.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "ws": "^8.17.0"
+  }
+}
