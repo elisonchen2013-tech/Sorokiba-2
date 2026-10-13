@@ -20,7 +20,7 @@ function attachSorokiba2(app, server, opt = {}) {
   const limited = ip => { const n = Date.now(), a = (tries.get(ip) || []).filter(t => n - t < 6e4); a.push(n); tries.set(ip, a); return a.length > 10; };
   setInterval(() => { const n = Date.now(); for (const [k, a] of tries) if (!a.some(t => n - t < 6e4)) tries.delete(k); }, 6e4).unref();
 
-  app.get(['/sorokiba2', '/sorokiba2.html'], (req, res) => res.sendFile(htmlFile));
+  app.get(['/', '/sorokiba2', '/sorokiba2.html'], (req, res) => res.sendFile(htmlFile));
 
   const reply = (res, row) => res.json({ ok: 1, token: db.sign(row.username), player: db.pub(row) });
   const check = (req, res) => {
