@@ -92,10 +92,10 @@ const WORK_TASKS = Object.freeze({
     { id: 'identify', prompt: 'Identifique o componente indicado no roteiro.', options: ['Componente vermelho', 'Fio aleatório', 'Sinalizador azul'], correct: 0 },
     { id: 'report', prompt: 'Registre o resultado da inspeção.', options: ['Relatório objetivo', 'Ocultar observações', 'Alterar dados'], correct: 0 },
   ] },
-  courier: { type: 'delivery_route', supervisor: 'Rosa', money: 45, xp: 24, stages: [
-    { id: 'pickup', prompt: 'Pegue a encomenda conferindo identificação e destino.', options: ['Conferir etiqueta e lacre', 'Abrir embalagem', 'Trocar etiqueta'], correct: 0 },
-    { id: 'route', prompt: 'Escolha o destino exibido para a entrega.', options: ['Biblioteca', 'Hospital', 'Praça central'], correct: 0 },
-    { id: 'deliver', prompt: 'Confirme a entrega ao destinatário.', options: ['Confirmar destinatário e registrar', 'Deixar na rua', 'Ignorar a confirmação'], correct: 0 },
+  courier: { type: 'delivery_route', supervisor: 'Rosa', money: 45, xp: 24, destinations: [
+    { name: 'Hospital', building: '✚ Hospital', x: 14.5, y: 13.3 },
+    { name: 'Biblioteca', building: 'Biblioteca', x: 15.5, y: 49.3 },
+    { name: 'Supermercado', building: 'Supermercado', x: 8.5, y: 66.3 },
   ] },
   fastfood_counter: { type: 'assemble_order', supervisor: 'Davi', money: 42, xp: 22, stages: [
     { id: 'assemble', prompt: 'Monte o pedido conforme a comanda.', options: ['Conferir itens da comanda', 'Escolher itens aleatórios', 'Omitir o acompanhamento'], correct: 0 },
@@ -127,7 +127,7 @@ const TRAINING = Object.freeze({
   1: { id: 'advanced_routine', title: 'Treinamento de rotina avançada', unlockXp: 40 },
   2: { id: 'leadership', title: 'Treinamento de liderança', unlockXp: 120 },
 });
-const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, stage: task.task?.stage, options: task.task?.options, status: task.status, createdAt: task.created_at });
+const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, stage: task.task?.stage, options: task.task?.options, targetBuilding: task.task?.targetBuilding, targetX: task.task?.targetX, targetY: task.task?.targetY, destination: task.task?.destination, status: task.status, createdAt: task.created_at });
 
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
@@ -481,9 +481,15 @@ async function attachSorokiba2(app, server, opt = {}) {
       const rank = Number(row.employment?.rank || 0), multiplier = 1 + rank * .2;
       const task = await db.assignWorkTask(row.username, state.shift.id, jobId, {
         type: definition.type,
-        payload: definition.stages
-          ? { stage: 0, stageId: definition.stages[0].id, prompt: definition.stages[0].prompt, options: definition.stages[0].options }
-          : { prompt: definition.prompt, target: definition.target },
+        payload: jobId === 'courier'
+          ? (() => {
+              const destinations = definition.destinations;
+              const destination = destinations[crypto.randomInt(destinations.length)];
+              return { stage: 0, stageId: 'pickup', prompt: 'Vá até a Rodoviária e pressione E para retirar a encomenda.', targetBuilding: 'Rodoviária', targetX: 35, targetY: 65.3, destination };
+            })()
+          : definition.stages
+            ? { stage: 0, stageId: definition.stages[0].id, prompt: definition.stages[0].prompt, options: definition.stages[0].options }
+            : { prompt: definition.prompt, target: definition.target },
         money: Math.round(definition.money * multiplier),
         xp: definition.xp,
       });
@@ -499,6 +505,31 @@ async function attachSorokiba2(app, server, opt = {}) {
       const state = await db.getWorkState(row.username);
       if (!state.shift?.task_id || state.shift.task_id !== taskId) return res.status(409).json({ err: 'Tarefa inválida ou não é a próxima tarefa' });
       const definition = WORK_TASKS[row.employment?.jobId];
+      if (definition?.type === 'delivery_route') {
+        const taskData = state.shift.task || {};
+        const livePlayer = [...P.values()].find(player => player.u === row.username);
+        if (!livePlayer) return res.status(409).json({ err: 'Entre na cidade para realizar a entrega.' });
+        const distance = Math.hypot(livePlayer.x - Number(taskData.targetX), livePlayer.y - Number(taskData.targetY));
+        if (!Number.isFinite(distance) || distance > 3.1) {
+          return res.status(409).json({ err: `Chegue até ${taskData.targetBuilding || 'o destino marcado'} e pressione E para interagir.` });
+        }
+        if (Number(taskData.stage) === 0) {
+          const destination = taskData.destination;
+          if (!destination || typeof destination.building !== 'string' || !Number.isFinite(destination.x) || !Number.isFinite(destination.y)) {
+            return res.status(409).json({ err: 'Destino da encomenda inválido. Solicite outra tarefa.' });
+          }
+          const nextTask = { ...taskData, stage: 1, stageId: 'deliver', prompt: `Encomenda retirada! Leve até ${destination.name} e pressione E para entregar.`, targetBuilding: destination.building, targetX: destination.x, targetY: destination.y };
+          const advanced = await db.advanceWorkTask(row.username, taskId, nextTask, { action: 'pickup', location: 'Rodoviária' }, false);
+          if (!advanced) return res.status(404).json({ err: 'Tarefa não encontrada' });
+          if (advanced.duplicate) return res.json({ ok: 1, duplicate: true, message: 'Esta tarefa já foi contabilizada.' });
+          return res.json({ ok: 1, completed: false, task: publicTask(advanced.task), message: 'Encomenda retirada. Agora siga o destino marcado no mapa.' });
+        }
+        if (Number(taskData.stage) !== 1 || !taskData.destination) return res.status(409).json({ err: 'Etapa de entrega inválida.' });
+        const advanced = await db.advanceWorkTask(row.username, taskId, {}, { action: 'delivery', location: taskData.destination.name, performance: 100 }, true);
+        if (!advanced) return res.status(404).json({ err: 'Tarefa não encontrada' });
+        if (advanced.duplicate) return res.json({ ok: 1, duplicate: true, message: 'Entrega já contabilizada; nenhum pagamento duplicado.' });
+        return res.json({ ok: 1, completed: true, payment: advanced.task.reward_money, professionalXp: advanced.task.reward_xp, performance: 100, player: db.pub(advanced.player), message: `Entrega concluída em ${taskData.destination.name}!` });
+      }
       if (definition?.stages) {
         const option = Number(req.body?.option);
         const stageIndex = Number(state.shift.task?.stage);
