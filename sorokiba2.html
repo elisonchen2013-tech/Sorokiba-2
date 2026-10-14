@@ -984,7 +984,8 @@ function makeInterior(building){
  else if(n.includes('academia')||n.includes('estádio'))family='sport';
  else if(n.includes('fábrica')||n.includes('oficina')||n.includes('posto'))family='workshop';
  else if(n.includes('igreja'))family='church';
- else if(n.includes('residencial')||n.includes('condomínio')||n.includes('hotel'))family='home';
+ else if(n.includes('condomínio'))family='condo';
+ else if(n.includes('residencial')||n.includes('hotel'))family='home';
  else if(n.includes('escola')||n.includes('universidade'))family='school';
  const colors={
   market:['#e9dfcc','#b7aa95','#c6b99f','#d8cbb1','#4c9865','Loja e atendimento'],
@@ -998,6 +999,7 @@ function makeInterior(building){
   workshop:['#c8d0ce','#8e9b98','#9aa6a3','#adb8b4','#d28b45','Área de trabalho'],
   church:['#eee4d0','#c6b99f','#cfc4ad','#ded5c2','#b89a70','Salão principal'],
   home:['#e9ddc9','#b8a78e','#bcae97','#cec1a9','#a77a65','Área interna'],
+  condo:['#e9ddc9','#b8a78e','#bcae97','#cec1a9','#4e8e9f','Térreo · recepção e áreas comuns'],
   school:['#e8e1cf','#b9ad96','#b9b5a5','#ccc8b7','#d9a441','Recepção e salas'],
   office:['#e1e7df','#a7b4ac','#b6c0b7','#cad1c8','#6d8c9a','Recepção e atendimento'],
   employment:['#e7edf0','#9baeb8','#bac8cf','#d9e2e5','#2d8d89','Recrutamento e orientação profissional']
@@ -1049,6 +1051,52 @@ function makeInterior(building){
  }else if(family==='church'){
   add('counter',5,1,2,.5,12,'#b29f7f','#dfd0ab','#8d7b5e');for(let row=0;row<3;row++)for(let col=0;col<2;col++)add('bench',2+col*5,2.4+row*1.2,2.1,.45,9,'#76543a','#a57b52','#4d3828');
   z('Altar',6,1.9,'Altar e área principal do salão.');z('Bancos',3.8,6.2,'Área de assentos para os visitantes.');
+ }else if(family==='condo'){
+  // Sorokiba Tower — térreo inspirado na cena do arquivo de referência.
+  // As coordenadas seguem a planta original de 26 × 16: recepção, portaria,
+  // salão de festas, academia, piscina e café, com corredores para circulação.
+  add('desk',4.1,3.2,3.2,.78,24,'#6b4a2b','#d7ba8a','#493326');
+  add('board',1.35,.78,1.35,.18,30,'#3a2a1a','#7b634a','#2a221a',false);
+  add('table',5.3,7.2,1.35,.78,12,'#8b6546','#d4b184','#5e4530');
+  add('chair',4.35,7.22,.52,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',6.95,7.22,.52,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',4.65,9.05,.52,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',6.7,9.05,.52,.52,9,'#74563e','#b58c60','#453226');
+  add('desk',1.15,12.2,1.8,.72,18,'#4a5568','#6b7788','#303946');
+  add('chair',2.65,13.55,.52,.52,9,'#5b7182','#94abb8','#364855');
+  add('board',8.2,.9,1.25,.18,28,'#3a2a1a','#7b634a','#2a221a',false);
+  add('table',14.0,2.3,1.5,.95,13,'#8b6546','#c7a37a','#5e4530');
+  add('chair',13.25,2.35,.5,.5,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',15.85,2.35,.5,.5,8,'#7d6045','#a9855c','#4e3b2c');
+  add('table',17.3,5.1,1.45,.9,13,'#8b6546','#c7a37a','#5e4530');
+  add('chair',16.55,5.15,.5,.5,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',19.0,5.15,.5,.5,8,'#7d6045','#a9855c','#4e3b2c');
+  add('screen',14.7,.55,2.8,.12,36,'#28334a','#819bb7','#20283a',false);
+  add('machine',13.1,10.3,1.0,.75,20,'#536c79','#94aab2','#314650');
+  add('machine',15.0,10.3,1.0,.75,20,'#536c79','#94aab2','#314650');
+  add('machine',17.0,10.3,1.0,.75,20,'#536c79','#94aab2','#314650');
+  add('machine',13.1,13.2,1.0,.75,20,'#536c79','#94aab2','#314650');
+  add('machine',17.0,13.2,1.0,.75,20,'#536c79','#94aab2','#314650');
+  add('bench',15.0,14.25,1.6,.45,10,'#333','#777','#242424');
+  add('lounger',20.25,.8,1.7,.65,9,'#f5f0e6','#f2b84b','#a48f6a');
+  add('lounger',23.7,.8,1.7,.65,9,'#f5f0e6','#f2b84b','#a48f6a');
+  add('counter',20.6,11.2,3.8,.7,22,'#7a4f2a','#e8d9c0','#493426');
+  add('table',21.25,13.3,1.0,.75,12,'#8b6546','#c7a37a','#5e4530');
+  add('chair',20.55,13.35,.45,.45,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',22.55,13.35,.45,.45,8,'#7d6045','#a9855c','#4e3b2c');
+  add('table',24.0,13.3,1.0,.75,12,'#8b6546','#c7a37a','#5e4530');
+  add('chair',23.35,13.35,.45,.45,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',25.35,13.35,.45,.45,8,'#7d6045','#a9855c','#4e3b2c');
+  z('Recepção principal',5.8,4.9,'Recepção da Sorokiba Tower. Fale com a equipe para obter orientações sobre o condomínio.');
+  z('Quadro de unidades',2.5,2.4,'Quadro da corretora com informações sobre apartamentos, andares e unidades disponíveis.');
+  z('Maquete do prédio',8.8,6.5,'Maquete da Sorokiba Tower: 15 andares, com apartamentos de diferentes tamanhos.');
+  z('Elevadores',9.5,1.4,'Núcleo de elevadores da torre. A seleção de andares ainda não está conectada ao sistema imobiliário nesta cena.');
+  z('Portaria',2.4,14.3,'Portaria de entrada. O porteiro pode orientar visitantes e moradores.');
+  z('Salão de festas',17.5,2.4,'Salão de festas para reuniões e eventos dos moradores. A ambientação musical é apenas visual nesta cena.');
+  z('Academia',14.8,11.7,'Área de treino com equipamentos de musculação e exercícios.');
+  z('Personal trainer',16.2,12.8,'O personal pode dar dicas de treino e explicar os equipamentos disponíveis.');
+  z('Piscina',23.0,8.8,'Piscina do condomínio. A área aquática está reservada para lazer dos moradores.');
+  z('Café',22.7,12.0,'Café do térreo com balcão e mesas para moradores e visitantes.');
  }else if(family==='home'){
   // Planta refeita: corredores amplos e setores separados para evitar sobreposição.
   // Recepção e concierge (lado direito)
@@ -1105,9 +1153,15 @@ function makeInterior(building){
  const dimensions={
   market:[18,12,'market-aisles'],hospital:[20,15,'hospital-wing'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
-  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
+  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
- const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],dividers:family==='employment' ? [
+ const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],dividers:family==='condo' ? [
+  {axis:'v',pos:12,from:0,to:3},{axis:'v',pos:12,from:5,to:11},{axis:'v',pos:12,from:13,to:16},
+  {axis:'v',pos:20,from:0,to:3},{axis:'v',pos:20,from:5,to:12},{axis:'v',pos:20,from:14,to:16},
+  {axis:'h',pos:8,from:12,to:15},{axis:'h',pos:8,from:17,to:20},
+  {axis:'h',pos:10,from:20,to:22},{axis:'h',pos:10,from:24,to:26},
+  {axis:'h',pos:11,from:0,to:4},{axis:'v',pos:4,from:11,to:12},{axis:'v',pos:4,from:14,to:16}
+ ] : family==='employment' ? [
   {axis:'v',pos:dimensions[0]*.38,from:dimensions[1]*.14,to:dimensions[1]*.39},
   {axis:'v',pos:dimensions[0]*.38,from:dimensions[1]*.51,to:dimensions[1]*.9},
   {axis:'v',pos:dimensions[0]*.72,from:dimensions[1]*.14,to:dimensions[1]*.37},
@@ -1119,8 +1173,8 @@ function makeInterior(building){
   {axis:'h',pos:dimensions[1]*.5,from:dimensions[0]*.87,to:dimensions[0]*.98},
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.72,to:dimensions[0]*.8},
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.87,to:dimensions[0]*.98}
- ] : [],exit:{x:dimensions[0]/2,y:dimensions[1]-.55}};
- const sx=room.width/12,sy=room.depth/8;
+ ] : [],exit:family==='condo'?{x:.9,y:7.5}:{x:dimensions[0]/2,y:dimensions[1]-.55}};
+ const sx=family==='condo'?1:room.width/12,sy=family==='condo'?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
@@ -1134,6 +1188,7 @@ function makeInterior(building){
   sport:[['Diego','Instrutor',6,2.05,'staff','#4d91a0','#bd865f','#272d38'],['Atleta','Aluno',3.2,6.3,'visitor','#4b83b5','#b77e56','#29262c'],['Atleta','Aluno',9.8,5.8,'visitor','#ca7547','#d6aa87','#29262c']],
   workshop:[['João','Mecânico',6,2,'staff','#d28b45','#b47b53','#272a2b'],['Paula','Funcionária',4.6,6.1,'staff','#647c7d','#d0a17b','#342c26'],['Cliente','Cliente',9.5,6,'visitor','#477c9b','#bd8967','#28282d']],
   church:[['André','Responsável',6,1.8,'staff','#d9d7c9','#bc8c65','#292521'],['Visitante','Visitante',3.8,6.4,'visitor','#7281a4','#d6a983','#382b20'],['Visitante','Visitante',10,6.4,'visitor','#b27d65','#a66f4b','#302722']],
+  condo:[['Marta','Corretora',5.6,3.6,'staff','#b03a48','#f1c7a0','#2b1b12'],['Seu Zé','Porteiro',2.0,12.8,'staff','#4a5568','#d9a273','#c9c9c9'],['Paulo','Personal trainer',16.1,12.1,'staff','#2DD4BF','#f1c7a0','#7a4a28'],['Léo','Atendente do café',22.1,11.8,'staff','#8d6e63','#a8704a','#111'],['Moradora','Moradora',6.9,8.8,'visitor','#7184ab','#ce9d74','#2d2521'],['Visitante','Visitante',17.8,6.3,'visitor','#b17866','#ddb28e','#3c2d24']],
   home:[['Recepcionista','Recepção',8.7,2.1,'staff','#a77a65','#d5a681','#302921'],['Morador','Morador',4.6,5.8,'visitor','#7184ab','#ce9d74','#2d2521'],['Visitante','Visitante',9.5,5.7,'visitor','#b17866','#ddb28e','#3c2d24']],
   school:[['Lúcia','Secretária',6,2,'staff','#d9a441','#d8a77d','#31261e'],['Paulo','Professor',9,5.7,'staff','#5b7aa1','#bb865f','#30271e'],['Estudante','Aluno',3.4,6.1,'visitor','#65a19b','#d7a981','#2f2924'],['Estudante','Aluno',7.7,6.2,'visitor','#c27b9a','#a87857','#292421']],
   office:[['Beatriz','Recepcionista',6,2,'staff','#6d8c9a','#d5a783','#292520'],['Funcionário','Funcionário',9.5,4.7,'staff','#5b718a','#b77d57','#292520'],['Visitante','Visitante',3.6,6.1,'visitor','#8c87b4','#d5a783','#292520']],
@@ -1262,6 +1317,30 @@ function drawRoomArchitecture(room,Q,U){
   wall(w*.57,d*.22,w*.57,d*.53,U*.75,'rgba(163,122,101,.35)');roomPoly([Q(w*.12,d*.56),Q(w*.4,d*.56),Q(w*.44,d*.82),Q(w*.08,d*.82)],'rgba(177,135,109,.2)','rgba(177,135,109,.25)');
  }else if(room.shape==='school-wing'){
   wall(w*.24,d*.26,w*.76,d*.26,U*.7,'rgba(169,146,91,.35)');wall(w*.76,d*.26,w*.76,d*.48,U*.7,'rgba(169,146,91,.35)');line(w*.28,d*.31,w*.72,d*.31,'rgba(255,255,255,.22)',2);
+ }else if(room.shape==='condo-ground'){
+  // Divisórias das áreas comuns e passagens conforme a planta de referência.
+  for(const part of room.dividers){
+   if(part.axis==='v')wall(part.pos,part.from,part.pos,part.to,U*.72,'rgba(111,100,83,.58)');
+   else wall(part.from,part.pos,part.to,part.pos,U*.72,'rgba(111,100,83,.58)');
+  }
+  // Faixa de azulejos e borda da piscina.
+  roomPoly([Q(20.85,1.85,3),Q(25.15,1.85,3),Q(25.15,8.15,3),Q(20.85,8.15,3)],'rgba(224,244,239,.46)','#f5f4e8');
+  line(20.9,7.9,25.1,7.9,'rgba(244,255,255,.85)',2);
+  for(const x of [21.5,24.5]){
+   line(x,7.85,x,8.45,'#768e98',2.4);line(x-.12,8.02,x+.12,8.02,'#e4ece9',1.2);
+  }
+  // Reforço de academia: demarcação de área e tapete de treino.
+  roomPoly([Q(12.45,8.45,1),Q(19.55,8.45,1),Q(19.55,15.55,1),Q(12.45,15.55,1)],'rgba(88,100,112,.17)','rgba(221,225,228,.25)');
+  for(const y of [9.25,15.0])line(12.6,y,19.4,y,'rgba(242,184,75,.7)',1.4);
+  // Placas de orientação com acabamento e texto legível.
+  const sign=(label,x,y,color)=>{const q=Q(x,y,U*1.3);c.fillStyle='#182634';c.strokeStyle=color;c.lineWidth=1.5;c.beginPath();c.roundRect(q[0]-43,q[1]-12,86,24,5);c.fill();c.stroke();c.fillStyle='#f3f4ea';c.font='800 9px system-ui';c.textAlign='center';c.fillText(label,q[0],q[1]+3)};
+  sign('RECEPÇÃO',5.8,.7,'#d6b77c');sign('SALÃO DE FESTAS',16,0.65,'#b8a8d5');sign('ACADEMIA',16,8.55,'#68c8b9');sign('PISCINA',23,1.05,'#72d8e8');sign('CAFÉ',23,10.6,'#d7ab73');sign('PORTARIA',2.2,11.3,'#92b5d5');
+  // Painel do elevador.
+  const eq=Q(9.5,1.2,U*1.45);c.fillStyle='#263744';c.strokeStyle='#e7b74d';c.lineWidth=1.4;c.beginPath();c.roundRect(eq[0]-28,eq[1]-15,56,30,5);c.fill();c.stroke();c.fillStyle='#f5d16c';c.font='bold 10px system-ui';c.textAlign='center';c.fillText('ELEVADOR',eq[0],eq[1]+3);
+  const light=Q(9.5,1.05,U*2.05);c.fillStyle='#67e1bb';c.beginPath();c.roundRect(light[0]-7,light[1]-4,14,8,2);c.fill();
+  // Marcações da recepção e balcão de controle.
+  line(4.0,2.1,11.1,2.1,'rgba(245,238,220,.38)',1.5);
+  line(.4,10.9,3.7,10.9,'rgba(255,255,255,.4)',1.5);
  }else if(room.shape==='career-center'){
   const doorWall='rgba(70,118,130,.64)';
   for(const part of room.dividers){if(part.axis==='v')wall(part.pos,part.from,part.pos,part.to,U*.86,doorWall);else wall(part.from,part.pos,part.to,part.pos,U*.78,doorWall)}
@@ -1278,6 +1357,20 @@ function renderInterior(t,h){
  const U=Math.max(10,Math.min(35,(W-140)/((w+d)*.64),(H-225)/((w+d)*.31+2.35))),wallH=U*1.9;
  const Q=(x,y,z=0)=>[W/2+(x-y-(w-d)/2)*U*.64,H*.17+(x+y)*U*.31-z];
  for(let y=0;y<d;y++)for(let x=0;x<w;x++){const shade=(x*7+y*11)%13===0;roomPoly([Q(x,y),Q(x+1,y),Q(x+1,y+1),Q(x,y+1)],shade?room.floor2:((x+y)%2?room.floor:room.floor2),'rgba(58,57,48,.12)')}
+ if(room.shape==='condo-ground'){
+  roomPoly([Q(0,0,1),Q(12,0,1),Q(12,16,1),Q(0,16,1)],'#d8d0c0','rgba(77,68,55,.25)');
+  roomPoly([Q(0,11,1),Q(4,11,1),Q(4,16,1),Q(0,16,1)],'#aeb9bf','rgba(55,67,76,.35)');
+  roomPoly([Q(12,0,1),Q(20,0,1),Q(20,8,1),Q(12,8,1)],'#42364b','rgba(15,18,26,.48)');
+  roomPoly([Q(12,8,1),Q(20,8,1),Q(20,16,1),Q(12,16,1)],'#343942','rgba(10,12,18,.6)');
+  roomPoly([Q(20,0,1),Q(26,0,1),Q(26,10,1),Q(20,10,1)],'#d0c7b8','rgba(70,61,50,.3)');
+  roomPoly([Q(21,2,2),Q(25,2,2),Q(25,8,2),Q(21,8,2)],'#35a9c8','#d1f7fa');
+  roomPoly([Q(21.2,2.2,2.5),Q(24.8,2.2,2.5),Q(24.8,7.8,2.5),Q(21.2,7.8,2.5)],'rgba(130,229,244,.58)','rgba(241,255,255,.7)');
+  for(let lane=0;lane<5;lane++){
+   const xx=21.45+lane*.7;
+   const a=Q(xx,2.35,3),b=Q(xx,7.65,3);c.strokeStyle='rgba(245,255,255,.55)';c.lineWidth=1.2;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();
+  }
+  roomPoly([Q(20,10,1),Q(26,10,1),Q(26,16,1),Q(20,16,1)],'#dfceb2','rgba(88,62,40,.35)');
+ }
  if(room.shape==='career-center'){
   roomPoly([Q(.25,.25),Q(w*.37,.25),Q(w*.37,d-.25),Q(.25,d-.25)],'rgba(45,212,191,.075)',null);
   roomPoly([Q(w*.39,.25),Q(w*.71,.25),Q(w*.71,d*.5),Q(w*.39,d*.5)],'rgba(242,184,75,.065)',null);
@@ -1298,6 +1391,13 @@ function renderInterior(t,h){
  }
  drawRoomArchitecture(room,Q,U);
  // Sinalização, iluminação e núcleo de elevadores dedicado para residenciais/hotéis.
+ if(room.family==='condo'){
+  const bx=Math.max(12,W-216),by=112;
+  c.fillStyle='rgba(8,13,25,.9)';c.strokeStyle='rgba(78,190,207,.75)';c.lineWidth=1;c.beginPath();c.roundRect(bx,by,202,148,12);c.fill();c.stroke();
+  c.fillStyle='#75d9e4';c.font='800 11px system-ui';c.textAlign='left';c.fillText('SOROKIBA TOWER',bx+12,by+20);
+  const labels=['Recepção e portaria','Salão de festas','Academia','Piscina','Café e elevadores'];
+  labels.forEach((label,i)=>{c.fillStyle=['#d6b77c','#b8a8d5','#68c8b9','#72d8e8','#d7ab73'][i];c.fillRect(bx+13,by+33+i*20,6,6);c.fillStyle='#e1e8ee';c.font='10px system-ui';c.fillText(label,bx+26,by+40+i*20)});
+ }
  if(room.family==='home'){
   const ex=14.4,ey=8.4,eq=Q(ex,ey);
   // Tapete de orientação que conduz visualmente ao elevador
@@ -1319,10 +1419,17 @@ function renderInterior(t,h){
   guide.forEach((g,i)=>{const yy=pyPanel+39+i*18;c.fillStyle='#314657';c.beginPath();c.arc(pxPanel+17,yy-3,6,0,Math.PI*2);c.fill();c.fillStyle='#f7e8c6';c.font='700 9px system-ui';c.textAlign='center';c.fillText(g[0],pxPanel+17,yy);c.textAlign='left';c.fillStyle='#d8e2ec';c.font='10px system-ui';c.fillText(g[1],pxPanel+29,yy)});
   c.fillStyle='#f2b84b';c.font='700 10px system-ui';c.fillText('Siga a faixa dourada até o elevador',pxPanel+12,pyPanel+110);
  }
- const doorW=Math.min(1.8,w*.12),doorX=w/2;
- roomPoly([Q(doorX-doorW/2,d,0),Q(doorX+doorW/2,d,0),Q(doorX+doorW/2,d,wallH*.76),Q(doorX-doorW/2,d,wallH*.76)],'#4b3326','#261d18');
- roomPoly([Q(doorX-doorW/2+.12,d,4),Q(doorX+doorW/2-.12,d,4),Q(doorX+doorW/2-.12,d,wallH*.7),Q(doorX-doorW/2+.12,d,wallH*.7)],'#79563a','#b99768');
- const knob=Q(doorX+doorW*.28,d,wallH*.4);c.fillStyle='#f2b84b';c.beginPath();c.arc(knob[0],knob[1],2.2,0,7);c.fill();
+ if(room.family==='condo'){
+  // Entrada alinhada à posição inicial do jogador na lateral esquerda.
+  roomPoly([Q(0,7.0,0),Q(0,8.05,0),Q(0,8.05,wallH*.76),Q(0,7.0,wallH*.76)],'#4b3326','#261d18');
+  roomPoly([Q(0,7.12,4),Q(0,7.93,4),Q(0,7.93,wallH*.7),Q(0,7.12,wallH*.7)],'#79563a','#b99768');
+  const knob=Q(0,7.25,wallH*.4);c.fillStyle='#f2b84b';c.beginPath();c.arc(knob[0],knob[1],2.2,0,7);c.fill();
+ }else{
+  const doorW=Math.min(1.8,w*.12),doorX=w/2;
+  roomPoly([Q(doorX-doorW/2,d,0),Q(doorX+doorW/2,d,0),Q(doorX+doorW/2,d,wallH*.76),Q(doorX-doorW/2,d,wallH*.76)],'#4b3326','#261d18');
+  roomPoly([Q(doorX-doorW/2+.12,d,4),Q(doorX+doorW/2-.12,d,4),Q(doorX+doorW/2-.12,d,wallH*.7),Q(doorX-doorW/2+.12,d,wallH*.7)],'#79563a','#b99768');
+  const knob=Q(doorX+doorW*.28,d,wallH*.4);c.fillStyle='#f2b84b';c.beginPath();c.arc(knob[0],knob[1],2.2,0,7);c.fill();
+ }
  c.fillStyle=(h<6||h>=19)?'rgba(255,214,143,.08)':'rgba(255,255,255,.025)';c.fillRect(0,0,W,H);
  c.fillStyle='rgba(8,13,25,.9)';c.strokeStyle=room.accent+'cc';c.lineWidth=1;c.beginPath();c.roundRect(16,14,Math.min(W-32,420),60,13);c.fill();c.stroke();
  c.fillStyle='#F2B84B';c.font='700 18px system-ui';c.textAlign='left';c.fillText(room.title,29,38);c.fillStyle='#e1e8ee';c.font='12px system-ui';c.fillText(room.subtitle+' · '+w+' × '+d,29,56);
