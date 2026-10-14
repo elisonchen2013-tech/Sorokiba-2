@@ -539,7 +539,7 @@ else if(m.t=='v')applyTrafficSnapshot(m.c,false);
 else if(m.t=='x'&&m.incident)activateAccident(m.incident);
 else if(m.t==='accidentTestResult')missionFeedback(m.message|| (m.ok?'Teste de acidente iniciado.':'Não foi possível testar o acidente.'));
 else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído.');missionFeedback(m.message||'Comando concluído.');}
-else if(m.t==='incidentClear'){clearAccidentScenes(m.ids);setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
+else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
 else if(m.t=='c')chat(m)};
