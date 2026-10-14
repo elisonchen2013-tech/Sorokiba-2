@@ -120,3 +120,21 @@ test('professional minigames keep stages and answers server-side', () => {
   assert.match(client, /data\.task\.options/);
   assert.match(client, /Etapa/);
 });
+
+test('career progression validates requirements and records promotions', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /CAREER_LADDERS/);
+  assert.match(server, /work\/promotion\/request/);
+  assert.match(server, /work\/promotion\/confirm/);
+  assert.match(server, /work\/training\/complete/);
+  assert.match(server, /professionalXp/);
+  assert.match(server, /avgPerformance/);
+  assert.match(db, /sk2_work_promotions/);
+  assert.match(db, /sk2_work_training/);
+  assert.match(db, /confirmPromotion/);
+  assert.match(client, /workPromotionRequest/);
+  assert.match(client, /workProgress/);
+  assert.match(client, /Treinamento/);
+});

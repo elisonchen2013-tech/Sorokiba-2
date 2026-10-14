@@ -106,6 +106,18 @@ async function init() {
     payment INT NOT NULL, professional_xp INT NOT NULL, performance INT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  CREATE TABLE IF NOT EXISTS sk2_work_promotions (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, from_rank INT NOT NULL, to_rank INT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'requested', requirements JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), confirmed_at TIMESTAMPTZ
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_pending_promotion ON sk2_work_promotions(username, job_id) WHERE status='requested';
+  CREATE TABLE IF NOT EXISTS sk2_work_training (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, training_id TEXT NOT NULL, completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (username, job_id, training_id)
+  );
   CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';`);
 }
 async function health() {
@@ -294,6 +306,50 @@ async function advanceWorkTask(username, taskId, nextTask, result, complete) {
       await client.query('COMMIT');
       return { duplicate: true, task: current };
     }
+
+    async function listTraining(username, jobId) {
+      const r = await q('SELECT training_id, completed_at FROM sk2_work_training WHERE username=$1 AND job_id=$2', [username, jobId]);
+      return r.rows;
+    }
+
+    async function completeTraining(username, jobId, trainingId) {
+      const r = await q(`INSERT INTO sk2_work_training (username, job_id, training_id)
+        VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING training_id, completed_at`, [username, jobId, trainingId]);
+      return r.rows[0] || null;
+    }
+
+    async function requestPromotion(username, jobId, fromRank, toRank, requirements) {
+      const r = await q(`INSERT INTO sk2_work_promotions (id, username, job_id, from_rank, to_rank, requirements)
+        VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING RETURNING *`,
+        [crypto.randomUUID(), username, jobId, fromRank, toRank, JSON.stringify(requirements)]);
+      return r.rows[0] || null;
+    }
+
+    async function getPendingPromotion(username, jobId) {
+      const r = await q(`SELECT * FROM sk2_work_promotions
+        WHERE username=$1 AND job_id=$2 AND status='requested' LIMIT 1`, [username, jobId]);
+      return r.rows[0] || null;
+    }
+
+    async function confirmPromotion(username, jobId, promotionId, employment) {
+      const client = await getPool().connect();
+      try {
+        await client.query('BEGIN');
+        const promotion = await client.query(`SELECT * FROM sk2_work_promotions
+          WHERE id=$1 AND username=$2 AND job_id=$3 AND status='requested' FOR UPDATE`, [promotionId, username, jobId]);
+        if (!promotion.rowCount) { await client.query('ROLLBACK'); return null; }
+        const updated = await client.query(`UPDATE sk2_players SET employment=$2, last_seen=now() WHERE username=$1 RETURNING *`,
+          [username, JSON.stringify(employment)]);
+        await client.query(`UPDATE sk2_work_promotions SET status='confirmed', confirmed_at=now() WHERE id=$1`, [promotionId]);
+        await client.query('COMMIT');
+        return updated.rows[0] || null;
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    }
     if (!complete) {
       const updated = await client.query(`UPDATE sk2_work_tasks SET task=$3
         WHERE id=$1 AND username=$2 AND status='assigned' RETURNING *`,
@@ -345,4 +401,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

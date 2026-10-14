@@ -96,6 +96,18 @@ const WORK_TASKS = Object.freeze({
     { id: 'handoff', prompt: 'Faça a conferência final antes da entrega.', options: ['Conferir nome e comanda', 'Entregar sem olhar', 'Remover identificação'], correct: 0 },
   ] },
 });
+const CAREER_LADDERS = Object.freeze({
+  hospital_reception: [{ title: 'Recepcionista', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Recepcionista sênior', salary: 1200, xp: 60, tasks: 3, performance: 70 }, { title: 'Coordenador de recepção', salary: 1600, xp: 150, tasks: 8, performance: 80 }],
+  restaurant_server: [{ title: 'Atendente', salary: 850, xp: 0, tasks: 0, performance: 0 }, { title: 'Atendente sênior', salary: 1100, xp: 60, tasks: 3, performance: 70 }, { title: 'Líder de salão', salary: 1450, xp: 150, tasks: 8, performance: 80 }],
+  library_assistant: [{ title: 'Assistente', salary: 800, xp: 0, tasks: 0, performance: 0 }, { title: 'Assistente sênior', salary: 1050, xp: 60, tasks: 3, performance: 75 }, { title: 'Coordenador de acervo', salary: 1400, xp: 150, tasks: 8, performance: 85 }],
+  electrician: [{ title: 'Eletricista trainee', salary: 1000, xp: 0, tasks: 0, performance: 0 }, { title: 'Eletricista', salary: 1350, xp: 60, tasks: 3, performance: 70 }, { title: 'Eletricista líder', salary: 1800, xp: 150, tasks: 8, performance: 85 }],
+  courier: [{ title: 'Entregador', salary: 800, xp: 0, tasks: 0, performance: 0 }, { title: 'Entregador sênior', salary: 1050, xp: 60, tasks: 3, performance: 70 }, { title: ' líder de rotas', salary: 1400, xp: 150, tasks: 8, performance: 80 }],
+  fastfood_counter: [{ title: 'Atendente', salary: 820, xp: 0, tasks: 0, performance: 0 }, { title: 'Atendente sênior', salary: 1080, xp: 60, tasks: 3, performance: 70 }, { title: 'Líder de turno', salary: 1450, xp: 150, tasks: 8, performance: 80 }],
+});
+const TRAINING = Object.freeze({
+  1: { id: 'advanced_routine', title: 'Treinamento de rotina avançada', unlockXp: 40 },
+  2: { id: 'leadership', title: 'Treinamento de liderança', unlockXp: 120 },
+});
 const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, stage: task.task?.stage, options: task.task?.options, status: task.status, createdAt: task.created_at });
 
 async function attachSorokiba2(app, server, opt = {}) {
@@ -311,7 +323,8 @@ async function attachSorokiba2(app, server, opt = {}) {
         status === 'hired' ? 'Aprovado e contratado.' : status === 'training' ? 'Aprovado para treinamento antes da contratação.' : 'Não aprovado; revise o currículo e tente novamente após o cooldown.'
       }`;
       const cooldownUntil = status === 'hired' ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      const employment = { jobId: job.id, title: job.title, profession: job.profession, building: job.building, hiredAt: new Date().toISOString() };
+      const ladder = CAREER_LADDERS[job.id] || [{ title: job.title, salary: 0, xp: 0, tasks: 0, performance: 0 }];
+      const employment = { jobId: job.id, title: ladder[0].title, profession: job.profession, building: job.building, rank: 0, salary: ladder[0].salary, professionalXp: 0, completedTasks: 0, totalEarned: 0, hiredAt: new Date().toISOString() };
       const result = await db.finalizeInterview(row.username, job.id, sessionId, { status, score, feedback, cooldownUntil }, employment);
       if (!result) return res.status(409).json({ err: 'Entrevista já finalizada' });
       const updated = await db.load(row.username);
@@ -323,16 +336,61 @@ async function attachSorokiba2(app, server, opt = {}) {
       const row = await authUser(req);
       if (!row) return res.status(401).json({ err: 'Sessão expirada' });
       const state = await db.getWorkState(row.username);
-      const job = state.player?.employment?.jobId ? careerById(state.player.employment.jobId) : null;
+      const employment = state.player?.employment || {};
+      const job = employment.jobId ? careerById(employment.jobId) : null;
+      const ladder = job ? CAREER_LADDERS[job.id] : null;
+      const rank = Number(employment.rank || 0), next = ladder?.[rank + 1] || null;
+      const avgPerformance = state.history.length ? Math.round(state.history.reduce((sum, item) => sum + item.performance, 0) / state.history.length) : 0;
+      const training = await db.listTraining(row.username, employment.jobId || '');
       res.json({
         player: db.pub(row),
         employment: db.pub(row).employment,
         job,
         supervisor: job ? WORK_TASKS[job.id]?.supervisor : null,
+        progression: { rank, title: ladder?.[rank]?.title || employment.title, salary: ladder?.[rank]?.salary || employment.salary || 0, professionalXp: Number(employment.professionalXp || 0), avgPerformance, completedTasks: Number(employment.completedTasks || 0), next: next ? { title: next.title, xp: next.xp, tasks: next.tasks, performance: next.performance } : null },
+        training: Object.values(TRAINING).map(item => ({ ...item, unlocked: Number(employment.professionalXp || 0) >= item.unlockXp, completed: training.some(done => done.training_id === item.id) })),
         shift: state.shift ? { id: state.shift.id, status: state.shift.status, startedAt: state.shift.started_at } : null,
         task: state.shift?.task_id ? publicTask({ id: state.shift.task_id, task_type: state.shift.task_type, task: state.shift.task, status: state.shift.task_status }) : null,
         history: state.history,
       });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/training/complete', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const employment = row.employment || {}, training = TRAINING[Number(req.body?.rank)];
+      if (!employment.jobId || !training || training.id !== req.body?.trainingId || Number(employment.professionalXp || 0) < training.unlockXp) return res.status(400).json({ err: 'Treinamento ainda não desbloqueado' });
+      const done = await db.completeTraining(row.username, employment.jobId, training.id);
+      res.json({ ok: 1, completed: !!done, training: { ...training, completed: true } });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/promotion/request', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const employment = row.employment || {}, ladder = CAREER_LADDERS[employment.jobId], rank = Number(employment.rank || 0), next = ladder?.[rank + 1];
+      if (!next) return res.status(409).json({ err: 'Você já está no cargo máximo desta carreira' });
+      const history = await db.getWorkState(row.username), avg = history.history.length ? history.history.reduce((sum, item) => sum + item.performance, 0) / history.history.length : 0;
+      const requirements = { xp: next.xp, tasks: next.tasks, performance: next.performance };
+      if (Number(employment.professionalXp || 0) < next.xp || Number(employment.completedTasks || 0) < next.tasks || avg < next.performance) return res.status(400).json({ err: 'Requisitos de promoção ainda não atingidos', requirements, progress: { xp: employment.professionalXp || 0, tasks: employment.completedTasks || 0, performance: Math.round(avg) } });
+      const promotion = await db.requestPromotion(row.username, employment.jobId, rank, rank + 1, requirements);
+      if (!promotion) return res.status(409).json({ err: 'Promoção já solicitada' });
+      res.status(201).json({ ok: 1, promotion: { id: promotion.id, status: promotion.status, requirements } });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/promotion/confirm', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const employment = row.employment || {}, ladder = CAREER_LADDERS[employment.jobId], rank = Number(employment.rank || 0), next = ladder?.[rank + 1];
+      const state = await db.getWorkState(row.username), avg = state.history.length ? state.history.reduce((sum, item) => sum + item.performance, 0) / state.history.length : 0;
+      if (!next || Number(employment.professionalXp || 0) < next.xp || Number(employment.completedTasks || 0) < next.tasks || avg < next.performance) return res.status(400).json({ err: 'Requisitos de promoção não estão mais válidos' });
+      const promotion = await db.getPendingPromotion(row.username, employment.jobId)
+        || await db.requestPromotion(row.username, employment.jobId, rank, rank + 1, { xp: next.xp, tasks: next.tasks, performance: next.performance });
+      const updated = promotion && await db.confirmPromotion(row.username, employment.jobId, promotion.id, { ...employment, rank: rank + 1, title: next.title, salary: next.salary });
+      if (!updated) return res.status(409).json({ err: 'Promoção já confirmada ou indisponível' });
+      res.json({ ok: 1, promoted: true, player: db.pub(updated), message: `Promoção confirmada: ${next.title}.` });
     } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
   });
   app.post('/api/sk2/work/supervisor', async (req, res) => {
@@ -364,12 +422,13 @@ async function attachSorokiba2(app, server, opt = {}) {
       const state = await db.getWorkState(row.username);
       if (!state.shift || state.shift.status !== 'active') return res.status(409).json({ err: 'Inicie um turno primeiro' });
       if (state.shift.task_id) return res.json({ ok: 1, task: publicTask({ id: state.shift.task_id, task_type: state.shift.task_type, task: state.shift.task, status: state.shift.task_status }) });
+      const rank = Number(row.employment?.rank || 0), multiplier = 1 + rank * .2;
       const task = await db.assignWorkTask(row.username, state.shift.id, jobId, {
         type: definition.type,
         payload: definition.stages
           ? { stage: 0, stageId: definition.stages[0].id, prompt: definition.stages[0].prompt, options: definition.stages[0].options }
           : { prompt: definition.prompt, target: definition.target },
-        money: definition.money,
+        money: Math.round(definition.money * multiplier),
         xp: definition.xp,
       });
       res.status(201).json({ ok: 1, task: publicTask(task) });

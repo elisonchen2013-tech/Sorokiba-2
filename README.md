@@ -87,6 +87,12 @@ Os mesmos endpoints de trabalho agora suportam tarefas em etapas para três novo
 
 As opções exibidas são apenas alternativas seguras; o gabarito e a etapa atual ficam no servidor. `POST /api/sk2/work/task/complete` aceita o índice da opção, valida a etapa, avança a tarefa ou finaliza o pagamento. Cada avanço é persistido e a finalização usa a mesma proteção transacional/idempotente do histórico, sem instruções de elétrica real ou qualquer ação perigosa.
 
+## Etapa 5: progressão profissional
+
+O painel **Meu trabalho** mostra a escada de cargos, salário mensal, XP profissional, tarefas concluídas e desempenho médio. Cada profissão possui três cargos com requisitos transparentes de XP, tarefas e desempenho; tarefas concluídas em cargos superiores recebem recompensa maior.
+
+Treinamentos são desbloqueados por XP profissional e concluídos pelo endpoint `POST /api/sk2/work/training/complete`. Promoções usam `POST /api/sk2/work/promotion/request` e `POST /api/sk2/work/promotion/confirm`: ambos recalculam os requisitos no servidor, e a confirmação atualiza `employment` e registra `sk2_work_promotions` em transação, sem aceitar cargo/salário enviados pelo cliente. Solicitações, treinamentos e promoções têm chaves únicas para evitar duplicação.
+
 ## Testes
 
 ```sh

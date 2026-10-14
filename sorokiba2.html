@@ -76,7 +76,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 <div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="out">Sair</button></div>
 <section id="careerPanel" hidden><button id="careerClose">Fechar</button><h2>Central de carreiras</h2><p id="careerMsg">Carregando...</p><h3>Meu currículo</h3><label for="resumeSummary">Resumo (280 caracteres)</label><textarea id="resumeSummary" maxlength="280" rows="3"></textarea><label for="resumeExperience">Experiência desbloqueada</label><input id="resumeExperience" type="number" min="0" step="1"><div id="resumeSkills"></div><button id="resumeSave">Salvar currículo</button><h3>Vagas abertas</h3><div id="careerJobs"></div></section>
 <section id="interviewPanel" hidden><button id="interviewClose">Fechar</button><h2 id="interviewTitle">Entrevista</h2><p id="interviewStatus"></p><div id="interviewQuestion"></div><div id="interviewOptions"></div><button id="interviewNext" hidden>Responder</button><button id="interviewFinish" hidden>Finalizar entrevista</button></section>
-<section id="workPanel" hidden><button id="workClose">Fechar</button><h2>Meu trabalho</h2><p id="workMsg">Carregando...</p><div id="workSummary"></div><button id="workSupervisor" class="workAction">Falar com supervisor</button><button id="workStart" class="workAction">Iniciar turno</button><button id="workNext" class="workAction">Receber próxima tarefa</button><div id="workTask"></div><div id="workHistory"></div></section>
+<section id="workPanel" hidden><button id="workClose">Fechar</button><h2>Meu trabalho</h2><p id="workMsg">Carregando...</p><div id="workSummary"></div><div id="workProgress"></div><div id="workTraining"></div><button id="workPromotionRequest" class="workAction">Solicitar promoção</button><button id="workPromotionConfirm" class="workAction">Confirmar promoção</button><button id="workSupervisor" class="workAction">Falar com supervisor</button><button id="workStart" class="workAction">Iniciar turno</button><button id="workNext" class="workAction">Receber próxima tarefa</button><div id="workTask"></div><div id="workHistory"></div></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden>E</button><button id="leaveRoom" hidden>← Voltar à cidade</button>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
 <input id="ch" maxlength="120" placeholder="Digite e aperte Enter..." autocomplete="off" hidden><div id="cl"></div>
@@ -961,6 +961,12 @@ function renderWork(data){
  if(data.player){user=data.player;$('hm').textContent=user.money}
  const e=data.employment||{};
  $('workSummary').textContent=e.jobId?`${e.title} · ${e.building} · supervisor: ${data.supervisor||'indisponível'} · tarefas concluídas: ${e.completedTasks||0} · XP profissional: ${e.professionalXp||0} · recebido: R$ ${e.totalEarned||0}`:'Você ainda não tem um emprego contratado.';
+ const p=data.progression;
+ $('workProgress').textContent=p?.next?`Cargo atual: ${p.title} · salário: R$ ${p.salary}/mês · XP profissional: ${p.professionalXp}/${p.next.xp} · tarefas: ${p.completedTasks}/${p.next.tasks} · desempenho: ${p.avgPerformance}%/${p.next.performance}% para ${p.next.title}.`:(p?`Cargo atual: ${p.title} · salário: R$ ${p.salary}/mês · XP profissional: ${p.professionalXp} · desempenho médio: ${p.avgPerformance}%. Cargo máximo atingido.`:'');
+ $('workPromotionRequest').disabled=!p?.next;
+ $('workPromotionConfirm').disabled=!p?.next;
+ const trainingBox=$('workTraining');trainingBox.replaceChildren();
+ (data.training||[]).forEach(item=>{const b=document.createElement('button');b.className='workAction';b.textContent=item.completed?`${item.title} concluído`:item.unlocked?`Concluir ${item.title}`:`${item.title} (desbloqueia em ${item.unlockXp} XP)`;b.disabled=item.completed||!item.unlocked;b.onclick=async()=>{await workAction('/work/training/complete',{rank:p.rank,trainingId:item.id},j=>'Treinamento concluído.');loadWork()};trainingBox.append(b)});
  $('workStart').disabled=!e.jobId||!!data.shift;
  $('workNext').disabled=!data.shift;
  const taskBox=$('workTask');taskBox.replaceChildren();
@@ -986,6 +992,8 @@ async function workAction(path, body, success){
 $('workSupervisor').onclick=()=>workAction('/work/supervisor',null,j=>`${j.supervisor}: ${j.message}`);
 $('workStart').onclick=async()=>{await workAction('/work/start',null,j=>'Turno iniciado.');loadWork()};
 $('workNext').onclick=async()=>{await workAction('/work/task',null,j=>'Nova tarefa recebida.');loadWork()};
+$('workPromotionRequest').onclick=async()=>{await workAction('/work/promotion/request',null,j=>'Promoção solicitada; confirme quando estiver pronto.');loadWork()};
+$('workPromotionConfirm').onclick=async()=>{const j=await workAction('/work/promotion/confirm',null,j=>j.message||'Promoção confirmada.');if(j?.player)user=j.player;loadWork()};
 async function completeWorkTask(taskId,option){
  const count=Number($('workCount')?.value);
  const body=option==null?{taskId,count}:{taskId,option};
