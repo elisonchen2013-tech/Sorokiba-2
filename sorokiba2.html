@@ -1338,6 +1338,41 @@ function drawRoomArchitecture(room,Q,U){
   // Painel do elevador.
   const eq=Q(9.5,1.2,U*1.45);c.fillStyle='#263744';c.strokeStyle='#e7b74d';c.lineWidth=1.4;c.beginPath();c.roundRect(eq[0]-28,eq[1]-15,56,30,5);c.fill();c.stroke();c.fillStyle='#f5d16c';c.font='bold 10px system-ui';c.textAlign='center';c.fillText('ELEVADOR',eq[0],eq[1]+3);
   const light=Q(9.5,1.05,U*2.05);c.fillStyle='#67e1bb';c.beginPath();c.roundRect(light[0]-7,light[1]-4,14,8,2);c.fill();
+  // Janelas amplas com molduras e travessas, visíveis nas paredes da torre.
+  const windowOnBack=(x,width=1.75)=>{
+   const z0=U*.72,z1=U*1.62;
+   roomPoly([Q(x-.09,0,z0-.09),Q(x+width+.09,0,z0-.09),Q(x+width+.09,0,z1+.09),Q(x-.09,0,z1+.09)],'#8d887e','#e8dfcf');
+   roomPoly([Q(x,0,z0),Q(x+width,0,z0),Q(x+width,0,z1),Q(x,0,z1)],'#a8d9e9','#f8f1df');
+   roomPoly([Q(x+.09,0,z0+.09),Q(x+width-.09,0,z0+.09),Q(x+width-.09,0,z1-.09),Q(x+.09,0,z1-.09)],'#bce8f4','rgba(255,255,255,.7)');
+   line(x+width*.5,0,z0,x+width*.5,0,'rgba(255,255,255,.95)',1);
+   const a=Q(x+width*.5,0,z0),b=Q(x+width*.5,0,z1);
+   c.strokeStyle='#f6f1e5';c.lineWidth=2;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();
+   const m=Q(x,0,(z0+z1)/2),n=Q(x+width,0,(z0+z1)/2);
+   c.beginPath();c.moveTo(m[0],m[1]);c.lineTo(n[0],n[1]);c.stroke();
+  };
+  [3.1,7.0,12.2,17.1,22.1].forEach(x=>windowOnBack(x,1.55));
+  const windowOnSide=(y,width=1.55)=>{
+   const z0=U*.72,z1=U*1.62;
+   roomPoly([Q(0,y-.09,z0-.09),Q(0,y+width+.09,z0-.09),Q(0,y+width+.09,z1+.09),Q(0,y-.09,z1+.09)],'#8d887e','#e8dfcf');
+   roomPoly([Q(0,y,z0),Q(0,y+width,z0),Q(0,y+width,z1),Q(0,y,z1)],'#a8d9e9','#f8f1df');
+   roomPoly([Q(0,y+.09,z0+.09),Q(0,y+width-.09,z0+.09),Q(0,y+width-.09,z1-.09),Q(0,y+.09,z1-.09)],'#bce8f4','rgba(255,255,255,.7)');
+   const a=Q(0,y+width*.5,z0),b=Q(0,y+width*.5,z1),m=Q(0,y,(z0+z1)/2),n=Q(0,y+width,(z0+z1)/2);
+   c.strokeStyle='#f6f1e5';c.lineWidth=2;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.moveTo(m[0],m[1]);c.lineTo(n[0],n[1]);c.stroke();
+  };
+  [2.0,6.0,10.0,13.8].forEach(y=>windowOnSide(y,1.5));
+  // Painéis decorativos de madeira e rodapé para tirar o aspecto de caixa vazia.
+  for(const x of [1.1,5.2,9.3,13.4,17.5,21.6]){
+   const a=Q(x,0,U*.24),b=Q(Math.min(x+2.4,w-.2),0,U*.24);
+   c.strokeStyle='rgba(92,68,43,.48)';c.lineWidth=2;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();
+  }
+  // Iluminação quente em arandelas nas paredes, com brilho perceptível.
+  for(const [x,y,side] of [[2.2,0,'back'],[10.3,0,'back'],[18.8,0,'back'],[0,4.2,'side'],[0,9.0,'side']]){
+   const p=side==='back'?Q(x,0,U*1.25):Q(0,y,U*1.25);
+   const g=c.createRadialGradient(p[0],p[1],1,p[0],p[1],28);
+   g.addColorStop(0,'rgba(255,220,151,.55)');g.addColorStop(1,'rgba(255,220,151,0)');
+   c.fillStyle=g;c.beginPath();c.arc(p[0],p[1],28,0,Math.PI*2);c.fill();
+   c.fillStyle='#ffe4a3';c.strokeStyle='#8b6a3b';c.lineWidth=1;c.beginPath();c.roundRect(p[0]-4,p[1]-6,8,12,2);c.fill();c.stroke();
+  }
   // Marcações da recepção e balcão de controle.
   line(4.0,2.1,11.1,2.1,'rgba(245,238,220,.38)',1.5);
   line(.4,10.9,3.7,10.9,'rgba(255,255,255,.4)',1.5);
