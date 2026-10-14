@@ -138,3 +138,43 @@ test('career progression validates requirements and records promotions', () => {
   assert.match(client, /workProgress/);
   assert.match(client, /Treinamento/);
 });
+
+
+test('map is expanded and the employment center has an explorable interior', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  assert.match(client, /const MW=96,MH=84/);
+  assert.match(server, /const MW = 96, MH = 84/);
+  assert.match(client, /bd\('Centro de Empregos'/);
+  assert.match(client, /family==='employment'/);
+  assert.match(client, /career-center/);
+  assert.match(client, /role==='Recrutador'/);
+});
+
+test('career XP thresholds are exposed to the interface and enforced on the server', () => {
+  const server = read('sorokiba2-server.js');
+  const client = read('sorokiba2.html');
+  for (const [job, xp] of [['courier', 0], ['fastfood_counter', 50], ['hospital_reception', 100],
+    ['restaurant_server', 100], ['library_assistant', 100], ['mechanic', 250], ['electrician', 300],
+    ['teacher_assistant', 400]]) {
+    assert.match(server, new RegExp("id: '" + job + "'.*minXp: " + xp));
+  }
+  assert.match(server, /currentXp: Number\(row\.xp\)\|\|0/);
+  assert.match(server, /currentXp < job\.minXp/);
+  assert.match(client, /careerXpTrack/);
+  assert.match(client, /Faltam .* XP geral/);
+});
+
+test('every listed career has interview questions, work tasks and career progression', () => {
+  const server = read('sorokiba2-server.js');
+  const careers = server.slice(server.indexOf('const CAREERS = Object.freeze(['), server.indexOf(']);', server.indexOf('const CAREERS = Object.freeze([')));
+  const tasks = server.slice(server.indexOf('const WORK_TASKS = Object.freeze({'), server.indexOf('});', server.indexOf('const WORK_TASKS = Object.freeze({')));
+  const ladders = server.slice(server.indexOf('const CAREER_LADDERS = Object.freeze({'), server.indexOf('});', server.indexOf('const CAREER_LADDERS = Object.freeze({')));
+  const questions = server.slice(server.indexOf('const INTERVIEW_QUESTIONS = Object.freeze({'), server.indexOf('});', server.indexOf('const INTERVIEW_QUESTIONS = Object.freeze({')));
+  const jobs = [...careers.matchAll(/id: '([^']+)'/g)].map(m => m[1]);
+  for (const job of jobs) {
+    assert.match(tasks, new RegExp('^  ' + job + ':', 'm'), job + ' has work tasks');
+    assert.match(ladders, new RegExp('^  ' + job + ':', 'm'), job + ' has progression');
+    assert.match(questions, new RegExp('^  ' + job + ':', 'm'), job + ' has interview questions');
+  }
+});

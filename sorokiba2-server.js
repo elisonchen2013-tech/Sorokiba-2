@@ -7,7 +7,7 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const db = require('./sorokiba2-db');
 
-const MW = 96, MH = 68, MAX_PLAYERS = 60;
+const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
 const MISSIONS = Object.freeze({
   welcome: { event: 'npc:kiba', money: 250, xp: 100, label: 'Fale com Kiba' },
@@ -16,14 +16,14 @@ const MISSIONS = Object.freeze({
   library_visit: { event: 'building:Biblioteca', money: 150, xp: 60, label: 'Visite a Biblioteca' },
 });
 const CAREERS = Object.freeze([
-  { id: 'hospital_reception', title: 'Recepcionista hospitalar', profession: 'Recepcionista', building: '✚ Hospital', skills: ['atendimento'], minExperience: 0, vacancies: 2 },
-  { id: 'library_assistant', title: 'Assistente de biblioteca', profession: 'Bibliotecária', building: 'Biblioteca', skills: ['organizacao'], minExperience: 0, vacancies: 1 },
-  { id: 'mechanic', title: 'Mecânico de oficina', profession: 'Mecânico', building: 'Oficina', skills: ['manutencao'], minExperience: 1, vacancies: 1 },
-  { id: 'restaurant_server', title: 'Atendente de restaurante', profession: 'Garçom', building: 'Restaurante', skills: ['atendimento'], minExperience: 0, vacancies: 2 },
-  { id: 'electrician', title: 'Eletricista de manutenção', profession: 'Eletricista', building: 'Fábrica', skills: ['manutencao'], minExperience: 1, vacancies: 1 },
-  { id: 'courier', title: 'Entregador urbano', profession: 'Entregador', building: 'Rodoviária', skills: ['organizacao'], minExperience: 0, vacancies: 2 },
-  { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 1, vacancies: 2 },
-  { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, vacancies: 1 },
+  { id: 'hospital_reception', title: 'Recepcionista hospitalar', profession: 'Recepcionista', building: '✚ Hospital', skills: ['atendimento'], minExperience: 0, minXp: 100, vacancies: 2 },
+  { id: 'library_assistant', title: 'Assistente de biblioteca', profession: 'Bibliotecária', building: 'Biblioteca', skills: ['organizacao'], minExperience: 0, minXp: 100, vacancies: 1 },
+  { id: 'mechanic', title: 'Mecânico de oficina', profession: 'Mecânico', building: 'Oficina', skills: ['manutencao'], minExperience: 1, minXp: 250, vacancies: 1 },
+  { id: 'restaurant_server', title: 'Atendente de restaurante', profession: 'Garçom', building: 'Restaurante', skills: ['atendimento'], minExperience: 0, minXp: 100, vacancies: 2 },
+  { id: 'electrician', title: 'Eletricista de manutenção', profession: 'Eletricista', building: 'Fábrica', skills: ['manutencao'], minExperience: 1, minXp: 300, vacancies: 1 },
+  { id: 'courier', title: 'Entregador urbano', profession: 'Entregador', building: 'Rodoviária', skills: ['organizacao'], minExperience: 0, minXp: 0, vacancies: 2 },
+  { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 2 },
+  { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, minXp: 400, vacancies: 1 },
 ]);
 const CAREER_SKILLS = Object.freeze({
   atendimento: { label: 'Atendimento ao público', unlockXp: 0 },
@@ -95,6 +95,16 @@ const WORK_TASKS = Object.freeze({
     { id: 'restriction', prompt: 'Confira a observação de restrição do cliente.', options: ['Sinalizar a restrição à cozinha', 'Ignorar a observação', 'Trocar sem registrar'], correct: 0 },
     { id: 'handoff', prompt: 'Faça a conferência final antes da entrega.', options: ['Conferir nome e comanda', 'Entregar sem olhar', 'Remover identificação'], correct: 0 },
   ] },
+  mechanic: { type: 'vehicle_inspection', supervisor: 'João', money: 60, xp: 30, stages: [
+    { id: 'inspect', prompt: 'Inicie a inspeção fictícia seguindo a ordem do serviço.', options: ['Conferir o roteiro e observar o veículo simulado', 'Pular a avaliação', 'Confirmar sem olhar'], correct: 0 },
+    { id: 'identify', prompt: 'Selecione o componente indicado no relatório de simulação.', options: ['Componente marcado na ordem de serviço', 'Peça aleatória', 'Item não relacionado'], correct: 0 },
+    { id: 'report', prompt: 'Finalize o serviço no sistema da oficina.', options: ['Registrar as observações e enviar o relatório', 'Ocultar o resultado', 'Marcar uma tarefa que não foi feita'], correct: 0 },
+  ] },
+  teacher_assistant: { type: 'classroom_support', supervisor: 'Lúcia', money: 38, xp: 22, stages: [
+    { id: 'prepare', prompt: 'Prepare os materiais da atividade escolar.', options: ['Conferir a lista e separar os materiais pedidos', 'Levar materiais aleatórios', 'Começar sem verificar'], correct: 0 },
+    { id: 'assist', prompt: 'Um aluno pede orientação na atividade simulada.', options: ['Explicar a próxima etapa com respeito', 'Ignorar o pedido', 'Fazer a atividade sem explicar'], correct: 0 },
+    { id: 'record', prompt: 'Registre a atividade concluída.', options: ['Registrar o que foi feito com precisão', 'Inventar resultados', 'Apagar o registro'], correct: 0 },
+  ] },
 });
 const CAREER_LADDERS = Object.freeze({
   hospital_reception: [{ title: 'Recepcionista', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Recepcionista sênior', salary: 1200, xp: 60, tasks: 3, performance: 70 }, { title: 'Coordenador de recepção', salary: 1600, xp: 150, tasks: 8, performance: 80 }],
@@ -103,6 +113,8 @@ const CAREER_LADDERS = Object.freeze({
   electrician: [{ title: 'Eletricista trainee', salary: 1000, xp: 0, tasks: 0, performance: 0 }, { title: 'Eletricista', salary: 1350, xp: 60, tasks: 3, performance: 70 }, { title: 'Eletricista líder', salary: 1800, xp: 150, tasks: 8, performance: 85 }],
   courier: [{ title: 'Entregador', salary: 800, xp: 0, tasks: 0, performance: 0 }, { title: 'Entregador sênior', salary: 1050, xp: 60, tasks: 3, performance: 70 }, { title: ' líder de rotas', salary: 1400, xp: 150, tasks: 8, performance: 80 }],
   fastfood_counter: [{ title: 'Atendente', salary: 820, xp: 0, tasks: 0, performance: 0 }, { title: 'Atendente sênior', salary: 1080, xp: 60, tasks: 3, performance: 70 }, { title: 'Líder de turno', salary: 1450, xp: 150, tasks: 8, performance: 80 }],
+  mechanic: [{ title: 'Auxiliar de oficina', salary: 950, xp: 0, tasks: 0, performance: 0 }, { title: 'Mecânico', salary: 1300, xp: 70, tasks: 4, performance: 72 }, { title: 'Mecânico sênior', salary: 1750, xp: 170, tasks: 10, performance: 85 }],
+  teacher_assistant: [{ title: 'Auxiliar escolar', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Assistente escolar', salary: 1200, xp: 70, tasks: 4, performance: 75 }, { title: 'Coordenador pedagógico', salary: 1650, xp: 170, tasks: 10, performance: 88 }],
 });
 const TRAINING = Object.freeze({
   1: { id: 'advanced_routine', title: 'Treinamento de rotina avançada', unlockXp: 40 },
@@ -212,8 +224,13 @@ async function attachSorokiba2(app, server, opt = {}) {
       const applications = await db.listApplications(row.username);
       const applied = new Map(applications.map(item => [item.job_id, item]));
       res.json({
+        currentXp: Number(row.xp)||0,
         careers: CAREERS.map(job => ({
           ...job,
+          currentXp: Number(row.xp)||0,
+          xpEligible: (Number(row.xp)||0) >= job.minXp,
+          missingXp: Math.max(0,job.minXp-(Number(row.xp)||0)),
+          xpProgress: job.minXp ? Math.min(100,Math.round((Number(row.xp)||0)/job.minXp*100)) : 100,
           requiredSkills: job.skills.map(skill => CAREER_SKILLS[skill].label),
           applied: applied.has(job.id) ? applied.get(job.id).status : null,
           application: applied.get(job.id) || null,
@@ -249,6 +266,8 @@ async function attachSorokiba2(app, server, opt = {}) {
       const job = careerById(req.body?.jobId);
       const resume = row.resume || { summary: '', skills: [], experience: 0 };
       if (!job) return res.status(400).json({ err: 'Vaga inválida' });
+      const currentXp = Math.max(0, Number(row.xp)||0);
+      if (currentXp < job.minXp) return res.status(403).json({ err: `Esta profissão exige ${job.minXp} XP geral; você possui ${currentXp}.`, requiredXp: job.minXp, currentXp, missingXp: job.minXp-currentXp });
       if (job.skills.some(skill => !resume.skills.includes(skill)) || resume.experience < job.minExperience) {
         return res.status(400).json({ err: 'Atualize seu currículo com as habilidades e experiência exigidas' });
       }

@@ -83,7 +83,7 @@ Endpoints autenticados: `GET /api/sk2/work`, `POST /api/sk2/work/supervisor`, `P
 
 ## Etapa 4: minijogos profissionais
 
-Os mesmos endpoints de trabalho agora suportam tarefas em etapas para três novos fluxos: **Eletricista** (inspeção fictícia, escolha de componente e relatório seguro), **Entregador** (pegar encomenda, confirmar destino e entregar) e **Atendente de fast-food** (montar, conferir restrição e fazer conferência final). As vagas usam os prédios/NPCs já existentes e passam pela entrevista antes da contratação.
+Os mesmos endpoints de trabalho suportam tarefas em etapas para **Eletricista** (inspeção fictícia, escolha de componente e relatório seguro), **Entregador** (pegar encomenda, confirmar destino e entregar), **Atendente de fast-food** (montar, conferir restrição e conferir o pedido), **Mecânico** (inspeção virtual e relatório de serviço) e **Assistente escolar** (preparo de materiais, apoio a alunos e registro de atividade). As vagas usam os prédios/NPCs já existentes e passam pela entrevista antes da contratação.
 
 As opções exibidas são apenas alternativas seguras; o gabarito e a etapa atual ficam no servidor. `POST /api/sk2/work/task/complete` aceita o índice da opção, valida a etapa, avança a tarefa ou finaliza o pagamento. Cada avanço é persistido e a finalização usa a mesma proteção transacional/idempotente do histórico, sem instruções de elétrica real ou qualquer ação perigosa.
 
@@ -92,6 +92,14 @@ As opções exibidas são apenas alternativas seguras; o gabarito e a etapa atua
 O painel **Meu trabalho** mostra a escada de cargos, salário mensal, XP profissional, tarefas concluídas e desempenho médio. Cada profissão possui três cargos com requisitos transparentes de XP, tarefas e desempenho; tarefas concluídas em cargos superiores recebem recompensa maior.
 
 Treinamentos são desbloqueados por XP profissional e concluídos pelo endpoint `POST /api/sk2/work/training/complete`. Promoções usam `POST /api/sk2/work/promotion/request` e `POST /api/sk2/work/promotion/confirm`: ambos recalculam os requisitos no servidor, e a confirmação atualiza `employment` e registra `sk2_work_promotions` em transação, sem aceitar cargo/salário enviados pelo cliente. Solicitações, treinamentos e promoções têm chaves únicas para evitar duplicação.
+
+## Expansão da cidade e requisitos de carreira
+
+A cidade foi ampliada de 96 × 68 para 96 × 84 células, com uma nova região ao sul e um prédio explorável chamado **Centro de Empregos**. O interior inclui recepção, painel de vagas, mesa de recrutamento, sala de entrevistas, orientação profissional e NPCs com funções específicas. Falar com o recrutador ou interagir com o painel de vagas abre a central existente, reaproveitando currículo, candidaturas e entrevistas persistidas.
+
+Cada profissão tem um requisito de XP geral verificado pelo servidor: Entregador 0 XP; Fast-food 50 XP; Recepcionista hospitalar, atendente de restaurante e assistente de biblioteca 100 XP; Mecânico 250 XP; Eletricista 300 XP; Assistente escolar 400 XP. A central mostra o progresso e impede candidaturas sem XP suficiente. O XP profissional continua separado e é usado para a progressão dentro da carreira.
+
+As carreiras de **Mecânico** e **Assistente escolar** também passaram a ter tarefas jogáveis em etapas e trilhas de cargos, alinhando o catálogo de empregos aos sistemas de trabalho.
 
 ## Testes
 

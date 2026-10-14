@@ -52,6 +52,9 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 #careerPanel label{display:block;font-size:12px;opacity:.8;margin-top:8px}#careerPanel textarea,#careerPanel input{width:100%;text-align:left;font-size:14px;padding:8px;border:1px solid #ffffff44;border-radius:6px;background:#ffffff0d}
 #careerPanel button{margin:6px 4px 0 0;padding:7px 10px;border:0;border-radius:7px;background:var(--a);color:var(--n);font-weight:700;cursor:pointer}
 #careerPanel .job{border:1px solid #ffffff25;border-radius:9px;padding:9px;margin:7px 0}.job small{display:block;opacity:.75}.job button[disabled]{opacity:.5;cursor:default}
+#careerPanel .careerXpTrack{height:7px;background:#ffffff18;border-radius:99px;overflow:hidden;margin:7px 0 3px}
+#careerPanel .careerXpFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2DD4BF,#F2B84B);transition:width .3s ease}
+#careerPanel .careerXpNote{display:block;font-size:11px;color:#cde2e7;opacity:.9}
 #careerClose{float:right;background:#ffffff1a!important;color:var(--c)!important}
 #interviewPanel{position:fixed;inset:18% 18%;z-index:13;background:rgba(11,16,32,.98);border:2px solid var(--g);border-radius:16px;padding:22px;box-shadow:0 12px 40px #000b}
 #interviewPanel h2{margin:0 0 8px;color:var(--g)}#interviewQuestion{font-size:18px;margin:18px 0 12px}
@@ -83,7 +86,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 <div id="fm" hidden><b>Mapa de Sorokiba</b><canvas id="fc"></canvas><small>M ou toque para fechar</small></div>
 <script>
 const $=i=>document.getElementById(i),cv=$('cv'),c=cv.getContext('2d'),pc=$('pv').getContext('2d');
-const MW=96,MH=68,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
+const MW=96,MH=84,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
 let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,cam={x:0,y:0};
 let px=27.5,py=14.5,pd=0,pf=0,gs=0,last=performance.now(),near=null,hT=0,sT=0,isNew=false,selC='#2DD4BF',selS='#f1c7a0',open=false;
 let interior=null,ipx=6,ipy=6.15;
@@ -98,7 +101,7 @@ function box(c,x,y,w,h,z0,z1,col,roof){const L=[P(x,y+h,z1),P(x+w,y+h,z1),P(x+w,
 poly(c,L,col);poly(c,L,'rgba(0,0,0,.18)');poly(c,Rr,col);poly(c,Rr,'rgba(0,0,0,.38)');poly(c,[P(x,y,z1),P(x+w,y,z1),P(x+w,y+h,z1),P(x,y+h,z1)],roof||col)}
 
 /* ---------- MAPA ---------- */
-const IX=[22,46,70],IY=[16,34,52],gd=(v,a)=>a.some(i=>v>=i&&v<i+3),gS=(v,a)=>a.some(i=>v>=i-3&&v<i||v>=i+3&&v<i+6);
+const IX=[22,46,70],IY=[16,34,52,70],gd=(v,a)=>a.some(i=>v>=i&&v<i+3),gS=(v,a)=>a.some(i=>v>=i-3&&v<i||v>=i+3&&v<i+6);
 const g=[];for(let y=0;y<MH;y++){g[y]=[];for(let x=0;x<MW;x++)g[y][x]=gd(y,IY)||gd(x,IX)?1:gS(y,IY)||gS(x,IX)?2:0}
 const bd=(n,c,aw,d,...p)=>({n,c,aw,d,p,x:p[0][0],y:p[0][1],w:p[0][2],h:p[0][3],dx:p[0][0]+(p[0][2]>>1),dy:p[0][1]+p[0][3]-1,lz:Math.max(...p.map(q=>q[4]))});
 const B=[bd('Banco','#4C8C6F',0,0,[3,6,6,7,110]),
@@ -130,19 +133,24 @@ bd('Rodoviária','#7D8A99',0,0,[30,62,10,4,80],[32,59,6,3,95]),
 bd('Condomínio','#B5838D',0,0,[52,63,6,4,130],[53,60,4,3,170],[54,58,2,2,205]),
 bd('Lavanderia','#6FB7B7','#16a085',0,[60,60,5,6,80]),
 bd('Residencial','#9A8C98',0,0,[78,62,7,5,150],[79,59,5,3,185],[80,58,3,1,205]),
-bd('Oficina','#8D6E63','#d35400',['chim',1],[88,62,6,4,85],[88,60,3,2,105])];
+bd('Oficina','#8D6E63','#d35400',['chim',1],[88,62,6,4,85],[88,60,3,2,105]),
+bd('Centro de Empregos','#477E91',0,['employment',0],[6,76,12,5,120],[8,76,8,4,145],[10,76,4,3,165])];
 const hm=[],bm=[];for(let y=0;y<MH;y++){hm[y]=[];bm[y]=[]}
 B.forEach(b=>b.p.forEach(([x,y,w,h,z])=>{for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++){if((hm[j][i]||0)<z){hm[j][i]=z;bm[j][i]=b}g[j][i]=3}}));
+/* Calçada de acesso ao novo Centro de Empregos, conectada à avenida sul. */
+for(let y=75;y<=81;y++)if(g[y]&&g[y][19]!==3)g[y][19]=2;
+for(let x=12;x<=19;x++)if(g[81]&&g[81][x]!==3)g[81][x]=2;
 const S=[],IT={};
 for(let ty=0;ty<MH;ty++)for(let tx=0;tx<MW;tx++){const z=hm[ty][tx];if(!z)continue;const zf=(hm[ty+1]||[])[tx]||0,zr=hm[ty][tx+1]||0,p=P(tx+.5,ty+.5,z/2),it={k:tx+ty+1,sx:p[0],sy:p[1],r:z/2+70,t:1,tx,ty,b:bm[ty][tx],z,zf,zr,fl:zf<z,fr:zr<z,dc:[]};S.push(it);IT[ty*MW+tx]=it}
 B.forEach(b=>{if(!b.d)return;const[k,pi]=b.d,[x,y,w,h]=b.p[pi],a=IT[(y+h-1)*MW+x+w-1],cx=x+w/2,cy=y+h/2,z=hm[y+h-1][x+w-1];a.dc.push((c,t)=>DECO[k](c,t,x,y,w,h,z,cx,cy))});
 const DECO={
+employment:(c,t,x,y,w,h,z,cx,cy)=>{const q=P(cx,cy,z+25);c.fillStyle='#183346';c.fillRect(q[0]-23,q[1]-12,46,24);c.strokeStyle='#F2B84B';c.lineWidth=2;c.strokeRect(q[0]-23,q[1]-12,46,24);c.fillStyle='#2DD4BF';c.fillRect(q[0]-8,q[1]-3,16,9);c.fillStyle='#F2B84B';c.fillRect(q[0]-4,q[1]-7,8,4)},
 cross:(c,t,x,y,w,h,z,cx,cy)=>{poly(c,[P(cx-1,cy-1,z+1),P(cx+1,cy-1,z+1),P(cx+1,cy+1,z+1),P(cx-1,cy+1,z+1)],'#f5efe3');poly(c,[P(cx-.8,cy-.2,z+2),P(cx+.8,cy-.2,z+2),P(cx+.8,cy+.2,z+2),P(cx-.8,cy+.2,z+2)],'#d94b4b');poly(c,[P(cx-.2,cy-.8,z+2),P(cx+.2,cy-.8,z+2),P(cx+.2,cy+.8,z+2),P(cx-.2,cy+.8,z+2)],'#d94b4b')},
 dome:(c,t,x,y,w,h,z,cx,cy)=>{const q=P(cx,cy,z);c.fillStyle='#2f8f83';c.beginPath();c.ellipse(q[0],q[1],26,13,0,0,Math.PI);c.fill();c.fillStyle='#37a99b';c.beginPath();c.ellipse(q[0],q[1],26,32,0,Math.PI,0);c.fill();c.fillStyle='rgba(255,255,255,.22)';c.beginPath();c.ellipse(q[0]-8,q[1]-18,5,10,-.5,0,7);c.fill();
 c.strokeStyle='#ddd';c.lineWidth=1.5;c.beginPath();c.moveTo(q[0],q[1]-32);c.lineTo(q[0],q[1]-56);c.stroke();c.fillStyle='#F2B84B';c.beginPath();c.moveTo(q[0],q[1]-56);c.lineTo(q[0]+15,q[1]-52+Math.sin(t*4)*2);c.lineTo(q[0],q[1]-47);c.fill()},
 pyr:(c,t,x,y,w,h,z,cx,cy)=>{const a=P(cx,cy,z+(w+h)*14),Lf=[P(x,y+h,z),P(x+w,y+h,z),a],Rr=[P(x+w,y+h,z),P(x+w,y,z),a];poly(c,Lf,'#8b3a2f');poly(c,Rr,'#8b3a2f');poly(c,Rr,'rgba(0,0,0,.3)')},
 chim:(c,t,x,y,w,h,z,cx,cy)=>{box(c,cx-.25,cy-.25,.5,.5,z,z+42,'#7a5a4a','#4a3a30');for(let i=0;i<4;i++){const u=(t*.4+i*.25)%1,q=P(cx,cy,z+42+u*54);c.fillStyle='rgba(215,220,228,'+(.55*(1-u))+')';c.beginPath();c.arc(q[0]+u*16+Math.sin(t*2+i)*3,q[1],4+u*9,0,7);c.fill()}}};
-for(let i=0;i<650;i++){const x=R()*MW|0,y=R()*MH|0;let ok=g[y][x]==0;for(let j=-1;j<2;j++)for(let k=-1;k<2;k++)if((g[y+j]||[])[x+k]==3)ok=false;if(ok){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}}
+for(let i=0;i<Math.round(MW*MH*.085);i++){const x=R()*MW|0,y=R()*MH|0;let ok=g[y][x]==0;for(let j=-1;j<2;j++)for(let k=-1;k<2;k++)if((g[y+j]||[])[x+k]==3)ok=false;if(ok){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}}
 const LP=[];IY.forEach(j=>[j-2.5,j+5.5].forEach(y=>{for(let x=2.5;x<MW;x+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));IX.forEach(i=>[i-1.5,i+4.5].forEach(x=>{for(let y=2.5;y<MH;y+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));
 LP.forEach(([x,y])=>{const p=P(x,y,20);S.push({k:x+y,sx:p[0],sy:p[1],r:40,t:3,x,y})});
 
@@ -154,7 +162,7 @@ IX.forEach(i=>IY.forEach(j=>{
 }));
 const walkable=(x,y)=>x>=0&&x<MW&&y>=0&&y<MH&&(g[y][x]===2||XW.has(y*MW+x));
 const routineNames={
- trabalho:['Empresa','✚ Hospital','Prefeitura','Delegacia','Escola','Universidade','Fábrica','Correio','Tribunal','Banco','Hotel','Rodoviária','Posto'],
+ trabalho:['Empresa','Centro de Empregos','✚ Hospital','Prefeitura','Delegacia','Escola','Universidade','Fábrica','Correio','Tribunal','Banco','Hotel','Rodoviária','Posto'],
  compras:['Loja','Mercado','Shopping','Farmácia','Supermercado','Padaria','Lavanderia','Oficina','Posto'],
  passeio:['Restaurante','Cinema','Academia','Biblioteca','Estádio','Igreja','Padaria','Hotel','Shopping'],
  casa:['Condomínio','Residencial','Mercado','Supermercado','Padaria','Lavanderia','Farmácia']
@@ -454,7 +462,8 @@ function findRoomPath(room,sx,sy,tx,ty){
 function makeInterior(building){
  const title=building.n.replace(/^✚\s*/,'').trim(),n=title.toLowerCase();
  let family='office';
- if(n.includes('hospital'))family='hospital';
+ if(n.includes('centro de empregos')||n.includes('carreiras'))family='employment';
+ else if(n.includes('hospital'))family='hospital';
  else if(['mercado','supermercado','loja','padaria','farmácia','shopping','lavanderia'].some(s=>n.includes(s)))family='market';
  else if(n.includes('banco'))family='bank';
  else if(n.includes('prefeitura'))family='cityhall';
@@ -479,7 +488,8 @@ function makeInterior(building){
   church:['#eee4d0','#c6b99f','#cfc4ad','#ded5c2','#b89a70','Salão principal'],
   home:['#e9ddc9','#b8a78e','#bcae97','#cec1a9','#a77a65','Área interna'],
   school:['#e8e1cf','#b9ad96','#b9b5a5','#ccc8b7','#d9a441','Recepção e salas'],
-  office:['#e1e7df','#a7b4ac','#b6c0b7','#cad1c8','#6d8c9a','Recepção e atendimento']
+  office:['#e1e7df','#a7b4ac','#b6c0b7','#cad1c8','#6d8c9a','Recepção e atendimento'],
+  employment:['#e7edf0','#9baeb8','#bac8cf','#d9e2e5','#2d8d89','Recrutamento e orientação profissional']
  }[family];
  const items=[],zones=[],add=(...a)=>items.push(roomItem(...a)),z=(label,x,y,desc)=>zones.push({label,x,y,desc});
  if(family==='market'){
@@ -531,6 +541,17 @@ function makeInterior(building){
  }else if(family==='home'){
   add('counter',8,1,1.9,.8,18,'#765640','#ba9369','#493628');add('bed',2,2.8,2.1,1.5,12,'#826b60','#e0c7b4','#4e4038');add('table',6,4.4,1.3,1,12,'#926d4b','#c7a37a','#5e4530');add('chair',5.5,5.6,.7,.7,10,'#7d6045','#a9855c','#4e3b2c');
   z('Recepção',8.7,2.2,'Área de entrada e recepção do prédio.');z('Quarto',4.5,4,'Área de descanso e acomodação.');z('Sala',7.8,5.8,'Espaço comum do interior.');
+ }else if(family==='employment'){
+  add('counter',2.6,1.1,3.2,.85,25,'#5a6e79','#d4e0e2','#354853');
+  add('desk',6.5,3.1,2.4,.9,20,'#6b6258','#c0a77d','#3c4244');
+  add('desk',9.2,4.8,1.8,.85,19,'#6b6258','#c0a77d','#3c4244');
+  add('chair',1.9,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',3,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',4.1,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');
+  add('board',9.1,1.05,1.45,.14,32,'#284b51','#4d8a86','#1c3137',false);
+  z('Balcão de recepção',4.1,2.2,'A recepção explica como procurar vagas, preparar o currículo e participar do processo seletivo.');
+  z('Painel de vagas',9.7,2.05,'Consulte as profissões, os requisitos de XP geral, as habilidades necessárias e as vagas disponíveis.');
+  z('Mesa de recrutamento',7.55,4.05,'O recrutador analisa seu currículo, verifica os requisitos e conduz a entrevista para a vaga escolhida.');
+  z('Sala de entrevistas',9.5,6.2,'Prepare-se para responder perguntas sobre a profissão e demonstrar suas habilidades.');
+  z('Orientação e treinamentos',2.9,6.1,'Consulte as habilidades e os treinamentos que podem ajudar a liberar profissões mais avançadas.');
  }else if(family==='school'){
   add('counter',4.1,1,3.6,.8,21,'#765e43','#c0a06e','#4e3c2d');add('desk',2,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',5,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',8,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('board',9.6,1,1.1,.12,34,'#34504c','#608479','#20342f',false);
   z('Secretaria',6,2.2,'Secretaria para orientação de alunos e visitantes.');z('Sala de aula',6,5.3,'Sala de aula com mesas e quadro.');z('Biblioteca',10,2.1,'Área reservada para leitura e materiais de estudo.');
@@ -541,7 +562,7 @@ function makeInterior(building){
  const dimensions={
   market:[18,12,'market-aisles'],hospital:[20,15,'hospital-wing'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
-  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[15,11,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite']
+  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[15,11,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
  const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],exit:{x:dimensions[0]/2,y:dimensions[1]-.55}};
  const sx=room.width/12,sy=room.depth/8;
@@ -560,13 +581,17 @@ function makeInterior(building){
   church:[['André','Responsável',6,1.8,'staff','#d9d7c9','#bc8c65','#292521'],['Visitante','Visitante',3.8,6.4,'visitor','#7281a4','#d6a983','#382b20'],['Visitante','Visitante',10,6.4,'visitor','#b27d65','#a66f4b','#302722']],
   home:[['Recepcionista','Recepção',8.7,2.1,'staff','#a77a65','#d5a681','#302921'],['Morador','Morador',4.6,5.8,'visitor','#7184ab','#ce9d74','#2d2521'],['Visitante','Visitante',9.5,5.7,'visitor','#b17866','#ddb28e','#3c2d24']],
   school:[['Lúcia','Secretária',6,2,'staff','#d9a441','#d8a77d','#31261e'],['Paulo','Professor',9,5.7,'staff','#5b7aa1','#bb865f','#30271e'],['Estudante','Aluno',3.4,6.1,'visitor','#65a19b','#d7a981','#2f2924'],['Estudante','Aluno',7.7,6.2,'visitor','#c27b9a','#a87857','#292421']],
-  office:[['Beatriz','Recepcionista',6,2,'staff','#6d8c9a','#d5a783','#292520'],['Funcionário','Funcionário',9.5,4.7,'staff','#5b718a','#b77d57','#292520'],['Visitante','Visitante',3.6,6.1,'visitor','#8c87b4','#d5a783','#292520']]
+  office:[['Beatriz','Recepcionista',6,2,'staff','#6d8c9a','#d5a783','#292520'],['Funcionário','Funcionário',9.5,4.7,'staff','#5b718a','#b77d57','#292520'],['Visitante','Visitante',3.6,6.1,'visitor','#8c87b4','#d5a783','#292520']],
+  employment:[['Marta','Recepcionista',4.2,2.1,'staff','#477E91','#d5a783','#292520'],['Daniel','Recrutador',7.55,4.15,'staff','#2D8D89','#c8946b','#202f3e'],['Renata','Orientadora profissional',9.3,5.7,'staff','#ba8750','#d5a783','#342b2a'],['Candidato','Candidato',5.4,6.2,'visitor','#6d8c9a','#c8946b','#292520']]
  }[family];
  for(const [name,role,x,y,kind,shirt,skin,hair]of crowd){
   const route=kind==='visitor'?[[x,y],[x+.65,y-.35],[x+.3,y+.35],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:(family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. As consultas e os exames ainda serão conectados ao sistema clínico.':
+   dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e conduzir a entrevista para a vaga que você escolher.':
+    (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
+    (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
+    (family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. As consultas e os exames ainda serão conectados ao sistema clínico.':
     (family==='market'&&role==='Caixa')?'Olá! Sou a pessoa responsável pelo caixa. O catálogo e os pagamentos ainda serão conectados aqui.':
     (family==='bank'&&role==='Caixa')?'Olá! Sou o atendente do banco. Depósitos e transferências ainda serão integrados a este cenário.':
     'Olá! Sou '+name+' e trabalho como '+role.toLowerCase()+'. Como posso ajudar?',
@@ -681,6 +706,11 @@ function drawRoomArchitecture(room,Q,U){
   wall(w*.57,d*.22,w*.57,d*.53,U*.75,'rgba(163,122,101,.35)');roomPoly([Q(w*.12,d*.56),Q(w*.4,d*.56),Q(w*.44,d*.82),Q(w*.08,d*.82)],'rgba(177,135,109,.2)','rgba(177,135,109,.25)');
  }else if(room.shape==='school-wing'){
   wall(w*.24,d*.26,w*.76,d*.26,U*.7,'rgba(169,146,91,.35)');wall(w*.76,d*.26,w*.76,d*.48,U*.7,'rgba(169,146,91,.35)');line(w*.28,d*.31,w*.72,d*.31,'rgba(255,255,255,.22)',2);
+ }else if(room.shape==='career-center'){
+  wall(w*.38,d*.22,w*.38,d*.88,U*.85,'rgba(70,118,130,.35)');wall(w*.72,d*.22,w*.72,d*.88,U*.85,'rgba(70,118,130,.35)');
+  wall(w*.38,d*.52,w*.72,d*.52,U*.65,'rgba(70,118,130,.25)');
+  line(w*.08,d*.2,w*.31,d*.2,'rgba(242,184,75,.7)',3);line(w*.77,d*.2,w*.92,d*.2,'rgba(45,212,191,.65)',3);
+  const sign=Q(w*.5,d*.08,U*1.65);c.fillStyle='#203e50';c.fillRect(sign[0]-28,sign[1]-9,56,18);c.strokeStyle='#F2B84B';c.lineWidth=1.5;c.strokeRect(sign[0]-28,sign[1]-9,56,18);c.fillStyle='#e7f1f2';c.font='bold 9px system-ui';c.textAlign='center';c.fillText('CARREIRAS',sign[0],sign[1]+3);
  }else if(room.shape==='office-suite'){
   wall(w*.33,d*.32,w*.33,d*.78,U*.8,'rgba(100,132,148,.35)');wall(w*.33,d*.32,w*.61,d*.32,U*.8,'rgba(100,132,148,.35)');wall(w*.7,d*.46,w*.7,d*.8,U*.8,'rgba(100,132,148,.35)');
  }
@@ -728,8 +758,14 @@ function act(){
  if(open){open=false;$('dlg').hidden=true;tone(440,.06,'sine',.07);return}
  if(interior){
   if(near?.t==='interiorExit'){leaveInterior();return}
-  if(near?.t==='interiorPerson'){open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return}
-  if(near?.t==='interiorSpot'){open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})}
+  if(near?.t==='interiorPerson'){
+   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers();tone(640,.09,'sine',.06);return}
+   open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
+  }
+  if(near?.t==='interiorSpot'){
+   if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers();tone(620,.09,'sine',.06);return}
+   open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
+  }
   return;
  }
  if(near&&near.t=='n'){const n=near.o;open=true;tone(660,.1,'sine',.08);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+(n.k?'Oi! Eu sou o Kiba, o ornitorrinco de Sorokiba. Bem-vindo ao Sorokiba 2!':LINES[R()*LINES.length|0])+'</p>';if(n.k)completeMission('welcome','npc:kiba').then(msg=>{$('dlg').innerHTML='<b>'+n.n+'</b><p>'+msg+'</p>'})}
@@ -917,9 +953,12 @@ function renderCareers(data){
  data.careers.forEach(job=>{
   const card=document.createElement('div');card.className='job';
   const title=document.createElement('b');title.textContent=job.title;card.append(title);
-  const info=document.createElement('small');info.textContent=`${job.building} · ${job.vacancies} vaga(s) · habilidades: ${job.requiredSkills.join(', ')}`;card.append(info);
+  const currentXp=Number(job.currentXp??data.currentXp??user?.xp??0),neededXp=Number(job.minXp||0),missingXp=Math.max(0,neededXp-currentXp);
+  const info=document.createElement('small');info.textContent=`${job.building} · ${job.vacancies} vaga(s) · XP geral: ${currentXp}/${neededXp} · habilidades: ${job.requiredSkills.join(', ')}`;card.append(info);
+  const xpTrack=document.createElement('div');xpTrack.className='careerXpTrack';const xpFill=document.createElement('div');xpFill.className='careerXpFill';xpFill.style.width=(neededXp?Math.min(100,currentXp/neededXp*100):100)+'%';xpTrack.append(xpFill);card.append(xpTrack);
+  const xpNote=document.createElement('small');xpNote.className='careerXpNote';xpNote.textContent=missingXp?`Faltam ${missingXp} XP geral para se candidatar.`:'Requisito de XP cumprido.';card.append(xpNote);
   const application=job.application;
-  const applyButton=document.createElement('button');applyButton.textContent=job.applied?'Candidatura enviada':'Candidatar-se';applyButton.disabled=!!job.applied;
+  const applyButton=document.createElement('button');applyButton.textContent=job.applied?'Candidatura enviada':missingXp?`Bloqueado · faltam ${missingXp} XP`:'Candidatar-se';applyButton.disabled=!!job.applied||missingXp>0;
   applyButton.onclick=async()=>{applyButton.disabled=true;try{const r=await fetch(API+'/career/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id})});const j=await r.json().catch(()=>({}));$('careerMsg').textContent=r.ok?'Candidatura registrada.':(j.err||'Não foi possível candidatar-se.');if(r.ok){applyButton.textContent='Candidatura enviada';loadCareers()}else applyButton.disabled=false}catch(e){applyButton.disabled=false;$('careerMsg').textContent='Não foi possível conectar à central.'}};
   card.append(applyButton);
   if(application){
