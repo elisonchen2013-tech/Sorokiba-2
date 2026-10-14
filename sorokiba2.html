@@ -201,58 +201,9 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 @media(max-width:800px){.mayorControlGrid{grid-template-columns:1fr}.mayorPanel{inset:8px;padding:16px;border-radius:16px}.mayorPanelHeader{gap:8px}.mayorPanelHeader button{padding:8px}.mayorControlCard{padding:14px}}
 
 
-/* Abertura animada antes da tela de conta */
-#splashScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 65%,#243b57 0%,#111c31 42%,#070b16 100%);color:#f5efe3;transition:opacity .65s ease,visibility .65s ease}
-#splashScreen.leaving{opacity:0;visibility:hidden;pointer-events:none}
-.splashGlow{position:absolute;width:min(70vw,620px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#f2b84b20,transparent 68%);animation:splashPulse 3s ease-in-out infinite}
-.splashScene{position:absolute;bottom:18%;width:100%;height:42%;display:flex;align-items:flex-end;justify-content:center;gap:clamp(5px,2vw,24px);perspective:700px;opacity:.9}
-.splashBuilding{position:relative;width:clamp(38px,8vw,100px);height:var(--bh);border:1px solid #5f7890;background:linear-gradient(110deg,#24374b,#172538 70%);box-shadow:inset 5px 0 #ffffff08,0 0 35px #0005;transform:skewY(-3deg);animation:buildingRise 1.3s ease-out both}
-.splashBuilding:before{content:"";position:absolute;inset:12px 8px;background:repeating-linear-gradient(90deg,transparent 0 10px,#f2b84b88 10px 13px),repeating-linear-gradient(0deg,transparent 0 15px,#73dccc66 15px 18px);mask-image:linear-gradient(#000,transparent 95%)}
-.splashRoad{position:absolute;bottom:0;left:0;width:100%;height:19%;background:linear-gradient(#25354a,#111b2a);border-top:2px solid #f2b84b88}
-.splashRoad:after{content:"";position:absolute;top:50%;left:0;width:100%;border-top:2px dashed #f2b84b99}
-.splashHero{position:absolute;bottom:19%;left:50%;width:36px;height:58px;transform:translateX(-50%);animation:heroBob .65s ease-in-out infinite alternate;filter:drop-shadow(0 8px 10px #0009)}
-.splashHero .head{position:absolute;left:10px;top:0;width:17px;height:17px;border-radius:5px;background:#e5b68d;border:2px solid #342a2a}
-.splashHero .hair{position:absolute;left:9px;top:-3px;width:19px;height:8px;border-radius:7px 7px 2px 2px;background:#3a2418}
-.splashHero .body{position:absolute;left:7px;top:17px;width:23px;height:23px;border-radius:5px;background:#2dd4bf;border:2px solid #b5f7ed}
-.splashHero .legs{position:absolute;left:9px;top:39px;width:7px;height:17px;background:#26324a;box-shadow:12px 0 #26324a;animation:heroWalk .3s linear infinite alternate}
-.splashCopy{position:relative;z-index:2;text-align:center;width:min(90vw,580px);padding:24px 20px 28px;border:1px solid #f2b84b55;border-radius:24px;background:linear-gradient(145deg,#0a1224eF,#111d31d9);box-shadow:0 24px 90px #0008, inset 0 1px #ffffff12;backdrop-filter:blur(10px);transform:translateY(-7%)}
-.splashEyebrow{font-size:11px;font-weight:800;letter-spacing:.32em;color:#f2b84b}
-.splashTitle{margin:7px 0 0;font-size:clamp(32px,7vw,58px);letter-spacing:.13em;font-weight:950;line-height:1.1;background:linear-gradient(100deg,#f2b84b,#fff5d8,#2dd4bf);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 35px #f2b84b15}
-.splashSubtitle{margin:10px 0 20px;color:#b9c9dc;font-size:12px;letter-spacing:.18em;text-transform:uppercase}
-.splashLoad{width:min(300px,80%);height:6px;margin:0 auto;border-radius:99px;overflow:hidden;background:#ffffff16;border:1px solid #ffffff1b}
-.splashLoad span{display:block;width:40%;height:100%;border-radius:99px;background:linear-gradient(90deg,#2dd4bf,#f2b84b);box-shadow:0 0 16px #f2b84b88;animation:loadSweep 1.35s ease-in-out infinite}
-.splashStatus{margin:10px 0 0;font-size:11px;color:#91a7bf;letter-spacing:.1em}
-#skipSplash{position:absolute;right:18px;bottom:18px;z-index:5;border:1px solid #ffffff35;background:#101b2dcc;color:#f5efe3;border-radius:999px;padding:9px 15px;font-weight:700;cursor:pointer}
-@keyframes splashPulse{50%{transform:scale(1.12);opacity:.65}}
-@keyframes buildingRise{from{transform:translateY(70px) skewY(-3deg);opacity:0}to{transform:translateY(0) skewY(-3deg);opacity:1}}
-@keyframes heroBob{to{margin-bottom:5px}}
-@keyframes heroWalk{to{transform:translateX(3px)}}
-@keyframes loadSweep{from{transform:translateX(-110%)}to{transform:translateX(260%)}}
-@media(prefers-reduced-motion:reduce){#splashScreen *,#splashScreen *:before,#splashScreen *:after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 
 </style></head><body>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
-<div id="splashScreen" role="status" aria-label="Carregando Sorokiba 2">
- <div class="splashGlow"></div>
- <div class="splashScene" aria-hidden="true">
-  <div class="splashBuilding" style="--bh:48%;animation-delay:.1s"></div>
-  <div class="splashBuilding" style="--bh:78%;animation-delay:.25s"></div>
-  <div class="splashBuilding" style="--bh:61%;animation-delay:.4s"></div>
-  <div class="splashBuilding" style="--bh:95%;animation-delay:.15s"></div>
-  <div class="splashBuilding" style="--bh:67%;animation-delay:.35s"></div>
-  <div class="splashBuilding" style="--bh:43%;animation-delay:.5s"></div>
-  <div class="splashRoad"></div>
-  <div class="splashHero"><span class="head"></span><span class="hair"></span><span class="body"></span><span class="legs"></span></div>
- </div>
- <div class="splashCopy">
-  <div class="splashEyebrow">UM MUNDO ESPERANDO POR VOCÊ</div>
-  <div class="splashTitle">SOROKIBA 2</div>
-  <p class="splashSubtitle">Cidade viva · Explore sua história</p>
-  <div class="splashLoad"><span></span></div>
-  <p class="splashStatus">Preparando a cidade...</p>
- </div>
- <button id="skipSplash" type="button">Pular abertura →</button>
-</div>
 <div id="login">
 <h1>SOROKIBA 2</h1><p class="sub">Mundo aberto · 2.5D</p>
 <div class="tabs"><button id="t1" class="on">Entrar</button><button id="t2">Criar conta</button></div>
@@ -298,16 +249,6 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <div id="fm" hidden><b>Mapa de Sorokiba</b><canvas id="fc"></canvas><small>M ou toque para fechar</small></div>
 <script>
 const $=i=>document.getElementById(i),cv=$('cv'),c=cv.getContext('2d'),pc=$('pv').getContext('2d');
-// Mostra a abertura animada antes da tela de conta; o botão permite entrar imediatamente.
-(function(){
- const splash=document.getElementById('splashScreen');
- if(!splash)return;
- let closed=false;
- const close=()=>{if(closed)return;closed=true;splash.classList.add('leaving');setTimeout(()=>splash.remove(),700)};
- const skip=document.getElementById('skipSplash');
- if(skip)skip.addEventListener('click',close);
- window.setTimeout(close,3800);
-})();
 
 const MW=96,MH=84,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
 let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,stickVector=null,stickPointer=null,cam={x:0,y:0},isSeated=false,seatBench=null,trafficAuthorityId=0,lastTrafficSend=0,ls=0,accidents=[],lastCrashAt=0,mayorTrafficSlowdown=false;
