@@ -879,8 +879,24 @@ function makeInterior(building){
   add('counter',5,1,2,.5,12,'#b29f7f','#dfd0ab','#8d7b5e');for(let row=0;row<3;row++)for(let col=0;col<2;col++)add('bench',2+col*5,2.4+row*1.2,2.1,.45,9,'#76543a','#a57b52','#4d3828');
   z('Altar',6,1.9,'Altar e área principal do salão.');z('Bancos',3.8,6.2,'Área de assentos para os visitantes.');
  }else if(family==='home'){
-  add('counter',8,1,1.9,.8,18,'#765640','#ba9369','#493628');add('bed',2,2.8,2.1,1.5,12,'#826b60','#e0c7b4','#4e4038');add('table',6,4.4,1.3,1,12,'#926d4b','#c7a37a','#5e4530');add('chair',5.5,5.6,.7,.7,10,'#7d6045','#a9855c','#4e3b2c');
-  z('Recepção',8.7,2.2,'Área de entrada e recepção do prédio.');z('Quarto',4.5,4,'Área de descanso e acomodação.');z('Sala',7.8,5.8,'Espaço comum do interior.');
+  // Interior residencial mais completo: sala, cozinha, quarto e circulação comum.
+  add('counter',8.35,1.05,2.1,.82,20,'#765640','#ba9369','#493628');
+  add('table',8.25,2.55,1.15,.82,12,'#8b6546','#c7a37a','#5e4530');
+  add('chair',7.75,2.72,.55,.58,9,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',9.35,2.72,.55,.58,9,'#7d6045','#a9855c','#4e3b2c');
+  add('bed',1.25,2.55,2.15,1.55,13,'#826b60','#e0c7b4','#4e4038');
+  add('table',1.65,4.65,1.05,.72,10,'#926d4b','#c7a37a','#5e4530');
+  add('chair',2.95,4.72,.58,.58,9,'#7d6045','#a9855c','#4e3b2c');
+  add('counter',5.0,1.05,1.8,.72,17,'#765640','#ba9369','#493628');
+  add('chair',5.55,2.15,.62,.62,9,'#7d6045','#a9855c','#4e3b2c');
+  add('table',5.2,4.5,1.55,.92,12,'#926d4b','#c7a37a','#5e4530');
+  add('chair',4.65,4.72,.58,.58,9,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',6.75,4.72,.58,.58,9,'#7d6045','#a9855c','#4e3b2c');
+  z('Recepção',8.7,5.8,'Hall do condomínio com acesso às áreas comuns.');
+  z('Cozinha',8.9,2.0,'Bancada e mesa para preparar e fazer refeições.');
+  z('Quarto',2.35,4.15,'Quarto residencial com cama e mesa lateral.');
+  z('Sala de estar',5.95,5.75,'Sala comum mobiliada para moradores e visitantes.');
+  z('Elevador',10.8,5.95,'Elevador do condomínio: escolha um andar para visitar ou comprar uma unidade.');
  }else if(family==='employment'){
   add('counter',1.3,1.1,2.6,.85,25,'#5a6e79','#d4e0e2','#354853');
   add('desk',5.2,3.1,2.6,.9,20,'#6b6258','#c0a77d','#3c4244');
