@@ -609,6 +609,35 @@ function outerChunk(cx,cy){
    m.fillStyle='#5A4634';m.fillRect(p[0]-3.5,p[1]+.3,7,1);
   }
  }
+ /* Sinalização e cercamento para dar aparência de obra real, somente fora do mapa jogável. */
+ const fx=X0+12.5,fy=Y0+3.5;
+ const fenceOutside=fx+2<0||fx>=MW||fy+2<0||fy>=MH;
+ if(fenceOutside&&fx>=-OUTER_MARGIN&&fy>=-OUTER_MARGIN&&fx+3<MW+OUTER_MARGIN&&fy+3<MH+OUTER_MARGIN){
+  const fence=modPos(cx*5+cy*3,3);
+  if(fence!==1){
+   for(let j=0;j<4;j++){
+    const x=fx+j*0.72;
+    line(x,fy,0,x,fy,2.2,'#665746',1.3);
+    line(x,fy,2.2,x,fy,2.8,'#D2B98B',1.1);
+   }
+   line(fx,fy,2.2,fx+2.16,fy,2.2,'#E5A52F',1.8);
+   line(fx,fy,1.1,fx+2.16,fy,1.1,'#F0E5C9',1.4);
+   for(let j=0;j<5;j++){
+    const x=fx+.12+j*.48;
+    line(x,fy-.02,1.25,x+.22,fy-.02,2.1,'#A56A32',1.1);
+   }
+  }
+  /* Placa de obra em cavalete, com cores contrastantes e iluminação de segurança. */
+  const sign=P(fx+1.1,fy+.7,4);
+  m.fillStyle='#4C4032';m.fillRect(sign[0]-5,sign[1]+1,2,7);m.fillRect(sign[0]+3,sign[1]+1,2,7);
+  m.fillStyle='#F2B84B';m.fillRect(sign[0]-8,sign[1]-5,16,7);
+  m.strokeStyle='#5B4934';m.lineWidth=.8;m.strokeRect(sign[0]-8,sign[1]-5,16,7);
+  m.fillStyle='#26313A';m.font='bold 3.5px system-ui';m.textAlign='center';m.fillText('OBRAS',sign[0],sign[1]);
+  const lamp=P(fx+2.7,fy+1.8,3);
+  m.fillStyle='#4A4D49';m.fillRect(lamp[0]-1,lamp[1]-7,2,8);
+  m.fillStyle='#FFE08A';m.beginPath();m.arc(lamp[0],lamp[1]-8,2.3,0,Math.PI*2);m.fill();
+  m.fillStyle='rgba(255,214,112,.12)';m.beginPath();m.arc(lamp[0],lamp[1]-8,5,0,Math.PI*2);m.fill();
+ }
  return cn;
 }
 /* ---------- MAPA DA CIDADE ---------- */
