@@ -49,6 +49,50 @@ As missões jogáveis atuais são concluídas por interações reais no cliente,
 
 Cada objetivo é salvo no PostgreSQL em `sk2_players.missions` e a atualização é atômica, portanto a recompensa não pode ser repetida. O endpoint autenticado é `POST /api/sk2/mission/complete` e aceita somente o par de missão/evento definido no servidor.
 
+## Etapa 1: central de carreiras
+
+O botão **Carreiras** abre uma central jogável com vagas derivadas dos NPCs e prédios existentes (Hospital, Biblioteca, Oficina, Restaurante e Escola). O currículo é persistido em `sk2_players.resume`, pode ser editado pelo painel e aceita apenas até quatro habilidades conhecidas e a experiência liberada pelo XP do jogador. As candidaturas são persistidas em `sk2_career_applications` com chave única por jogador e vaga.
+
+Endpoints autenticados:
+
+- `GET /api/sk2/careers`: catálogo de vagas, currículo e candidaturas atuais;
+- `PUT /api/sk2/career/resume`: salva resumo, habilidades e experiência validados pelo servidor;
+- `POST /api/sk2/career/apply`: registra uma candidatura somente quando o currículo atende à vaga.
+
+Entrevistas, painel Meu Trabalho, tarefas profissionais e pagamentos recorrentes ainda não fazem parte desta etapa; serão construídos sobre essas candidaturas sem duplicar autenticação ou economia.
+
+## Etapa 2: entrevistas
+
+Cada vaga da central tem três perguntas específicas da profissão. O servidor cria a sessão, controla a ordem e valida cada resposta; o cliente nunca envia ou calcula o gabarito. Os endpoints são:
+
+- `POST /api/sk2/career/interview/start`: inicia ou retoma uma entrevista de candidatura;
+- `POST /api/sk2/career/interview/answer`: valida a resposta da pergunta atual;
+- `POST /api/sk2/career/interview/finish`: calcula e persiste a pontuação e o resultado.
+
+A pontuação é transparente: até 70 pontos por respostas, 20 por habilidades do currículo e 10 por experiência. `75+` aprova e contrata, `55–74` aprova para treinamento e abaixo disso recusa. Resultado, feedback, score, contratação e `cooldown_until` ficam em `sk2_career_applications`; tentativas não aprovadas aguardam 24 horas. Contratações ficam em `sk2_players.employment` e aparecem na central.
+
+## Etapa 3: Meu trabalho
+
+Contratações aprovadas nos cargos de recepção hospitalar, atendimento de restaurante e assistência de biblioteca aparecem no painel **Meu trabalho**. O jogador pode falar com o supervisor, iniciar o turno, receber uma tarefa e concluí-la com uma quantidade validada no servidor:
+
+- Hospital: registrar 2 pacientes;
+- Restaurante: servir 3 pedidos;
+- Biblioteca: catalogar 4 livros.
+
+Endpoints autenticados: `GET /api/sk2/work`, `POST /api/sk2/work/supervisor`, `POST /api/sk2/work/start`, `POST /api/sk2/work/task` e `POST /api/sk2/work/task/complete`. Turnos, tarefas e histórico são persistidos; há no máximo um turno ativo e uma tarefa pendente por conta. Pagamento e XP profissional são calculados pela definição server-side, e a conclusão usa atualização transacional/idempotente para resistir a reenvio após falha de rede.
+
+## Etapa 4: minijogos profissionais
+
+Os mesmos endpoints de trabalho agora suportam tarefas em etapas para três novos fluxos: **Eletricista** (inspeção fictícia, escolha de componente e relatório seguro), **Entregador** (pegar encomenda, confirmar destino e entregar) e **Atendente de fast-food** (montar, conferir restrição e fazer conferência final). As vagas usam os prédios/NPCs já existentes e passam pela entrevista antes da contratação.
+
+As opções exibidas são apenas alternativas seguras; o gabarito e a etapa atual ficam no servidor. `POST /api/sk2/work/task/complete` aceita o índice da opção, valida a etapa, avança a tarefa ou finaliza o pagamento. Cada avanço é persistido e a finalização usa a mesma proteção transacional/idempotente do histórico, sem instruções de elétrica real ou qualquer ação perigosa.
+
+## Etapa 5: progressão profissional
+
+O painel **Meu trabalho** mostra a escada de cargos, salário mensal, XP profissional, tarefas concluídas e desempenho médio. Cada profissão possui três cargos com requisitos transparentes de XP, tarefas e desempenho; tarefas concluídas em cargos superiores recebem recompensa maior.
+
+Treinamentos são desbloqueados por XP profissional e concluídos pelo endpoint `POST /api/sk2/work/training/complete`. Promoções usam `POST /api/sk2/work/promotion/request` e `POST /api/sk2/work/promotion/confirm`: ambos recalculam os requisitos no servidor, e a confirmação atualiza `employment` e registra `sk2_work_promotions` em transação, sem aceitar cargo/salário enviados pelo cliente. Solicitações, treinamentos e promoções têm chaves únicas para evitar duplicação.
+
 ## Testes
 
 ```sh

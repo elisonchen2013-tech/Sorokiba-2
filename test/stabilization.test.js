@@ -53,3 +53,88 @@ test('reusable missions are server-validated and persisted atomically', () => {
   assert.match(client, /building:✚ Hospital/);
   assert.match(client, /spot:Prefeitura:Quadro de avisos/);
 });
+
+test('career center persists validated resumes and unique applications', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /\/api\/sk2\/careers/);
+  assert.match(server, /\/api\/sk2\/career\/resume/);
+  assert.match(server, /\/api\/sk2\/career\/apply/);
+  assert.match(server, /skills\.every/);
+  assert.match(server, /job\.skills\.some/);
+  assert.match(db, /sk2_career_applications/);
+  assert.match(db, /PRIMARY KEY \(username, job_id\)/);
+  assert.match(client, /Central de carreiras/);
+  assert.match(client, /resumeSave/);
+});
+
+test('career interviews hide answers, validate progression and persist outcomes', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /career\/interview\/start/);
+  assert.match(server, /career\/interview\/answer/);
+  assert.match(server, /career\/interview\/finish/);
+  assert.match(server, /questionById/);
+  assert.match(server, /answerPoints/);
+  assert.match(server, /status = score >= 75 \? 'hired'/);
+  assert.match(server, /cooldownUntil/);
+  assert.match(db, /interview_status/);
+  assert.match(db, /finalizeInterview/);
+  assert.match(db, /employment=\$2/);
+  assert.match(client, /interviewPanel/);
+  assert.match(client, /startInterview/);
+  assert.match(client, /interview\/finish/);
+});
+
+test('work panel provides server-validated tasks and idempotent payment history', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /api\/sk2\/work/);
+  assert.match(server, /api\/sk2\/work\/task\/complete/);
+  assert.match(server, /WORK_TASKS/);
+  assert.match(server, /Number\(req\.body\?\.count\)/);
+  assert.match(server, /performance = Math\.min/);
+  assert.match(db, /sk2_work_shifts/);
+  assert.match(db, /sk2_work_history/);
+  assert.match(db, /status='assigned'/);
+  assert.match(db, /duplicate: true/);
+  assert.match(client, /Meu trabalho/);
+  assert.match(client, /completeWorkTask/);
+});
+
+test('professional minigames keep stages and answers server-side', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /electrician:/);
+  assert.match(server, /courier:/);
+  assert.match(server, /fastfood_counter:/);
+  assert.match(server, /definition\.stages/);
+  assert.match(server, /option !== stage\.correct/);
+  assert.match(server, /advanceWorkTask/);
+  assert.match(db, /async function advanceWorkTask/);
+  assert.match(db, /status='assigned'/);
+  assert.match(client, /data\.task\.options/);
+  assert.match(client, /Etapa/);
+});
+
+test('career progression validates requirements and records promotions', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /CAREER_LADDERS/);
+  assert.match(server, /work\/promotion\/request/);
+  assert.match(server, /work\/promotion\/confirm/);
+  assert.match(server, /work\/training\/complete/);
+  assert.match(server, /professionalXp/);
+  assert.match(server, /avgPerformance/);
+  assert.match(db, /sk2_work_promotions/);
+  assert.match(db, /sk2_work_training/);
+  assert.match(db, /confirmPromotion/);
+  assert.match(client, /workPromotionRequest/);
+  assert.match(client, /workProgress/);
+  assert.match(client, /Treinamento/);
+});
