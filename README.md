@@ -69,7 +69,7 @@ Cada vaga da central tem três perguntas específicas da profissão. O servidor 
 - `POST /api/sk2/career/interview/answer`: valida a resposta da pergunta atual;
 - `POST /api/sk2/career/interview/finish`: calcula e persiste a pontuação e o resultado.
 
-A pontuação é transparente: até 70 pontos por respostas, 20 por habilidades do currículo e 10 por experiência. `75+` aprova e contrata, `55–74` aprova para treinamento e abaixo disso recusa. Resultado, feedback, score, contratação e `cooldown_until` ficam em `sk2_career_applications`; tentativas não aprovadas aguardam 24 horas. Contratações ficam em `sk2_players.employment` e aparecem na central.
+A pontuação é transparente: até 70 pontos por respostas, 20 por habilidades do currículo e 10 por experiência. `75+` aprova e contrata, `53–74` aprova para treinamento e abaixo disso recusa. Resultado, feedback, score, contratação e `cooldown_until` ficam em `sk2_career_applications`; tentativas não aprovadas aguardam 24 horas. Contratações ficam em `sk2_players.employment` e aparecem na central.
 
 ## Etapa 3: Meu trabalho
 

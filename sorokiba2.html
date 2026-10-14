@@ -150,7 +150,7 @@ dome:(c,t,x,y,w,h,z,cx,cy)=>{const q=P(cx,cy,z);c.fillStyle='#2f8f83';c.beginPat
 c.strokeStyle='#ddd';c.lineWidth=1.5;c.beginPath();c.moveTo(q[0],q[1]-32);c.lineTo(q[0],q[1]-56);c.stroke();c.fillStyle='#F2B84B';c.beginPath();c.moveTo(q[0],q[1]-56);c.lineTo(q[0]+15,q[1]-52+Math.sin(t*4)*2);c.lineTo(q[0],q[1]-47);c.fill()},
 pyr:(c,t,x,y,w,h,z,cx,cy)=>{const a=P(cx,cy,z+(w+h)*14),Lf=[P(x,y+h,z),P(x+w,y+h,z),a],Rr=[P(x+w,y+h,z),P(x+w,y,z),a];poly(c,Lf,'#8b3a2f');poly(c,Rr,'#8b3a2f');poly(c,Rr,'rgba(0,0,0,.3)')},
 chim:(c,t,x,y,w,h,z,cx,cy)=>{box(c,cx-.25,cy-.25,.5,.5,z,z+42,'#7a5a4a','#4a3a30');for(let i=0;i<4;i++){const u=(t*.4+i*.25)%1,q=P(cx,cy,z+42+u*54);c.fillStyle='rgba(215,220,228,'+(.55*(1-u))+')';c.beginPath();c.arc(q[0]+u*16+Math.sin(t*2+i)*3,q[1],4+u*9,0,7);c.fill()}}};
-for(let i=0;i<Math.round(MW*MH*.085);i++){const x=R()*MW|0,y=R()*MH|0;let ok=g[y][x]==0;for(let j=-1;j<2;j++)for(let k=-1;k<2;k++)if((g[y+j]||[])[x+k]==3)ok=false;if(ok){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}}
+for(let i=0;i<Math.round(MW*MH*.10);i++){const x=R()*MW|0,y=R()*MH|0;let ok=g[y][x]==0;for(let j=-1;j<2;j++)for(let k=-1;k<2;k++)if((g[y+j]||[])[x+k]==3)ok=false;if(ok){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}}
 const LP=[];IY.forEach(j=>[j-2.5,j+5.5].forEach(y=>{for(let x=2.5;x<MW;x+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));IX.forEach(i=>[i-1.5,i+4.5].forEach(x=>{for(let y=2.5;y<MH;y+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));
 LP.forEach(([x,y])=>{const p=P(x,y,20);S.push({k:x+y,sx:p[0],sy:p[1],r:40,t:3,x,y})});
 
@@ -759,11 +759,11 @@ function act(){
  if(interior){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
-   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers();tone(640,.09,'sine',.06);return}
+   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
   }
   if(near?.t==='interiorSpot'){
-   if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers();tone(620,.09,'sine',.06);return}
+   if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
    open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
   }
   return;
@@ -1040,9 +1040,20 @@ async function completeWorkTask(taskId,option){
 }
 $('workBtn').onclick=loadWork;
 $('workClose').onclick=()=>{$('workPanel').hidden=true};
-async function loadCareers(){
+async function loadCareers(context){
  $('careerPanel').hidden=false;$('careerMsg').textContent='Carregando vagas...';
- try{const r=await fetch(API+'/careers');const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Erro');renderCareers(j);$('careerMsg').textContent='Currículo e vagas carregados.'}
+ try{const r=await fetch(API+'/careers');const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Erro');renderCareers(j);
+  const guidance={
+   'Recrutador':'Daniel, do recrutamento, pode revisar seu currículo. Escolha uma vaga compatível e envie a candidatura para iniciar a entrevista.',
+   'Orientadora profissional':'Renata pode orientar você sobre XP, habilidades e treinamentos necessários para alcançar cada carreira.',
+   'Recepcionista':'Marta pode explicar como funcionam as vagas. Consulte os requisitos antes de enviar o currículo.',
+   'Painel de vagas':'Escolha uma vaga para ver os requisitos de XP, habilidades e o processo de seleção.',
+   'Mesa de recrutamento':'Confira seu currículo e selecione uma vaga. Após se candidatar, você poderá iniciar a entrevista profissional.',
+   'Balcão de recepção':'Veja as vagas disponíveis e prepare seu currículo antes de conversar com o recrutador.',
+   'Sala de entrevistas':'Selecione uma candidatura disponível e inicie a entrevista para responder às perguntas da profissão.'
+  };
+  $('careerMsg').textContent=guidance[context]||'Currículo e vagas carregados.'
+ }
  catch(e){$('careerMsg').textContent=e.message||'Não foi possível carregar a central.'}
 }
 $('careerBtn').onclick=loadCareers;

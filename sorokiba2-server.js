@@ -337,7 +337,7 @@ async function attachSorokiba2(app, server, opt = {}) {
       const skillPoints = job.skills.every(skill => (row.resume?.skills || []).includes(skill)) ? 20 : 0;
       const experiencePoints = row.resume?.experience >= job.minExperience ? 10 : 0;
       const score = answerPoints + skillPoints + experiencePoints;
-      const status = score >= 75 ? 'hired' : score >= 55 ? 'training' : 'rejected';
+      const status = score >= 75 ? 'hired' : score >= 53 ? 'training' : 'rejected';
       const feedback = `Pontuação: ${score}/100 (respostas ${answerPoints}/70, currículo ${skillPoints}/20, experiência ${experiencePoints}/10). ${
         status === 'hired' ? 'Aprovado e contratado.' : status === 'training' ? 'Aprovado para treinamento antes da contratação.' : 'Não aprovado; revise o currículo e tente novamente após o cooldown.'
       }`;

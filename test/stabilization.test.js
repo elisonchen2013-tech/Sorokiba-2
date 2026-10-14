@@ -178,3 +178,9 @@ test('every listed career has interview questions, work tasks and career progres
     assert.match(questions, new RegExp('^  ' + job + ':', 'm'), job + ' has interview questions');
   }
 });
+
+
+test('an interview score of 53 can enter the training outcome', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /const status = score >= 75 \? 'hired' : score >= 53 \? 'training' : 'rejected'/);
+});
