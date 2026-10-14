@@ -1684,12 +1684,12 @@ function renderWork(data){
   rewardBox.hidden=true;rewardBox.replaceChildren();
   if(data.task?.type==='delivery_route'){
    missionBadge.textContent='Entrega ativa';
-   const done=Number(e.deliveryProgress||0),goal=3;
+   const delivered=Number(data.task.stage)===1?0:0,goal=1;
    missionProgress.replaceChildren();
-   const label=document.createElement('p');label.textContent=`Entregas concluídas: ${done}/${goal}`;missionProgress.append(label);
-   const bar=document.createElement('div');bar.className='workDeliveryProgressTrack';bar.setAttribute('role','progressbar');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(goal));bar.setAttribute('aria-valuenow',String(Math.min(goal,done)));
-   const fill=document.createElement('div');fill.className='workDeliveryProgressFill';fill.style.width=`${Math.min(100,done/goal*100)}%`;bar.append(fill);missionProgress.append(bar);
-   const quantity=document.createElement('p');quantity.className='workDeliveryQuantity';quantity.textContent=`Entregue 1 encomenda para ${data.task.targetBuilding||'o destino indicado'}.`;missionProgress.append(quantity);
+   const label=document.createElement('p');label.textContent='Progresso da missão: 0/1 encomenda';missionProgress.append(label);
+   const bar=document.createElement('div');bar.className='workDeliveryProgressTrack';bar.setAttribute('role','progressbar');bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax',String(goal));bar.setAttribute('aria-valuenow',String(delivered));
+   const fill=document.createElement('div');fill.className='workDeliveryProgressFill';fill.style.width=`${delivered/goal*100}%`;bar.append(fill);missionProgress.append(bar);
+   const quantity=document.createElement('p');quantity.className='workDeliveryQuantity';quantity.textContent=`Quantidade: 1 encomenda para ${data.task.targetBuilding||'o destino indicado'}.`;missionProgress.append(quantity);
   }else if(data.task){
    missionBadge.textContent='Missão ativa';missionProgress.textContent=data.task.prompt||'Conclua o objetivo atual.';
   }else if(data.shift){
@@ -1743,8 +1743,9 @@ async function completeWorkTask(taskId,option){
    claim.onclick=async()=>{const next=await workAction('/work/task',null,j=>'Nova missão iniciada.');if(next?.task){$('workMsg').textContent='Nova missão pronta!';loadWork()}else loadWork()};
    rewardBox.append(claim);
   }
-  $('workMsg').textContent='Entrega concluída! Sua recompensa e seu XP foram recebidos.';
-  loadWork();
+  $('workMsg').textContent='Entrega concluída! Sua recompensa e seu XP foram recebidos. Resgate abaixo para iniciar outra missão.';
+  if(result.player){user=result.player;$('hm').textContent=user.money}
+  if(workState){workState.task=null;workState.shift=workState.shift||{};workState.shift.task_id=null;workState.player=result.player||workState.player}
  }else if(result)loadWork();
 }
 $('workBtn').onclick=loadWork;
