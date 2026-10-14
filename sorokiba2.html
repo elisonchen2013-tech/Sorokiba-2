@@ -448,8 +448,12 @@ function chunk(cx,cy){const X0=cx*CH,Y0=cy*CH,X1=Math.min(MW,X0+CH),Y1=Math.min(
 const sg=(x1,y1,x2,y2)=>{const a=P(x1,y1),b=P(x2,y2);m.beginPath();m.moveTo(a[0],a[1]);m.lineTo(b[0],b[1]);m.stroke()};
 for(let y=Y0;y<Y1;y++)for(let x=X0;x<X1;x++){const v=g[y][x];
 if(x==MW-1)poly(m,[P(MW,y),P(MW,y+1),P(MW,y+1,-30),P(MW,y,-30)],'#3a281d');if(y==MH-1)poly(m,[P(x,MH),P(x+1,MH),P(x+1,MH,-30),P(x,MH,-30)],'#4a3326');
-const constructionTile=x<20&&y<5;
+const constructionTile=(x<20&&y<5)||isEdgeWork(x,y);
 poly(m,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],constructionTile?((x+y)%3?'#8A7155':'#A58A68'):v==1?'#2b2f3a':v==2?((x+y)%2?'#9aa1ad':'#8e95a1'):v==3?'#3a3f4c':v==4?'#1f6b3a':v==5?'#387846':v==6?((x+y)%2?'#c6bda7':'#b9ae98'):v==7?'#267b9b':(x*7+y*13)%5?'#2f5d3a':'#2b5636');
+if(constructionTile){
+ m.strokeStyle='rgba(66,45,28,.45)';m.lineWidth=1;sg(x+.08,y+.18,x+.92,y+.82);
+ if((x+y)%2===0){const q=P(x+.5,y+.5,5);m.fillStyle='#e7b84f';m.fillRect(q[0]-3,q[1]-2,6,4);m.fillStyle='#493b2d';m.fillRect(q[0]-2,q[1]-1,4,2)}
+}
 const h2=(x*73+y*151)%97;
 if(v==2){m.strokeStyle='rgba(0,0,0,.14)';m.lineWidth=1;sg(x,y,x+1,y);sg(x+1,y,x+1,y+1);sg(x+1,y+1,x,y+1);sg(x,y+1,x,y);m.strokeStyle='#d5dae2';m.lineWidth=2;
 if((g[y+1]||[])[x]==1)sg(x,y+1,x+1,y+1);if(g[y][x+1]==1)sg(x+1,y,x+1,y+1);if((g[y-1]||[])[x]==1)sg(x,y,x+1,y);if(g[y][x-1]==1)sg(x,y,x,y+1)}
@@ -779,7 +783,8 @@ IY.forEach(j=>[[j+.5,1,1.45],[j+2.5,-1,1.25]].forEach(([y,d,v])=>{for(let k=0;k<
 IX.forEach(i=>[[i+.5,1,1.35],[i+2.5,-1,1.5]].forEach(([x,d,v])=>{for(let k=0;k<2;k++)cars.push({x,y:d>0?-2+k*MH/2+R()*4:MH+2-k*MH/2-R()*4,dx:0,dy:d,col:CC[ci%9],v,s:v,br:0,d:0,m:ci++%4})}));
 }
 spawn();
-const inConstructionZone=(x,y)=>x>=0&&x<20&&y>=0&&y<5.5;
+const isEdgeWork=(x,y)=>{if(x<0||y<0||x>=MW||y>=MH)return false;const edge=x<2||x>=MW-2||y<2||y>=MH-2;if(!edge||g[y][x]!==0)return false;return !B.some(b=>b.p.some(([bx,by,bw,bh])=>x>=bx-.5&&x<bx+bw+.5&&y>=by-.5&&y<by+bh+.5))};
+const inConstructionZone=(x,y)=>(x>=0&&x<20&&y>=0&&y<5.5)||isEdgeWork(x|0,y|0);
 const bl=(x,y)=>{if(x<0||y<0)return 1;const a=g[y|0];if(!a)return 1;const v=a[x|0];const kiosk=x>ICE_CREAM_STAND.x-.15&&x<ICE_CREAM_STAND.x+ICE_CREAM_STAND.w+.12&&y>ICE_CREAM_STAND.y-.12&&y<ICE_CREAM_STAND.y+ICE_CREAM_STAND.d-.06;return v===undefined||v==3||v==4||v==7||kiosk||inConstructionZone(x,y)};
 const hit=(x,y)=>bl(x-.2,y-.2)||bl(x+.2,y-.2)||bl(x-.2,y+.2)||bl(x+.2,y+.2);
 const vehicleHit=(x,y)=>cars.some(a=>{const [len,width]=CM[a.m],hx=(a.dx?len:width)/2+.22,hy=(a.dx?width:len)/2+.22;return Math.abs(x-a.x)<hx&&Math.abs(y-a.y)<hy});
@@ -1512,7 +1517,11 @@ const tf=()=>c.setTransform(Zc,0,0,Zc,Math.round(W/2-cam.x*Zc),Math.round(H/2-ca
 const hw=W/2/Zc+60,hv=H/2/Zc+60;c.imageSmoothingEnabled=false;CL.forEach(([cx,cy])=>{const X0=cx*CH,Y0=cy*CH,X1=Math.min(MW,X0+CH),Y1=Math.min(MH,Y0+CH),l=(X0-Y1)*32-2,tp0=(X0+Y0)*16-2,w=(X1-X0+Y1-Y0)*32+4,hh=(X1-X0+Y1-Y0)*16+40;if(l+w<cam.x-hw||l>cam.x+hw||tp0+hh<cam.y-hv||tp0>cam.y+hv)return;c.drawImage(CK[cx+','+cy]||(CK[cx+','+cy]=chunk(cx,cy)),l,tp0)});
 if(sun&&D<1){c.fillStyle='rgba(0,0,0,'+.3*(1-D)*(1-rn*.6)+')';B.forEach(b=>b.p.forEach(([x,y,w,h,z])=>{const dx=(u-.5)*2*z*.8,dy=z*.12,q=[P(x,y),P(x+w,y),P(x+w,y+h),P(x,y+h)],hl=hull(q.concat(q.map(p=>[p[0]+dx,p[1]+dy])));c.beginPath();hl.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.fill()}))}
 const V=S.filter(i=>Math.abs(i.sx-cam.x)<hw+i.r&&Math.abs(i.sy-cam.y)<hv+i.r);
-const constructionWorkers=[{x:5.5,y:2.6,sh:'#f2a900',sk:'#b87950',hr:'#30251f',o:{pn:'#38485c',st:0},face:0},{x:14.8,y:3.1,sh:'#e6a23c',sk:'#e0b18a',hr:'#493323',o:{pn:'#f0f0e8',st:1},face:2},{x:17.2,y:1.5,sh:'#f2a900',sk:'#8d5a3d',hr:'#30251f',o:{pn:'#2f655e',st:0},face:0}];
+const constructionWorkers=[{x:5.5,y:2.6,sh:'#f2a900',sk:'#b87950',hr:'#30251f',o:{pn:'#38485c',st:0},face:0},{x:14.8,y:3.1,sh:'#e6a23c',sk:'#e0b18a',hr:'#493323',o:{pn:'#f0f0e8',st:1},face:2},{x:17.2,y:1.5,sh:'#f2a900',sk:'#8d5a3d',hr:'#30251f',o:{pn:'#2f655e',st:0},face:0},
+{x:2.7,y:22.5,sh:'#f2a900',sk:'#b87950',hr:'#30251f',o:{pn:'#38485c',st:0},face:1},
+{x:93.2,y:39.5,sh:'#e6a23c',sk:'#e0b18a',hr:'#493323',o:{pn:'#f0f0e8',st:1},face:3},
+{x:24.5,y:81.5,sh:'#f2a900',sk:'#8d5a3d',hr:'#30251f',o:{pn:'#2f655e',st:0},face:2},
+{x:72.5,y:81.2,sh:'#e6a23c',sk:'#b87950',hr:'#30251f',o:{pn:'#38485c',st:0},face:0}];
 constructionWorkers.forEach(w=>V.push({k:w.x+w.y,f:()=>{
  const p=P(w.x,w.y);person(c,p[0],p[1],w.face,0,w.sh,w.sk,w.hr,w.o);
  c.save();c.fillStyle='#F9C846';c.strokeStyle='#7a5722';c.lineWidth=1;
