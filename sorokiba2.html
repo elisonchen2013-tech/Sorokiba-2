@@ -1053,6 +1053,8 @@ function activateAccident(data){
  const inc={...data,id,startedAt:Number(data.startedAt),x:Number(data.x),y:Number(data.y),axis:Number(data.axis)===1?1:0};
  if(!Number.isInteger(Number(inc.victimId)))inc.victimId=-1;
  inc.expiresAt=Number(inc.expiresAt)||inc.startedAt+65000;
+ const victim=npcs.find(n=>n.id===inc.victimId&&!n.k);
+ if(victim){victim.x=inc.x+(inc.axis===0 ? 0.72 : -0.72);victim.y=inc.y+(inc.axis===0 ? -0.28 : 0.72);victim.tx=Math.floor(victim.x);victim.ty=Math.floor(victim.y);victim.path=[];victim.wait=0;victim.arrived=true;victim.state='injured';victim.injuredUntil=inc.startedAt+20000;victim.inAmbulance=false;victim.evacuateUntil=0}
  inc.hospitalRoute=findRoadPath(inc.x,inc.y,20.5,16.5)||[{x:20.5,y:16.5}];
  inc.hospitalTravelSeconds=Math.max(7,(inc.hospitalRoute.length-1)/3.2);
  accidents.push(inc);if(accidents.length>10)accidents=accidents.slice(-10);
@@ -1062,7 +1064,7 @@ function registerTrafficCollision(a,b,ia,ib){
  const now=Date.now();if(now-lastCrashAt<6500||a.crashedUntil||b.crashedUntil)return;
  const ax=a.x,ay=a.y,bx=b.x,by=b.y,vx=(ax+bx)/2,vy=(ay+by)/2;
  const nearest=npcs.filter(n=>!n.k&&!n.inAmbulance).sort((n1,n2)=>Math.hypot(n1.x-vx,n1.y-vy)-Math.hypot(n2.x-vx,n2.y-vy))[0];
- const victimId=nearest&&Math.hypot(nearest.x-vx,nearest.y-vy)<14?nearest.id:-1;
+ const victimId=nearest&&Math.hypot(nearest.x-vx,nearest.y-vy)<4.5?nearest.id:-1;
  const event={t:'x',a:ia,b:ib,ax:Math.round(ax*100),ay:Math.round(ay*100),bx:Math.round(bx*100),by:Math.round(by*100),axis:a.dx?0:1,victim:victimId};
  a.s=b.s=0;a.br=b.br=true;a.crashedUntil=b.crashedUntil=now+24000;a.crashPending=b.crashPending=true;lastCrashAt=now;
  if(ON&&ws&&ws.readyState===1&&myId===trafficAuthorityId)ws.send(JSON.stringify(event));
@@ -1113,7 +1115,7 @@ function drawWaterStream(c,inc,pose,t){
 function updateAccidentScenes(now){
  accidents=accidents.filter(inc=>now<inc.expiresAt);
  for(const inc of accidents){const e=(now-inc.startedAt)/1000,victim=npcs.find(n=>n.id===inc.victimId&&!n.k);if(victim){
-  if(e>=20&&e<26+inc.hospitalTravelSeconds){victim.inAmbulance=true;victim.evacuateUntil=0;victim.path=[];victim.f=0}
+  if(e>=20&&e<26+inc.hospitalTravelSeconds){victim.inAmbulance=true;victim.injuredUntil=0;victim.evacuateUntil=0;victim.path=[];victim.f=0}
   else if(e>=26+inc.hospitalTravelSeconds&&!inc.patientDelivered){inc.patientDelivered=true;victim.inAmbulance=false;victim.x=20.6;victim.y=17.1;victim.tx=20;victim.ty=17;victim.path=[];victim.wait=0;victim.arrived=true;victim.state='recovering';victim.recoveringUntil=now+12000;victim.evacuateUntil=0;if(victim.normalSp)victim.sp=victim.normalSp}
  }}
 }
@@ -1124,7 +1126,7 @@ function applyTrafficSnapshot(snapshot,hard=false){
  snapshot.forEach((row,i)=>{if(!Array.isArray(row)||row.length<4)return;const x=Number(row[0])/100,y=Number(row[1])/100,s=Number(row[2])/100,br=Number(row[3])===1;if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(s)||x< -4||x>MW+4||y< -4||y>MH+4||s<0||s>3)return;const a=cars[i];if(hard){a.x=x;a.y=y;a.s=s;a.br=br;a.netTarget=null}else a.netTarget={x,y,s,br}});
 }
 function smoothTraffic(dt){cars.forEach(a=>{const q=a.netTarget;if(!q)return;const alpha=Math.min(1,dt*12);if(Math.abs(q.x-a.x)>MW/2)a.x=q.x;else a.x+=(q.x-a.x)*alpha;if(Math.abs(q.y-a.y)>MH/2)a.y=q.y;else a.y+=(q.y-a.y)*alpha;a.s+=(q.s-a.s)*Math.min(1,dt*8);a.br=q.br;a.playerBlocking=false;a.hornFlash=Math.max(0,(a.hornFlash||0)-dt)})}
-function updateTraffic(dt,gm,h){const LG=tl(performance.now()),now=Date.now();
+function updateTraffic(dt,gm,h){const LG=tl(Date.now()),now=Date.now();
 cars.forEach((a,carIndex)=>{
  if(a.crashedUntil&&now>=a.crashedUntil){a.crashedUntil=0;a.crashPending=false;a.accidentId=null;a.s=a.v;a.br=0;if(a.dx>0)a.x=-3;else if(a.dx<0)a.x=MW+3;else if(a.dy>0)a.y=-3;else a.y=MH+3}
  if(a.crashedUntil&&now<a.crashedUntil){a.s=0;a.br=true;return}const st=a.dx?LG.ew:LG.ns,hl=CM[a.m][0]/2;let ds=99,de=a.v;(a.dx?IX:IY).forEach(i=>{const d=a.dx==1?i-1.1-(a.x+hl):a.dx==-1?(a.x-hl)-(i+4.1):a.dy==1?i-1.1-(a.y+hl):(a.y-hl)-(i+4.1);if(d>-.1&&d<ds)ds=d});
@@ -1168,6 +1170,7 @@ npcs.forEach(n=>{
  if(n.k)return;
  const nowNpc=Date.now();
  if(n.inAmbulance){n.f=0;return}
+ if(n.injuredUntil&&nowNpc<n.injuredUntil){n.f=0;return}
  if(n.recoveringUntil&&nowNpc<n.recoveringUntil){n.f=0;return}
  if(n.recoveringUntil&&nowNpc>=n.recoveringUntil){n.recoveringUntil=0;n.state='resting';n.wait=.7;n.path=[];n.arrived=false}
  if(n.evacuateUntil&&nowNpc<n.evacuateUntil){
@@ -1245,7 +1248,7 @@ npcs.forEach(n=>{if(n.inAmbulance)return;const p=P(n.x,n.y);V.push({k:n.x+n.y,f:
 cars.forEach(a=>V.push({k:a.x+a.y,f:()=>carD(c,a)}));
 accidents.forEach(inc=>{const elapsed=incidentElapsed(inc);if(elapsed<22)V.push({k:inc.x+inc.y+.02,f:()=>drawAccidentFire(c,inc,t,elapsed)});const police=emergencyPose(inc,'police',elapsed),ambulance=emergencyPose(inc,'ambulance',elapsed),fire=emergencyPose(inc,'fire',elapsed);[police,ambulance,fire].filter(Boolean).forEach(v=>V.push({k:v.x+v.y,f:()=>drawEmergencyVehicle(c,v,t)}));if(elapsed>=7&&elapsed<20&&fire)V.push({k:inc.x+inc.y+.03,f:()=>drawWaterStream(c,inc,fire,t)})});
 RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));
-const L2=tl(performance.now());TP.forEach(p=>V.push({k:p[0]+p[1],f:()=>tlD(c,p,L2)}));
+const L2=tl(Date.now());TP.forEach(p=>V.push({k:p[0]+p[1],f:()=>tlD(c,p,L2)}));
 if(gm)V.push({k:px+py,f:()=>{const p=P(px,py);myO.seated=!!isSeated;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});
 V.sort((a,b)=>a.k-b.k).forEach(it=>{if(it.f)return it.f();
 if(it.t==1){const b=it.b,tx=it.tx,ty=it.ty,z=it.z;

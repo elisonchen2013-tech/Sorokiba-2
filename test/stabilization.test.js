@@ -310,3 +310,17 @@ test('shared traffic collisions trigger evacuation, firefighters and ambulance t
   assert.match(server, /activeAccidents\.push\(incident\)/);
   assert.match(server, /incidents: liveAccidents\(\)/);
 });
+
+
+test('traffic lights use a shared wall-clock phase across browsers', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(client.includes('tl(Date.now())'));
+  assert.ok(!client.includes('tl(performance.now())'));
+});
+
+test('the selected accident victim remains at the scene until ambulance pickup', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /Math\.hypot\(nearest\.x-vx,nearest\.y-vy\)<4\.5/);
+  assert.match(client, /victim\.state='injured';victim\.injuredUntil=inc\.startedAt\+20000/);
+  assert.match(client, /if\(n\.injuredUntil&&nowNpc<n\.injuredUntil\)/);
+});
