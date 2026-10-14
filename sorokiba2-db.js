@@ -126,8 +126,30 @@ async function init() {
   );
   CREATE TABLE IF NOT EXISTS sk2_units (
     id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
-    layout JSONB, open BOOLEAN NOT NULL DEFAULT false, bought_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    layout JSONB, layout_version INT NOT NULL DEFAULT 2,
+    open BOOLEAN NOT NULL DEFAULT false, bought_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );`);
+  await q('ALTER TABLE sk2_units ADD COLUMN IF NOT EXISTS layout_version INT NOT NULL DEFAULT 1');
+  const legacyLayouts = await q('SELECT id, layout FROM sk2_units WHERE layout_version=1 AND layout IS NOT NULL');
+  for (const row of legacyLayouts.rows) {
+    const next = [];
+    for (const item of Array.isArray(row.layout) ? row.layout : []) {
+      if (!Array.isArray(item) || item.length < 4) continue;
+      const [type,x,y,rotation] = item.map(Number);
+      if (![type,x,y,rotation].every(Number.isInteger) || type < 0 || type > 12 || ![0,1].includes(rotation)) continue;
+      let candidate=[type,x,y,rotation];
+      if (!cleanUnitLayout(row.id,[...next,candidate])) {
+        candidate=null;
+        const [cols,rows]=UNIT_SIZE[row.id.slice(-1)]||[0,0];
+        for (let yy=0; yy<rows && !candidate; yy++) for (let xx=0; xx<cols && !candidate; xx++) for (const turn of [rotation,rotation^1]) {
+          const attempt=[type,xx,yy,turn];
+          if (cleanUnitLayout(row.id,[...next,attempt])) candidate=attempt;
+        }
+      }
+      if (candidate) next.push(candidate);
+    }
+    await q('UPDATE sk2_units SET layout=$2, layout_version=2 WHERE id=$1',[row.id,JSON.stringify(next)]);
+  }
 }
 async function health() {
   await q('SELECT 1');
@@ -186,18 +208,46 @@ async function savePositions(list) {
 
 // Condomínio: 15 andares, 4 unidades por andar (A–D).
 const UNIT_AREA = { A: 40, B: 54, C: 77, D: 104 };
-const FURNITURE_PRICES = [900, 1400, 500, 120, 800, 350, 1200, 700, 80, 250, 150, 600, 650];
+const UNIT_SIZE = { A: [8, 5], B: [9, 6], C: [11, 7], D: [13, 8] };
+const UNIT_WALLS = {
+  A: [],
+  B: [['v',5,0,1],['v',5,3,4],['v',5,5,6],['h',4,5,9]],
+  C: [['v',6,0,1],['v',6,3,4],['v',6,6,7],['h',3,6,11],['h',5,0,1],['h',5,2,3],['v',3,5,7]],
+  D: [['v',7,0,1],['v',7,2,4],['v',7,5,6],['v',7,7,8],['h',3,7,13],['h',5,7,13],['h',6,0,1],['h',6,2,3],['v',3,6,8]]
+};
+// IDs 0–12 retain the first release's persisted furniture meaning. New ZIP catalog
+// items use IDs 13–17 so saved layouts are not reinterpreted after the update.
+const FURNITURE_PRICES = [900,1400,500,120,800,350,1200,700,80,250,150,600,650,350,700,250,150,650];
+const FURNITURE_SIZE = [[2,2],[2,1],[2,1],[1,1],[2,1],[1,1],[1,1],[1,1],[1,1],[2,2],[1,1],[2,1],[2,1],[1,1],[2,1],[2,2],[1,1],[2,1]];
 const unitOk = id => typeof id === 'string' && /^(1[0-5]|[1-9])[A-D]$/.test(id);
 const unitPrice = id => UNIT_AREA[id.slice(-1)] * (300 + 40 * parseInt(id, 10));
-function cleanUnitLayout(items) {
+function cleanUnitLayout(id, items) {
+  if (Array.isArray(id)) { items = id; id = null; }
   if (!Array.isArray(items) || items.length > 80) return null;
+  const size = id && UNIT_SIZE[id.slice(-1)];
   const out = [];
+  const occupied = new Set();
   for (const item of items) {
     if (!Array.isArray(item) || item.length < 4) return null;
     const [type, x, y, rotation] = item.map(Number);
-    if (![type, x, y, rotation].every(Number.isInteger) || type < 0 || type >= FURNITURE_PRICES.length || x < 0 || x > 15 || y < 0 || y > 15 || ![0, 1].includes(rotation)) return null;
+    if (![type, x, y, rotation].every(Number.isInteger) || type < 0 || type >= FURNITURE_PRICES.length || x < 0 || y < 0 || ![0, 1].includes(rotation)) return null;
+    const [baseW,baseH] = FURNITURE_SIZE[type], w = rotation ? baseH : baseW, h = rotation ? baseW : baseH;
+    if (size && (x + w > size[0] || y + h > size[1])) return null;
+    if (type !== 15) for (let yy=y; yy<y+h; yy++) for (let xx=x; xx<x+w; xx++) {
+      const cell = `${xx},${yy}`;
+      if (occupied.has(cell)) return null;
+      occupied.add(cell);
+    }
     out.push([type, x, y, rotation]);
   }
+  if (size && out.some(([type,x,y,rot]) => {
+    const [bw,bh] = FURNITURE_SIZE[type], w=rot?bh:bw, h=rot?bw:bh;
+    return (y<=({A:2,B:3,C:3,D:3}[id.slice(-1)]) && y+h>({A:2,B:3,C:3,D:3}[id.slice(-1)]) && x<2);
+  })) return null;
+  if (size && UNIT_WALLS[id.slice(-1)].some(([axis,pos,from,to]) => out.some(([type,x,y,rot]) => {
+    const [bw,bh] = FURNITURE_SIZE[type], w=rot?bh:bw, h=rot?bw:bh;
+    return axis==='v' ? x<pos && x+w>pos && y<to && y+h>from : y<pos && y+h>pos && x<to && x+w>from;
+  }))) return null;
   return out;
 }
 function unitLayoutCost(old, next) {
@@ -243,7 +293,7 @@ const saveUnitLayout = (username, id, items) => withTx(async client => {
   const cost = unitLayoutCost(old, items);
   const player = await client.query('SELECT money FROM sk2_players WHERE username=$1 FOR UPDATE', [username]);
   if (!player.rowCount || player.rows[0].money < cost) return { err: 'Saldo insuficiente para essa decoração' };
-  await client.query('UPDATE sk2_units SET layout=$2 WHERE id=$1', [id, JSON.stringify(items)]);
+  await client.query('UPDATE sk2_units SET layout=$2, layout_version=2 WHERE id=$1', [id, JSON.stringify(items)]);
   const updated = await client.query('UPDATE sk2_players SET money=money-$1 WHERE username=$2 RETURNING money', [cost, username]);
   return { money: updated.rows[0].money, cost };
 });

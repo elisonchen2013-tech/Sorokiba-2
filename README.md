@@ -103,7 +103,7 @@ As carreiras de **Mecânico** e **Assistente escolar** também passaram a ter ta
 
 ## Sorokiba Tower
 
-A corretora Marta e os elevadores abrem o painel imobiliário durante a exploração do térreo. O painel mostra as 60 unidades em 15 andares, tamanhos, proprietários e preço de tabela; as propostas de compra são negociadas e validadas no servidor. Compras e decoração usam o saldo existente do jogador. Proprietários podem salvar até 80 móveis, liberar ou fechar visitas e ver a planta decorada; somente unidades abertas exibem a planta para visitantes. A cena 2.5D do térreo continua integrada, com mapa dos ambientes comuns e uma planta distinta para cada andar.
+A corretora Marta e os elevadores abrem o painel imobiliário durante a exploração do térreo. O painel mostra as 60 unidades em 15 andares, seus layouts A–D, tamanhos, proprietários e preço de tabela; as propostas de compra são negociadas e validadas no servidor. As plantas internas seguem os quatro modelos do ZIP, com cozinha, sala, quartos e banheiro conforme a unidade. Proprietários recebem uma decoração inicial gratuita, podem posicionar, girar e remover móveis na planta isométrica e liberar ou fechar visitas; somente unidades abertas exibem a planta decorada aos visitantes. A cena 2.5D do térreo continua integrada, com seus ambientes comuns e elevadores.
 
 Rotas autenticadas: `GET /api/sk2/condo`, `GET /api/sk2/condo/unit/:id`, `POST /api/sk2/condo/negotiate`, `POST /api/sk2/condo/buy`, `POST /api/sk2/condo/layout` e `POST /api/sk2/condo/open`. A inicialização cria `sk2_units` sem alterar tabelas de outros sistemas.
 

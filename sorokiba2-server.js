@@ -264,7 +264,7 @@ async function attachSorokiba2(app, server, opt = {}) {
     if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
     const unit = await db.getUnit(id);
     if (unit && unit.owner !== row.username && !unit.open) return res.status(403).json({ err: 'Este apartamento é privado.' });
-    res.json({ ok: 1, unit: unit ? { id, owner: unit.name, open: !!unit.open, layout: unit.layout || [] } : null, isOwner: !!unit && unit.owner === row.username, price: db.unitPrice(id) });
+    res.json({ ok: 1, unit: unit ? { id, owner: unit.name, open: !!unit.open, layout: unit.layout } : null, isOwner: !!unit && unit.owner === row.username, price: db.unitPrice(id) });
   }));
   app.post('/api/sk2/condo/negotiate', json, condoGuard(async (req, res, row) => {
     const id = String(req.body?.u || '');
@@ -305,7 +305,7 @@ async function attachSorokiba2(app, server, opt = {}) {
     res.json({ ok: 1, money: result.money, paid: price, player: db.pub(player) });
   }));
   app.post('/api/sk2/condo/layout', json, condoGuard(async (req, res, row) => {
-    const id = String(req.body?.u || ''), items = db.cleanUnitLayout(req.body?.items);
+    const id = String(req.body?.u || ''), items = db.cleanUnitLayout(id, req.body?.items);
     if (!db.unitOk(id) || !items) return res.status(400).json({ err: 'Dados de decoração inválidos' });
     const result = await db.saveUnitLayout(row.username, id, items);
     if (result.err) return res.status(409).json({ err: result.err });
