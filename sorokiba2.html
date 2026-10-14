@@ -1679,7 +1679,8 @@ $('workPromotionConfirm').onclick=async()=>{const j=await workAction('/work/prom
 async function completeWorkTask(taskId,option){
  const count=Number($('workCount')?.value);
  const body=option==null?{taskId,count}:{taskId,option};
- await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Tarefa concluída: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));loadWork();
+ const result=await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Tarefa concluída: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));
+ if(result)loadWork();
 }
 $('workBtn').onclick=loadWork;
 $('workClose').onclick=()=>{$('workPanel').hidden=true};
