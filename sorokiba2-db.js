@@ -123,6 +123,10 @@ async function init() {
     username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
     item_id TEXT NOT NULL, quantity INT NOT NULL DEFAULT 0 CHECK(quantity >= 0),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (username, item_id)
+  );
+  CREATE TABLE IF NOT EXISTS sk2_units (
+    id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    layout JSONB, open BOOLEAN NOT NULL DEFAULT false, bought_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );`);
 }
 async function health() {
@@ -178,6 +182,74 @@ async function savePositions(list) {
   await q(`UPDATE sk2_players p SET x=v.x, y=v.y, last_seen=now()
     FROM (SELECT unnest($1::text[]) AS u, unnest($2::real[]) AS x, unnest($3::real[]) AS y) v WHERE p.username=v.u`,
     [list.map(o => o.u), list.map(o => o.x), list.map(o => o.y)]);
+}
+
+// Condomínio: 15 andares, 4 unidades por andar (A–D).
+const UNIT_AREA = { A: 40, B: 54, C: 77, D: 104 };
+const FURNITURE_PRICES = [900, 1400, 500, 120, 800, 350, 1200, 700, 80, 250, 150, 600, 650];
+const unitOk = id => typeof id === 'string' && /^(1[0-5]|[1-9])[A-D]$/.test(id);
+const unitPrice = id => UNIT_AREA[id.slice(-1)] * (300 + 40 * parseInt(id, 10));
+function cleanUnitLayout(items) {
+  if (!Array.isArray(items) || items.length > 80) return null;
+  const out = [];
+  for (const item of items) {
+    if (!Array.isArray(item) || item.length < 4) return null;
+    const [type, x, y, rotation] = item.map(Number);
+    if (![type, x, y, rotation].every(Number.isInteger) || type < 0 || type >= FURNITURE_PRICES.length || x < 0 || x > 15 || y < 0 || y > 15 || ![0, 1].includes(rotation)) return null;
+    out.push([type, x, y, rotation]);
+  }
+  return out;
+}
+function unitLayoutCost(old, next) {
+  if (!old) return 0;
+  const counts = Array(FURNITURE_PRICES.length).fill(0);
+  next.forEach(item => counts[item[0]]++);
+  old.forEach(item => counts[item[0]]--);
+  return counts.reduce((sum, count, type) => sum + (count > 0 ? count * FURNITURE_PRICES[type] : 0), 0);
+}
+async function condoInfo(username) {
+  const r = await q('SELECT u.id, u.open, u.owner, p.name FROM sk2_units u JOIN sk2_players p ON p.username=u.owner');
+  return Object.fromEntries(r.rows.map(row => [row.id, { o: row.name, open: row.open ? 1 : 0, mine: row.owner === username }]));
+}
+async function getUnit(id) {
+  const r = await q('SELECT u.id, u.owner, u.layout, u.open, p.name FROM sk2_units u JOIN sk2_players p ON p.username=u.owner WHERE u.id=$1', [id]);
+  return r.rows[0] || null;
+}
+async function withTx(fn) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query(result?.err ? 'ROLLBACK' : 'COMMIT');
+    return result;
+  } catch (error) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    throw error;
+  } finally { client.release(); }
+}
+const buyUnit = (username, id, price) => withTx(async client => {
+  const player = await client.query('SELECT money FROM sk2_players WHERE username=$1 FOR UPDATE', [username]);
+  if (!player.rowCount || player.rows[0].money < price) return { err: 'Saldo insuficiente' };
+  const inserted = await client.query('INSERT INTO sk2_units (id, owner) VALUES ($1,$2) ON CONFLICT DO NOTHING', [id, username]);
+  if (!inserted.rowCount) return { err: 'Unidade já vendida' };
+  const updated = await client.query('UPDATE sk2_players SET money=money-$1 WHERE username=$2 RETURNING money', [price, username]);
+  return { money: updated.rows[0].money };
+});
+const saveUnitLayout = (username, id, items) => withTx(async client => {
+  const unit = await client.query('SELECT owner, layout FROM sk2_units WHERE id=$1 FOR UPDATE', [id]);
+  if (!unit.rowCount || unit.rows[0].owner !== username) return { err: 'Esta unidade não é sua' };
+  const old = unit.rows[0].layout;
+  if (!old && items.length > 14) return { err: 'O primeiro projeto pode ter até 14 móveis' };
+  const cost = unitLayoutCost(old, items);
+  const player = await client.query('SELECT money FROM sk2_players WHERE username=$1 FOR UPDATE', [username]);
+  if (!player.rowCount || player.rows[0].money < cost) return { err: 'Saldo insuficiente para essa decoração' };
+  await client.query('UPDATE sk2_units SET layout=$2 WHERE id=$1', [id, JSON.stringify(items)]);
+  const updated = await client.query('UPDATE sk2_players SET money=money-$1 WHERE username=$2 RETURNING money', [cost, username]);
+  return { money: updated.rows[0].money, cost };
+});
+async function setUnitOpen(username, id, open) {
+  const r = await q('UPDATE sk2_units SET open=$3 WHERE id=$1 AND owner=$2', [id, username, !!open]);
+  return r.rowCount > 0;
 }
 
 async function completeWelcome(username) {
@@ -447,4 +519,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

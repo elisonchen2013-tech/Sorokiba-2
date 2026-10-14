@@ -101,6 +101,12 @@ Cada profissão tem um requisito de XP geral verificado pelo servidor: Entregado
 
 As carreiras de **Mecânico** e **Assistente escolar** também passaram a ter tarefas jogáveis em etapas e trilhas de cargos, alinhando o catálogo de empregos aos sistemas de trabalho.
 
+## Sorokiba Tower
+
+A corretora Marta e os elevadores abrem o painel imobiliário durante a exploração do térreo. O painel mostra as 60 unidades em 15 andares, tamanhos, proprietários e preço de tabela; as propostas de compra são negociadas e validadas no servidor. Compras e decoração usam o saldo existente do jogador. Proprietários podem salvar até 80 móveis, liberar ou fechar visitas e ver a planta decorada; somente unidades abertas exibem a planta para visitantes. A cena 2.5D do térreo continua integrada, com mapa dos ambientes comuns e uma planta distinta para cada andar.
+
+Rotas autenticadas: `GET /api/sk2/condo`, `GET /api/sk2/condo/unit/:id`, `POST /api/sk2/condo/negotiate`, `POST /api/sk2/condo/buy`, `POST /api/sk2/condo/layout` e `POST /api/sk2/condo/open`. A inicialização cria `sk2_units` sem alterar tabelas de outros sistemas.
+
 ## Testes
 
 ```sh

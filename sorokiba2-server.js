@@ -241,6 +241,83 @@ async function attachSorokiba2(app, server, opt = {}) {
       res.json({ ok: 1, player: db.pub(result.player), inventory: result.inventory, message: 'Você comeu um sorvete de ' + flavor.name + '.' });
     } catch (e) { res.status(500).json({ err: 'Não foi possível comer o sorvete' }); }
   });
+
+  // Imóveis usam o saldo já existente em sk2_players e ficam isolados em sk2_units.
+  const condoNegotiations = new Map();
+  addInterval(() => { const now = Date.now(); for (const [key, deal] of condoNegotiations) if (deal.expires < now) condoNegotiations.delete(key); }, 5 * 60e3);
+  const condoGuard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `condo:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações no condomínio. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] condomínio:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a ação do condomínio.' });
+    }
+  };
+  app.get('/api/sk2/condo', condoGuard(async (_req, res, row) => {
+    res.json({ ok: 1, units: await db.condoInfo(row.username), money: Number(row.money) || 0 });
+  }));
+  app.get('/api/sk2/condo/unit/:id', condoGuard(async (req, res, row) => {
+    const id = String(req.params.id);
+    if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
+    const unit = await db.getUnit(id);
+    if (unit && unit.owner !== row.username && !unit.open) return res.status(403).json({ err: 'Este apartamento é privado.' });
+    res.json({ ok: 1, unit: unit ? { id, owner: unit.name, open: !!unit.open, layout: unit.layout || [] } : null, isOwner: !!unit && unit.owner === row.username, price: db.unitPrice(id) });
+  }));
+  app.post('/api/sk2/condo/negotiate', json, condoGuard(async (req, res, row) => {
+    const id = String(req.body?.u || '');
+    if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
+    if (await db.getUnit(id)) return res.status(409).json({ err: 'Esta unidade já foi vendida.' });
+    const key = `${row.username}|${id}`, list = db.unitPrice(id), now = Date.now();
+    let deal = condoNegotiations.get(key);
+    if (!deal || deal.expires < now) {
+      deal = { ask: list, reserve: Math.round(list * (.84 + Math.random() * .08)), rounds: 0, accepted: null, expires: now + 15 * 60e3 };
+      condoNegotiations.set(key, deal);
+    }
+    deal.expires = now + 15 * 60e3;
+    if (req.body.accept) {
+      deal.accepted = deal.ask;
+      return res.json({ ok: 1, result: 'deal', price: deal.accepted });
+    }
+    const offer = Math.round(Number(req.body.offer) || 0);
+    if (!offer) return res.json({ ok: 1, result: 'start', ask: deal.ask, list });
+    if (deal.rounds >= 5) return res.json({ ok: 1, result: 'final', ask: deal.ask, remaining: 0 });
+    deal.rounds++;
+    if (offer >= deal.ask || offer >= deal.reserve) {
+      deal.accepted = Math.min(offer, deal.ask);
+      return res.json({ ok: 1, result: 'deal', price: deal.accepted });
+    }
+    if (offer < list * .6) return res.json({ ok: 1, result: 'low', ask: deal.ask, remaining: 5 - deal.rounds });
+    deal.ask = Math.max(deal.reserve, Math.round(deal.ask - (deal.ask - offer) * .4));
+    res.json({ ok: 1, result: deal.rounds >= 5 ? 'final' : 'counter', ask: deal.ask, remaining: 5 - deal.rounds });
+  }));
+  app.post('/api/sk2/condo/buy', json, condoGuard(async (req, res, row) => {
+    const id = String(req.body?.u || '');
+    if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
+    const key = `${row.username}|${id}`, negotiation = condoNegotiations.get(key);
+    const price = req.body.deal && negotiation?.accepted && negotiation.expires > Date.now() ? negotiation.accepted : db.unitPrice(id);
+    const result = await db.buyUnit(row.username, id, price);
+    if (result.err) return res.status(409).json({ err: result.err });
+    condoNegotiations.delete(key);
+    const player = await db.load(row.username);
+    res.json({ ok: 1, money: result.money, paid: price, player: db.pub(player) });
+  }));
+  app.post('/api/sk2/condo/layout', json, condoGuard(async (req, res, row) => {
+    const id = String(req.body?.u || ''), items = db.cleanUnitLayout(req.body?.items);
+    if (!db.unitOk(id) || !items) return res.status(400).json({ err: 'Dados de decoração inválidos' });
+    const result = await db.saveUnitLayout(row.username, id, items);
+    if (result.err) return res.status(409).json({ err: result.err });
+    res.json({ ok: 1, money: result.money, cost: result.cost, player: db.pub(await db.load(row.username)) });
+  }));
+  app.post('/api/sk2/condo/open', json, condoGuard(async (req, res, row) => {
+    const id = String(req.body?.u || '');
+    if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
+    const updated = await db.setUnitOpen(row.username, id, !!req.body.open);
+    if (!updated) return res.status(404).json({ err: 'Esta unidade não é sua.' });
+    res.json({ ok: 1, open: !!req.body.open });
+  }));
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
