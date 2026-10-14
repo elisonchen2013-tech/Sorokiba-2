@@ -598,8 +598,7 @@ async function attachSorokiba2(app, server, opt = {}) {
           toAll({ t: 'mayorAnnouncement', message, by: me.n, at: now });
           send(me, { t: 'mayorActionResult', ok: true, message: 'Comunicado transmitido para os jogadores conectados.' });
         } else { send(me, { t: 'mayorActionResult', ok: false, message: 'Comando da Prefeitura desconhecido.' }); }
-      } else i
-      else if (m.t === 'testAccident') {
+      } else if (m.t === 'testAccident') {
         const now = Date.now();
         if (me.lk?.role !== 'prefeito') { send(me, { t: 'accidentTestResult', ok: false, message: 'Somente o Prefeito pode testar acidentes.' }); return; }
         if (now - lastIncidentAt < 10000) { send(me, { t: 'accidentTestResult', ok: false, message: 'Aguarde alguns segundos antes de testar outro acidente.' }); return; }
