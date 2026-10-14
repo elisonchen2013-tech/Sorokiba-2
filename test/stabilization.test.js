@@ -441,3 +441,13 @@ test('delivery bike has improved layered rendering and route destination is visi
   assert.match(client, /fillText\('DESTINO'/);
   assert.match(client, /if\(!inside\)/);
 });
+
+
+test('courier delivery presents a waiting customer and automatically queues the next delivery after reward', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /fillText\('CLIENTE'/);
+  assert.match(client, /Cliente atendido! Recompensa:/);
+  assert.match(client, /if\(result\?\.completed\)/);
+  assert.match(client, /await workAction\('\/work\/task',null/);
+  assert.match(client, /Nova encomenda disponível!/);
+});
