@@ -401,3 +401,19 @@ test('mayor control panel exposes protected city controls and global announcemen
   assert.match(server, /traffic_toggle/);
   assert.match(server, /mayorAnnouncement/);
 });
+
+
+test('courier missions require in-world pickup and delivery at a marked destination', () => {
+  const server = read('sorokiba2-server.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /destinations: \[/);
+  assert.match(server, /targetBuilding: 'Rodoviária'/);
+  assert.match(server, /distance > 3\.1/);
+  assert.match(server, /Number\(taskData\.stage\) === 0/);
+  assert.match(server, /taskData\.destination/);
+  assert.match(server, /livePlayer/);
+  assert.match(client, /t:'workTarget'/);
+  assert.match(client, /completeWorkTask\(near\.o\.id,null\)/);
+  assert.match(client, /task\?\.type==='delivery_route'/);
+  assert.match(client, /marcador dourado no minimapa/);
+});
