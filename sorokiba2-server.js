@@ -542,7 +542,7 @@ async function attachSorokiba2(app, server, opt = {}) {
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
   const flush = list => db.savePositions(list.map(o => ({ u: o.u, x: o.x, y: o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
-  let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0;
+  let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0, mayorTrafficSlowdown = false;
   const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
 
   wss.on('connection', (ws, req) => {
@@ -570,10 +570,36 @@ async function attachSorokiba2(app, server, opt = {}) {
         if (trafficAuthority && !P.has(trafficAuthority)) { trafficAuthority = P.values().next().value?.id || 0; if (trafficAuthority) toAll({ t: 'a', id: trafficAuthority, c: trafficState }); }
         me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
         const peers = [...P.values()].map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
-        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents() }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
+        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'testAccident') {
+      if (m.t === 'mayorAction') {
+        const now = Date.now();
+        if (me.lk?.role !== 'prefeito') { send(me, { t: 'mayorActionResult', ok: false, message: 'Somente o Prefeito pode controlar a cidade.' }); return; }
+        const action = String(m.action || '');
+        if (action === 'accident_start') {
+          if (now - lastIncidentAt < 10000) { send(me, { t: 'mayorActionResult', ok: false, message: 'Aguarde alguns segundos antes de iniciar outra ocorrência.' }); return; }
+          if (liveAccidents().length >= 5) { send(me, { t: 'mayorActionResult', ok: false, message: 'Já existem muitas ocorrências ativas. Encerre algumas primeiro.' }); return; }
+          const incident = { id: 'mayor-' + (++incidentSequence), x: 46.35, y: 34.5, carA: 0, carB: 24, carAX: 46.15, carAY: 34.5, carBX: 46.5, carBY: 34.5, axis: 0, victimId: 0, startedAt: now, expiresAt: now + 65000, test: true, source: 'mayor' };
+          activeAccidents.push(incident); lastIncidentAt = now; toAll({ t: 'x', incident });
+          send(me, { t: 'mayorActionResult', ok: true, message: 'Acidente iniciado no mundo aberto. Os jogadores verão a ocorrência e os serviços de emergência.' });
+        } else if (action === 'accident_end') {
+          const ids = liveAccidents().map(a => String(a.id)); activeAccidents = [];
+          toAll({ t: 'incidentClear', ids });
+          send(me, { t: 'mayorActionResult', ok: true, message: ids.length ? 'Ocorrências encerradas e veículos liberados.' : 'Não há ocorrências ativas para encerrar.' });
+        } else if (action === 'traffic_toggle') {
+          mayorTrafficSlowdown = typeof m.active === 'boolean' ? m.active : !mayorTrafficSlowdown;
+          const message = mayorTrafficSlowdown ? 'Congestionamento de teste ativado. Os veículos reduziram a velocidade.' : 'Congestionamento de teste desativado. O trânsito voltou ao normal.';
+          toAll({ t: 'cityEvent', event: 'traffic', active: mayorTrafficSlowdown, message });
+          send(me, { t: 'mayorActionResult', ok: true, message });
+        } else if (action === 'announcement') {
+          const message = typeof m.message === 'string' ? m.message.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 160) : '';
+          if (!message) { send(me, { t: 'mayorActionResult', ok: false, message: 'Escreva um comunicado antes de transmitir.' }); return; }
+          toAll({ t: 'mayorAnnouncement', message, by: me.n, at: now });
+          send(me, { t: 'mayorActionResult', ok: true, message: 'Comunicado transmitido para os jogadores conectados.' });
+        } else { send(me, { t: 'mayorActionResult', ok: false, message: 'Comando da Prefeitura desconhecido.' }); }
+      } else i
+      else if (m.t === 'testAccident') {
         const now = Date.now();
         if (me.lk?.role !== 'prefeito') { send(me, { t: 'accidentTestResult', ok: false, message: 'Somente o Prefeito pode testar acidentes.' }); return; }
         if (now - lastIncidentAt < 10000) { send(me, { t: 'accidentTestResult', ok: false, message: 'Aguarde alguns segundos antes de testar outro acidente.' }); return; }
