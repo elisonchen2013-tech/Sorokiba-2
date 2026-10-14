@@ -430,3 +430,14 @@ test('courier can toggle a delivery motorcycle and work dashboard is organized r
   assert.match(client, /workMissionCard/);
   assert.match(client, /@media\(max-width:760px\)\{#workPanel/);
 });
+
+
+test('delivery bike has improved layered rendering and route destination is visible on world and maps', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /function drawDeliveryBike/);
+  assert.match(client, /caixa de entrega visível na traseira/);
+  assert.match(client, /workState\?\.task\?\.type==='delivery_route'/);
+  assert.match(client, /strokeStyle='#fff4bf'/);
+  assert.match(client, /fillText\('DESTINO'/);
+  assert.match(client, /if\(!inside\)/);
+});
