@@ -64,7 +64,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 #workPanel{position:fixed;inset:10% 24%;z-index:11;overflow:auto;background:rgba(11,16,32,.97);border:2px solid #9ff0e4;border-radius:16px;padding:18px;box-shadow:0 12px 40px #000b}
 #workPanel h2{margin:0 0 8px;color:#9ff0e4}#workPanel h3{margin:15px 0 6px;color:var(--a)}
 #workClose{float:right;background:#ffffff1a!important;color:var(--c)!important}
-#workTask{border:1px solid #ffffff33;border-radius:9px;padding:12px;margin:10px 0}.workAction{margin:6px 4px 0 0;padding:8px 10px;border:0;border-radius:7px;background:var(--a);color:var(--n);font-weight:700;cursor:pointer}
+#workTask{border:1px solid #ffffff33;border-radius:9px;padding:12px;margin:10px 0;white-space:pre-line}.workRouteHint{color:#F2B84B;font-size:13px;line-height:1.5;margin:10px 0}.workAction{margin:6px 4px 0 0;padding:8px 10px;border:0;border-radius:7px;background:var(--a);color:var(--n);font-weight:700;cursor:pointer}
 
 /* --- Centro de carreiras: formulário legível e salas profissionais --- */
 #careerPanel{inset:4% 5%;z-index:20;overflow:auto;background:linear-gradient(145deg,rgba(9,17,33,.99),rgba(16,31,52,.99));border:1px solid #4f8b9b;border-radius:20px;padding:clamp(16px,2.5vw,28px);box-shadow:0 18px 60px #000d;color:#F5EFE3;overscroll-behavior:contain}
@@ -499,6 +499,12 @@ m.setLineDash([]);B.forEach(b=>b.p.forEach(([x,y,w,h])=>{const a=QP(x,y),d=QP(x+
 const mmc=$('mm').getContext('2d'),fc=$('fc'),fx=fc.getContext('2d');let fmO=false;
 function drawMM(t){const q=QP(px,py);mmc.fillStyle='#0b1020';mmc.fillRect(0,0,150,100);mmc.drawImage(PM,q[0]-75,q[1]-50,150,100,0,0,150,100);
 const k=QP(npcs[0].x,npcs[0].y);mmc.fillStyle='#2DD4BF';mmc.beginPath();mmc.arc(k[0]-q[0]+75,k[1]-q[1]+50,2.5,0,7);mmc.fill();
+const task=workState?.task;
+if(task?.type==='delivery_route'&&Number.isFinite(task.targetX)&&Number.isFinite(task.targetY)){
+ const target=QP(task.targetX,task.targetY);const tx=target[0]-q[0]+75,ty=target[1]-q[1]+50;
+ mmc.strokeStyle='#F2B84B';mmc.lineWidth=2;mmc.beginPath();mmc.arc(tx,ty,5+Math.sin(t*5)*1.5,0,Math.PI*2);mmc.stroke();
+ mmc.fillStyle='#F2B84B';mmc.beginPath();mmc.arc(tx,ty,2.5,0,Math.PI*2);mmc.fill();
+}
 mmc.fillStyle='#F2B84B';mmc.strokeStyle='#fff';mmc.lineWidth=1.5;mmc.beginPath();mmc.arc(75,50,3.5+Math.sin(t*5),0,7);mmc.fill();mmc.stroke()}
 function drawFM(t){const s=fc.width/PM.width;fx.clearRect(0,0,fc.width,fc.height);fx.drawImage(PM,0,0,fc.width,fc.height);fx.font='bold 10px sans-serif';fx.textAlign='center';fx.lineWidth=3;fx.strokeStyle='#000c';fx.fillStyle='#F5EFE3';
 B.forEach(b=>{const q=QP(b.x+b.w/2,b.y+b.h/2);fx.strokeText(b.n,q[0]*s,q[1]*s);fx.fillText(b.n,q[0]*s,q[1]*s)});
@@ -1085,6 +1091,11 @@ function act(){
  if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden)return;
  if(open){open=false;$('dlg').hidden=true;tone(440,.06,'sine',.07);return}
  if(!interior&&near?.t==='icecream'){openIceCreamShop();return}
+ if(!interior&&near?.t==='workTarget'&&near.o?.type==='delivery_route'){
+  completeWorkTask(near.o.id,null);
+  tone(740,.09,'sine',.07);
+  return;
+ }
  if(!interior&&near?.t==='bench'){
   if(isSeated){isSeated=false;seatBench=null;myO.seated=false;tone(430,.07,'sine',.07)}
   else{px=near.o.sitX;py=near.o.sitY;pd=0;pf=0;isSeated=true;seatBench=near.o.id;myO.seated=true;tone(620,.09,'sine',.07)}
@@ -1370,7 +1381,12 @@ if(trafficShouldSimulate())updateTraffic(dt,gm,h);else smoothTraffic(dt);
 near=null;if(!gm)return;let bd=1.4;npcs.forEach(n=>{const d=Math.hypot(n.x-px,n.y-py);if(d<bd){bd=d;near={t:'n',o:n}}});
 B.forEach(b=>{const d=Math.hypot(b.dx+.5-px,b.y+b.h+.3-py);if(d<1.4&&d<bd){bd=d;near={t:'d',o:b}}});
 parkBenches.forEach(b=>{const d=Math.hypot(px-(isSeated?b.sitX:b.x),py-(isSeated?b.sitY:b.y));if(d<1.3&&(d<bd||d<.65)){bd=d;near={t:'bench',o:b}}});
-const shopD=Math.hypot(px-ICE_CREAM_WORKER.x,py-ICE_CREAM_WORKER.y);if(shopD<1.65){bd=shopD;near={t:'icecream',o:ICE_CREAM_WORKER}}}
+const shopD=Math.hypot(px-ICE_CREAM_WORKER.x,py-ICE_CREAM_WORKER.y);if(shopD<1.65){bd=shopD;near={t:'icecream',o:ICE_CREAM_WORKER}}
+const deliveryTask=workState?.task;
+if(!interior&&deliveryTask?.type==='delivery_route'&&Number.isFinite(deliveryTask.targetX)&&Number.isFinite(deliveryTask.targetY)){
+ const targetDistance=Math.hypot(px-deliveryTask.targetX,py-deliveryTask.targetY);
+ if(targetDistance<1.65){near={t:'workTarget',o:deliveryTask};bd=targetDistance}
+}}
 
 /* ---------- RENDER ---------- */
 function setup(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;Z=Math.max(.7,Math.min(W,H)/560);
@@ -1632,7 +1648,12 @@ function renderWork(data){
  $('workNext').disabled=!data.shift;
  const taskBox=$('workTask');taskBox.replaceChildren();
  if(data.task){
-  const p=document.createElement('p');p.textContent=data.task.stage!=null?`Etapa ${data.task.stage+1}: ${data.task.prompt}`:data.task.prompt+` Meta: ${data.task.target}.`;taskBox.append(p);
+  const p=document.createElement('p');p.textContent=data.task.type==='delivery_route'
+ ? `ENTREGA URBANA · Etapa ${Number(data.task.stage||0)+1}/2\n${data.task.prompt}\nDestino: ${data.task.targetBuilding||'marcado no minimapa'}.`
+ : data.task.stage!=null?`Etapa ${data.task.stage+1}: ${data.task.prompt}`:data.task.prompt+` Meta: ${data.task.target}.`;taskBox.append(p);
+ if(data.task.type==='delivery_route'){
+  const hint=document.createElement('p');hint.className='workRouteHint';hint.textContent='Siga o marcador dourado no minimapa. Chegue perto do prédio indicado e pressione E para interagir.';taskBox.append(hint);
+ }
   if(Array.isArray(data.task.options)){
    data.task.options.forEach((option,index)=>{const button=document.createElement('button');button.className='workAction';button.textContent=option;button.onclick=()=>completeWorkTask(data.task.id,index);taskBox.append(button)});
   }else{
