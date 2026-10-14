@@ -85,6 +85,27 @@ async function init() {
   ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS interview_feedback TEXT;
   ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS cooldown_until TIMESTAMPTZ;
   ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS hired_at TIMESTAMPTZ;
+  CREATE TABLE IF NOT EXISTS sk2_work_shifts (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active',
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(), ended_at TIMESTAMPTZ
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_active_shift ON sk2_work_shifts(username) WHERE status='active';
+  CREATE TABLE IF NOT EXISTS sk2_work_tasks (
+    id UUID PRIMARY KEY, shift_id UUID NOT NULL REFERENCES sk2_work_shifts(id) ON DELETE CASCADE,
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, task_type TEXT NOT NULL, task JSONB NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'assigned', reward_money INT NOT NULL DEFAULT 0,
+    reward_xp INT NOT NULL DEFAULT 0, result JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), completed_at TIMESTAMPTZ
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_pending_task ON sk2_work_tasks(shift_id) WHERE status='assigned';
+  CREATE TABLE IF NOT EXISTS sk2_work_history (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, task_id UUID NOT NULL UNIQUE REFERENCES sk2_work_tasks(id) ON DELETE CASCADE,
+    payment INT NOT NULL, professional_xp INT NOT NULL, performance INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
   CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';`);
 }
 async function health() {
@@ -226,6 +247,73 @@ async function finalizeInterview(username, jobId, sessionId, result, employment)
   }
 }
 
+async function getWorkState(username) {
+      const player = await q('SELECT * FROM sk2_players WHERE username=$1', [username]);
+      const shift = await q(`SELECT s.*, t.id AS task_id, t.task_type, t.task, t.status AS task_status
+        FROM sk2_work_shifts s LEFT JOIN sk2_work_tasks t ON t.shift_id=s.id AND t.status='assigned'
+        WHERE s.username=$1 AND s.status='active' LIMIT 1`, [username]);
+      const history = await q(`SELECT job_id, task_id, payment, professional_xp, performance, created_at
+        FROM sk2_work_history WHERE username=$1 ORDER BY created_at DESC LIMIT 10`, [username]);
+      return { player: player.rows[0] || null, shift: shift.rows[0] || null, history: history.rows };
+    }
+
+    async function startWorkShift(username, jobId) {
+      const id = crypto.randomUUID();
+      const r = await q(`INSERT INTO sk2_work_shifts (id, username, job_id)
+        VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING *`, [id, username, jobId]);
+      if (r.rows[0]) return r.rows[0];
+      const active = await q(`SELECT * FROM sk2_work_shifts WHERE username=$1 AND status='active' LIMIT 1`, [username]);
+      return active.rows[0] || null;
+    }
+
+    async function assignWorkTask(username, shiftId, jobId, task) {
+      const id = crypto.randomUUID();
+      const r = await q(`INSERT INTO sk2_work_tasks
+        (id, shift_id, username, job_id, task_type, task, reward_money, reward_xp)
+        SELECT $1,$2,$3,$4,$5,$6,$7,$8
+        WHERE EXISTS (SELECT 1 FROM sk2_work_shifts WHERE id=$2 AND username=$3 AND status='active')
+          AND NOT EXISTS (SELECT 1 FROM sk2_work_tasks WHERE shift_id=$2 AND status='assigned')
+        RETURNING *`, [id, shiftId, username, jobId, task.type, JSON.stringify(task.payload), task.money, task.xp]);
+      if (r.rows[0]) return r.rows[0];
+      const existing = await q(`SELECT * FROM sk2_work_tasks WHERE shift_id=$1 AND status='assigned' LIMIT 1`, [shiftId]);
+      return existing.rows[0] || null;
+    }
+
+    async function completeWorkTask(username, taskId, result) {
+      const client = await getPool().connect();
+      try {
+        await client.query('BEGIN');
+        const task = await client.query(`SELECT * FROM sk2_work_tasks
+          WHERE id=$1 AND username=$2 FOR UPDATE`, [taskId, username]);
+        if (!task.rowCount) { await client.query('ROLLBACK'); return null; }
+        const current = task.rows[0];
+        if (current.status === 'completed') {
+          await client.query('COMMIT');
+          return { duplicate: true, task: current };
+        }
+        const player = await client.query('SELECT * FROM sk2_players WHERE username=$1 FOR UPDATE', [username]);
+        const employment = { ...(player.rows[0].employment || {}) };
+        employment.completedTasks = Number(employment.completedTasks || 0) + 1;
+        employment.totalEarned = Number(employment.totalEarned || 0) + current.reward_money;
+        employment.professionalXp = Number(employment.professionalXp || 0) + current.reward_xp;
+        const updatedTask = await client.query(`UPDATE sk2_work_tasks SET status='completed', result=$3,
+          completed_at=now() WHERE id=$1 AND username=$2 AND status='assigned' RETURNING *`, [taskId, username, JSON.stringify(result)]);
+        if (!updatedTask.rowCount) { await client.query('ROLLBACK'); return { duplicate: true, task: current }; }
+        await client.query(`INSERT INTO sk2_work_history
+          (id, username, job_id, task_id, payment, professional_xp, performance)
+          VALUES ($1,$2,$3,$4,$5,$6,$7)`, [crypto.randomUUID(), username, current.job_id, taskId, current.reward_money, current.reward_xp, result.performance]);
+        const updatedPlayer = await client.query(`UPDATE sk2_players
+          SET money=money+$2, xp=xp+$3, employment=$4, last_seen=now() WHERE username=$1 RETURNING *`,
+          [username, current.reward_money, current.reward_xp, JSON.stringify(employment)]);
+        await client.query('COMMIT');
+        return { duplicate: false, task: updatedTask.rows[0], player: updatedPlayer.rows[0] };
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    }
 const pub = row => ({
   name: row.name, role: row.role, ...cleanLook(row.look), money: row.money, xp: row.xp,
   mission: { id: row.mission_id || 'welcome', done: !!row.mission_done },
@@ -245,4 +333,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

@@ -71,6 +71,16 @@ Cada vaga da central tem três perguntas específicas da profissão. O servidor 
 
 A pontuação é transparente: até 70 pontos por respostas, 20 por habilidades do currículo e 10 por experiência. `75+` aprova e contrata, `55–74` aprova para treinamento e abaixo disso recusa. Resultado, feedback, score, contratação e `cooldown_until` ficam em `sk2_career_applications`; tentativas não aprovadas aguardam 24 horas. Contratações ficam em `sk2_players.employment` e aparecem na central.
 
+## Etapa 3: Meu trabalho
+
+Contratações aprovadas nos cargos de recepção hospitalar, atendimento de restaurante e assistência de biblioteca aparecem no painel **Meu trabalho**. O jogador pode falar com o supervisor, iniciar o turno, receber uma tarefa e concluí-la com uma quantidade validada no servidor:
+
+- Hospital: registrar 2 pacientes;
+- Restaurante: servir 3 pedidos;
+- Biblioteca: catalogar 4 livros.
+
+Endpoints autenticados: `GET /api/sk2/work`, `POST /api/sk2/work/supervisor`, `POST /api/sk2/work/start`, `POST /api/sk2/work/task` e `POST /api/sk2/work/task/complete`. Turnos, tarefas e histórico são persistidos; há no máximo um turno ativo e uma tarefa pendente por conta. Pagamento e XP profissional são calculados pela definição server-side, e a conclusão usa atualização transacional/idempotente para resistir a reenvio após falha de rede.
+
 ## Testes
 
 ```sh

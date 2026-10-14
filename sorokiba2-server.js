@@ -58,6 +58,12 @@ const INTERVIEW_QUESTIONS = Object.freeze({
 const careerById = id => CAREERS.find(job => job.id === id);
 const questionById = (jobId, id) => INTERVIEW_QUESTIONS[jobId]?.find(question => question.id === id);
 const publicQuestion = question => ({ id: question.id, prompt: question.prompt, options: question.options });
+const WORK_TASKS = Object.freeze({
+  hospital_reception: { type: 'patient_checkin', prompt: 'Registre corretamente 2 pacientes na recepção.', target: 2, money: 40, xp: 20, supervisor: 'Helena' },
+  restaurant_server: { type: 'serve_orders', prompt: 'Sirva 3 pedidos e confirme cada um.', target: 3, money: 35, xp: 18, supervisor: 'Davi' },
+  library_assistant: { type: 'catalog_books', prompt: 'Catalogue 4 livros novos no acervo.', target: 4, money: 30, xp: 16, supervisor: 'Clara' },
+});
+const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, status: task.status, createdAt: task.created_at });
 
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
@@ -277,6 +283,78 @@ async function attachSorokiba2(app, server, opt = {}) {
       if (!result) return res.status(409).json({ err: 'Entrevista já finalizada' });
       const updated = await db.load(row.username);
       res.json({ ok: 1, status, score, feedback, cooldownUntil, application: { jobId: job.id, status }, player: db.pub(updated) });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.get('/api/sk2/work', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const state = await db.getWorkState(row.username);
+      const job = state.player?.employment?.jobId ? careerById(state.player.employment.jobId) : null;
+      res.json({
+        player: db.pub(row),
+        employment: db.pub(row).employment,
+        job,
+        supervisor: job ? WORK_TASKS[job.id]?.supervisor : null,
+        shift: state.shift ? { id: state.shift.id, status: state.shift.status, startedAt: state.shift.started_at } : null,
+        task: state.shift?.task_id ? publicTask({ id: state.shift.task_id, task_type: state.shift.task_type, task: state.shift.task, status: state.shift.task_status }) : null,
+        history: state.history,
+      });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/supervisor', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const jobId = row.employment?.jobId, task = WORK_TASKS[jobId];
+      if (!task) return res.status(409).json({ err: 'Você ainda não tem um emprego jogável' });
+      res.json({ ok: 1, supervisor: task.supervisor, message: `Olá! Sou ${task.supervisor}. Inicie o turno para receber sua próxima tarefa.` });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/start', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const jobId = row.employment?.jobId;
+      if (!WORK_TASKS[jobId]) return res.status(409).json({ err: 'Seu emprego ainda não tem tarefas jogáveis' });
+      const shift = await db.startWorkShift(row.username, jobId);
+      if (!shift) return res.status(409).json({ err: 'Não foi possível iniciar o turno' });
+      res.status(201).json({ ok: 1, shift: { id: shift.id, status: shift.status, startedAt: shift.started_at }, supervisor: WORK_TASKS[jobId].supervisor });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/task', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const jobId = row.employment?.jobId, definition = WORK_TASKS[jobId];
+      if (!definition) return res.status(409).json({ err: 'Seu emprego ainda não tem tarefas jogáveis' });
+      const state = await db.getWorkState(row.username);
+      if (!state.shift || state.shift.status !== 'active') return res.status(409).json({ err: 'Inicie um turno primeiro' });
+      if (state.shift.task_id) return res.json({ ok: 1, task: publicTask({ id: state.shift.task_id, task_type: state.shift.task_type, task: state.shift.task, status: state.shift.task_status }) });
+      const task = await db.assignWorkTask(row.username, state.shift.id, jobId, {
+        type: definition.type,
+        payload: { prompt: definition.prompt, target: definition.target },
+        money: definition.money,
+        xp: definition.xp,
+      });
+      res.status(201).json({ ok: 1, task: publicTask(task) });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/work/task/complete', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const taskId = typeof req.body?.taskId === 'string' ? req.body.taskId : '';
+      const count = Number(req.body?.count);
+      const state = await db.getWorkState(row.username);
+      if (!state.shift?.task_id || state.shift.task_id !== taskId) return res.status(409).json({ err: 'Tarefa inválida ou não é a próxima tarefa' });
+      const target = Number(state.shift.task?.target);
+      if (!Number.isInteger(count) || count < target) return res.status(400).json({ err: `Conclua pelo menos ${target} unidade(s) da tarefa` });
+      const performance = Math.min(100, Math.round(count === target ? 100 : target / count * 100));
+      const result = await db.completeWorkTask(row.username, taskId, { count, performance });
+      if (!result) return res.status(404).json({ err: 'Tarefa não encontrada' });
+      if (result.duplicate) return res.json({ ok: 1, duplicate: true, message: 'Tarefa já contabilizada; nenhum pagamento duplicado.' });
+      res.json({ ok: 1, completed: true, payment: result.task.reward_money, professionalXp: result.task.reward_xp, performance, player: db.pub(result.player) });
     } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
   });
 

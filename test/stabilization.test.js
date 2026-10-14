@@ -87,3 +87,20 @@ test('career interviews hide answers, validate progression and persist outcomes'
   assert.match(client, /startInterview/);
   assert.match(client, /interview\/finish/);
 });
+
+test('work panel provides server-validated tasks and idempotent payment history', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /api\/sk2\/work/);
+  assert.match(server, /api\/sk2\/work\/task\/complete/);
+  assert.match(server, /WORK_TASKS/);
+  assert.match(server, /Number\(req\.body\?\.count\)/);
+  assert.match(server, /performance = Math\.min/);
+  assert.match(db, /sk2_work_shifts/);
+  assert.match(db, /sk2_work_history/);
+  assert.match(db, /status='assigned'/);
+  assert.match(db, /duplicate: true/);
+  assert.match(client, /Meu trabalho/);
+  assert.match(client, /completeWorkTask/);
+});
