@@ -368,3 +368,10 @@ test('only the authenticated mayor can start a shared accident test', () => {
   assert.match(server, /t: 'accidentTestResult'/);
   assert.match(server, /test-'.*incidentSequence/);
 });
+
+
+test('local and remote seated avatars render at the height of the bench seat', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /P\(q\.x,q\.y,q\.o\.seated\?5:0\)/);
+  assert.match(client, /P\(px,py,isSeated\?5:0\)/);
+});

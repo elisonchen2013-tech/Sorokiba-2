@@ -1355,9 +1355,9 @@ const iceWorkerPoint=P(ICE_CREAM_WORKER.x,ICE_CREAM_WORKER.y);
 V.push({k:ICE_CREAM_WORKER.x+ICE_CREAM_WORKER.y,f:()=>person(c,iceWorkerPoint[0],iceWorkerPoint[1],ICE_CREAM_WORKER.face,0,ICE_CREAM_WORKER.sh,ICE_CREAM_WORKER.sk,ICE_CREAM_WORKER.hr,ICE_CREAM_WORKER.o)});
 cars.forEach(a=>V.push({k:a.x+a.y,f:()=>carD(c,a)}));
 accidents.forEach(inc=>{const elapsed=incidentElapsed(inc);if(elapsed<22)V.push({k:inc.x+inc.y+.02,f:()=>drawAccidentFire(c,inc,t,elapsed)});const police=emergencyPose(inc,'police',elapsed),ambulance=emergencyPose(inc,'ambulance',elapsed),fire=emergencyPose(inc,'fire',elapsed);[police,ambulance,fire].filter(Boolean).forEach(v=>V.push({k:v.x+v.y,f:()=>drawEmergencyVehicle(c,v,t)}));if(elapsed>=7&&elapsed<20&&fire)V.push({k:inc.x+inc.y+.03,f:()=>drawWaterStream(c,inc,fire,t)})});
-RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));
+RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y,q.o.seated?5:0);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));
 const L2=tl(Date.now());TP.forEach(p=>V.push({k:p[0]+p[1],f:()=>tlD(c,p,L2)}));
-if(gm)V.push({k:px+py,f:()=>{const p=P(px,py);myO.seated=!!isSeated;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO);if(iceCreamEatingUntil>Date.now())drawIceCreamSnack(c,p[0]+10,p[1]-24,t,iceCreamEatingFlavor)}});
+if(gm)V.push({k:px+py,f:()=>{const p=P(px,py,isSeated?5:0);myO.seated=!!isSeated;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO);if(iceCreamEatingUntil>Date.now())drawIceCreamSnack(c,p[0]+10,p[1]-24,t,iceCreamEatingFlavor)}});
 V.sort((a,b)=>a.k-b.k).forEach(it=>{if(it.f)return it.f();
 if(it.t==1){const b=it.b,tx=it.tx,ty=it.ty,z=it.z;
 if(it.fl){const Lf=[P(tx,ty+1,z),P(tx+1,ty+1,z),P(tx+1,ty+1,it.zf),P(tx,ty+1,it.zf)];poly(c,Lf,b.c);poly(c,Lf,'rgba(0,0,0,.18)');if(!it.zf)poly(c,[P(tx,ty+1,7),P(tx+1,ty+1,7),P(tx+1,ty+1),P(tx,ty+1)],'rgba(0,0,0,.28)')}
