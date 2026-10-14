@@ -1358,6 +1358,25 @@ function drawRoomArchitecture(room,Q,U){
   wall(w*.33,d*.32,w*.33,d*.78,U*.8,'rgba(100,132,148,.35)');wall(w*.33,d*.32,w*.61,d*.32,U*.8,'rgba(100,132,148,.35)');wall(w*.7,d*.46,w*.7,d*.8,U*.8,'rgba(100,132,148,.35)');
  }
 }
+// Decorações do térreo, copiadas do render do ZIP.
+const DEC={
+desk:{s:[4,1],p:[[.05,.05,3.9,.9,0,26,'#6b4a2b','#7a5430'],[-.05,0,4.1,1,26,30,'#f2eee6','#fffaf0'],[.6,.3,.5,.1,30,46,'#111','#222'],[2.9,.3,.5,.1,30,46,'#111','#222']],f:(c,x,y)=>poly(c,[P(x+1.2,y+1,20),P(x+2.8,y+1,20),P(x+2.8,y+1,9),P(x+1.2,y+1,9)],'#F2B84B')},
+board:{s:[1,1],p:[[.05,.42,.9,.12,0,64,'#3a2a1a','#4a3a2a']],f:(c,x,y)=>{poly(c,[P(x+.12,y+.54,58),P(x+.88,y+.54,58),P(x+.88,y+.54,14),P(x+.12,y+.54,14)],'#c9a06a');[['#fff',.2,50],['#F2B84B',.5,46],['#6d8cff',.28,30],['#e86aa6',.58,26],['#7bc47f',.4,16]].forEach(([cl,a,z])=>poly(c,[P(x+a,y+.54,z+9),P(x+a+.22,y+.54,z+9),P(x+a+.22,y+.54,z),P(x+a,y+.54,z)],cl))}},
+maquete:{s:[2,2],p:[[.1,.1,1.8,1.8,0,14,'#6b4a2b','#bfe3f7'],[.3,.3,.4,.4,14,30,'#d9a441','#e6b85a'],[.9,.4,.4,.5,14,40,'#7a8fb5','#8fa3c9'],[.5,1.0,.5,.4,14,24,'#c06c84','#d6849a'],[1.25,1.1,.4,.4,14,34,'#4C8C6F','#5fa383']]},
+treadmill:{s:[1,2],p:[[.1,.05,.8,1.9,0,8,'#222','#2c2c2c'],[.15,.1,.7,.1,8,46,'#333','#444']],f:(c,x,y,t)=>{c.strokeStyle='#666';c.lineWidth=1.2;for(let k=0;k<5;k++){const o=(k*.34+t*1.4)%1.7;ln(c,P(x+.2,y+.2+o,8.6),P(x+.8,y+.2+o,8.6))}}},
+bench:{s:[2,1],p:[[.1,.2,1.8,.6,0,12,'#333','#444'],[0,.45,2,.1,22,25,'#aaa','#ddd'],[-.1,.35,.2,.3,12,34,'#222','#333'],[1.9,.35,.2,.3,12,34,'#222','#333']]},
+racks:{s:[2,1],p:[[.05,.2,1.9,.6,0,22,'#444','#555']],f:(c,x,y)=>{['#e74c3c','#3498db','#f1c40f','#2ecc71','#9b59b6'].forEach((cl,k)=>{const q=P(x+.25+k*.38,y+.5,23);c.fillStyle=cl;c.beginPath();c.ellipse(q[0],q[1],4,2.2,0,0,7);c.fill()})}},
+lounger:{s:[2,1],p:[[.1,.15,1.8,.7,0,9,'#f5f0e6','#f2b84b'],[.1,.15,.5,.7,9,20,'#f5f0e6','#fff']]},
+umbrella:{s:[1,1],p:[[.45,.45,.1,.1,0,64,'#ddd','#eee']],f:(c,x,y)=>{const q=P(x+.5,y+.5,64);for(let k=0;k<8;k++){c.fillStyle=k%2?'#e74c3c':'#f5efe3';c.beginPath();c.moveTo(q[0],q[1]-8);c.arc(q[0],q[1],36,Math.PI*(1+k/8),Math.PI*(1+(k+1)/8));c.closePath();c.fill()}}},
+dj:{s:[2,1],p:[[.05,.2,1.9,.6,0,24,'#222','#333'],[-.25,.15,.3,.7,0,46,'#111','#222'],[1.95,.15,.3,.7,0,46,'#111','#222']],f:(c,x,y,t)=>{const b=Math.sin(t*8)*.5+.5;[-.1,2.1].forEach(ox=>{const q=P(x+ox,y+.5,16);c.fillStyle='#444';c.beginPath();c.arc(q[0],q[1],5+b*1.5,0,7);c.fill()});const q=P(x+1,y+.5,27);c.fillStyle=['#f33','#3f3','#38f'][(t*4|0)%3];c.fillRect(q[0]-12,q[1]-1,24,2)}},
+buffet:{s:[3,1],p:[[.05,.2,2.9,.6,0,24,'#6b4a2b','#fffaf0']],f:(c,x,y)=>['#e74c3c','#f1c40f','#27ae60','#e67e22','#9b59b6'].forEach((cl,k)=>{const q=P(x+.35+k*.55,y+.5,25);c.fillStyle='#fff';c.beginPath();c.ellipse(q[0],q[1],6,3,0,0,7);c.fill();c.fillStyle=cl;c.beginPath();c.ellipse(q[0],q[1]-1,4,2,0,0,7);c.fill()})},
+counter:{s:[4,1],p:[[.05,.2,3.9,.6,0,26,'#7a4f2a','#e8d9c0'],[2.8,.3,.8,.4,26,40,'#555','#777']],f:(c,x,y,t)=>{for(let i=0;i<3;i++){const u=(t*.6+i/3)%1,q=P(x+3.2,y+.5,42+u*30);c.fillStyle='rgba(255,255,255,'+.4*(1-u)+')';c.beginPath();c.arc(q[0]+Math.sin(t*3+i)*3,q[1],3+u*4,0,7);c.fill()}}},
+stool:{s:[1,1],p:[[.35,.35,.3,.3,0,16,'#444','#c0392b']]},
+guarddesk:{s:[2,1],p:[[.05,.1,1.9,.8,0,24,'#4a5568','#6b7788'],[.3,.3,.4,.1,24,40,'#111','#222'],[1.1,.3,.4,.1,24,40,'#111','#222']]},
+bench2:{s:[2,1],p:[[.1,.2,1.8,.6,0,12,'#7a5430','#9a7040'],[.1,.15,1.8,.15,12,30,'#7a5430','#8a6038']]},
+cooler:{s:[1,1],p:[[.3,.3,.4,.4,0,34,'#dfe5ea','#f1f5f8'],[.35,.35,.3,.3,34,48,'#9fd4e8','#bfe9ff']]},
+ball:{s:[1,1],p:[],f:(c,x,y,t)=>{const q=P(x+.5,y+.5,96);c.strokeStyle='#bbb';c.lineWidth=1;ln(c,[q[0],q[1]-30],q);const g=c.createRadialGradient(q[0]-4,q[1]-4,2,q[0],q[1],14);g.addColorStop(0,'#fff');g.addColorStop(1,'#8892a6');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1],13,0,7);c.fill();for(let k=0;k<6;k++){const a=t*2+k*1.05;c.fillStyle='rgba(255,255,255,.8)';c.fillRect(q[0]+Math.cos(a)*9,q[1]+Math.sin(a*1.3)*8,2,2)}}}};
+function drawDec(c,n,x,y,t){const d=DEC[n];d.p.forEach(([ox,oy,w,h,z0,z1,cl,tp])=>box(c,x+ox,y+oy,w,h,z0,z1,cl,tp));if(d.f)d.f(c,x,y,t)}
 // Conteúdo visual do térreo copiado do buildGround/aptRender do ZIP.
 const CONDO_ZIP={
  rooms:[[0,0,12,16,'Recepção','m'],[0,11,4,5,'Portaria','s'],[12,0,8,8,'Salão de festas','d'],[12,8,8,8,'Academia','g'],[20,0,6,10,'Piscina','q'],[21,2,4,6,'','p'],[20,10,6,6,'Café','k']],
