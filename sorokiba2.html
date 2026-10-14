@@ -1212,7 +1212,7 @@ function makeInterior(building){
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const start=findRoomSpot(interior.room,interior.room.width/2,interior.room.depth-1.15);ipx=start?.x??interior.room.width/2;ipy=start?.y??interior.room.depth-1.15;
+ const entry=interior.room.family==='condo'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=false;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
