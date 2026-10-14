@@ -417,3 +417,16 @@ test('courier missions require in-world pickup and delivery at a marked destinat
   assert.match(client, /task\?\.type==='delivery_route'/);
   assert.match(client, /marcador dourado no minimapa/);
 });
+
+
+test('courier can toggle a delivery motorcycle and work dashboard is organized responsively', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /let deliveryBike=false/);
+  assert.match(client, /function drawDeliveryBike/);
+  assert.match(client, /deliveryBike\?1\.7:1/);
+  assert.match(client, /Pegar moto de entrega/);
+  assert.match(client, /Devolver moto de entrega/);
+  assert.match(client, /workOverview/);
+  assert.match(client, /workMissionCard/);
+  assert.match(client, /@media\(max-width:760px\)\{#workPanel/);
+});
