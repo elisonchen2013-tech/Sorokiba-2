@@ -195,6 +195,12 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 .mayorTool{background:#8b2525!important;border:1px solid #ff8f8f77!important;color:#fff1e7!important;font-weight:800!important}
 @media(max-width:500px){#icecreamChoices{grid-template-columns:minmax(0,1fr)}.icecreamItem{padding:11px}.icecreamActions button{font-size:12px}}
 
+/* Central administrativa e polimento visual do mundo 2.5D */
+.mayorTool{border:1px solid #f2b84b99!important;background:linear-gradient(135deg,#f2b84b,#ffdc91)!important;color:#111827!important;border-radius:9px!important;padding:7px 11px!important;font-weight:800;cursor:pointer}
+.mayorPanel{position:fixed;z-index:12;inset:clamp(10px,3vh,28px) clamp(10px,4vw,48px);overflow:auto;padding:clamp(16px,3vw,30px);border:1px solid #f2b84b77;border-radius:22px;background:linear-gradient(145deg,rgba(10,16,31,.97),rgba(20,32,53,.96));box-shadow:0 24px 80px #000b;backdrop-filter:blur(18px);color:#f5efe3}
+.mayorPanelHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.mayorPanelHeader h2{margin:3px 0 6px;font-size:clamp(24px,4vw,36px);letter-spacing:-.03em}.mayorPanelHeader p{margin:0;color:#c5d0dd;max-width:640px;line-height:1.5}.mayorPanelHeader .mayorKicker{color:#f2b84b;font-size:11px;font-weight:900;letter-spacing:.18em}.mayorPanelHeader button,.mayorControlCard button{border:1px solid #ffffff25;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer;background:#f2b84b;color:#101725}.mayorPanelHeader button{background:#ffffff10;color:#f5efe3}.mayorStatusRow{display:flex;align-items:center;gap:9px;margin:22px 0;padding:12px 14px;border:1px solid #2dd4bf44;border-radius:12px;background:#2dd4bf0b;color:#d9e7ef;font-size:13px}.mayorStatusDot{width:8px;height:8px;border-radius:50%;background:#f2b84b;box-shadow:0 0 12px currentColor;flex:none}.mayorControlGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.mayorControlCard{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:0;padding:18px;border:1px solid #ffffff18;border-radius:16px;background:linear-gradient(150deg,#ffffff0b,#ffffff04)}.mayorControlIcon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#f2b84b1c;color:#f2b84b;font-size:12px;font-weight:900}.mayorControlCard h3{margin:2px 0 0;font-size:18px}.mayorControlCard p{margin:0 0 8px;color:#aebdcc;font-size:13px;line-height:1.55;flex:1}.mayorControlCard button{width:100%;min-height:42px}.mayorControlCard button:disabled{opacity:.55;cursor:wait}.mayorControlCard button.mayorSecondary{background:#ffffff0b;color:#f5efe3;border-color:#ffffff24}.mayorAnnouncementCard label{font-size:12px;font-weight:700;color:#d9e7ef}.mayorAnnouncementCard textarea{width:100%;resize:vertical;min-height:76px;border:1px solid #ffffff2c;border-radius:10px;padding:10px;background:#080f1d;color:#f5efe3;font:inherit;font-size:13px;text-align:left;outline:none}.mayorAnnouncementCard textarea:focus{border-color:#f2b84b;box-shadow:0 0 0 3px #f2b84b1c}.mayorFootnote{color:#8e9eaf;font-size:12px;margin:18px 0 0}.mayorPanel[hidden]{display:none!important}
+@media(max-width:800px){.mayorControlGrid{grid-template-columns:1fr}.mayorPanel{inset:8px;padding:16px;border-radius:16px}.mayorPanelHeader{gap:8px}.mayorPanelHeader button{padding:8px}.mayorControlCard{padding:14px}}
+
 </style></head><body>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -206,7 +212,17 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <div id="cu" hidden><div class="sw" id="c1"></div><div class="sw" id="c2"></div><div class="sw" id="c3"></div><div class="sw" id="c4"></div><div class="sw" id="c5"></div><div class="sw" id="c6"></div><div class="sw" id="c7"></div><div class="sw" id="c8"></div></div>
 <button id="go" class="main">Entrar</button><div id="msg"></div>
 </div>
-<div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="mayorTestAccident" class="mayorTool" hidden type="button">Testar acidente</button><button id="out">Sair</button></div>
+<div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="mayorControlsBtn" class="mayorTool" hidden type="button">Prefeitura</button><button id="out">Sair</button></div>
+<section id="mayorPanel" class="mayorPanel" hidden aria-labelledby="mayorPanelTitle">
+ <header class="mayorPanelHeader"><div><p class="mayorKicker">SOROKIBA 2 · CONTROLE DO MUNDO</p><h2 id="mayorPanelTitle">Central da Prefeitura</h2><p>As ações daqui afetam o mundo aberto para todos os jogadores conectados.</p></div><button id="mayorClose" type="button" aria-label="Fechar painel">Fechar</button></header>
+ <div class="mayorStatusRow"><span class="mayorStatusDot"></span><span id="mayorStatus" aria-live="polite">Conecte-se ao multiplayer para controlar a cidade.</span></div>
+ <div class="mayorControlGrid">
+  <article class="mayorControlCard"><span class="mayorControlIcon">01</span><h3>Trânsito e acidentes</h3><p>Inicie uma ocorrência visível no mapa, com veículos parados e resposta de emergência.</p><button id="mayorStartAccident" type="button">Iniciar acidente de teste</button><button id="mayorEndAccidents" class="mayorSecondary" type="button">Encerrar ocorrências</button></article>
+  <article class="mayorControlCard"><span class="mayorControlIcon">02</span><h3>Fluxo da cidade</h3><p>Ative um congestionamento de teste para reduzir a velocidade dos veículos no mundo.</p><button id="mayorTrafficToggle" type="button">Ativar congestionamento</button></article>
+  <article class="mayorControlCard mayorAnnouncementCard"><span class="mayorControlIcon">03</span><h3>Comunicado global</h3><p>Envie um aviso para todos os jogadores. O comunicado aparece com som.</p><label for="mayorAnnouncementInput">Mensagem para a cidade</label><textarea id="mayorAnnouncementInput" maxlength="160" rows="3" placeholder="Ex.: Atenção, cidadãos! A Prefeitura iniciou um teste de trânsito."></textarea><button id="mayorSendAnnouncement" type="button">Transmitir comunicado</button></article>
+ </div>
+ <p class="mayorFootnote">Ações protegidas pelo servidor. Os controles não ficam disponíveis para contas de cidadão.</p>
+</section>
 <section id="careerPanel" hidden aria-labelledby="careerTitle">
  <button id="careerClose" type="button">Fechar</button>
  <div class="careerHeader"><div><p class="careerKicker">Sorokiba 2 · Recrutamento</p><h2 id="careerTitle">Central de carreiras</h2><p class="careerIntro">Prepare seu currículo, confira os requisitos e candidate-se às vagas da cidade.</p></div><div class="careerXpBadge"><span>Seu XP geral</span><strong id="careerPlayerXp">0</strong></div></div>
@@ -233,7 +249,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <script>
 const $=i=>document.getElementById(i),cv=$('cv'),c=cv.getContext('2d'),pc=$('pv').getContext('2d');
 const MW=96,MH=84,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
-let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,stickVector=null,stickPointer=null,cam={x:0,y:0},isSeated=false,seatBench=null,trafficAuthorityId=0,lastTrafficSend=0,ls=0,accidents=[],lastCrashAt=0;
+let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,stickVector=null,stickPointer=null,cam={x:0,y:0},isSeated=false,seatBench=null,trafficAuthorityId=0,lastTrafficSend=0,ls=0,accidents=[],lastCrashAt=0,mayorTrafficSlowdown=false;
 let px=27.5,py=14.5,pd=0,pf=0,gs=0,last=performance.now(),near=null,hT=0,sT=0,isNew=false,selC='#2DD4BF',selS='#f1c7a0',open=false;
 let interior=null,ipx=6,ipy=6.15;
 const DEV_OFFLINE=window.SK2_DEV_OFFLINE===true||new URLSearchParams(location.search).get('devOffline')==='1';
@@ -514,7 +530,7 @@ $('snd').onclick=e=>{e.stopPropagation();aud();mute=!mute;try{localStorage.setIt
 function conn(){try{ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host+'/sk2ws')}catch(e){ws=null;return}
 const w=ws;w.onopen=()=>w.send(JSON.stringify({t:'hi',token}));
 w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
-if(m.t=='r'){myId=m.id;RP.clear();m.p.forEach(addR);ON=1;trafficAuthorityId=m.authority||0;if(Array.isArray(m.traffic))applyTrafficSnapshot(m.traffic,true);if(Array.isArray(m.incidents))m.incidents.forEach(activateAccident);$('cb').hidden=false}
+if(m.t=='r'){myId=m.id;RP.clear();m.p.forEach(addR);ON=1;trafficAuthorityId=m.authority||0;mayorTrafficSlowdown=!!m.cityEvents?.trafficSlowdown;updateMayorTrafficButton();if(Array.isArray(m.traffic))applyTrafficSnapshot(m.traffic,true);if(Array.isArray(m.incidents))m.incidents.forEach(activateAccident);$('cb').hidden=false}
 else if(m.t=='j'){addR(m.p);if(Number.isInteger(m.authority))trafficAuthorityId=m.authority}
 else if(m.t=='l')RP.delete(m.id);
 else if(m.t=='s')m.p.forEach(([id,x,y,d,f,s])=>{const q=RP.get(id);if(q){q.tx=x/100;q.ty=y/100;q.d=d;q.f=f;q.seated=!!s;q.o.seated=q.seated}});
@@ -522,6 +538,10 @@ else if(m.t=='a'){trafficAuthorityId=m.id||0;if(Array.isArray(m.c))applyTrafficS
 else if(m.t=='v')applyTrafficSnapshot(m.c,false);
 else if(m.t=='x'&&m.incident)activateAccident(m.incident);
 else if(m.t==='accidentTestResult')missionFeedback(m.message|| (m.ok?'Teste de acidente iniciado.':'Não foi possível testar o acidente.'));
+else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído.');missionFeedback(m.message||'Comando concluído.');}
+else if(m.t==='incidentClear'){clearAccidentScenes(m.ids);setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
+else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
+else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
 else if(m.t=='c')chat(m)};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
@@ -1288,6 +1308,7 @@ if(gm&&!interior){
 }
 a.playerBlocking=playerBlocking;a.hornCooldown=Math.max(0,(a.hornCooldown||0)-dt);a.hornFlash=Math.max(0,(a.hornFlash||0)-dt);
 if(playerBlocking&&a.s<.42&&a.hornCooldown<=0){playCarHorn();a.hornCooldown=2.15;a.hornFlash=.72}
+if(mayorTrafficSlowdown&&de>.25)de=Math.min(de,Math.max(.35,a.v*.52));
 a.br=de<a.s-.05||a.s<.3;a.s+=Math.max(-8.5*dt,Math.min(2.8*dt,de-a.s));
 a.d+=a.s*dt;a.x+=a.dx*a.s*dt;a.y+=a.dy*a.s*dt;if(a.x>MW+3)a.x=-3;if(a.x<-3)a.x=MW+3;if(a.y>MH+3)a.y=-3;if(a.y<-3)a.y=MH+3});
  detectTrafficCollisions();
@@ -1501,12 +1522,19 @@ $('icecreamChoices').onclick=e=>{
  iceCreamAction(button.dataset.icecreamBuy?'buy':'eat',flavor);
 };
 $('icecreamClose').onclick=()=>{$('icecreamMenu').hidden=true;iceCreamShopBusy=false};
-$('mayorTestAccident').onclick=()=>{
- if(user?.role!=='prefeito')return missionFeedback('Somente o Prefeito pode iniciar o teste de acidente.');
- if(!ws||ws.readyState!==1)return missionFeedback('Conecte-se ao multiplayer para testar o acidente.');
- ws.send(JSON.stringify({t:'testAccident'}));
- missionFeedback('Solicitando teste de acidente ao servidor...');
-};
+function setMayorStatus(message){const el=$('mayorStatus');if(el)el.textContent=String(message||'');}
+function updateMayorTrafficButton(){const b=$('mayorTrafficToggle');if(b)b.textContent=mayorTrafficSlowdown?'Desativar congestionamento':'Ativar congestionamento';}
+function sendMayorAction(action,extra={}){
+ if(user?.role!=='prefeito')return missionFeedback('Somente o Prefeito pode controlar a cidade.');
+ if(!ws||ws.readyState!==1)return missionFeedback('Conecte-se ao multiplayer para controlar a cidade.');
+ ws.send(JSON.stringify({t:'mayorAction',action,...extra}));setMayorStatus('Enviando comando ao servidor...');
+}
+$('mayorControlsBtn').onclick=()=>{if(user?.role!=='prefeito')return;$('mayorPanel').hidden=false;setMayorStatus(ON?'Conectado ao mundo multiplayer.':'Conecte-se ao multiplayer para controlar a cidade.');updateMayorTrafficButton();tone(620,.07,'sine',.05)};
+$('mayorClose').onclick=()=>{$('mayorPanel').hidden=true};
+$('mayorStartAccident').onclick=()=>sendMayorAction('accident_start');
+$('mayorEndAccidents').onclick=()=>sendMayorAction('accident_end');
+$('mayorTrafficToggle').onclick=()=>sendMayorAction('traffic_toggle',{active:!mayorTrafficSlowdown});
+$('mayorSendAnnouncement').onclick=()=>{const field=$('mayorAnnouncementInput'),message=field.value.trim();if(!message)return setMayorStatus('Digite uma mensagem antes de transmitir.');sendMayorAction('announcement',{message});};
 
 async function completeMission(id,event){
  if(!user||user.missions?.[id]||(id==='welcome'&&user.mission?.done))return 'Objetivo já concluído.';
@@ -1684,9 +1712,9 @@ if(!DEV_OFFLINE)return;
 say('');
 if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor'];db[k]={name:n,h:hs(p),col:LK.col,skin:LK.skin,hr:LK.hr,pn:LK.pn,body:LK.body,st:LK.st,ac:LK.ac,dr:LK.dr,money:fm?1000:100,xp:0,x:27.5,y:14.5,role:fm?'prefeito':'cidadão'};if(fm)db['#mayor']=k;sv();start(db[k])}
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
-function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorTestAccident').hidden=a.role!=='prefeito';
+function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorTestAccident').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 function save(){if(user){user.x=px;user.y=py;sv()}}
 addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);
