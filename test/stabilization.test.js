@@ -104,3 +104,19 @@ test('work panel provides server-validated tasks and idempotent payment history'
   assert.match(client, /Meu trabalho/);
   assert.match(client, /completeWorkTask/);
 });
+
+test('professional minigames keep stages and answers server-side', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /electrician:/);
+  assert.match(server, /courier:/);
+  assert.match(server, /fastfood_counter:/);
+  assert.match(server, /definition\.stages/);
+  assert.match(server, /option !== stage\.correct/);
+  assert.match(server, /advanceWorkTask/);
+  assert.match(db, /async function advanceWorkTask/);
+  assert.match(db, /status='assigned'/);
+  assert.match(client, /data\.task\.options/);
+  assert.match(client, /Etapa/);
+});

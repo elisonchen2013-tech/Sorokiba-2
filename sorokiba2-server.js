@@ -20,6 +20,9 @@ const CAREERS = Object.freeze([
   { id: 'library_assistant', title: 'Assistente de biblioteca', profession: 'Bibliotecária', building: 'Biblioteca', skills: ['organizacao'], minExperience: 0, vacancies: 1 },
   { id: 'mechanic', title: 'Mecânico de oficina', profession: 'Mecânico', building: 'Oficina', skills: ['manutencao'], minExperience: 1, vacancies: 1 },
   { id: 'restaurant_server', title: 'Atendente de restaurante', profession: 'Garçom', building: 'Restaurante', skills: ['atendimento'], minExperience: 0, vacancies: 2 },
+  { id: 'electrician', title: 'Eletricista de manutenção', profession: 'Eletricista', building: 'Fábrica', skills: ['manutencao'], minExperience: 1, vacancies: 1 },
+  { id: 'courier', title: 'Entregador urbano', profession: 'Entregador', building: 'Rodoviária', skills: ['organizacao'], minExperience: 0, vacancies: 2 },
+  { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 1, vacancies: 2 },
   { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, vacancies: 1 },
 ]);
 const CAREER_SKILLS = Object.freeze({
@@ -54,6 +57,21 @@ const INTERVIEW_QUESTIONS = Object.freeze({
     { id: 'inclusion', prompt: 'Um aluno precisa de apoio extra. Você:', options: ['Adapta a explicação e pede suporte', 'Ignora', 'Expõe o aluno'], correct: 0 },
     { id: 'planning', prompt: 'Para preparar uma aula, é importante:', options: ['Planejar objetivo, materiais e acompanhamento', 'Improvisar sempre', 'Evitar feedback'], correct: 0 },
   ],
+  electrician: [
+    { id: 'isolate', prompt: 'Antes de uma inspeção fictícia, qual é a atitude segura?', options: ['Isolar a área e seguir o procedimento do supervisor', 'Tocar no painel para testar', 'Pular a inspeção'], correct: 0 },
+    { id: 'component', prompt: 'Qual componente o supervisor pediu para identificar?', options: ['Sinalizador azul', 'Componente vermelho indicado no roteiro', 'Qualquer fio'], correct: 1 },
+    { id: 'report', prompt: 'Como registrar o resultado?', options: ['Relatar observações sem improvisar reparos', 'Esconder a falha', 'Alterar o relatório'], correct: 0 },
+  ],
+  courier: [
+    { id: 'route', prompt: 'Como escolher uma rota de entrega?', options: ['Conferir destino e planejar a rota', 'Sair sem endereço', 'Entregar ao primeiro prédio'], correct: 0 },
+    { id: 'package', prompt: 'Antes de sair com a encomenda, você deve:', options: ['Conferir identificação e integridade da embalagem', 'Abrir a embalagem', 'Trocar a etiqueta'], correct: 0 },
+    { id: 'handoff', prompt: 'Na entrega, qual é a melhor prática?', options: ['Confirmar o destinatário e registrar a entrega', 'Deixar na rua', 'Ignorar o destino'], correct: 0 },
+  ],
+  fastfood_counter: [
+    { id: 'assemble', prompt: 'Como montar um pedido?', options: ['Conferir itens e montar conforme a comanda', 'Escolher itens aleatórios', 'Omitir acompanhamentos'], correct: 0 },
+    { id: 'allergen', prompt: 'Uma restrição foi informada. Você:', options: ['Confere a comanda e sinaliza à cozinha', 'Ignora a observação', 'Troca o pedido sem registrar'], correct: 0 },
+    { id: 'handoff', prompt: 'Antes de entregar o pedido:', options: ['Conferir a comanda e o nome do cliente', 'Entregar sem olhar', 'Remover a identificação'], correct: 0 },
+  ],
 });
 const careerById = id => CAREERS.find(job => job.id === id);
 const questionById = (jobId, id) => INTERVIEW_QUESTIONS[jobId]?.find(question => question.id === id);
@@ -62,8 +80,23 @@ const WORK_TASKS = Object.freeze({
   hospital_reception: { type: 'patient_checkin', prompt: 'Registre corretamente 2 pacientes na recepção.', target: 2, money: 40, xp: 20, supervisor: 'Helena' },
   restaurant_server: { type: 'serve_orders', prompt: 'Sirva 3 pedidos e confirme cada um.', target: 3, money: 35, xp: 18, supervisor: 'Davi' },
   library_assistant: { type: 'catalog_books', prompt: 'Catalogue 4 livros novos no acervo.', target: 4, money: 30, xp: 16, supervisor: 'Clara' },
+  electrician: { type: 'inspect_panel', supervisor: 'João', money: 55, xp: 28, stages: [
+    { id: 'safety', prompt: 'Inspeção fictícia: escolha o procedimento seguro.', options: ['Isolar a área e seguir o roteiro', 'Tocar no painel', 'Improvisar'], correct: 0 },
+    { id: 'identify', prompt: 'Identifique o componente indicado no roteiro.', options: ['Componente vermelho', 'Fio aleatório', 'Sinalizador azul'], correct: 0 },
+    { id: 'report', prompt: 'Registre o resultado da inspeção.', options: ['Relatório objetivo', 'Ocultar observações', 'Alterar dados'], correct: 0 },
+  ] },
+  courier: { type: 'delivery_route', supervisor: 'Rosa', money: 45, xp: 24, stages: [
+    { id: 'pickup', prompt: 'Pegue a encomenda conferindo identificação e destino.', options: ['Conferir etiqueta e lacre', 'Abrir embalagem', 'Trocar etiqueta'], correct: 0 },
+    { id: 'route', prompt: 'Escolha o destino exibido para a entrega.', options: ['Biblioteca', 'Hospital', 'Praça central'], correct: 0 },
+    { id: 'deliver', prompt: 'Confirme a entrega ao destinatário.', options: ['Confirmar destinatário e registrar', 'Deixar na rua', 'Ignorar a confirmação'], correct: 0 },
+  ] },
+  fastfood_counter: { type: 'assemble_order', supervisor: 'Davi', money: 42, xp: 22, stages: [
+    { id: 'assemble', prompt: 'Monte o pedido conforme a comanda.', options: ['Conferir itens da comanda', 'Escolher itens aleatórios', 'Omitir o acompanhamento'], correct: 0 },
+    { id: 'restriction', prompt: 'Confira a observação de restrição do cliente.', options: ['Sinalizar a restrição à cozinha', 'Ignorar a observação', 'Trocar sem registrar'], correct: 0 },
+    { id: 'handoff', prompt: 'Faça a conferência final antes da entrega.', options: ['Conferir nome e comanda', 'Entregar sem olhar', 'Remover identificação'], correct: 0 },
+  ] },
 });
-const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, status: task.status, createdAt: task.created_at });
+const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.task?.prompt, target: task.task?.target, stage: task.task?.stage, options: task.task?.options, status: task.status, createdAt: task.created_at });
 
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
@@ -333,7 +366,9 @@ async function attachSorokiba2(app, server, opt = {}) {
       if (state.shift.task_id) return res.json({ ok: 1, task: publicTask({ id: state.shift.task_id, task_type: state.shift.task_type, task: state.shift.task, status: state.shift.task_status }) });
       const task = await db.assignWorkTask(row.username, state.shift.id, jobId, {
         type: definition.type,
-        payload: { prompt: definition.prompt, target: definition.target },
+        payload: definition.stages
+          ? { stage: 0, stageId: definition.stages[0].id, prompt: definition.stages[0].prompt, options: definition.stages[0].options }
+          : { prompt: definition.prompt, target: definition.target },
         money: definition.money,
         xp: definition.xp,
       });
@@ -348,6 +383,28 @@ async function attachSorokiba2(app, server, opt = {}) {
       const count = Number(req.body?.count);
       const state = await db.getWorkState(row.username);
       if (!state.shift?.task_id || state.shift.task_id !== taskId) return res.status(409).json({ err: 'Tarefa inválida ou não é a próxima tarefa' });
+      const definition = WORK_TASKS[row.employment?.jobId];
+      if (definition?.stages) {
+        const option = Number(req.body?.option);
+        const stageIndex = Number(state.shift.task?.stage);
+        const stage = definition.stages[stageIndex];
+        if (!stage || !Number.isInteger(option) || option < 0 || option >= stage.options.length) {
+          return res.status(400).json({ err: 'Etapa ou opção inválida' });
+        }
+        if (option !== stage.correct) {
+          return res.status(400).json({ err: 'Essa escolha não atende ao procedimento da tarefa. Tente novamente.' });
+        }
+        const nextIndex = stageIndex + 1, done = nextIndex >= definition.stages.length;
+        const nextStage = definition.stages[nextIndex];
+        const nextTask = done ? { ...state.shift.task, stage: nextIndex, stageId: stage.id, prompt: stage.prompt, options: stage.options } :
+          { stage: nextIndex, stageId: nextStage.id, prompt: nextStage.prompt, options: nextStage.options };
+        const advanced = await db.advanceWorkTask(row.username, taskId, nextTask, { option }, done);
+        if (!advanced) return res.status(404).json({ err: 'Tarefa não encontrada' });
+        if (advanced.duplicate) return res.json({ ok: 1, duplicate: true, message: 'Tarefa já contabilizada; nenhum pagamento duplicado.' });
+        return res.json(done
+          ? { ok: 1, completed: true, payment: advanced.task.reward_money, professionalXp: advanced.task.reward_xp, performance: 100, player: db.pub(advanced.player) }
+          : { ok: 1, completed: false, task: publicTask(advanced.task), message: 'Etapa concluída. Próxima etapa liberada.' });
+      }
       const target = Number(state.shift.task?.target);
       if (!Number.isInteger(count) || count < target) return res.status(400).json({ err: `Conclua pelo menos ${target} unidade(s) da tarefa` });
       const performance = Math.min(100, Math.round(count === target ? 100 : target / count * 100));

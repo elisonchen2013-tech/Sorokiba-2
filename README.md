@@ -81,6 +81,12 @@ Contratações aprovadas nos cargos de recepção hospitalar, atendimento de res
 
 Endpoints autenticados: `GET /api/sk2/work`, `POST /api/sk2/work/supervisor`, `POST /api/sk2/work/start`, `POST /api/sk2/work/task` e `POST /api/sk2/work/task/complete`. Turnos, tarefas e histórico são persistidos; há no máximo um turno ativo e uma tarefa pendente por conta. Pagamento e XP profissional são calculados pela definição server-side, e a conclusão usa atualização transacional/idempotente para resistir a reenvio após falha de rede.
 
+## Etapa 4: minijogos profissionais
+
+Os mesmos endpoints de trabalho agora suportam tarefas em etapas para três novos fluxos: **Eletricista** (inspeção fictícia, escolha de componente e relatório seguro), **Entregador** (pegar encomenda, confirmar destino e entregar) e **Atendente de fast-food** (montar, conferir restrição e fazer conferência final). As vagas usam os prédios/NPCs já existentes e passam pela entrevista antes da contratação.
+
+As opções exibidas são apenas alternativas seguras; o gabarito e a etapa atual ficam no servidor. `POST /api/sk2/work/task/complete` aceita o índice da opção, valida a etapa, avança a tarefa ou finaliza o pagamento. Cada avanço é persistido e a finalização usa a mesma proteção transacional/idempotente do histórico, sem instruções de elétrica real ou qualquer ação perigosa.
+
 ## Testes
 
 ```sh

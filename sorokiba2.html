@@ -965,9 +965,13 @@ function renderWork(data){
  $('workNext').disabled=!data.shift;
  const taskBox=$('workTask');taskBox.replaceChildren();
  if(data.task){
-  const p=document.createElement('p');p.textContent=data.task.prompt+` Meta: ${data.task.target}.`;taskBox.append(p);
-  const input=document.createElement('input');input.type='number';input.min=data.task.target;input.value=data.task.target;input.id='workCount';input.placeholder='Quantidade concluída';taskBox.append(input);
-  const done=document.createElement('button');done.className='workAction';done.textContent='Concluir tarefa';done.onclick=()=>completeWorkTask(data.task.id);taskBox.append(done);
+  const p=document.createElement('p');p.textContent=data.task.stage!=null?`Etapa ${data.task.stage+1}: ${data.task.prompt}`:data.task.prompt+` Meta: ${data.task.target}.`;taskBox.append(p);
+  if(Array.isArray(data.task.options)){
+   data.task.options.forEach((option,index)=>{const button=document.createElement('button');button.className='workAction';button.textContent=option;button.onclick=()=>completeWorkTask(data.task.id,index);taskBox.append(button)});
+  }else{
+   const input=document.createElement('input');input.type='number';input.min=data.task.target;input.value=data.task.target;input.id='workCount';input.placeholder='Quantidade concluída';taskBox.append(input);
+   const done=document.createElement('button');done.className='workAction';done.textContent='Concluir tarefa';done.onclick=()=>completeWorkTask(data.task.id);taskBox.append(done);
+  }
  }else{taskBox.textContent=data.shift?'O turno está ativo. Receba a próxima tarefa.':'Nenhuma tarefa ativa.'}
  const history=$('workHistory');history.replaceChildren();const h=document.createElement('p');h.textContent=`Histórico recente: ${(data.history||[]).map(item=>`${item.job_id} · R$ ${item.payment} · ${item.professional_xp} XP`).join(' | ')||'nenhum registro'}`;history.append(h);
 }
@@ -982,9 +986,10 @@ async function workAction(path, body, success){
 $('workSupervisor').onclick=()=>workAction('/work/supervisor',null,j=>`${j.supervisor}: ${j.message}`);
 $('workStart').onclick=async()=>{await workAction('/work/start',null,j=>'Turno iniciado.');loadWork()};
 $('workNext').onclick=async()=>{await workAction('/work/task',null,j=>'Nova tarefa recebida.');loadWork()};
-async function completeWorkTask(taskId){
+async function completeWorkTask(taskId,option){
  const count=Number($('workCount')?.value);
- await workAction('/work/task/complete',{taskId,count},j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':`Tarefa concluída: R$ ${j.payment} e ${j.professionalXp} XP profissional.`);loadWork();
+ const body=option==null?{taskId,count}:{taskId,option};
+ await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Tarefa concluída: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));loadWork();
 }
 $('workBtn').onclick=loadWork;
 $('workClose').onclick=()=>{$('workPanel').hidden=true};
