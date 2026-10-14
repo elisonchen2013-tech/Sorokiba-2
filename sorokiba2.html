@@ -1729,9 +1729,17 @@ async function completeWorkTask(taskId,option){
  const result=await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Cliente atendido! Recompensa: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));
  if(result?.completed){
   deliveryBike=false;
-  const next=await workAction('/work/task',null,j=>'Recompensa recebida! Uma nova entrega foi preparada.');
-  if(next?.task){$('workMsg').textContent=`Entrega concluída: +R$ ${result.payment} e +${result.professionalXp} XP. Nova encomenda disponível!`;loadWork()}
-  else loadWork();
+  const rewardBox=$('workRewardClaim');
+  if(rewardBox){
+   rewardBox.hidden=false;rewardBox.replaceChildren();
+   const title=document.createElement('strong');title.textContent='Entrega concluída!';rewardBox.append(title);
+   const details=document.createElement('p');details.textContent=`Recompensa: R$ ${result.payment} e ${result.professionalXp} XP profissional. O pagamento já foi creditado automaticamente.`;rewardBox.append(details);
+   const claim=document.createElement('button');claim.type='button';claim.className='workAction';claim.textContent='Continuar para próxima entrega';
+   claim.onclick=async()=>{const next=await workAction('/work/task',null,j=>'Nova entrega preparada.');if(next?.task){$('workMsg').textContent='Recompensa confirmada! A próxima entrega já está disponível.';loadWork()}else loadWork()};
+   rewardBox.append(claim);
+  }
+  $('workMsg').textContent='Entrega concluída! Confira sua recompensa e continue quando estiver pronto.';
+  loadWork();
  }else if(result)loadWork();
 }
 $('workBtn').onclick=loadWork;
