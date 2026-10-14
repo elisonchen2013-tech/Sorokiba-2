@@ -451,3 +451,15 @@ test('courier delivery presents a waiting customer and automatically queues the 
   assert.match(client, /await workAction\('\/work\/task',null/);
   assert.match(client, /Nova encomenda disponível!/);
 });
+
+
+test('work dashboard organizes mission status and presents a reward confirmation before the next courier task', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /workMissionBadge/);
+  assert.match(client, /workMissionProgress/);
+  assert.match(client, /workRewardClaim/);
+  assert.match(client, /Missão: conclua 3 entregas/);
+  assert.match(client, /O pagamento já foi creditado automaticamente/);
+  assert.match(client, /Continuar para próxima entrega/);
+  assert.match(client, /data\.task\.type!=='delivery_route'/);
+});
