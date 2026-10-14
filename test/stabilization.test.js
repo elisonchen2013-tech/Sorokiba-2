@@ -1,0 +1,55 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const read = name => fs.readFileSync(require('node:path').join(__dirname, '..', name), 'utf8');
+
+test('startup waits for database initialization before listening', () => {
+  const standalone = read('sorokiba2-standalone.js');
+  assert.match(standalone, /attachSorokiba2\(app, server\)\s*\.then/);
+  assert.match(read('sorokiba2-server.js'), /async function attachSorokiba2/);
+});
+
+test('health and signal shutdown are wired', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /app\.get\('\/health'/);
+  assert.match(server, /SIGTERM/);
+  assert.match(server, /SIGINT/);
+  assert.match(server, /await db\.close\(\)/);
+});
+
+test('proxy headers and offline mode require explicit configuration', () => {
+  const server = read('sorokiba2-server.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /opt\.trustProxy === true/);
+  assert.match(client, /DEV_OFFLINE/);
+  assert.match(client, /if\(!DEV_OFFLINE\)return/);
+});
+
+test('session, rate limits, payload validation and mission are wired', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /HttpOnly/);
+  assert.match(server, /MAX_CONNECTIONS_PER_IP/);
+  assert.match(server, /Number\.isFinite\(x\)/);
+  assert.match(server, /mission\/complete/);
+  assert.match(db, /completeWelcome/);
+  assert.match(client, /restoreSession/);
+  assert.match(client, /completeMission/);
+});
+
+test('reusable missions are server-validated and persisted atomically', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /hospital_visit/);
+  assert.match(server, /cityhall_notice/);
+  assert.match(server, /library_visit/);
+  assert.match(server, /req\.body\?\.event !== mission\.event/);
+  assert.match(db, /missions=jsonb_set/);
+  assert.match(db, /NOT \(COALESCE\(missions/);
+  assert.match(client, /building:✚ Hospital/);
+  assert.match(client, /spot:Prefeitura:Quadro de avisos/);
+});

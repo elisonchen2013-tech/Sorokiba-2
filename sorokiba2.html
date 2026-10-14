@@ -68,8 +68,9 @@ const MW=96,MH=68,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
 let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,cam={x:0,y:0};
 let px=27.5,py=14.5,pd=0,pf=0,gs=0,last=performance.now(),near=null,hT=0,sT=0,isNew=false,selC='#2DD4BF',selS='#f1c7a0',open=false;
 let interior=null,ipx=6,ipy=6.15;
-try{db=JSON.parse(localStorage.getItem('sk2')||'{}')}catch(e){}
-const sv=()=>{try{localStorage.setItem('sk2',JSON.stringify(db))}catch(e){}};
+const DEV_OFFLINE=window.SK2_DEV_OFFLINE===true||new URLSearchParams(location.search).get('devOffline')==='1';
+if(DEV_OFFLINE)try{db=JSON.parse(localStorage.getItem('sk2')||'{}')}catch(e){}
+const sv=()=>{if(!DEV_OFFLINE)return;try{localStorage.setItem('sk2',JSON.stringify(db))}catch(e){}};
 const hs=s=>{let h=5381;for(const ch of s)h=(h*33^ch.charCodeAt(0))>>>0;return h.toString(36)};
 let sd=7;const R=()=>(sd=sd*16807%2147483647)/2147483647;
 const P=(x,y,z=0)=>[(x-y)*32,(x+y)*16-z];
@@ -317,7 +318,7 @@ w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
 if(m.t=='r'){myId=m.id;RP.clear();m.p.forEach(addR);ON=1;$('cb').hidden=false}else if(m.t=='j')addR(m.p);else if(m.t=='l')RP.delete(m.id);
 else if(m.t=='s')m.p.forEach(([id,x,y,d,f])=>{const q=RP.get(id);if(q){q.tx=x/100;q.ty=y/100;q.d=d;q.f=f}});
 else if(m.t=='c')chat(m)};
-w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&token)setTimeout(()=>{if(mode=='game'&&token&&ws===w)conn()},3000)}}
+w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){RP.set(p.id,{id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,lk:p.lk,o:oOf(p.lk),bub:null})}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
 const bb={m:m.m,u:performance.now()+6000};if(m.id==myId)myBub=bb;else{const q=RP.get(m.id);if(q)q.bub=bb}if(m.id!=myId)tone(880,.05,'sine',.04)}
@@ -559,6 +560,8 @@ function enterBuilding(building){
  const start=findRoomSpot(interior.room,interior.room.width/2,interior.room.depth-1.15);ipx=start?.x??interior.room.width/2;ipy=start?.y??interior.room.depth-1.15;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=false;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
+ if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
+ if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
 }
 function leaveInterior(){
  if(!interior)return;const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
@@ -707,10 +710,10 @@ function act(){
  if(interior){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return}
-  if(near?.t==='interiorSpot'){open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>'}
+  if(near?.t==='interiorSpot'){open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})}
   return;
  }
- if(near&&near.t=='n'){const n=near.o;open=true;tone(660,.1,'sine',.08);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+(n.k?'Oi! Eu sou o Kiba, o ornitorrinco de Sorokiba. Bem-vindo ao Sorokiba 2!':LINES[R()*LINES.length|0])+'</p>'}
+ if(near&&near.t=='n'){const n=near.o;open=true;tone(660,.1,'sine',.08);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+(n.k?'Oi! Eu sou o Kiba, o ornitorrinco de Sorokiba. Bem-vindo ao Sorokiba 2!':LINES[R()*LINES.length|0])+'</p>';if(n.k)completeMission('welcome','npc:kiba').then(msg=>{$('dlg').innerHTML='<b>'+n.n+'</b><p>'+msg+'</p>'})}
  else if(near&&near.t=='d'){enterBuilding(near.o)}
 }
 $('dlg').onclick=act;$('bE').onclick=act;
@@ -863,6 +866,16 @@ requestAnimationFrame(frame)}
 /* ---------- LOGIN ---------- */
 const say=s=>$('msg').textContent=s;let myO={},API='/api/sk2',token=null,ws=null,myId=0,ON=0,RP=new Map(),myBub=null,lastSend=0,lx=0,ly=0,ld=0,lf=0;
 const LK={col:'#2DD4BF',skin:'#f1c7a0',hr:'#2b1b12',pn:'#2a2f45',body:'m',st:0,ac:0,dr:0};
+function missionFeedback(msg){const tip=$('tip');tip.hidden=false;tip.textContent=msg;setTimeout(()=>{if(tip.textContent===msg)tip.hidden=true},3500)}
+async function completeMission(id,event){
+ if(!user||user.missions?.[id]||(id==='welcome'&&user.mission?.done))return 'Objetivo já concluído.';
+ try{
+  const x=await fetch(API+'/mission/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,event})});
+  const j=await x.json().catch(()=>({}));
+  if(x.ok&&j.player){user=j.player;$('hm').textContent=user.money;const msg=j.completed?'Missão concluída! Você recebeu R$ '+j.reward.money+' e '+j.reward.xp+' XP.':'Objetivo já concluído.';missionFeedback(msg);return msg}
+ }catch(e){}
+ return 'Não foi possível salvar o objetivo agora. Tente novamente.';
+}
 function oOf(a){return{pn:a.pn,st:a.st|0,f:a.body=='f',dr:a.dr,bp:a.ac==3?'#8a5a38':0,hat:a.ac==1?'#d9534f':0,gl:a.ac==2,bd:a.ac==4,crown:a.role=='prefeito'}}
 function mk(id,lb,it,cb,sw){const e=$(id);e.append(lb+' ');it.forEach((v,i)=>{const b=document.createElement(sw?'i':'button');if(sw)b.style.background=v;else b.textContent=v;if(!i)b.className='on';b.onclick=()=>{[...e.children].forEach(k=>k.className='');b.className='on';cb(sw?v:i)};e.appendChild(b)})}
 mk('c1','Corpo',['Masculino','Feminino'],i=>LK.body=i?'f':'m');
@@ -879,14 +892,16 @@ $('go').onclick=async()=>{aud();const n=$('u').value.trim(),p=$('p').value,k=n.t
 if(!/^[A-Za-z0-9_]{3,14}$/.test(n))return say('Usuário: 3 a 14 letras, números ou _');
 if(p.length<4)return say('A senha precisa ter 4 ou mais caracteres');
 say('Conectando...');let rs=null;
-try{const x=await fetch(API+(isNew?'/register':'/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,pass:p,look:LK})});if(x.status==404||x.status==405)throw 0;const j=await x.json();if(!x.ok)return say(j.err||'Erro');rs=j}catch(e){rs=null}
+try{const x=await fetch(API+(isNew?'/register':'/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,pass:p,look:LK})});const j=await x.json().catch(()=>({}));if(!x.ok){if(!DEV_OFFLINE)return say(j.err||'A API não está disponível')}else rs=j}catch(e){if(!DEV_OFFLINE)return say('Não foi possível conectar à API. Tente novamente.')}
 if(rs){token=rs.token;say('');return start(rs.player)}
+if(!DEV_OFFLINE)return;
 say('');
 if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor'];db[k]={name:n,h:hs(p),col:LK.col,skin:LK.skin,hr:LK.hr,pn:LK.pn,body:LK.body,st:LK.st,ac:LK.ac,dr:LK.dr,money:fm?1000:100,xp:0,x:27.5,y:14.5,role:fm?'prefeito':'cidadão'};if(fm)db['#mayor']=k;sv();start(db[k])}
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
-function start(a){user=a;myO=oOf(a);if(token)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
+function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
 if(matchMedia('(pointer:coarse)').matches)$('bE').hidden=false;const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();if(ws){const w=ws;ws=null;w.close()}token=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;mode='menu';$('login').hidden=false;['hud','tip','dlg','bE','mm','mp'].forEach(i=>$(i).hidden=true);omap(false);open=false};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;mode='menu';$('login').hidden=false;['hud','tip','dlg','bE','mm','mp'].forEach(i=>$(i).hidden=true);omap(false);open=false};
+async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 function save(){if(user){user.x=px;user.y=py;sv()}}
-addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}requestAnimationFrame(frame);
+addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);
 </script></body></html>
