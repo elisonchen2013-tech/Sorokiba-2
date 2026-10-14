@@ -205,3 +205,23 @@ test('employment center has separate walkable rooms and an interview NPC', () =>
   assert.match(client, /'Carla','Entrevistadora'/);
   assert.match(client, /near\.o\.role==='Entrevistadora'/);
 });
+
+
+test('device detection enables a virtual joystick only for touch gameplay', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(client.includes("matchMedia('(pointer: coarse)')"));
+  assert.ok(client.includes('navigator.maxTouchPoints'));
+  assert.ok(client.includes('id="mobileControls"'));
+  assert.ok(client.includes('id="moveStick"'));
+  assert.ok(client.includes("const active=touchDevice&&mode==='game'"));
+  assert.ok(client.includes("addEventListener('pointerdown'"));
+  assert.ok(client.includes('stickVector||tv'));
+  assert.ok(client.includes('Use o joystick para andar'));
+});
+
+test('keyboard and virtual joystick inputs share the same movement logic', () => {
+  const client = read('sorokiba2.html');
+  assert.equal((client.match(/const moveVector=stickVector\|\|tv/g)||[]).length, 2);
+  assert.ok(client.includes('keys[k]=1'));
+  assert.ok(client.includes('resetStick()'));
+});
