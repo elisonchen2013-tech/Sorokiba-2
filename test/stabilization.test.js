@@ -225,3 +225,12 @@ test('keyboard and virtual joystick inputs share the same movement logic', () =>
   assert.ok(client.includes('keys[k]=1'));
   assert.ok(client.includes('resetStick()'));
 });
+
+
+test('account screen no longer displays the first-account-mayor notice', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(!client.includes('O primeiro a criar conta é o Prefeito!'));
+  assert.ok(!client.includes('id="mh"'));
+  assert.ok(!client.includes("$('mh').hidden"));
+  assert.match(client, /Criar conta e entrar/);
+});

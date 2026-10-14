@@ -139,7 +139,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 </style></head><body>
 <canvas id="cv"></canvas>
 <div id="login">
-<h1>SOROKIBA 2</h1><p class="sub">Mundo aberto · 2.5D</p><p id="mh" class="sub" hidden style="color:#F2B84B;text-transform:none;letter-spacing:.04em">👑 O primeiro a criar conta é o Prefeito!</p>
+<h1>SOROKIBA 2</h1><p class="sub">Mundo aberto · 2.5D</p>
 <div class="tabs"><button id="t1" class="on">Entrar</button><button id="t2">Criar conta</button></div>
 <canvas id="pv" width="64" height="72" hidden></canvas>
 <input id="u" placeholder="Usuário" autocomplete="username" maxlength="14">
@@ -1220,7 +1220,7 @@ mk('c5','Camisa',['#2DD4BF','#F2B84B','#C8643C','#6D8CFF','#E86AA6','#7BC47F'],v
 mk('c6','Calça',['#2a2f45','#3b4a6b','#5a4a3a','#222'],v=>LK.pn=v,1);
 mk('c7','Roupa',['Calça','Vestido'],i=>LK.dr=i);
 mk('c8','Acessório',['Nenhum','Boné','Óculos','Mochila','Barba'],i=>LK.ac=i);
-function tab(n){isNew=n;$('t1').className=n?'':'on';$('t2').className=n?'on':'';['cu','pv'].forEach(i=>$(i).hidden=!n);$('go').textContent=n?'Criar conta e entrar':'Entrar';$('p').autocomplete=n?'new-password':'current-password';$('mh').hidden=!(n&&!db['#mayor']);say('')}
+function tab(n){isNew=n;$('t1').className=n?'':'on';$('t2').className=n?'on':'';['cu','pv'].forEach(i=>$(i).hidden=!n);$('go').textContent=n?'Criar conta e entrar':'Entrar';$('p').autocomplete=n?'new-password':'current-password';say('')}
 $('t1').onclick=()=>tab(0);$('t2').onclick=()=>tab(1);
 $('go').onclick=async()=>{aud();const n=$('u').value.trim(),p=$('p').value,k=n.toLowerCase();
 if(!/^[A-Za-z0-9_]{3,14}$/.test(n))return say('Usuário: 3 a 14 letras, números ou _');
