@@ -62,11 +62,19 @@ async function init() {
     money INT NOT NULL DEFAULT 100, xp INT NOT NULL DEFAULT 0,
     mission_id TEXT NOT NULL DEFAULT 'welcome', mission_done BOOLEAN NOT NULL DEFAULT false,
     missions JSONB NOT NULL DEFAULT '{}',
+    resume JSONB NOT NULL DEFAULT '{"summary":"","skills":[],"experience":0}',
     x REAL NOT NULL DEFAULT 27.5, y REAL NOT NULL DEFAULT 14.5,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_seen TIMESTAMPTZ);
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS mission_id TEXT NOT NULL DEFAULT 'welcome';
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS mission_done BOOLEAN NOT NULL DEFAULT false;
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS missions JSONB NOT NULL DEFAULT '{}';
+  ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS resume JSONB NOT NULL DEFAULT '{"summary":"","skills":[],"experience":0}';
+  CREATE TABLE IF NOT EXISTS sk2_career_applications (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    job_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'submitted',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (username, job_id)
+  );`);
   CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';`);
 }
 async function health() {
@@ -139,10 +147,31 @@ async function completeMission(username, id, money, xp) {
   return r.rows[0] || null;
 }
 
+async function getResume(username) {
+  const r = await q('SELECT resume FROM sk2_players WHERE username=$1', [username]);
+  return r.rows[0]?.resume || { summary: '', skills: [], experience: 0 };
+}
+
+async function saveResume(username, resume) {
+  const r = await q('UPDATE sk2_players SET resume=$2, last_seen=now() WHERE username=$1 RETURNING *', [username, JSON.stringify(resume)]);
+  return r.rows[0] || null;
+}
+
+async function applyForCareer(username, jobId) {
+  const r = await q(`INSERT INTO sk2_career_applications (username, job_id)
+    VALUES ($1,$2) ON CONFLICT (username, job_id) DO NOTHING RETURNING username, job_id, status, created_at`, [username, jobId]);
+  return r.rows[0] || null;
+}
+
+async function listApplications(username) {
+  const r = await q('SELECT job_id, status, created_at FROM sk2_career_applications WHERE username=$1 ORDER BY created_at DESC', [username]);
+  return r.rows;
+}
+
 const pub = row => ({
   name: row.name, role: row.role, ...cleanLook(row.look), money: row.money, xp: row.xp,
   mission: { id: row.mission_id || 'welcome', done: !!row.mission_done },
-  missions: row.missions || {}, x: row.x, y: row.y,
+  missions: row.missions || {}, resume: row.resume || { summary: '', skills: [], experience: 0 }, x: row.x, y: row.y,
 });
 
 function sign(u) {
@@ -157,4 +186,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

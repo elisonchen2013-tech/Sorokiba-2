@@ -53,3 +53,18 @@ test('reusable missions are server-validated and persisted atomically', () => {
   assert.match(client, /building:✚ Hospital/);
   assert.match(client, /spot:Prefeitura:Quadro de avisos/);
 });
+
+test('career center persists validated resumes and unique applications', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /\/api\/sk2\/careers/);
+  assert.match(server, /\/api\/sk2\/career\/resume/);
+  assert.match(server, /\/api\/sk2\/career\/apply/);
+  assert.match(server, /skills\.every/);
+  assert.match(server, /job\.skills\.some/);
+  assert.match(db, /sk2_career_applications/);
+  assert.match(db, /PRIMARY KEY \(username, job_id\)/);
+  assert.match(client, /Central de carreiras/);
+  assert.match(client, /resumeSave/);
+});

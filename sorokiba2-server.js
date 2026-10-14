@@ -14,6 +14,20 @@ const MISSIONS = Object.freeze({
   cityhall_notice: { event: 'spot:Prefeitura:Quadro de avisos', money: 200, xp: 80, label: 'Leia o quadro da Prefeitura' },
   library_visit: { event: 'building:Biblioteca', money: 150, xp: 60, label: 'Visite a Biblioteca' },
 });
+const CAREERS = Object.freeze([
+  { id: 'hospital_reception', title: 'Recepcionista hospitalar', profession: 'Recepcionista', building: '✚ Hospital', skills: ['atendimento'], minExperience: 0, vacancies: 2 },
+  { id: 'library_assistant', title: 'Assistente de biblioteca', profession: 'Bibliotecária', building: 'Biblioteca', skills: ['organizacao'], minExperience: 0, vacancies: 1 },
+  { id: 'mechanic', title: 'Mecânico de oficina', profession: 'Mecânico', building: 'Oficina', skills: ['manutencao'], minExperience: 1, vacancies: 1 },
+  { id: 'restaurant_server', title: 'Atendente de restaurante', profession: 'Garçom', building: 'Restaurante', skills: ['atendimento'], minExperience: 0, vacancies: 2 },
+  { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, vacancies: 1 },
+]);
+const CAREER_SKILLS = Object.freeze({
+  atendimento: { label: 'Atendimento ao público', unlockXp: 0 },
+  organizacao: { label: 'Organização', unlockXp: 0 },
+  comunicacao: { label: 'Comunicação', unlockXp: 100 },
+  manutencao: { label: 'Manutenção', unlockXp: 100 },
+});
+const careerById = id => CAREERS.find(job => job.id === id);
 
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
@@ -108,6 +122,57 @@ async function attachSorokiba2(app, server, opt = {}) {
         ok: 1, completed: !!updated, id: req.body.id, label: mission.label,
         player: db.pub(updated || row), reward: updated ? { money: mission.money, xp: mission.xp } : null,
       });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.get('/api/sk2/careers', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const applications = await db.listApplications(row.username);
+      const applied = new Map(applications.map(item => [item.job_id, item]));
+      res.json({
+        careers: CAREERS.map(job => ({
+          ...job,
+          requiredSkills: job.skills.map(skill => CAREER_SKILLS[skill].label),
+          applied: applied.has(job.id) ? applied.get(job.id).status : null,
+        })),
+        applications,
+        resume: row.resume || { summary: '', skills: [], experience: 0 },
+      });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.put('/api/sk2/career/resume', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const body = req.body || {};
+      const summary = typeof body.summary === 'string' ? body.summary.trim().slice(0, 280) : '';
+      const skills = Array.isArray(body.skills) ? [...new Set(body.skills)] : [];
+      const unlocked = skills.every(skill => typeof skill === 'string'
+        && Object.prototype.hasOwnProperty.call(CAREER_SKILLS, skill)
+        && row.xp >= CAREER_SKILLS[skill].unlockXp);
+      const maxExperience = Math.min(20, Math.floor(Math.max(0, Number(row.xp) || 0) / 100));
+      const experience = Number.isInteger(body.experience) ? body.experience : 0;
+      if (!unlocked || skills.length > 4 || experience < 0 || experience > maxExperience) {
+        return res.status(400).json({ err: 'Currículo contém habilidades ou experiência ainda não desbloqueadas', maxExperience });
+      }
+      const updated = await db.saveResume(row.username, { summary, skills, experience });
+      res.json({ ok: 1, resume: updated.resume, player: db.pub(updated), maxExperience });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/career/apply', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const job = careerById(req.body?.jobId);
+      const resume = row.resume || { summary: '', skills: [], experience: 0 };
+      if (!job) return res.status(400).json({ err: 'Vaga inválida' });
+      if (job.skills.some(skill => !resume.skills.includes(skill)) || resume.experience < job.minExperience) {
+        return res.status(400).json({ err: 'Atualize seu currículo com as habilidades e experiência exigidas' });
+      }
+      const application = await db.applyForCareer(row.username, job.id);
+      if (!application) return res.status(409).json({ err: 'Você já se candidatou a esta vaga' });
+      res.status(201).json({ ok: 1, application, job });
     } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
   });
 

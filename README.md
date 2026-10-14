@@ -49,6 +49,18 @@ As missões jogáveis atuais são concluídas por interações reais no cliente,
 
 Cada objetivo é salvo no PostgreSQL em `sk2_players.missions` e a atualização é atômica, portanto a recompensa não pode ser repetida. O endpoint autenticado é `POST /api/sk2/mission/complete` e aceita somente o par de missão/evento definido no servidor.
 
+## Etapa 1: central de carreiras
+
+O botão **Carreiras** abre uma central jogável com vagas derivadas dos NPCs e prédios existentes (Hospital, Biblioteca, Oficina, Restaurante e Escola). O currículo é persistido em `sk2_players.resume`, pode ser editado pelo painel e aceita apenas até quatro habilidades conhecidas e a experiência liberada pelo XP do jogador. As candidaturas são persistidas em `sk2_career_applications` com chave única por jogador e vaga.
+
+Endpoints autenticados:
+
+- `GET /api/sk2/careers`: catálogo de vagas, currículo e candidaturas atuais;
+- `PUT /api/sk2/career/resume`: salva resumo, habilidades e experiência validados pelo servidor;
+- `POST /api/sk2/career/apply`: registra uma candidatura somente quando o currículo atende à vaga.
+
+Entrevistas, painel Meu Trabalho, tarefas profissionais e pagamentos recorrentes ainda não fazem parte desta etapa; serão construídos sobre essas candidaturas sem duplicar autenticação ou economia.
+
 ## Testes
 
 ```sh
