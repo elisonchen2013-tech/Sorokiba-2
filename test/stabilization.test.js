@@ -286,3 +286,27 @@ test('multiplayer shares a traffic snapshot and synchronizes sitting poses', () 
   assert.match(server, /toAll\(\{t:'v',c:clean\},me\)/);
   assert.match(server, /o\.seated \? 1 : 0/);
 });
+
+
+test('traffic uses earlier braking and a larger lane-following safety gap', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /ds<5\.5/);
+  assert.match(client, /const safeGap=2\.25\+a\.s\*\.4/);
+  assert.match(client, /function detectTrafficCollisions\(\)/);
+  assert.match(client, /registerTrafficCollision\(a,b,i,j\)/);
+  assert.match(client, /a\.crashedUntil&&now<a\.crashedUntil/);
+});
+
+test('shared traffic collisions trigger evacuation, firefighters and ambulance transport', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  assert.match(client, /function activateAccident\(data\)/);
+  assert.match(client, /function drawAccidentFire\(c,inc,t,elapsed\)/);
+  assert.match(client, /function drawWaterStream\(c,inc,pose,t\)/);
+  assert.match(client, /n\.state='fleeing'/);
+  assert.match(client, /findRoadPath\(inc\.x,inc\.y,20\.5,16\.5\)/);
+  assert.match(client, /victim\.state='recovering'/);
+  assert.match(server, /if \(m\.t === 'x'\)/);
+  assert.match(server, /activeAccidents\.push\(incident\)/);
+  assert.match(server, /incidents: liveAccidents\(\)/);
+});

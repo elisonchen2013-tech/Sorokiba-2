@@ -505,7 +505,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
   const flush = list => db.savePositions(list.map(o => ({ u: o.u, x: o.x, y: o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
-  let trafficState = null, trafficAuthority = 0;
+  let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0;
+  const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
 
   wss.on('connection', (ws, req) => {
     const ip = ipOf(req), count = connectionsByIp.get(ip) || 0;
@@ -532,10 +533,21 @@ async function attachSorokiba2(app, server, opt = {}) {
         if (trafficAuthority && !P.has(trafficAuthority)) { trafficAuthority = P.values().next().value?.id || 0; if (trafficAuthority) toAll({ t: 'a', id: trafficAuthority, c: trafficState }); }
         me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
         const peers = [...P.values()].map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
-        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
+        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents() }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'v') {
+      if (m.t === 'x') {
+        const now = Date.now();
+        if (me.id !== trafficAuthority || now-lastIncidentAt<6500) return;
+        const {a,b,ax,ay,bx,by,axis,victim}=m;
+        if (![a,b,ax,ay,bx,by,axis,victim].every(Number.isInteger) || a<0 || a>=36 || b<0 || b>=36 || a===b || (axis!==0&&axis!==1) || ax< -400 || ax>(MW+4)*100 || bx< -400 || bx>(MW+4)*100 || ay< -400 || ay>(MH+4)*100 || by< -400 || by>(MH+4)*100 || (victim!==-1&&(victim<0||victim>=30))) return;
+        if (!trafficState || !trafficState[a] || !trafficState[b]) return;
+        const ax0=trafficState[a][0],ay0=trafficState[a][1],bx0=trafficState[b][0],by0=trafficState[b][1];
+        if (Math.hypot(ax-ax0,ay-ay0)>300 || Math.hypot(bx-bx0,by-by0)>300) return;
+        const incident={id:++incidentSequence,x:(ax+bx)/200,y:(ay+by)/200,carA:a,carB:b,carAX:ax/100,carAY:ay/100,carBX:bx/100,carBY:by/100,axis,victimId:victim,startedAt:now,expiresAt:now+65000};
+        activeAccidents.push(incident);if(activeAccidents.length>10)activeAccidents.shift();lastIncidentAt=now;
+        toAll({t:'x',incident},me);send(me,{t:'x',incident});
+      } else if (m.t === 'v') {
         if (me.id !== trafficAuthority || !Array.isArray(m.c) || m.c.length !== 36) return;
         const clean = []; for (const row of m.c) { if (!Array.isArray(row) || row.length !== 4 || !row.every(Number.isInteger)) return; const [x,y,speed,braking]=row; if(x< -400||x>(MW+4)*100||y< -400||y>(MH+4)*100||speed<0||speed>300||(braking!==0&&braking!==1))return;clean.push([x,y,speed,braking]); }
         trafficState=clean;toAll({t:'v',c:clean},me);
