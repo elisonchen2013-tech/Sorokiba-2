@@ -1451,7 +1451,7 @@ cars.forEach(a=>V.push({k:a.x+a.y,f:()=>carD(c,a)}));
 accidents.forEach(inc=>{const elapsed=incidentElapsed(inc);if(elapsed<22)V.push({k:inc.x+inc.y+.02,f:()=>drawAccidentFire(c,inc,t,elapsed)});const police=emergencyPose(inc,'police',elapsed),ambulance=emergencyPose(inc,'ambulance',elapsed),fire=emergencyPose(inc,'fire',elapsed);[police,ambulance,fire].filter(Boolean).forEach(v=>V.push({k:v.x+v.y,f:()=>drawEmergencyVehicle(c,v,t)}));if(elapsed>=7&&elapsed<20&&fire)V.push({k:inc.x+inc.y+.03,f:()=>drawWaterStream(c,inc,fire,t)})});
 RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y,q.o.seated?5:0);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));
 const L2=tl(Date.now());TP.forEach(p=>V.push({k:p[0]+p[1],f:()=>tlD(c,p,L2)}));
-if(gm&&!interior&&workState?.task?.type==='delivery_route'&&Number.isFinite(workState.task.targetX)&&Number.isFinite(workState.task.targetY))V.push({k:workState.task.targetX+workState.task.targetY-.02,f:()=>{const target=P(workState.task.targetX,workState.task.targetY,0);const pulse=1+Math.sin(t*5)*.18;c.save();c.strokeStyle='#fff4bf';c.lineWidth=2.5;c.beginPath();c.ellipse(target[0],target[1]-7,12*pulse,7*pulse,0,0,Math.PI*2);c.stroke();c.fillStyle='#f2b84b';c.beginPath();c.moveTo(target[0],target[1]-28);c.lineTo(target[0]-6,target[1]-39);c.lineTo(target[0]+6,target[1]-39);c.closePath();c.fill();c.fillStyle='#fff3bd';c.beginPath();c.arc(target[0],target[1]-32,3,0,Math.PI*2);c.fill();c.restore()}});
+if(gm&&!interior&&workState?.task?.type==='delivery_route'&&Number.isFinite(workState.task.targetX)&&Number.isFinite(workState.task.targetY))V.push({k:workState.task.targetX+workState.task.targetY-.03,f:()=>{const target=P(workState.task.targetX,workState.task.targetY,0);const customer={pn:'#29364a',st:0,f:false,dr:0,pt:false};person(c,target[0],target[1],0,0,'#3b9b91','#e7b88f','#493329',customer);c.save();c.fillStyle='#f8f3e7';c.strokeStyle='#29364a';c.lineWidth=2;c.beginPath();c.roundRect(target[0]-19,target[1]-47,38,12,4);c.fill();c.stroke();c.fillStyle='#243243';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('CLIENTE',target[0],target[1]-39);const pulse=1+Math.sin(t*5)*.18;c.strokeStyle='#fff4bf';c.lineWidth=2.5;c.beginPath();c.ellipse(target[0],target[1]-7,12*pulse,7*pulse,0,0,Math.PI*2);c.stroke();c.fillStyle='#f2b84b';c.beginPath();c.moveTo(target[0],target[1]-28);c.lineTo(target[0]-6,target[1]-39);c.lineTo(target[0]+6,target[1]-39);c.closePath();c.fill();c.fillStyle='#fff3bd';c.beginPath();c.arc(target[0],target[1]-32,3,0,Math.PI*2);c.fill();c.restore()}});
 if(gm&&deliveryBike&&!interior)V.push({k:px+py,f:()=>{const p=P(px,py,isSeated?5:0);myO.seated=true;myO.ridingBike=true;person(c,p[0],p[1]-5,pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO);drawDeliveryBike(c,p,t,pd)}});
 else if(gm)V.push({k:px+py,f:()=>{const p=P(px,py,isSeated?5:0);myO.seated=!!isSeated;myO.ridingBike=false;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO);if(iceCreamEatingUntil>Date.now())drawIceCreamSnack(c,p[0]+10,p[1]-24,t,iceCreamEatingFlavor)}});
 V.sort((a,b)=>a.k-b.k).forEach(it=>{if(it.f)return it.f();
@@ -1712,8 +1712,13 @@ $('workPromotionConfirm').onclick=async()=>{const j=await workAction('/work/prom
 async function completeWorkTask(taskId,option){
  const count=Number($('workCount')?.value);
  const body=option==null?{taskId,count}:{taskId,option};
- const result=await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Tarefa concluída: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));
- if(result)loadWork();
+ const result=await workAction('/work/task/complete',body,j=>j.duplicate?'Tarefa já contabilizada; nenhum pagamento duplicado.':j.completed?`Cliente atendido! Recompensa: R$ ${j.payment} e ${j.professionalXp} XP profissional.`:(j.message||'Etapa concluída.'));
+ if(result?.completed){
+  deliveryBike=false;
+  const next=await workAction('/work/task',null,j=>'Recompensa recebida! Uma nova entrega foi preparada.');
+  if(next?.task){$('workMsg').textContent=`Entrega concluída: +R$ ${result.payment} e +${result.professionalXp} XP. Nova encomenda disponível!`;loadWork()}
+  else loadWork();
+ }else if(result)loadWork();
 }
 $('workBtn').onclick=loadWork;
 $('workClose').onclick=()=>{$('workPanel').hidden=true};
