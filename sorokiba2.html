@@ -879,39 +879,39 @@ function makeInterior(building){
   add('counter',5,1,2,.5,12,'#b29f7f','#dfd0ab','#8d7b5e');for(let row=0;row<3;row++)for(let col=0;col<2;col++)add('bench',2+col*5,2.4+row*1.2,2.1,.45,9,'#76543a','#a57b52','#4d3828');
   z('Altar',6,1.9,'Altar e área principal do salão.');z('Bancos',3.8,6.2,'Área de assentos para os visitantes.');
  }else if(family==='home'){
-  // Condomínio/hotel com ambientes distintos, circulação e pontos de interação.
-  // Recepção principal
-  add('counter',8.55,1.0,2.25,.82,22,'#765640','#ba9369','#493628');
-  add('chair',7.75,2.15,.62,.62,10,'#7d6045','#a9855c','#4e3b2c');
-  add('chair',9.15,2.15,.62,.62,10,'#7d6045','#a9855c','#4e3b2c');
-  add('table',8.1,3.0,1.35,.82,13,'#8b6546','#c7a37a','#5e4530');
-  // Lounge / sala de convivência
-  add('table',4.8,1.05,1.45,.82,14,'#926d4b','#c7a37a','#5e4530');
-  add('chair',4.2,1.15,.58,.58,10,'#7d6045','#a9855c','#4e3b2c');
-  add('chair',6.25,1.15,.58,.58,10,'#7d6045','#a9855c','#4e3b2c');
-  add('chair',4.45,2.35,.58,.58,10,'#7d6045','#a9855c','#4e3b2c');
-  add('chair',6.0,2.35,.58,.58,10,'#7d6045','#a9855c','#4e3b2c');
-  // Cozinha / café
-  add('counter',8.55,4.15,2.1,.75,19,'#765640','#ba9369','#493628');
-  add('table',8.45,5.35,1.2,.78,12,'#8b6546','#c7a37a','#5e4530');
-  add('chair',7.8,5.45,.52,.52,9,'#7d6045','#a9855c','#4e3b2c');
-  add('chair',9.85,5.45,.52,.52,9,'#7d6045','#a9855c','#4e3b2c');
-  // Ala residencial / quarto decorado
-  add('bed',1.05,1.25,2.15,1.55,14,'#826b60','#e0c7b4','#4e4038');
-  add('table',1.25,3.15,.85,.65,10,'#926d4b','#c7a37a','#5e4530');
-  add('chair',2.4,3.25,.55,.55,9,'#7d6045','#a9855c','#4e3b2c');
-  add('counter',1.0,5.0,1.7,.7,16,'#765640','#ba9369','#493628');
-  // Balcão de concierge e áreas comuns
-  add('desk',4.5,4.3,1.7,.8,16,'#896b50','#c5a27b','#5e4837');
-  add('chair',4.95,5.35,.58,.58,9,'#7d6045','#a9855c','#4e3b2c');
-  z('Recepção principal',10.2,2.15,'Faça check-in, peça informações e descubra os serviços do condomínio/hotel.');
-  z('Sala de convivência',5.35,3.1,'Lounge dos moradores e hóspedes, com mesas e assentos para conversar e descansar.');
-  z('Café e refeições',10.25,6.1,'Área de café da manhã e refeições rápidas, com bancada, mesas e cadeiras.');
-  z('Quarto modelo',2.15,4.25,'Quarto decorado para mostrar como uma unidade residencial pode ser mobiliada.');
-  z('Concierge',5.35,5.8,'Peça ajuda com orientações do prédio e serviços de recepção.');
-  z('Elevadores',14.4,9.05,'Você encontrou o núcleo dos elevadores. A faixa dourada e o guia no canto superior direito ajudam a localizar esta área. A seleção funcional de andares ainda será conectada ao sistema imobiliário.');
-  z('Sala de reuniões',3.4,6.1,'Sala reservada para reuniões de condomínio, encontros de moradores e avisos administrativos.');
- }else if(family==='employment'){
+  // Planta refeita: corredores amplos e setores separados para evitar sobreposição.
+  // Recepção e concierge (lado direito)
+  add('counter',8.9,.65,2.15,.72,22,'#5f4534','#d1ad7b','#392a23');
+  add('desk',8.95,1.65,1.55,.62,14,'#806149','#c9a77e','#4c382a');
+  // Lounge central, com assentos ao redor de uma mesa
+  add('table',4.55,1.15,1.45,.85,13,'#8b6546','#d4b184','#5e4530');
+  add('chair',3.85,1.25,.5,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',6.2,1.25,.5,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',4.1,2.45,.5,.52,9,'#74563e','#b58c60','#453226');
+  add('chair',5.95,2.45,.5,.52,9,'#74563e','#b58c60','#453226');
+  // Café com balcão e mesas (canto superior direito)
+  add('counter',8.45,3.35,2.05,.68,18,'#765640','#ba9369','#493628');
+  add('table',8.65,4.45,1.05,.72,12,'#8b6546','#c7a37a','#5e4530');
+  add('chair',7.95,4.55,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',9.95,4.55,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  // Quarto modelo isolado à esquerda
+  add('bed',.8,1.0,2.05,1.45,13,'#826b60','#e0c7b4','#4e4038');
+  add('table',1.05,2.8,.68,.55,9,'#926d4b','#c7a37a','#5e4530');
+  add('chair',2.05,2.85,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  // Sala de reuniões na parte inferior esquerda
+  add('table',1.2,5.15,2.05,.82,13,'#77583f','#c6a16d','#49352a');
+  add('chair',1.15,4.55,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',2.8,4.55,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',1.15,6.2,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  add('chair',2.8,6.2,.48,.48,8,'#7d6045','#a9855c','#4e3b2c');
+  // Corredor central livre: sem mobília bloqueando o acesso ao núcleo vertical.
+  z('Recepção principal',9.9,2.15,'Recepção do prédio: peça informações, orientação e atendimento aos hóspedes e moradores.');
+  z('Sala de convivência',5.1,3.25,'Lounge central para descansar e conversar. O corredor ao redor fica livre para circulação.');
+  z('Café e refeições',10.0,5.35,'Café do hotel com balcão, mesas e assentos.');
+  z('Quarto modelo',2.05,3.75,'Quarto modelo com cama e mesa para mostrar a organização de uma unidade.');
+  z('Sala de reuniões',3.3,6.55,'Sala reservada para reuniões de moradores e administração do condomínio.');
+  z('Elevadores',9.6,5.2,'Núcleo dos elevadores. Siga a sinalização dourada para chegar até aqui; a seleção funcional de andares ainda será conectada ao sistema imobiliário.');
+ }}else if(family==='employment'){
   add('counter',1.3,1.1,2.6,.85,25,'#5a6e79','#d4e0e2','#354853');
   add('desk',5.2,3.1,2.6,.9,20,'#6b6258','#c0a77d','#3c4244');
   add('desk',9.2,5.4,1.7,.85,19,'#6b6258','#c0a77d','#3c4244');
