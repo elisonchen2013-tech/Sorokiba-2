@@ -909,7 +909,7 @@ function makeInterior(building){
   z('Café e refeições',10.25,6.1,'Área de café da manhã e refeições rápidas, com bancada, mesas e cadeiras.');
   z('Quarto modelo',2.15,4.25,'Quarto decorado para mostrar como uma unidade residencial pode ser mobiliada.');
   z('Concierge',5.35,5.8,'Peça ajuda com orientações do prédio e serviços de recepção.');
-  z('Elevadores',6.9,6.15,'Acesso aos elevadores do prédio. A seleção real de andares e compra de unidades será conectada ao sistema imobiliário.');
+  z('Elevadores',6.9,5.85,'Você encontrou o núcleo dos elevadores. A faixa dourada e o guia no canto superior direito ajudam a localizar esta área. A seleção funcional de andares ainda será conectada ao sistema imobiliário.');
   z('Sala de reuniões',3.4,6.1,'Sala reservada para reuniões de condomínio, encontros de moradores e avisos administrativos.');
  }else if(family==='employment'){
   add('counter',1.3,1.1,2.6,.85,25,'#5a6e79','#d4e0e2','#354853');
@@ -1126,6 +1126,28 @@ function renderInterior(t,h){
   }
  }
  drawRoomArchitecture(room,Q,U);
+ // Sinalização, iluminação e núcleo de elevadores dedicado para residenciais/hotéis.
+ if(room.family==='home'){
+  const ex=6.9,ey=5.35,eq=Q(ex,ey);
+  // Tapete de orientação que conduz visualmente ao elevador
+  c.save();c.setLineDash([5,5]);c.lineWidth=2;c.strokeStyle='rgba(242,184,75,.62)';
+  const start=Q(w/2,d-1.0),mid=Q(w/2,d-2.4),end=Q(ex,ey+.45);
+  c.beginPath();c.moveTo(start[0],start[1]);c.lineTo(mid[0],mid[1]);c.lineTo(end[0],end[1]);c.stroke();c.restore();
+  // Caixa do elevador e portas metálicas desenhadas em perspectiva
+  const ew=1.45,eh=1.72;
+  roomPoly([Q(ex-ew/2,ey-.18,0),Q(ex+ew/2,ey-.18,0),Q(ex+ew/2,ey-.18,eh*U),Q(ex-ew/2,ey-.18,eh*U)],'#40515c','#9eafb6');
+  roomPoly([Q(ex-ew/2+.08,ey-.17,.04*U),Q(ex-.035,ey-.17,.04*U),Q(ex-.035,ey-.17,eh*U-.08*U),Q(ex-ew/2+.08,ey-.17,eh*U-.08*U)],'#9aabb2','#d8e2e4');
+  roomPoly([Q(ex+.035,ey-.17,.04*U),Q(ex+ew/2-.08,ey-.17,.04*U),Q(ex+ew/2-.08,ey-.17,eh*U-.08*U),Q(ex+.035,ey-.17,eh*U-.08*U)],'#80949e','#d8e2e4');
+  const panel=Q(ex+ew/2+.16,ey-.17,1.05*U);c.fillStyle='#f2b84b';c.beginPath();c.roundRect(panel[0]-3,panel[1]-7,6,14,2);c.fill();
+  const tag=Q(ex,ey-.2,eh*U+16);c.fillStyle='rgba(8,13,25,.94)';c.strokeStyle='#f2b84b';c.lineWidth=1;c.beginPath();c.roundRect(tag[0]-42,tag[1]-13,84,24,7);c.fill();c.stroke();c.fillStyle='#fff1c9';c.font='700 11px system-ui';c.textAlign='center';c.fillText('ELEVADORES',tag[0],tag[1]+3);
+  // Diretório fixo no canto superior direito, sempre visível
+  const pxPanel=Math.max(12,W-202),pyPanel=88;
+  c.fillStyle='rgba(8,13,25,.88)';c.strokeStyle='rgba(242,184,75,.6)';c.lineWidth=1;c.beginPath();c.roundRect(pxPanel,pyPanel,188,120,12);c.fill();c.stroke();
+  c.textAlign='left';c.fillStyle='#f2b84b';c.font='800 11px system-ui';c.fillText('GUIA DO PRÉDIO',pxPanel+12,pyPanel+19);
+  const guide=[['1','Recepção / Concierge'],['2','Lounge e reuniões'],['3','Café e refeições'],['4','Quarto modelo']];
+  guide.forEach((g,i)=>{const yy=pyPanel+39+i*18;c.fillStyle='#314657';c.beginPath();c.arc(pxPanel+17,yy-3,6,0,Math.PI*2);c.fill();c.fillStyle='#f7e8c6';c.font='700 9px system-ui';c.textAlign='center';c.fillText(g[0],pxPanel+17,yy);c.textAlign='left';c.fillStyle='#d8e2ec';c.font='10px system-ui';c.fillText(g[1],pxPanel+29,yy)});
+  c.fillStyle='#f2b84b';c.font='700 10px system-ui';c.fillText('Siga a faixa dourada até o elevador',pxPanel+12,pyPanel+110);
+ }
  const doorW=Math.min(1.8,w*.12),doorX=w/2;
  roomPoly([Q(doorX-doorW/2,d,0),Q(doorX+doorW/2,d,0),Q(doorX+doorW/2,d,wallH*.76),Q(doorX-doorW/2,d,wallH*.76)],'#4b3326','#261d18');
  roomPoly([Q(doorX-doorW/2+.12,d,4),Q(doorX+doorW/2-.12,d,4),Q(doorX+doorW/2-.12,d,wallH*.7),Q(doorX-doorW/2+.12,d,wallH*.7)],'#79563a','#b99768');
