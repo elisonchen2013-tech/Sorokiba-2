@@ -575,6 +575,40 @@ function outerChunk(cx,cy){
    line(bx+1.8,by+2,23,bx+2.6,by+2,23,'#F3C85B',4);
   }
  }
+ /* Equipamentos de obra adicionais, sempre fora da área jogável. */
+ const sx=X0+8.5,sy=Y0+8.5;
+ const siteOutside=sx+2.5<0||sx>=MW||sy+2.5<0||sy>=MH;
+ if(siteOutside&&sx>=-OUTER_MARGIN&&sy>=-OUTER_MARGIN&&sx+3<MW+OUTER_MARGIN&&sy+3<MH+OUTER_MARGIN){
+  const equipment=modPos(cx*7+cy*11,4);
+  /* Paletes de tijolos e madeira empilhada. */
+  if(equipment===0||equipment===2){
+   const p=P(sx,sy,1);
+   m.fillStyle='#5B4939';m.fillRect(p[0]-7,p[1]-2,14,3);
+   for(let r=0;r<3;r++){
+    m.fillStyle=r%2?'#B76D48':'#C78356';
+    m.fillRect(p[0]-6+(r%2),p[1]-7+r*2.1,12-(r%2),1.8);
+    m.strokeStyle='rgba(75,45,29,.6)';m.lineWidth=.45;
+    for(let j=0;j<4;j++){m.beginPath();m.moveTo(p[0]-5+j*3,p[1]-7+r*2.1);m.lineTo(p[0]-5+j*3,p[1]-5.2+r*2.1);m.stroke()}
+   }
+   m.fillStyle='#8B6A43';m.fillRect(p[0]-7,p[1]-1,14,1.2);
+  }else{
+   /* Betoneira compacta estacionada no lote. */
+   const p=P(sx,sy,1);
+   m.fillStyle='#3D4545';m.fillRect(p[0]-8,p[1]-2,15,3);
+   m.fillStyle='#E5A52F';m.fillRect(p[0]-5,p[1]-5,8,3);
+   m.fillStyle='#BFC4BF';m.beginPath();m.ellipse(p[0]+2,p[1]-5,3.2,2.6,-.35,0,Math.PI*2);m.fill();
+   m.strokeStyle='#666B67';m.lineWidth=.8;m.stroke();
+   m.fillStyle='#252B30';m.beginPath();m.arc(p[0]-5,p[1]+1,2,0,Math.PI*2);m.arc(p[0]+5,p[1]+1,2,0,Math.PI*2);m.fill();
+  }
+  /* Cavaletes de segurança com faixas alternadas. */
+  for(let j=0;j<3;j++){
+   const p=P(sx+.3+j*1.05,sy+1.9,2);
+   m.fillStyle='#E8A52F';m.fillRect(p[0]-3,p[1]-2.5,6,3);
+   m.fillStyle='#F7E8C5';m.fillRect(p[0]-2,p[1]-2.1,1.2,2.2);
+   m.fillRect(p[0]+.7,p[1]-2.1,1.2,2.2);
+   m.fillStyle='#5A4634';m.fillRect(p[0]-3.5,p[1]+.3,7,1);
+  }
+ }
  return cn;
 }
 /* ---------- MAPA DA CIDADE ---------- */
