@@ -262,3 +262,27 @@ test('cinematic CSS treatment and motion respect reduced-motion preferences', ()
   assert.ok(client.includes('filter:saturate(1.09) contrast(1.035)'));
   assert.ok(client.includes('@media(prefers-reduced-motion:reduce)'));
 });
+
+
+test('Parque Central has walkable paths, a pond, trees and usable sitting benches', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /const parkBenches=\[/);
+  assert.match(client, /function drawBench\(c,b,t\)/);
+  assert.match(client, /E · Sentar no banco/);
+  assert.match(client, /E · Levantar do banco/);
+  assert.match(client, /seated=!!o\.seated/);
+  assert.match(client, /g\[y\]\[x\]=7/);
+});
+
+test('multiplayer shares a traffic snapshot and synchronizes sitting poses', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  assert.match(client, /function applyTrafficSnapshot\(snapshot,hard=false\)/);
+  assert.match(client, /myId===trafficAuthorityId/);
+  assert.match(client, /JSON\.stringify\(\{t:'v',c:snapshot\}\)/);
+  assert.match(client, /else if\(m\.t=='v'\)/);
+  assert.match(server, /let trafficState = null, trafficAuthority = 0/);
+  assert.match(server, /if \(m\.t === 'v'\)/);
+  assert.match(server, /toAll\(\{t:'v',c:clean\},me\)/);
+  assert.match(server, /o\.seated \? 1 : 0/);
+});

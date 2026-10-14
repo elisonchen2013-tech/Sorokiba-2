@@ -501,10 +501,11 @@ async function attachSorokiba2(app, server, opt = {}) {
   const connectionsByIp = new Map();
   let activeConnections = 0;
   let nid = 1;
-  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, lk: o.lk });
+  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, lk: o.lk, seated: !!o.seated });
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
   const flush = list => db.savePositions(list.map(o => ({ u: o.u, x: o.x, y: o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
+  let trafficState = null, trafficAuthority = 0;
 
   wss.on('connection', (ws, req) => {
     const ip = ipOf(req), count = connectionsByIp.get(ip) || 0;
@@ -528,17 +529,21 @@ async function attachSorokiba2(app, server, opt = {}) {
         let row; try { row = await db.load(u); } catch (e) { return ws.close(); }
         if (!row) return ws.close();
         for (const o of [...P.values()]) if (o.u === u) { P.delete(o.id); flush([o]); toAll({ t: 'l', id: o.id }); o.ws.close(); }   // um login por conta
-        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, d: 0, f: 0, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
-        send(me, { t: 'r', id: me.id, p: [...P.values()].map(pub) });
-        toAll({ t: 'j', p: pub(me) }, me);
-        P.set(me.id, me);
+        if (trafficAuthority && !P.has(trafficAuthority)) { trafficAuthority = P.values().next().value?.id || 0; if (trafficAuthority) toAll({ t: 'a', id: trafficAuthority, c: trafficState }); }
+        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
+        const peers = [...P.values()].map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
+        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'p') {
+      if (m.t === 'v') {
+        if (me.id !== trafficAuthority || !Array.isArray(m.c) || m.c.length !== 36) return;
+        const clean = []; for (const row of m.c) { if (!Array.isArray(row) || row.length !== 4 || !row.every(Number.isInteger)) return; const [x,y,speed,braking]=row; if(x< -400||x>(MW+4)*100||y< -400||y>(MH+4)*100||speed<0||speed>300||(braking!==0&&braking!==1))return;clean.push([x,y,speed,braking]); }
+        trafficState=clean;toAll({t:'v',c:clean},me);
+      } else if (m.t === 'p') {
         const x = +m.x, y = +m.y, now = Date.now(), dt = Math.max(.05, (now - me.last) / 1000);
-        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || !(x > 0 && x < MW && y > 0 && y < MH)) return;
-        if (Math.hypot(x - me.x, y - me.y) > 8 * dt + 2) return;       // limite de velocidade
-        me.x = x; me.y = y; me.d = (m.d | 0) & 3; me.f = (m.f | 0) & 3; me.last = now; me.dirty = true; me.moved = true;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || (m.s!==undefined&&m.s!==0&&m.s!==1) || !(x > 0 && x < MW && y > 0 && y < MH)) return;
+        if (Math.hypot(x - me.x, y - me.y) > 8 * dt + 2) return;
+        me.x=x;me.y=y;me.d=(m.d|0)&3;me.f=(m.f|0)&3;me.seated=m.s===1;me.last=now;me.dirty=true;me.moved=true;
       } else if (m.t === 'c') {
         const now = Date.now(); if (now - me.lc < 1200) return; me.lc = now;
         if (typeof m.m !== 'string') return;
@@ -553,7 +558,7 @@ async function attachSorokiba2(app, server, opt = {}) {
       const left = (connectionsByIp.get(ip) || 1) - 1;
       if (left > 0) connectionsByIp.set(ip, left); else connectionsByIp.delete(ip);
       clearTimeout(timer);
-      if (me && P.get(me.id) === me) { P.delete(me.id); flush([me]); toAll({ t: 'l', id: me.id }); }
+      if (me && P.get(me.id) === me) { const wasTrafficAuthority=trafficAuthority===me.id;P.delete(me.id);flush([me]);toAll({t:'l',id:me.id});if(wasTrafficAuthority){trafficAuthority=P.values().next().value?.id||0;toAll({t:'a',id:trafficAuthority,c:trafficState});} }
     });
   });
 
@@ -561,7 +566,7 @@ async function attachSorokiba2(app, server, opt = {}) {
   addInterval(() => {
     const moved = [...P.values()].filter(o => o.moved);
     if (!moved.length) return;
-    const all = moved.map(o => [o.id, Math.round(o.x * 100), Math.round(o.y * 100), o.d, o.f]);
+    const all = moved.map(o => [o.id, Math.round(o.x * 100), Math.round(o.y * 100), o.d, o.f, o.seated ? 1 : 0]);
     for (const o of P.values()) {
       const p = all.filter(a => a[0] !== o.id);
       if (p.length) send(o, { t: 's', p });
