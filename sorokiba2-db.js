@@ -118,7 +118,12 @@ async function init() {
     job_id TEXT NOT NULL, training_id TEXT NOT NULL, completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (username, job_id, training_id)
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';`);
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';
+  CREATE TABLE IF NOT EXISTS sk2_food_inventory (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    item_id TEXT NOT NULL, quantity INT NOT NULL DEFAULT 0 CHECK(quantity >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (username, item_id)
+  );`);
 }
 async function health() {
   await q('SELECT 1');
@@ -383,6 +388,46 @@ async function advanceWorkTask(username, taskId, nextTask, result, complete) {
     client.release();
   }
 }
+
+async function getIceCreamInventory(username) {
+  const r = await q('SELECT item_id, quantity FROM sk2_food_inventory WHERE username=$1', [username]);
+  return Object.fromEntries(r.rows.map(row => [row.item_id, Number(row.quantity)]));
+}
+async function buyIceCream(username, itemId, price) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const locked = await client.query('SELECT * FROM sk2_players WHERE username=$1 FOR UPDATE', [username]);
+    if (!locked.rowCount) { await client.query('ROLLBACK'); return null; }
+    if (Number(locked.rows[0].money) < price) { await client.query('ROLLBACK'); return { error: 'insufficient' }; }
+    const player = await client.query('UPDATE sk2_players SET money=money-$2, last_seen=now() WHERE username=$1 RETURNING *', [username, price]);
+    await client.query(`INSERT INTO sk2_food_inventory(username,item_id,quantity) VALUES($1,$2,1)
+      ON CONFLICT(username,item_id) DO UPDATE SET quantity=sk2_food_inventory.quantity+1, updated_at=now()`, [username,itemId]);
+    const rows = await client.query('SELECT item_id, quantity FROM sk2_food_inventory WHERE username=$1', [username]);
+    await client.query('COMMIT');
+    return { player: player.rows[0], inventory: Object.fromEntries(rows.rows.map(row => [row.item_id, Number(row.quantity)])) };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally { client.release(); }
+}
+async function eatIceCream(username, itemId) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const item = await client.query('SELECT quantity FROM sk2_food_inventory WHERE username=$1 AND item_id=$2 FOR UPDATE', [username,itemId]);
+    if (!item.rowCount || Number(item.rows[0].quantity)<1) { await client.query('ROLLBACK'); return null; }
+    await client.query('UPDATE sk2_food_inventory SET quantity=quantity-1, updated_at=now() WHERE username=$1 AND item_id=$2', [username,itemId]);
+    const player = await client.query('SELECT * FROM sk2_players WHERE username=$1', [username]);
+    const rows = await client.query('SELECT item_id, quantity FROM sk2_food_inventory WHERE username=$1', [username]);
+    await client.query('COMMIT');
+    return { player: player.rows[0] || null, inventory: Object.fromEntries(rows.rows.map(row => [row.item_id, Number(row.quantity)])) };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally { client.release(); }
+}
+
 const pub = row => ({
   name: row.name, role: row.role, ...cleanLook(row.look), money: row.money, xp: row.xp,
   mission: { id: row.mission_id || 'welcome', done: !!row.mission_done },
@@ -402,4 +447,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

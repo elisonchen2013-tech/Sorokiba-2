@@ -167,6 +167,34 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 @media(pointer:coarse),(max-width:760px){body.game-on #visualFx:after{animation-duration:34s}body.game-on #cv{filter:saturate(1.06) contrast(1.025)}}
 @media(prefers-reduced-motion:reduce){#visualFx:after,#rotatePrompt .rotatePhone,#rotatePrompt .rotateArrow,body.game-on #hud{animation:none!important}#visualFx{transition:none}}
 
+
+/* Sorveteria do Parque Central */
+#icecreamMenu{position:fixed;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%);width:min(650px,94vw);max-height:84vh;overflow:auto;padding:clamp(15px,3vw,24px);border:1px solid #e5c58d;border-radius:20px;background:linear-gradient(150deg,rgba(19,35,51,.99),rgba(9,17,31,.99));box-shadow:0 24px 80px #000d;color:#f5efe3;overscroll-behavior:contain}
+.icecreamHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;border-bottom:1px solid #ffffff22;padding-bottom:13px}
+.icecreamKicker{margin:0 0 5px;color:#f1bd78;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.icecreamHeader h2{margin:0 0 5px;color:#fff0d0;font-size:clamp(23px,4vw,30px)}
+.icecreamHeader p:not(.icecreamKicker){margin:0;color:#bdccda;font-size:13px}
+#icecreamClose{flex:none;background:#ffffff12;border:1px solid #ffffff2e;color:#f5efe3;padding:8px 10px;border-radius:9px;cursor:pointer}
+#icecreamMsg{min-height:20px;color:#a7e6d9;font-size:13px;line-height:1.45;margin:12px 0}
+#icecreamChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.icecreamItem{min-width:0;padding:13px;background:linear-gradient(145deg,#ffffff0c,#ffffff04);border:1px solid #ffffff1c;border-radius:14px}
+.icecreamTop{display:flex;gap:10px;align-items:center}
+.icecreamScoop{position:relative;flex:none;width:44px;height:44px;border-radius:50%;box-shadow:inset -5px -5px 10px #0002,inset 5px 4px 8px #ffffff35;border:2px solid #ffffff35}
+.icecreamCone{position:relative;flex:none;width:22px;height:32px;margin-left:7px;background:#d9a65b;clip-path:polygon(0 0,100% 0,50% 100%);border:1px solid #fff2c7;filter:drop-shadow(0 2px 2px #0006)}
+.icecreamCone:before{content:"";position:absolute;left:3px;right:3px;top:8px;border-top:1px solid #895b33;transform:rotate(18deg);box-shadow:0 5px #895b33,0 10px #895b33}
+.icecreamItem h3{margin:0 0 3px;font-size:15px;color:#fff2d9}
+.icecreamItem p{margin:0;color:#b8c8d7;font-size:11px;line-height:1.4}
+.icecreamPrice{margin-top:11px;font-weight:800;font-size:15px;color:#f4c779}
+.icecreamStock{margin-top:3px;color:#9fb3c7;font-size:11px}
+.icecreamActions{display:flex;gap:7px;margin-top:10px}
+.icecreamActions button{flex:1;min-width:0;padding:8px 7px;border-radius:8px;border:1px solid #f1bd78;background:#f1bd78;color:#172336;font-weight:800;font-size:11px;cursor:pointer}
+.icecreamActions button[data-icecream-eat]{background:#2dd4bf;border-color:#2dd4bf}
+.icecreamActions button:disabled{opacity:.35;cursor:not-allowed}
+#icecreamMenu footer{border-top:1px solid #ffffff1a;padding-top:13px;margin-top:13px;color:#b9cad8;font-size:12px}
+#icecreamMenu footer strong{color:#f4c779}
+.mayorTool{background:#8b2525!important;border:1px solid #ff8f8f77!important;color:#fff1e7!important;font-weight:800!important}
+@media(max-width:500px){#icecreamChoices{grid-template-columns:minmax(0,1fr)}.icecreamItem{padding:11px}.icecreamActions button{font-size:12px}}
+
 </style></head><body>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -178,7 +206,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <div id="cu" hidden><div class="sw" id="c1"></div><div class="sw" id="c2"></div><div class="sw" id="c3"></div><div class="sw" id="c4"></div><div class="sw" id="c5"></div><div class="sw" id="c6"></div><div class="sw" id="c7"></div><div class="sw" id="c8"></div></div>
 <button id="go" class="main">Entrar</button><div id="msg"></div>
 </div>
-<div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="out">Sair</button></div>
+<div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="mayorTestAccident" class="mayorTool" hidden type="button">Testar acidente</button><button id="out">Sair</button></div>
 <section id="careerPanel" hidden aria-labelledby="careerTitle">
  <button id="careerClose" type="button">Fechar</button>
  <div class="careerHeader"><div><p class="careerKicker">Sorokiba 2 · Recrutamento</p><h2 id="careerTitle">Central de carreiras</h2><p class="careerIntro">Prepare seu currículo, confira os requisitos e candidate-se às vagas da cidade.</p></div><div class="careerXpBadge"><span>Seu XP geral</span><strong id="careerPlayerXp">0</strong></div></div>
@@ -197,6 +225,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 </section>
 <section id="interviewPanel" hidden><button id="interviewClose">Fechar</button><h2 id="interviewTitle">Entrevista</h2><p id="interviewStatus"></p><div id="interviewQuestion"></div><div id="interviewOptions"></div><button id="interviewNext" hidden>Responder</button><button id="interviewFinish" hidden>Finalizar entrevista</button></section>
 <section id="workPanel" hidden><button id="workClose">Fechar</button><h2>Meu trabalho</h2><p id="workMsg">Carregando...</p><div id="workSummary"></div><div id="workProgress"></div><div id="workTraining"></div><button id="workPromotionRequest" class="workAction">Solicitar promoção</button><button id="workPromotionConfirm" class="workAction">Confirmar promoção</button><button id="workSupervisor" class="workAction">Falar com supervisor</button><button id="workStart" class="workAction">Iniciar turno</button><button id="workNext" class="workAction">Receber próxima tarefa</button><div id="workTask"></div><div id="workHistory"></div></section>
+<section id="icecreamMenu" hidden aria-labelledby="icecreamTitle"><header class="icecreamHeader"><div><p class="icecreamKicker">Parque Central · Sorveteria</p><h2 id="icecreamTitle">Sorvetes da Luna</h2><p>Escolha um sabor, compre e coma quando quiser.</p></div><button id="icecreamClose" type="button" aria-label="Fechar sorveteria">Fechar</button></header><p id="icecreamMsg" aria-live="polite">Falando com a atendente...</p><div id="icecreamChoices"></div><footer>Seu dinheiro: <strong>R$ <span id="icecreamMoney">0</span></strong> · Os sorvetes comprados ficam no seu inventário.</footer></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
 <input id="ch" maxlength="120" placeholder="Digite e aperte Enter..." autocomplete="off" hidden><div id="cl"></div>
@@ -275,15 +304,18 @@ for(let y=PARK.y0;y<=PARK.y1;y++)g[y][44]=6;
 for(let x=25;x<=35;x++)g[76][x]=6;
 for(let y=76;y<=78;y++)for(let x=56;x<=61;x++)g[y][x]=7;
 const parkBenches=[
- {id:'park-bench-1',x:30.5,y:78.15,sitX:30.5,sitY:78.78},
- {id:'park-bench-2',x:37.2,y:80.25,sitX:37.2,sitY:80.88},
- {id:'park-bench-3',x:49.1,y:78.2,sitX:49.1,sitY:78.83},
- {id:'park-bench-4',x:64.1,y:80.25,sitX:64.1,sitY:80.88}
+ {id:'park-bench-1',x:30.5,y:78.15,sitX:30.5,sitY:78.35},
+ {id:'park-bench-2',x:37.2,y:80.25,sitX:37.2,sitY:80.45},
+ {id:'park-bench-3',x:53.1,y:80.15,sitX:53.1,sitY:80.35},
+ {id:'park-bench-4',x:64.1,y:80.25,sitX:64.1,sitY:80.45}
 ];
+const ICE_CREAM_STAND={x:50.3,y:77.1,w:1.45,d:.85};
+const ICE_CREAM_WORKER={name:'Luna',role:'Atendente da sorveteria',x:51.35,y:78.55,face:0,sh:'#E86AA6',sk:'#f1c7a0',hr:'#5a3428',o:{pn:'#f2efe8',st:0,f:false,dr:0,pt:true}};
 for(let i=0;i<Math.round(MW*MH*.10);i++){const x=R()*MW|0,y=R()*MH|0;let ok=g[y][x]==0;for(let j=-1;j<2;j++)for(let k=-1;k<2;k++)if((g[y+j]||[])[x+k]==3)ok=false;if(ok){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}}
 /* Árvores, bancos e postes junto às trilhas. */
 [[27,77],[34,77],[39,81],[42,77],[49,81],[53,77],[64,77],[67,81]].forEach(([x,y])=>{if(g[y]?.[x]===5){g[y][x]=4;const p=P(x+.5,y+.5,20);S.push({k:x+y+1,sx:p[0],sy:p[1],r:50,t:2,tx:x,ty:y})}});
 parkBenches.forEach(b=>{const p=P(b.x,b.y,10);S.push({k:b.x+b.y+1,sx:p[0],sy:p[1],r:46,t:4,bench:b})});
+{const p=P(ICE_CREAM_STAND.x+ICE_CREAM_STAND.w/2,ICE_CREAM_STAND.y+ICE_CREAM_STAND.d/2,38);S.push({k:ICE_CREAM_STAND.x+ICE_CREAM_STAND.y+1,sx:p[0],sy:p[1],r:82,t:5,stand:ICE_CREAM_STAND})}
 [[28.5,78],[46.5,78],[67,78]].forEach(([x,y])=>{const p=P(x,y,20);S.push({k:x+y,sx:p[0],sy:p[1],r:42,t:3,x,y})});
 const LP=[];IY.forEach(j=>[j-2.5,j+5.5].forEach(y=>{for(let x=2.5;x<MW;x+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));IX.forEach(i=>[i-1.5,i+4.5].forEach(x=>{for(let y=2.5;y<MH;y+=6)if(g[y|0][x|0]==2)LP.push([x,y])}));
 LP.forEach(([x,y])=>{const p=P(x,y,20);S.push({k:x+y,sx:p[0],sy:p[1],r:40,t:3,x,y})});
@@ -489,6 +521,7 @@ else if(m.t=='s')m.p.forEach(([id,x,y,d,f,s])=>{const q=RP.get(id);if(q){q.tx=x/
 else if(m.t=='a'){trafficAuthorityId=m.id||0;if(Array.isArray(m.c))applyTrafficSnapshot(m.c,true)}
 else if(m.t=='v')applyTrafficSnapshot(m.c,false);
 else if(m.t=='x'&&m.incident)activateAccident(m.incident);
+else if(m.t==='accidentTestResult')missionFeedback(m.message|| (m.ok?'Teste de acidente iniciado.':'Não foi possível testar o acidente.'));
 else if(m.t=='c')chat(m)};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
@@ -499,6 +532,40 @@ function openChat(){if(!ws||ws.readyState!=1)return;$('ch').hidden=false;$('ch')
 $('cb').onclick=e=>{e.stopPropagation();openChat()};
 $('ch').onkeydown=e=>{e.stopPropagation();if(e.key=='Enter'){const m=$('ch').value.trim();if(m&&ws&&ws.readyState==1)ws.send(JSON.stringify({t:'c',m}));$('ch').value='';$('ch').hidden=true;$('ch').blur()}else if(e.key=='Escape'){$('ch').value='';$('ch').hidden=true;$('ch').blur()}};
 /* ---------- PERSONAGENS ---------- */
+function drawIceCreamStand(c,t){
+ const s=ICE_CREAM_STAND,x=s.x,y=s.y,w=s.w,d=s.d;
+ const foot=P(x+w/2,y+d+.04,0);
+ c.save();c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(foot[0],foot[1]+3,31,9,-.1,0,7);c.fill();
+ box(c,x,y,w,d,0,10,'#9b603f','#f6e8cc');
+ box(c,x+.08,y+.12,w-.16,d-.18,10,18,'#f0e6d5','#f9f4e9');
+ /* balcão frontal */
+ poly(c,[P(x+.05,y+d-.05,10),P(x+w-.05,y+d-.05,10),P(x+w-.05,y+d+.02,19),P(x+.05,y+d+.02,19)],'#ce8553');
+ /* toldo listrado */
+ const roof=[P(x-.12,y-.08,31),P(x+w+.12,y-.08,31),P(x+w+.12,y+d+.03,31),P(x-.12,y+d+.03,31)];
+ poly(c,roof,'#fff1d5');
+ for(let k=0;k<5;k++){
+  const xa=x-.12+(w+.24)*k/5,xb=x-.12+(w+.24)*(k+1)/5;
+  poly(c,[P(xa,y-.08,31),P(xb,y-.08,31),P(xb,y+d+.03,31),P(xa,y+d+.03,31)],k%2?'#ef6b68':'#fff1d5');
+  poly(c,[P(xa,y+d+.03,31),P(xb,y+d+.03,31),P(xb,y+d+.12,25),P(xa,y+d+.12,25)],k%2?'#ef6b68':'#fff1d5');
+ }
+ const sign=P(x+w/2,y-.05,40);
+ c.fillStyle='#244c57';c.fillRect(sign[0]-35,sign[1]-10,70,13);
+ c.strokeStyle='#e8c887';c.lineWidth=1;c.strokeRect(sign[0]-35,sign[1]-10,70,13);
+ c.fillStyle='#fff6e3';c.font='bold 8px system-ui';c.textAlign='center';c.fillText('SORVETES',sign[0],sign[1]);
+ /* pequenos potes de sorvete no balcão */
+ [['#e7c78c',x+.3],['#7d4b35',x+.72],['#e98da9',x+1.12]].forEach(([col,cx])=>{
+  const q=P(cx,y+d+.05,20);c.fillStyle='#f5efe3';c.fillRect(q[0]-3,q[1]-3,6,5);
+  c.fillStyle=col;c.beginPath();c.arc(q[0],q[1]-4,3.5,0,7);c.fill();
+ });
+ c.restore();
+}
+function drawIceCreamSnack(c,x,y,t,flavor){
+ c.save();const bob=Math.sin(t*8)*1.2;c.translate(x,y+bob);
+ c.fillStyle='#d7a45b';c.beginPath();c.moveTo(-4,2);c.lineTo(4,2);c.lineTo(0,11);c.closePath();c.fill();
+ const colors={baunilha:'#e7d7ad',chocolate:'#80503e',morango:'#e985a4',flocos:'#f3eee2',pistache:'#9bc36b'};
+ c.fillStyle=colors[flavor]||'#e7d7ad';c.beginPath();c.arc(0,0,4.6,0,7);c.fill();
+ c.fillStyle='#fff5db';c.beginPath();c.arc(-1.2,-1.5,1.4,0,7);c.fill();c.restore();
+}
 function drawBench(c,b,t){
  const x=b.x,y=b.y,q=P(x,y);
  c.save();c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(q[0]+1,q[1]+5,23,7,-.08,0,7);c.fill();
@@ -510,7 +577,35 @@ function drawBench(c,b,t){
 }
 function person(c,x,y,d,f,sh,sk,hr,o){o=o||{};const pn=o.pn||'#2a2f45',sw=[0,-2,0,2][f&3],b=f&1?-1:0,sd=d>1,fw=d==3?1:-1,fe=o.f,tw=fe?5:6,st=o.st|0,seated=!!o.seated;
 c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.ellipse(x,y,9,3.6,0,0,7);c.fill();
-if(seated){c.fillStyle=pn;c.fillRect(x-7,y-9+sw,5,5);c.fillRect(x+2,y-9-sw,5,5);c.fillStyle='#14161f';c.fillRect(x-8,y-5+sw,6,2.5);c.fillRect(x+1,y-5-sw,6,2.5);c.fillStyle='#e8e8e8';c.fillRect(x-8,y-3+sw,6,.6);c.fillRect(x+1,y-3-sw,6,.6)}else if(!sd){c.fillStyle=pn;c.fillRect(x-5,y-10+sw,4,10);c.fillRect(x+1,y-10-sw,4,10);c.fillStyle='rgba(0,0,0,.15)';c.fillRect(x+1,y-10-sw,4,10);c.fillStyle='#14161f';c.fillRect(x-5,y-2+sw,4,2.5);c.fillRect(x+1,y-2-sw,4,2.5);c.fillStyle='#e8e8e8';c.fillRect(x-5,y+.2+sw,4,.6);c.fillRect(x+1,y+.2-sw,4,.6)}
+if(seated){
+ c.save();
+ /* pernas dobradas à frente do banco */
+ poly(c,[[x-6,y-10],[x-1,y-10],[x-2,y-5],[x-9,y-4],[x-10,y-2],[x-7,y-1],[x-1,y-2],[x+1,y-4],[x+6,y-4],[x+10,y-2],[x+10,y-1],[x+3,y-1],[x-1,y-3]],pn);
+ c.fillStyle='#14161f';c.fillRect(x-10,y-2.6,5,2);c.fillRect(x+5,y-2.6,5,2);
+ c.fillStyle='#e8e8e8';c.fillRect(x-10,y-.7,5,.5);c.fillRect(x+5,y-.7,5,.5);
+ /* torso mais baixo e braços apoiados no colo */
+ c.fillStyle=sh;c.fillRect(x-6,y-20,12,10);
+ c.fillStyle='rgba(255,255,255,.13)';c.fillRect(x-6,y-20,12,2);
+ c.fillStyle='rgba(0,0,0,.16)';c.fillRect(x+1,y-18,5,7);
+ c.fillStyle=sh;c.fillRect(x-8,y-18,3,6);c.fillRect(x+5,y-18,3,6);
+ c.fillStyle=sk;c.fillRect(x-7,y-13,4,3);c.fillRect(x+3,y-13,4,3);
+ c.fillStyle='#8a6a3a';c.fillRect(x-5,y-10,10,.8);
+ c.fillStyle=sk;c.fillRect(x-2,y-22,4,3);
+ c.fillStyle=sk;c.beginPath();c.ellipse(x,y-27,5.4,5.7,0,0,7);c.fill();
+ c.fillStyle='rgba(0,0,0,.1)';c.beginPath();c.ellipse(x,y-27,5.4,5.7,0,-Math.PI/2,Math.PI/2);c.fill();
+ c.fillStyle=hr;c.beginPath();c.ellipse(x,y-29,5.6,3.2,0,Math.PI,0);c.fill();
+ if(d===0||d===1){
+  c.fillStyle='#fff';c.fillRect(x-3.2,y-28,2.2,2.2);c.fillRect(x+1,y-28,2.2,2.2);
+  c.fillStyle='#111';c.fillRect(x-2.5,y-27.6,1.3,1.6);c.fillRect(x+1.5,y-27.6,1.3,1.6);
+  c.fillStyle='#3a2a20';c.fillRect(x-3.4,y-29.1,2.5,.7);c.fillRect(x+.9,y-29.1,2.5,.7);
+  c.fillStyle='#c0392b';c.fillRect(x-1,y-24.3,2,1);
+ }
+ if(o.hat){c.fillStyle=o.hat;c.beginPath();c.ellipse(x,y-29,5.8,4.7,0,Math.PI,0);c.fill();c.fillStyle=o.hat;c.fillRect(x-6,y-29,12,1.6)}
+ if(o.crown){c.fillStyle='#F2B84B';poly(c,[[x-5,y-31],[x-5,y-36],[x-2,y-33],[x,y-37],[x+2,y-33],[x+5,y-36],[x+5,y-31]],'#F2B84B')}
+ if(o.gl&&d!==1){c.strokeStyle='#111';c.lineWidth=.8;c.strokeRect(x-4.2,y-28,3.6,3);c.strokeRect(x+.6,y-28,3.6,3)}
+ c.restore();return;
+}
+if(!sd){c.fillStyle=pn;c.fillRect(x-5,y-10+sw,4,10);c.fillRect(x+1,y-10-sw,4,10);c.fillStyle='rgba(0,0,0,.15)';c.fillRect(x+1,y-10-sw,4,10);c.fillStyle='#14161f';c.fillRect(x-5,y-2+sw,4,2.5);c.fillRect(x+1,y-2-sw,4,2.5);c.fillStyle='#e8e8e8';c.fillRect(x-5,y+.2+sw,4,.6);c.fillRect(x+1,y+.2-sw,4,.6)}
 else{c.fillStyle='#1d2133';c.fillRect(x-1-sw,y-10,4,10);c.fillStyle='#0d0f16';c.fillRect(x-1-sw+fw,y-2,5,2.5);c.fillStyle=pn;c.fillRect(x-3+sw,y-10,4,10);c.fillStyle='#14161f';c.fillRect(x-3+sw+fw,y-2,5,2.5);c.fillStyle='#e8e8e8';c.fillRect(x-3+sw+fw,y+.2,5,.6)}
 if(o.dr){c.fillStyle=sh;c.beginPath();c.moveTo(x-tw,y-11+b);c.lineTo(x+tw,y-11+b);c.lineTo(x+tw+3,y-4);c.lineTo(x-tw-3,y-4);c.closePath();c.fill();c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x-tw-3,y-5.5,tw*2+6,1.5)}
 c.fillStyle=sh;c.fillRect(x-tw,y-21+b,tw*2,o.dr?10:12);c.fillStyle='rgba(255,255,255,.13)';c.fillRect(x-tw,y-21+b,tw*2,2);c.fillStyle='rgba(0,0,0,.14)';c.fillRect(x,y-21+b,tw,o.dr?10:12);
@@ -576,7 +671,7 @@ IY.forEach(j=>[[j+.5,1,1.45],[j+2.5,-1,1.25]].forEach(([y,d,v])=>{for(let k=0;k<
 IX.forEach(i=>[[i+.5,1,1.35],[i+2.5,-1,1.5]].forEach(([x,d,v])=>{for(let k=0;k<2;k++)cars.push({x,y:d>0?-2+k*MH/2+R()*4:MH+2-k*MH/2-R()*4,dx:0,dy:d,col:CC[ci%9],v,s:v,br:0,d:0,m:ci++%4})}));
 }
 spawn();
-const bl=(x,y)=>{if(x<0||y<0)return 1;const a=g[y|0];if(!a)return 1;const v=a[x|0];return v===undefined||v==3||v==4||v==7};
+const bl=(x,y)=>{if(x<0||y<0)return 1;const a=g[y|0];if(!a)return 1;const v=a[x|0];const kiosk=x>ICE_CREAM_STAND.x-.15&&x<ICE_CREAM_STAND.x+ICE_CREAM_STAND.w+.12&&y>ICE_CREAM_STAND.y-.12&&y<ICE_CREAM_STAND.y+ICE_CREAM_STAND.d-.06;return v===undefined||v==3||v==4||v==7||kiosk};
 const hit=(x,y)=>bl(x-.2,y-.2)||bl(x+.2,y-.2)||bl(x-.2,y+.2)||bl(x+.2,y+.2);
 const vehicleHit=(x,y)=>cars.some(a=>{const [len,width]=CM[a.m],hx=(a.dx?len:width)/2+.22,hy=(a.dx?width:len)/2+.22;return Math.abs(x-a.x)<hx&&Math.abs(y-a.y)<hy});
 
@@ -940,8 +1035,9 @@ function renderInterior(t,h){
 
 const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.'];
 function act(){
- if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden)return;
+ if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden)return;
  if(open){open=false;$('dlg').hidden=true;tone(440,.06,'sine',.07);return}
+ if(!interior&&near?.t==='icecream'){openIceCreamShop();return}
  if(!interior&&near?.t==='bench'){
   if(isSeated){isSeated=false;seatBench=null;myO.seated=false;tone(430,.07,'sine',.07)}
   else{px=near.o.sitX;py=near.o.sitY;pd=0;pf=0;isSeated=true;seatBench=near.o.id;myO.seated=true;tone(620,.09,'sine',.07)}
@@ -968,8 +1064,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -1035,7 +1131,7 @@ function chooseFleePath(n,inc){
 }
 function startIncidentEvacuation(inc){
  const elapsed=(Date.now()-inc.startedAt)/1000;if(elapsed>13||inc.evacStarted)return;inc.evacStarted=true;
- for(const n of npcs){if(n.k||n.inAmbulance||Math.hypot(n.x-inc.x,n.y-inc.y)>12)continue;
+ for(const n of npcs){if(n.k||n.inAmbulance||n.injuredUntil||n.recoveringUntil||Math.hypot(n.x-inc.x,n.y-inc.y)>12)continue;
   const path=chooseFleePath(n,inc);n.evacuateUntil=inc.startedAt+13500;n.fleeIncident=inc.id;n.path=path;n.wait=0;n.arrived=false;n.state='fleeing';n.f=Math.random()*5;
   n.normalSp=n.normalSp||n.sp;n.sp=Math.max(n.sp,2.15);
  }
@@ -1125,7 +1221,7 @@ function applyTrafficSnapshot(snapshot,hard=false){
  if(!Array.isArray(snapshot)||snapshot.length!==cars.length)return;
  snapshot.forEach((row,i)=>{if(!Array.isArray(row)||row.length<4)return;const x=Number(row[0])/100,y=Number(row[1])/100,s=Number(row[2])/100,br=Number(row[3])===1;if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(s)||x< -4||x>MW+4||y< -4||y>MH+4||s<0||s>3)return;const a=cars[i];if(hard){a.x=x;a.y=y;a.s=s;a.br=br;a.netTarget=null}else a.netTarget={x,y,s,br}});
 }
-function smoothTraffic(dt){cars.forEach(a=>{const q=a.netTarget;if(!q)return;const alpha=Math.min(1,dt*12);if(Math.abs(q.x-a.x)>MW/2)a.x=q.x;else a.x+=(q.x-a.x)*alpha;if(Math.abs(q.y-a.y)>MH/2)a.y=q.y;else a.y+=(q.y-a.y)*alpha;a.s+=(q.s-a.s)*Math.min(1,dt*8);a.br=q.br;a.playerBlocking=false;a.hornFlash=Math.max(0,(a.hornFlash||0)-dt)})}
+function smoothTraffic(dt){cars.forEach(a=>{if(a.crashedUntil&&Date.now()<a.crashedUntil){a.s=0;a.br=true;return}const q=a.netTarget;if(!q)return;const alpha=Math.min(1,dt*12);if(Math.abs(q.x-a.x)>MW/2)a.x=q.x;else a.x+=(q.x-a.x)*alpha;if(Math.abs(q.y-a.y)>MH/2)a.y=q.y;else a.y+=(q.y-a.y)*alpha;a.s+=(q.s-a.s)*Math.min(1,dt*8);a.br=q.br;a.playerBlocking=false;a.hornFlash=Math.max(0,(a.hornFlash||0)-dt)})}
 function updateTraffic(dt,gm,h){const LG=tl(Date.now()),now=Date.now();
 cars.forEach((a,carIndex)=>{
  if(a.crashedUntil&&now>=a.crashedUntil){a.crashedUntil=0;a.crashPending=false;a.accidentId=null;a.s=a.v;a.br=0;if(a.dx>0)a.x=-3;else if(a.dx<0)a.x=MW+3;else if(a.dy>0)a.y=-3;else a.y=MH+3}
@@ -1225,7 +1321,8 @@ socialize(dt);
 if(trafficShouldSimulate())updateTraffic(dt,gm,h);else smoothTraffic(dt);
 near=null;if(!gm)return;let bd=1.4;npcs.forEach(n=>{const d=Math.hypot(n.x-px,n.y-py);if(d<bd){bd=d;near={t:'n',o:n}}});
 B.forEach(b=>{const d=Math.hypot(b.dx+.5-px,b.y+b.h+.3-py);if(d<1.4&&d<bd){bd=d;near={t:'d',o:b}}});
-parkBenches.forEach(b=>{const d=Math.hypot(px-(isSeated?b.sitX:b.x),py-(isSeated?b.sitY:b.y));if(d<1.35&&d<bd){bd=d;near={t:'bench',o:b}}})}
+parkBenches.forEach(b=>{const d=Math.hypot(px-(isSeated?b.sitX:b.x),py-(isSeated?b.sitY:b.y));if(d<1.3&&(d<bd||d<.65)){bd=d;near={t:'bench',o:b}}});
+const shopD=Math.hypot(px-ICE_CREAM_WORKER.x,py-ICE_CREAM_WORKER.y);if(shopD<1.65){bd=shopD;near={t:'icecream',o:ICE_CREAM_WORKER}}}
 
 /* ---------- RENDER ---------- */
 function setup(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;Z=Math.max(.7,Math.min(W,H)/560);
@@ -1254,11 +1351,13 @@ npcs.forEach(n=>{if(n.inAmbulance)return;const p=P(n.x,n.y);V.push({k:n.x+n.y,f:
   c.restore();
  }
 }})});
+const iceWorkerPoint=P(ICE_CREAM_WORKER.x,ICE_CREAM_WORKER.y);
+V.push({k:ICE_CREAM_WORKER.x+ICE_CREAM_WORKER.y,f:()=>person(c,iceWorkerPoint[0],iceWorkerPoint[1],ICE_CREAM_WORKER.face,0,ICE_CREAM_WORKER.sh,ICE_CREAM_WORKER.sk,ICE_CREAM_WORKER.hr,ICE_CREAM_WORKER.o)});
 cars.forEach(a=>V.push({k:a.x+a.y,f:()=>carD(c,a)}));
 accidents.forEach(inc=>{const elapsed=incidentElapsed(inc);if(elapsed<22)V.push({k:inc.x+inc.y+.02,f:()=>drawAccidentFire(c,inc,t,elapsed)});const police=emergencyPose(inc,'police',elapsed),ambulance=emergencyPose(inc,'ambulance',elapsed),fire=emergencyPose(inc,'fire',elapsed);[police,ambulance,fire].filter(Boolean).forEach(v=>V.push({k:v.x+v.y,f:()=>drawEmergencyVehicle(c,v,t)}));if(elapsed>=7&&elapsed<20&&fire)V.push({k:inc.x+inc.y+.03,f:()=>drawWaterStream(c,inc,fire,t)})});
 RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));
 const L2=tl(Date.now());TP.forEach(p=>V.push({k:p[0]+p[1],f:()=>tlD(c,p,L2)}));
-if(gm)V.push({k:px+py,f:()=>{const p=P(px,py);myO.seated=!!isSeated;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});
+if(gm)V.push({k:px+py,f:()=>{const p=P(px,py);myO.seated=!!isSeated;person(c,p[0],p[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO);if(iceCreamEatingUntil>Date.now())drawIceCreamSnack(c,p[0]+10,p[1]-24,t,iceCreamEatingFlavor)}});
 V.sort((a,b)=>a.k-b.k).forEach(it=>{if(it.f)return it.f();
 if(it.t==1){const b=it.b,tx=it.tx,ty=it.ty,z=it.z;
 if(it.fl){const Lf=[P(tx,ty+1,z),P(tx+1,ty+1,z),P(tx+1,ty+1,it.zf),P(tx,ty+1,it.zf)];poly(c,Lf,b.c);poly(c,Lf,'rgba(0,0,0,.18)');if(!it.zf)poly(c,[P(tx,ty+1,7),P(tx+1,ty+1,7),P(tx+1,ty+1),P(tx,ty+1)],'rgba(0,0,0,.28)')}
@@ -1288,6 +1387,7 @@ else if(it.t==2){
  for(let j=0;j<4;j++){const a=p[0]+Math.sin(it.tx*3+j*7)*7+sw,b=p[1]-31-(j%3)*3;c.fillStyle=j%2?'rgba(174,207,112,.26)':'rgba(5,32,19,.18)';c.beginPath();c.ellipse(a,b,2.3,1.3,-.35,0,7);c.fill()}
 }
 else if(it.t==4){drawBench(c,it.bench,t)}
+else if(it.t==5){drawIceCreamStand(c,t)}
 else{const a=P(it.x,it.y),b=P(it.x,it.y,44);c.strokeStyle='#18231f';c.lineWidth=4;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();c.strokeStyle='#89969a';c.lineWidth=1.4;c.beginPath();c.moveTo(a[0]-1,a[1]-2);c.lineTo(b[0]-1,b[1]);c.lineTo(b[0]+5,b[1]-3);c.stroke();c.fillStyle='#303c40';c.fillRect(b[0]-2,b[1]-4,9,4);c.fillStyle='#ffe9a0';c.beginPath();c.ellipse(b[0]+3,b[1]-2,3.6,2,0,0,7);c.fill()}});
 c.font='bold 12px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';
 B.forEach(b=>{const p=P(b.x+b.w/2,b.y+b.h/2,b.lz+18);if(Math.abs(p[0]-cam.x)<hw+80&&Math.abs(p[1]-cam.y)<hv+80){c.strokeText(b.n,p[0],p[1]);c.fillStyle='#F5EFE3';c.fillText(b.n,p[0],p[1])}});
@@ -1313,16 +1413,74 @@ function frame(now){const t=now/1000,dt=Math.min(.05,(now-last)/1000);last=now;c
 update(dt,t,gm,h);render(t,h,gm);if(gm&&!interior&&ws&&ws.readyState==1){const nw=performance.now();if(nw-lastSend>200&&(px!=lx||py!=ly||pd!=ld||(pf|0)!=lf||(isSeated?1:0)!==ls)){lastSend=nw;lx=px;ly=py;ld=pd;lf=pf|0;ls=isSeated?1:0;ws.send(JSON.stringify({t:'p',x:+px.toFixed(2),y:+py.toFixed(2),d:pd,f:(pf|0)&3,s:ls}))}}
 if(gm&&ON&&ws&&ws.readyState===1&&myId===trafficAuthorityId){const nw=performance.now();if(nw-lastTrafficSend>200){lastTrafficSend=nw;const snapshot=cars.map(a=>[Math.round(a.x*100),Math.round(a.y*100),Math.round(a.s*100),a.br?1:0]);ws.send(JSON.stringify({t:'v',c:snapshot}))}}
 sound(t,dt,dk(h),Math.max(0,Math.min(1,(Math.sin(t/60+1)-.55)*3)),gm);if(gm&&!interior){drawMM(t);if(fmO)drawFM(t)}
-if(gm){const tip=$('tip');if(near&&!open){tip.hidden=false;tip.textContent=near.t=='n'?'E · Falar com '+near.o.n:near.t==='bench'?(isSeated?'E · Levantar do banco':'E · Sentar no banco'):near.t==='d'?'E · Entrar: '+near.o.n:near.t==='interiorSpot'?'E · Interagir: '+near.o.label:'E · Sair para a cidade'}else tip.hidden=true;
+if(gm){const tip=$('tip');if(near&&!open){tip.hidden=false;tip.textContent=near.t==='icecream'?'E · Comprar sorvetes com '+near.o.name:near.t=='n'?'E · Falar com '+near.o.n:near.t==='bench'?(isSeated?'E · Levantar do banco':'E · Sentar no banco'):near.t==='d'?'E · Entrar: '+near.o.n:near.t==='interiorSpot'?'E · Interagir: '+near.o.label:'E · Sair para a cidade'}else tip.hidden=true;
 hT-=dt;if(hT<=0){hT=.25;$('on').textContent=ON?'🟢 '+(RP.size+1)+' online':'⚪ offline';$('hl').textContent=1+(user.xp/100|0);$('hm').textContent=user.money;$('xf').style.width=user.xp%100+'%';$('hc').textContent=String(h|0).padStart(2,'0')+':'+String((h%1)*60|0).padStart(2,'0')+(dk(h)>.5?' 🌙':' ☀')}
 sT-=dt;if(sT<=0){sT=3;save()}}
 else if(!$('pv').hidden){pc.setTransform(1,0,0,1,0,0);pc.clearRect(0,0,64,72);pc.setTransform(1.8,0,0,1.8,0,0);person(pc,18,38,(t/1.2|0)%4,t*8|0,LK.col,LK.skin,LK.hr,oOf(LK))}
 requestAnimationFrame(frame)}
 
 /* ---------- LOGIN ---------- */
-const say=s=>$('msg').textContent=s;let myO={},API='/api/sk2',token=null,ws=null,myId=0,ON=0,RP=new Map(),myBub=null,lastSend=0,lx=0,ly=0,ld=0,lf=0;
+const say=s=>$('msg').textContent=s;let myO={},API='/api/sk2',token=null,ws=null,myId=0,ON=0,RP=new Map(),myBub=null,lastSend=0,lx=0,ly=0,ld=0,lf=0,iceCreamInventory={},iceCreamEatingUntil=0,iceCreamEatingFlavor='baunilha',iceCreamShopBusy=false;
 const LK={col:'#2DD4BF',skin:'#f1c7a0',hr:'#2b1b12',pn:'#2a2f45',body:'m',st:0,ac:0,dr:0};
 function missionFeedback(msg){const tip=$('tip');tip.hidden=false;tip.textContent=msg;setTimeout(()=>{if(tip.textContent===msg)tip.hidden=true},3500)}
+
+const ICE_CREAM_MENU=[
+ {id:'baunilha',name:'Baunilha',description:'Clássico, suave e cremoso.',price:10,color:'#e7d7ad'},
+ {id:'chocolate',name:'Chocolate',description:'Chocolate intenso e cremoso.',price:12,color:'#80503e'},
+ {id:'morango',name:'Morango',description:'Doce, frutado e refrescante.',price:12,color:'#e985a4'},
+ {id:'flocos',name:'Flocos',description:'Creme de baunilha com flocos de chocolate.',price:14,color:'#f3eee2'},
+ {id:'pistache',name:'Pistache',description:'Um sabor especial com notas de castanha.',price:16,color:'#9bc36b'}
+];
+function renderIceCreamShop(message=''){
+ $('icecreamMoney').textContent=String(user?.money??0);
+ $('icecreamMsg').textContent=message||'A Luna está pronta para atender! Escolha seu sabor.';
+ $('icecreamChoices').innerHTML=ICE_CREAM_MENU.map(item=>{
+  const qty=Math.max(0,Number(iceCreamInventory[item.id]||0));
+  return '<article class="icecreamItem"><div class="icecreamTop"><div class="icecreamScoop" style="background:'+item.color+'"></div><div><h3>'+item.name+'</h3><p>'+item.description+'</p></div></div><div class="icecreamPrice">R$ '+item.price+'</div><div class="icecreamStock">No inventário: '+qty+'</div><div class="icecreamActions"><button type="button" data-icecream-buy="'+item.id+'" '+(iceCreamShopBusy?'disabled':'')+'>Comprar</button><button type="button" data-icecream-eat="'+item.id+'" '+(!qty||iceCreamShopBusy?'disabled':'')+'>Comer</button></div></article>';
+ }).join('');
+}
+async function openIceCreamShop(){
+ open=false;$('dlg').hidden=true;$('icecreamMenu').hidden=false;
+ renderIceCreamShop('A Luna está conferindo seu inventário...');
+ try{
+  const headers={};if(token)headers.Authorization='Bearer '+token;
+  const res=await fetch(API+'/icecream',{headers});const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.err||'Não foi possível abrir a sorveteria.');
+  if(data.player)user=data.player;iceCreamInventory=data.inventory||{};
+  renderIceCreamShop();
+ }catch(e){renderIceCreamShop(e.message||'Falha ao conectar à sorveteria.')}
+}
+async function iceCreamAction(action,flavor){
+ if(iceCreamShopBusy)return;
+ if(!ICE_CREAM_MENU.some(item=>item.id===flavor))return;
+ iceCreamShopBusy=true;renderIceCreamShop(action==='buy'?'A Luna está preparando seu pedido...':'Você está saboreando seu sorvete...');
+ try{
+  const headers={'Content-Type':'application/json'};if(token)headers.Authorization='Bearer '+token;
+  const res=await fetch(API+'/icecream/'+action,{method:'POST',headers,body:JSON.stringify({flavor})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.err||'Não foi possível concluir a ação.');
+  if(data.player){user=data.player;$('hm').textContent=user.money}
+  iceCreamInventory=data.inventory||iceCreamInventory;
+  if(action==='eat'){iceCreamEatingFlavor=flavor;iceCreamEatingUntil=Date.now()+2400;missionFeedback('Você comeu um sorvete de '+ICE_CREAM_MENU.find(item=>item.id===flavor).name+'.')}
+  renderIceCreamShop(data.message||(action==='buy'?'Compra realizada! O sorvete foi guardado no seu inventário.':'Sorvete consumido. Bom apetite!'));
+ }catch(e){renderIceCreamShop(e.message||'Erro na sorveteria.')}
+ finally{iceCreamShopBusy=false;renderIceCreamShop($('icecreamMsg').textContent)}
+}
+$('icecreamChoices').onclick=e=>{
+ const button=e.target.closest('button[data-icecream-buy],button[data-icecream-eat]');
+ if(!button)return;
+ e.preventDefault();e.stopPropagation();
+ const flavor=button.dataset.icecreamBuy||button.dataset.icecreamEat;
+ iceCreamAction(button.dataset.icecreamBuy?'buy':'eat',flavor);
+};
+$('icecreamClose').onclick=()=>{$('icecreamMenu').hidden=true;iceCreamShopBusy=false};
+$('mayorTestAccident').onclick=()=>{
+ if(user?.role!=='prefeito')return missionFeedback('Somente o Prefeito pode iniciar o teste de acidente.');
+ if(!ws||ws.readyState!==1)return missionFeedback('Conecte-se ao multiplayer para testar o acidente.');
+ ws.send(JSON.stringify({t:'testAccident'}));
+ missionFeedback('Solicitando teste de acidente ao servidor...');
+};
+
 async function completeMission(id,event){
  if(!user||user.missions?.[id]||(id==='welcome'&&user.mission?.done))return 'Objetivo já concluído.';
  try{
@@ -1499,9 +1657,9 @@ if(!DEV_OFFLINE)return;
 say('');
 if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor'];db[k]={name:n,h:hs(p),col:LK.col,skin:LK.skin,hr:LK.hr,pn:LK.pn,body:LK.body,st:LK.st,ac:LK.ac,dr:LK.dr,money:fm?1000:100,xp:0,x:27.5,y:14.5,role:fm?'prefeito':'cidadão'};if(fm)db['#mayor']=k;sv();start(db[k])}
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
-function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
+function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorTestAccident').hidden=a.role!=='prefeito';
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorTestAccident').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 function save(){if(user){user.x=px;user.y=py;sv()}}
 addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);

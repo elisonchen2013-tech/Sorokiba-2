@@ -332,3 +332,39 @@ test('traffic slows to match a lead vehicle and brakes for accident scene obstac
   assert.match(client, /for\(const inc of accidents\)/);
   assert.match(client, /gap>4\.5/);
 });
+
+
+test('park seating uses a low, bent seated pose and bench-aligned interaction anchors', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /id:'park-bench-1',x:30\.5,y:78\.15,sitX:30\.5,sitY:78\.35/);
+  assert.match(client, /if\(seated\)\{\s*c\.save\(\)/);
+  assert.match(client, /c\.fillRect\(x-6,y-20,12,10\)/);
+  assert.match(client, /near=\{t:'bench',o:b\}/);
+});
+
+test('ice-cream attendant, shop menu, purchase and eating animation are connected', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  const database = read('sorokiba2-db.js');
+  assert.match(client, /role:'Atendente da sorveteria'/);
+  assert.match(client, /E · Comprar sorvetes com /);
+  assert.match(client, /function openIceCreamShop\(\)/);
+  assert.match(client, /data-icecream-buy/);
+  assert.match(client, /data-icecream-eat/);
+  assert.match(client, /drawIceCreamSnack\(c,p\[0\]\+10,p\[1\]-24,t,iceCreamEatingFlavor\)/);
+  assert.match(server, /app\.post\('\/api\/sk2\/icecream\/buy'/);
+  assert.match(server, /app\.post\('\/api\/sk2\/icecream\/eat'/);
+  assert.match(database, /CREATE TABLE IF NOT EXISTS sk2_food_inventory/);
+  assert.match(database, /async function buyIceCream/);
+  assert.match(database, /async function eatIceCream/);
+});
+
+test('only the authenticated mayor can start a shared accident test', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  assert.match(client, /id="mayorTestAccident" class="mayorTool" hidden/);
+  assert.match(client, /ws\.send\(JSON\.stringify\(\{t:'testAccident'\}\)\)/);
+  assert.match(server, /if \(me\.lk\?\.role !== 'prefeito'\)/);
+  assert.match(server, /t: 'accidentTestResult'/);
+  assert.match(server, /test-'.*incidentSequence/);
+});

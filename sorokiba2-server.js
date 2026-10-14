@@ -9,6 +9,13 @@ const db = require('./sorokiba2-db');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
+const ICE_CREAM_FLAVORS = Object.freeze({
+  baunilha: { id: 'baunilha', name: 'Baunilha', price: 10 },
+  chocolate: { id: 'chocolate', name: 'Chocolate', price: 12 },
+  morango: { id: 'morango', name: 'Morango', price: 12 },
+  flocos: { id: 'flocos', name: 'Flocos', price: 14 },
+  pistache: { id: 'pistache', name: 'Pistache', price: 16 },
+});
 const MISSIONS = Object.freeze({
   welcome: { event: 'npc:kiba', money: 250, xp: 100, label: 'Fale com Kiba' },
   hospital_visit: { event: 'building:✚ Hospital', money: 150, xp: 60, label: 'Visite o Hospital' },
@@ -204,6 +211,36 @@ async function attachSorokiba2(app, server, opt = {}) {
     } catch (e) { res.status(503).json({ err: 'Erro no servidor' }); }
   });
   app.post('/api/sk2/logout', (req, res) => { clearSession(res); res.json({ ok: 1 }); });
+  app.get('/api/sk2/icecream', async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      res.json({ ok: 1, player: db.pub(row), inventory: await db.getIceCreamInventory(row.username), menu: Object.values(ICE_CREAM_FLAVORS) });
+    } catch (e) { res.status(500).json({ err: 'Não foi possível carregar os sorvetes' }); }
+  });
+  app.post('/api/sk2/icecream/buy', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const flavor = ICE_CREAM_FLAVORS[req.body?.flavor];
+      if (!flavor) return res.status(400).json({ err: 'Sabor inválido' });
+      const result = await db.buyIceCream(row.username, flavor.id, flavor.price);
+      if (result?.error === 'insufficient') return res.status(409).json({ err: 'Dinheiro insuficiente para esse sorvete.' });
+      if (!result?.player) return res.status(404).json({ err: 'Jogador não encontrado' });
+      res.json({ ok: 1, player: db.pub(result.player), inventory: result.inventory, message: flavor.name + ' comprado por R$ ' + flavor.price + '.' });
+    } catch (e) { res.status(500).json({ err: 'Não foi possível comprar o sorvete' }); }
+  });
+  app.post('/api/sk2/icecream/eat', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const flavor = ICE_CREAM_FLAVORS[req.body?.flavor];
+      if (!flavor) return res.status(400).json({ err: 'Sabor inválido' });
+      const result = await db.eatIceCream(row.username, flavor.id);
+      if (!result?.player) return res.status(409).json({ err: 'Você não tem esse sorvete no inventário.' });
+      res.json({ ok: 1, player: db.pub(result.player), inventory: result.inventory, message: 'Você comeu um sorvete de ' + flavor.name + '.' });
+    } catch (e) { res.status(500).json({ err: 'Não foi possível comer o sorvete' }); }
+  });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
@@ -536,7 +573,15 @@ async function attachSorokiba2(app, server, opt = {}) {
         send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents() }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'x') {
+      if (m.t === 'testAccident') {
+        const now = Date.now();
+        if (me.lk?.role !== 'prefeito') { send(me, { t: 'accidentTestResult', ok: false, message: 'Somente o Prefeito pode testar acidentes.' }); return; }
+        if (now - lastIncidentAt < 10000) { send(me, { t: 'accidentTestResult', ok: false, message: 'Aguarde alguns segundos antes de testar outro acidente.' }); return; }
+        const incident = { id: 'test-' + (++incidentSequence), x: 46.35, y: 34.5, carA: 0, carB: 24, carAX: 46.15, carAY: 34.5, carBX: 46.5, carBY: 34.5, axis: 0, victimId: 0, startedAt: now, expiresAt: now + 65000, test: true };
+        activeAccidents.push(incident); if (activeAccidents.length > 10) activeAccidents.shift(); lastIncidentAt = now;
+        toAll({ t: 'x', incident });
+        send(me, { t: 'accidentTestResult', ok: true, message: 'Acidente de teste iniciado. Confira o fogo e a chegada dos serviços de emergência.' });
+      } else if (m.t === 'x') {
         const now = Date.now();
         if (me.id !== trafficAuthority || now-lastIncidentAt<6500) return;
         const {a,b,ax,ay,bx,by,axis,victim}=m;
