@@ -288,13 +288,24 @@ test('multiplayer shares a traffic snapshot and synchronizes sitting poses', () 
 });
 
 
-test('traffic uses earlier braking and a larger lane-following safety gap', () => {
+test('traffic uses adaptive following distance, smooth acceleration and progressive braking', () => {
   const client = read('sorokiba2.html');
-  assert.match(client, /ds<5\.5/);
-  assert.match(client, /const safeGap=2\.25\+a\.s\*\.4/);
-  assert.match(client, /function detectTrafficCollisions\(\)/);
-  assert.match(client, /registerTrafficCollision\(a,b,i,j\)/);
-  assert.match(client, /a\.crashedUntil&&now<a\.crashedUntil/);
+  assert.match(client, /const safeGap=2\\.65\\+a\\.s\\*\\.55/);
+  assert.match(client, /Math\\.sqrt\\(Math\\.max\\(0,2\\*3\\.8\\*Math\\.max\\(0,freeGap-\\.85\\)\\)\\)/);
+  assert.match(client, /Math\\.max\\(-8\\.5\\*dt,Math\\.min\\(2\\.8\\*dt,de-a\\.s\\)\\)/);
+  assert.match(client, /function detectTrafficCollisions\\(\\)/);
+  assert.match(client, /registerTrafficCollision\\(a,b,i,j\\)/);
+  assert.match(client, /a\\.crashedUntil&&now<a\\.crashedUntil/);
+});
+
+test('cars render with layered body reflections, detailed windows, animated lamps and brake glow', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /function carD\\(c,a\\)/);
+  assert.match(client, /rgba\\(255,255,255,\\.35\\)/);
+  assert.match(client, /c\\.shadowBlur=curD>\\.1\\?curD\\*10:2/);
+  assert.match(client, /c\\.fillStyle=a\\.br\\?'#ff2929':'#922b31'/);
+  assert.match(client, /const plate=hz\\?P\\(/);
+  assert.match(client, /function wheel\\(c,p,r\\)/);
 });
 
 test('shared traffic collisions trigger evacuation, firefighters and ambulance transport', () => {
