@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Sorokiba 2</title>
 <style>
-:root{--n:#0B1020;--a:#F2B84B;--g:#2DD4BF;--c:#F5EFE3}
+:root{--n:#0B1020;--a:#FFD166;--g:#42F5D4;--c:#FFF9EE;--text-strong:#FFFFFF;--text-muted:#D5E2F5}
 *{box-sizing:border-box}[hidden]{display:none!important}
 html,body{height:100%;margin:0;background:var(--n);color:var(--c);font:16px system-ui,sans-serif;overflow:hidden}
 #cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
@@ -19,7 +19,7 @@ input:focus{border-color:var(--a)}::placeholder{color:#F5EFE3aa}
 #hud{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));background:rgba(11,16,32,.8);border:1px solid #2DD4BF55;border-radius:12px;padding:8px 12px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 20px)}
 #xb{display:inline-block;width:60px;height:6px;background:#ffffff26;border-radius:3px;overflow:hidden}#xf{display:block;height:100%;background:var(--a)}
 #out{background:#ffffff1a;border:0;color:var(--c);border-radius:6px;padding:3px 8px;cursor:pointer}
-#tip{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:rgba(11,16,32,.85);padding:8px 14px;border-radius:20px;font-size:14px;border:1px solid var(--a)}
+/* Legibilidade reforçada */ body{color:var(--c)} button,a,[role=button]{text-shadow:0 1px 2px #0008} small,.muted,.subtle{color:var(--text-muted)} :focus-visible{outline:2px solid #42F5D4;outline-offset:3px} #tip{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:rgba(11,16,32,.85);padding:8px 14px;border-radius:20px;font-size:14px;border:1px solid var(--a)}
 #dlg{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(520px,92vw);background:rgba(11,16,32,.92);border:2px solid var(--a);border-radius:14px;padding:14px 16px;cursor:pointer}
 #dlg b{color:var(--a)}#dlg p{margin:6px 0 0}
 #bE{position:fixed;right:calc(18px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:50%;border:0;background:var(--a);color:var(--n);font:800 22px system-ui;opacity:.9}
@@ -1171,10 +1171,10 @@ function renderInterior(t,h){
  c.fillStyle='rgba(8,13,25,.82)';c.beginPath();c.roundRect(16,H-48,Math.min(W-32,500),30,10);c.fill();c.fillStyle='#e1e8ee';c.font='12px system-ui';c.textAlign='left';c.fillText(touchDevice?'Use o joystick para andar · toque em E para interagir · use Voltar à cidade para sair':'WASD / setas para andar · E para falar ou interagir · use Voltar à cidade para sair',27,H-29);c.globalAlpha=1;
 }
 
-const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.'];
+const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.']; const npcConversation=n=>{const hour=cityHour|0;const routine=n.routine==='trabalho'?'Estou no meu turno. Espero que o dia seja tranquilo!':n.routine==='compras'?'Estou procurando algumas coisas nas lojas da cidade.':n.routine==='casa'?'Estou indo para casa descansar um pouco.':'Estou passeando pela cidade. Tem muita coisa para conhecer!';const time=hour<6?'A cidade está bem calma a esta hora.':hour<12?'Bom dia! A cidade está começando a acordar.':hour<18?'Boa tarde! Está aproveitando o dia?':'Boa noite! As luzes da cidade estão bonitas.';return [routine,time,'Você pode explorar os prédios e conversar com outras pessoas. Se encontrar algum problema, avise a administração.'];};
 function act(){
  if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden)return;
- if(open){open=false;$('dlg').hidden=true;tone(440,.06,'sine',.07);return}
+ if(open){const n=near?.t==='n'?near.o:null;if(n&&Array.isArray(n.dialogLines)&&(n.dialogStep||0)<n.dialogLines.length-1){n.dialogStep=(n.dialogStep||0)+1;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+n.dialogLines[n.dialogStep]+'</p><small>Toque ou pressione E para continuar</small>';tone(520,.06,'sine',.06);return}open=false;$('dlg').hidden=true;if(n){n.dialogLines=null;n.dialogStep=0}tone(440,.06,'sine',.07);return}
  if(!interior&&near?.t==='icecream'){openIceCreamShop();return}
  if(!interior&&near?.t==='workTarget'&&near.o?.type==='delivery_route'){
   completeWorkTask(near.o.id,null);
@@ -1198,7 +1198,7 @@ function act(){
   }
   return;
  }
- if(near&&near.t=='n'){const n=near.o;open=true;tone(660,.1,'sine',.08);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+(n.k?'Oi! Eu sou o Kiba, o ornitorrinco de Sorokiba. Bem-vindo ao Sorokiba 2!':LINES[R()*LINES.length|0])+'</p>';if(n.k)completeMission('welcome','npc:kiba').then(msg=>{$('dlg').innerHTML='<b>'+n.n+'</b><p>'+msg+'</p>'})}
+ if(near&&near.t=='n'){const n=near.o;open=true;tone(660,.1,'sine',.08);$('dlg').hidden=false;const lines=n.k?['Oi! Eu sou o Kiba, o ornitorrinco de Sorokiba. Bem-vindo ao Sorokiba 2!','A cidade tem lojas, profissões e lugares para explorar.','Se precisar de ajuda, fale comigo novamente!']:npcConversation(n);n.dialogStep=0;n.dialogLines=lines;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+lines[0]+'</p><small>Toque ou pressione E para continuar a conversa</small>';if(n.k)completeMission('welcome','npc:kiba').then(msg=>{if(open&&near?.o===n)$('dlg').innerHTML='<b>'+n.n+'</b><p>'+msg+'</p><small>Toque ou pressione E para continuar</small>'})}
  else if(near&&near.t=='d'){enterBuilding(near.o)}
 }
 $('dlg').onclick=act;$('bE').onclick=act;
@@ -1393,7 +1393,7 @@ for(const inc of accidents){
  if(gap<=-.5||gap>4.5)continue;
  const safe=Math.max(0,gap-1.85);de=Math.min(de,safe<.22?0:Math.sqrt(2*3.8*safe));
 }
-let playerBlocking=false,playerInside=false;
+/* Pedestres: freia antes de atravessar a área ocupada por NPCs. */ for(const n of npcs){if(n.k||n.inAmbulance||(n.injuredUntil&&n.injuredUntil>now))continue;const forward=(n.x-a.x)*a.dx+(n.y-a.y)*a.dy,lateral=a.dx?Math.abs(n.y-a.y):Math.abs(n.x-a.x);const [carLength,carWidth]=CM[a.m],halfLength=carLength/2,halfWidth=carWidth/2;if(lateral<halfWidth+.62&&forward>-halfLength-.25&&forward<4.2){const gap=Math.max(0,forward-halfLength-.35);de=Math.min(de,gap<.28?0:Math.sqrt(2*5.5*gap));if(forward<halfLength+.25)de=0;}} let playerBlocking=false,playerInside=false;
 if(gm&&!interior){
  const [carLength,carWidth]=CM[a.m],forward=(px-a.x)*a.dx+(py-a.y)*a.dy,lateral=a.dx?Math.abs(py-a.y):Math.abs(px-a.x),halfLength=carLength/2,halfWidth=carWidth/2;
  if(lateral<halfWidth+.34&&forward>-halfLength-.2&&forward<halfLength+3.1){
