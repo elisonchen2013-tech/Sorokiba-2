@@ -63,18 +63,28 @@ async function init() {
     mission_id TEXT NOT NULL DEFAULT 'welcome', mission_done BOOLEAN NOT NULL DEFAULT false,
     missions JSONB NOT NULL DEFAULT '{}',
     resume JSONB NOT NULL DEFAULT '{"summary":"","skills":[],"experience":0}',
+    employment JSONB NOT NULL DEFAULT '{}',
     x REAL NOT NULL DEFAULT 27.5, y REAL NOT NULL DEFAULT 14.5,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_seen TIMESTAMPTZ);
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS mission_id TEXT NOT NULL DEFAULT 'welcome';
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS mission_done BOOLEAN NOT NULL DEFAULT false;
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS missions JSONB NOT NULL DEFAULT '{}';
   ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS resume JSONB NOT NULL DEFAULT '{"summary":"","skills":[],"experience":0}';
+  ALTER TABLE sk2_players ADD COLUMN IF NOT EXISTS employment JSONB NOT NULL DEFAULT '{}';
   CREATE TABLE IF NOT EXISTS sk2_career_applications (
     username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
     job_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'submitted',
+    interview_status TEXT NOT NULL DEFAULT 'not_started',
+    interview JSONB NOT NULL DEFAULT '{}',
+    interview_score INT, interview_feedback TEXT, cooldown_until TIMESTAMPTZ, hired_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (username, job_id)
-  );`);
+    PRIMARY KEY (username, job_id));
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS interview_status TEXT NOT NULL DEFAULT 'not_started';
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS interview JSONB NOT NULL DEFAULT '{}';
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS interview_score INT;
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS interview_feedback TEXT;
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS cooldown_until TIMESTAMPTZ;
+  ALTER TABLE sk2_career_applications ADD COLUMN IF NOT EXISTS hired_at TIMESTAMPTZ;
   CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';`);
 }
 async function health() {
@@ -164,14 +174,63 @@ async function applyForCareer(username, jobId) {
 }
 
 async function listApplications(username) {
-  const r = await q('SELECT job_id, status, created_at FROM sk2_career_applications WHERE username=$1 ORDER BY created_at DESC', [username]);
+  const r = await q(`SELECT job_id, status, interview_status, interview_score, interview_feedback,
+    cooldown_until, hired_at, created_at FROM sk2_career_applications
+    WHERE username=$1 ORDER BY created_at DESC`, [username]);
   return r.rows;
+}
+
+async function getApplication(username, jobId) {
+  const r = await q('SELECT * FROM sk2_career_applications WHERE username=$1 AND job_id=$2', [username, jobId]);
+  return r.rows[0] || null;
+}
+
+async function startInterview(username, jobId, interview) {
+  const r = await q(`UPDATE sk2_career_applications SET interview_status='active', interview=$3
+    WHERE username=$1 AND job_id=$2 AND status <> 'hired'
+      AND (cooldown_until IS NULL OR cooldown_until <= now())
+    RETURNING *`, [username, jobId, JSON.stringify(interview)]);
+  return r.rows[0] || null;
+}
+
+async function answerInterview(username, jobId, sessionId, interview) {
+  const r = await q(`UPDATE sk2_career_applications SET interview=$4
+    WHERE username=$1 AND job_id=$2 AND interview_status='active'
+      AND interview->>'sessionId'=$3 RETURNING *`, [username, jobId, sessionId, JSON.stringify(interview)]);
+  return r.rows[0] || null;
+}
+
+async function finalizeInterview(username, jobId, sessionId, result, employment) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const app = await client.query(`UPDATE sk2_career_applications
+      SET status=$4, interview_status=$4, interview_score=$5, interview_feedback=$6,
+          cooldown_until=$7, hired_at=CASE WHEN $4='hired' THEN now() ELSE hired_at END
+      WHERE username=$1 AND job_id=$2 AND interview_status='active' AND interview->>'sessionId'=$3
+      RETURNING *`, [username, jobId, sessionId, result.status, result.score, result.feedback, result.cooldownUntil]);
+    if (!app.rowCount) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    if (result.status === 'hired') {
+      await client.query('UPDATE sk2_players SET employment=$2, last_seen=now() WHERE username=$1', [username, JSON.stringify(employment)]);
+    }
+    await client.query('COMMIT');
+    return app.rows[0];
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 const pub = row => ({
   name: row.name, role: row.role, ...cleanLook(row.look), money: row.money, xp: row.xp,
   mission: { id: row.mission_id || 'welcome', done: !!row.mission_done },
-  missions: row.missions || {}, resume: row.resume || { summary: '', skills: [], experience: 0 }, x: row.x, y: row.y,
+  missions: row.missions || {}, resume: row.resume || { summary: '', skills: [], experience: 0 },
+  employment: row.employment || {}, x: row.x, y: row.y,
 });
 
 function sign(u) {
@@ -186,4 +245,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

@@ -61,6 +61,16 @@ Endpoints autenticados:
 
 Entrevistas, painel Meu Trabalho, tarefas profissionais e pagamentos recorrentes ainda não fazem parte desta etapa; serão construídos sobre essas candidaturas sem duplicar autenticação ou economia.
 
+## Etapa 2: entrevistas
+
+Cada vaga da central tem três perguntas específicas da profissão. O servidor cria a sessão, controla a ordem e valida cada resposta; o cliente nunca envia ou calcula o gabarito. Os endpoints são:
+
+- `POST /api/sk2/career/interview/start`: inicia ou retoma uma entrevista de candidatura;
+- `POST /api/sk2/career/interview/answer`: valida a resposta da pergunta atual;
+- `POST /api/sk2/career/interview/finish`: calcula e persiste a pontuação e o resultado.
+
+A pontuação é transparente: até 70 pontos por respostas, 20 por habilidades do currículo e 10 por experiência. `75+` aprova e contrata, `55–74` aprova para treinamento e abaixo disso recusa. Resultado, feedback, score, contratação e `cooldown_until` ficam em `sk2_career_applications`; tentativas não aprovadas aguardam 24 horas. Contratações ficam em `sk2_players.employment` e aparecem na central.
+
 ## Testes
 
 ```sh

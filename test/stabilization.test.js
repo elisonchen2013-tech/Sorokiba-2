@@ -68,3 +68,22 @@ test('career center persists validated resumes and unique applications', () => {
   assert.match(client, /Central de carreiras/);
   assert.match(client, /resumeSave/);
 });
+
+test('career interviews hide answers, validate progression and persist outcomes', () => {
+  const server = read('sorokiba2-server.js');
+  const db = read('sorokiba2-db.js');
+  const client = read('sorokiba2.html');
+  assert.match(server, /career\/interview\/start/);
+  assert.match(server, /career\/interview\/answer/);
+  assert.match(server, /career\/interview\/finish/);
+  assert.match(server, /questionById/);
+  assert.match(server, /answerPoints/);
+  assert.match(server, /status = score >= 75 \? 'hired'/);
+  assert.match(server, /cooldownUntil/);
+  assert.match(db, /interview_status/);
+  assert.match(db, /finalizeInterview/);
+  assert.match(db, /employment=\$2/);
+  assert.match(client, /interviewPanel/);
+  assert.match(client, /startInterview/);
+  assert.match(client, /interview\/finish/);
+});

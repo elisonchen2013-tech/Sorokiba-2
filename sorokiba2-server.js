@@ -2,6 +2,7 @@
 // Sorokiba 2 – servidor online. Encaixa no seu server.js com 2 linhas (veja LEIA-ME no chat).
 // Leve de propósito (plano grátis 512 MB): o servidor só repassa posições e chat; carros e moradores são desenhados em cada navegador.
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const db = require('./sorokiba2-db');
@@ -27,7 +28,36 @@ const CAREER_SKILLS = Object.freeze({
   comunicacao: { label: 'Comunicação', unlockXp: 100 },
   manutencao: { label: 'Manutenção', unlockXp: 100 },
 });
+const INTERVIEW_QUESTIONS = Object.freeze({
+  hospital_reception: [
+    { id: 'greeting', prompt: 'Como você recebe um paciente nervoso?', options: ['Ignoro para ganhar tempo', 'Ouço, acolho e encaminho com clareza', 'Peço que volte outro dia'], correct: 1 },
+    { id: 'privacy', prompt: 'O que fazer com dados de um paciente?', options: ['Compartilhar no chat', 'Guardar e compartilhar apenas com a equipe autorizada', 'Publicar no mural'], correct: 1 },
+    { id: 'queue', prompt: 'A fila está atrasada. Qual é a melhor atitude?', options: ['Informar a situação e reorganizar prioridades', 'Esconder a fila', 'Atender apenas conhecidos'], correct: 0 },
+  ],
+  library_assistant: [
+    { id: 'catalog', prompt: 'Como organizar livros recém-chegados?', options: ['Por cor apenas', 'Registrar e classificar no catálogo', 'Deixar em qualquer estante'], correct: 1 },
+    { id: 'silence', prompt: 'Um visitante faz barulho. O que fazer?', options: ['Orientar com respeito', 'Expulsar sem conversar', 'Desligar as luzes'], correct: 0 },
+    { id: 'search', prompt: 'Alguém procura um livro sem saber o título.', options: ['Fazer perguntas e buscar por assunto/autor', 'Dizer que não existe', 'Mandar procurar sozinho'], correct: 0 },
+  ],
+  mechanic: [
+    { id: 'diagnosis', prompt: 'Antes de reparar uma máquina, você deve:', options: ['Diagnosticar e isolar o risco', 'Trocar qualquer peça', 'Acelerar o motor'], correct: 0 },
+    { id: 'tools', prompt: 'Uma ferramenta está danificada. Você:', options: ['Usa assim mesmo', 'Sinaliza e substitui com segurança', 'Esconde na oficina'], correct: 1 },
+    { id: 'customer', prompt: 'Como explicar um reparo ao cliente?', options: ['Usar termos claros e informar o custo', 'Não explicar nada', 'Prometer resultado impossível'], correct: 0 },
+  ],
+  restaurant_server: [
+    { id: 'order', prompt: 'Como confirmar um pedido?', options: ['Repetir o pedido e as restrições', 'Adivinhar', 'Mandar o cliente para a cozinha'], correct: 0 },
+    { id: 'rush', prompt: 'Durante o movimento, a prioridade é:', options: ['Organizar a fila e comunicar atrasos', 'Ignorar mesas', 'Servir apenas pedidos fáceis'], correct: 0 },
+    { id: 'mistake', prompt: 'Um pedido saiu errado. Você:', options: ['Assume, corrige e informa o cliente', 'Culpa o cliente', 'Apaga o pedido'], correct: 0 },
+  ],
+  teacher_assistant: [
+    { id: 'classroom', prompt: 'Uma turma está dispersa. Você:', options: ['Define uma instrução clara e uma atividade', 'Grita sem explicar', 'Cancela a aula'], correct: 0 },
+    { id: 'inclusion', prompt: 'Um aluno precisa de apoio extra. Você:', options: ['Adapta a explicação e pede suporte', 'Ignora', 'Expõe o aluno'], correct: 0 },
+    { id: 'planning', prompt: 'Para preparar uma aula, é importante:', options: ['Planejar objetivo, materiais e acompanhamento', 'Improvisar sempre', 'Evitar feedback'], correct: 0 },
+  ],
+});
 const careerById = id => CAREERS.find(job => job.id === id);
+const questionById = (jobId, id) => INTERVIEW_QUESTIONS[jobId]?.find(question => question.id === id);
+const publicQuestion = question => ({ id: question.id, prompt: question.prompt, options: question.options });
 
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
@@ -135,6 +165,7 @@ async function attachSorokiba2(app, server, opt = {}) {
           ...job,
           requiredSkills: job.skills.map(skill => CAREER_SKILLS[skill].label),
           applied: applied.has(job.id) ? applied.get(job.id).status : null,
+          application: applied.get(job.id) || null,
         })),
         applications,
         resume: row.resume || { summary: '', skills: [], experience: 0 },
@@ -173,6 +204,79 @@ async function attachSorokiba2(app, server, opt = {}) {
       const application = await db.applyForCareer(row.username, job.id);
       if (!application) return res.status(409).json({ err: 'Você já se candidatou a esta vaga' });
       res.status(201).json({ ok: 1, application, job });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/career/interview/start', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const job = careerById(req.body?.jobId), questions = INTERVIEW_QUESTIONS[req.body?.jobId];
+      if (!job || !questions) return res.status(400).json({ err: 'Vaga sem entrevista configurada' });
+      const application = await db.getApplication(row.username, job.id);
+      if (!application) return res.status(404).json({ err: 'Candidate-se antes de iniciar a entrevista' });
+      if (application.status === 'hired') return res.status(409).json({ err: 'Você já foi contratado para esta vaga' });
+      if (application.interview_status === 'active' && application.interview?.sessionId) {
+        const current = questionById(job.id, application.interview.questionIds[application.interview.index]);
+        return res.json({ ok: 1, resumed: true, status: 'active', sessionId: application.interview.sessionId, index: application.interview.index, total: application.interview.questionIds.length, done: !current, question: current ? publicQuestion(current) : null });
+      }
+      if (application.cooldown_until && new Date(application.cooldown_until) > new Date()) {
+        return res.status(429).json({ err: 'Aguarde o fim do cooldown para tentar novamente', retryAt: application.cooldown_until });
+      }
+      const questionIds = questions.map(question => question.id).sort(() => Math.random() - .5);
+      const interview = { sessionId: crypto.randomUUID(), questionIds, index: 0, answers: {}, startedAt: new Date().toISOString() };
+      const started = await db.startInterview(row.username, job.id, interview);
+      if (!started) return res.status(409).json({ err: 'Não foi possível iniciar esta entrevista agora' });
+      return res.status(201).json({ ok: 1, status: 'active', sessionId: interview.sessionId, index: 0, total: questionIds.length, question: publicQuestion(questionById(job.id, questionIds[0])) });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/career/interview/answer', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const job = careerById(req.body?.jobId), application = job ? await db.getApplication(row.username, job.id) : null;
+      const { sessionId, questionId, answer } = req.body || {};
+      if (!job || !application || application.interview_status !== 'active' || application.interview?.sessionId !== sessionId) {
+        return res.status(409).json({ err: 'Entrevista inválida ou expirada' });
+      }
+      const state = application.interview, expectedId = state.questionIds[state.index];
+      if (questionId !== expectedId || !Number.isInteger(answer)) return res.status(400).json({ err: 'Resposta inválida para a pergunta atual' });
+      const question = questionById(job.id, questionId);
+      if (!question || answer < 0 || answer >= question.options.length) return res.status(400).json({ err: 'Opção de resposta inválida' });
+      const next = { ...state, answers: { ...state.answers, [questionId]: answer }, index: state.index + 1 };
+      const saved = await db.answerInterview(row.username, job.id, sessionId, next);
+      if (!saved) return res.status(409).json({ err: 'Entrevista atualizada por outra sessão' });
+      const nextQuestion = questionById(job.id, next.questionIds[next.index]);
+      res.json({ ok: 1, index: next.index, total: next.questionIds.length, done: !nextQuestion, question: nextQuestion ? publicQuestion(nextQuestion) : null });
+    } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
+  });
+  app.post('/api/sk2/career/interview/finish', json, async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      const job = careerById(req.body?.jobId), application = job ? await db.getApplication(row.username, job.id) : null;
+      const { sessionId } = req.body || {};
+      if (!job || !application || application.interview_status !== 'active' || application.interview?.sessionId !== sessionId) {
+        return res.status(409).json({ err: 'Entrevista inválida ou expirada' });
+      }
+      const state = application.interview, questions = INTERVIEW_QUESTIONS[job.id];
+      if (state.index !== questions.length || Object.keys(state.answers || {}).length !== questions.length) {
+        return res.status(400).json({ err: 'Responda todas as perguntas antes de finalizar' });
+      }
+      const correct = questions.filter(question => state.answers[question.id] === question.correct).length;
+      const answerPoints = Math.round(correct / questions.length * 70);
+      const skillPoints = job.skills.every(skill => (row.resume?.skills || []).includes(skill)) ? 20 : 0;
+      const experiencePoints = row.resume?.experience >= job.minExperience ? 10 : 0;
+      const score = answerPoints + skillPoints + experiencePoints;
+      const status = score >= 75 ? 'hired' : score >= 55 ? 'training' : 'rejected';
+      const feedback = `Pontuação: ${score}/100 (respostas ${answerPoints}/70, currículo ${skillPoints}/20, experiência ${experiencePoints}/10). ${
+        status === 'hired' ? 'Aprovado e contratado.' : status === 'training' ? 'Aprovado para treinamento antes da contratação.' : 'Não aprovado; revise o currículo e tente novamente após o cooldown.'
+      }`;
+      const cooldownUntil = status === 'hired' ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const employment = { jobId: job.id, title: job.title, profession: job.profession, building: job.building, hiredAt: new Date().toISOString() };
+      const result = await db.finalizeInterview(row.username, job.id, sessionId, { status, score, feedback, cooldownUntil }, employment);
+      if (!result) return res.status(409).json({ err: 'Entrevista já finalizada' });
+      const updated = await db.load(row.username);
+      res.json({ ok: 1, status, score, feedback, cooldownUntil, application: { jobId: job.id, status }, player: db.pub(updated) });
     } catch (e) { res.status(500).json({ err: 'Erro no servidor' }); }
   });
 

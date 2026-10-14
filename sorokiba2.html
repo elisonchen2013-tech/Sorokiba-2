@@ -53,6 +53,11 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 #careerPanel button{margin:6px 4px 0 0;padding:7px 10px;border:0;border-radius:7px;background:var(--a);color:var(--n);font-weight:700;cursor:pointer}
 #careerPanel .job{border:1px solid #ffffff25;border-radius:9px;padding:9px;margin:7px 0}.job small{display:block;opacity:.75}.job button[disabled]{opacity:.5;cursor:default}
 #careerClose{float:right;background:#ffffff1a!important;color:var(--c)!important}
+#interviewPanel{position:fixed;inset:18% 18%;z-index:13;background:rgba(11,16,32,.98);border:2px solid var(--g);border-radius:16px;padding:22px;box-shadow:0 12px 40px #000b}
+#interviewPanel h2{margin:0 0 8px;color:var(--g)}#interviewQuestion{font-size:18px;margin:18px 0 12px}
+#interviewOptions{display:grid;gap:8px}.interviewOption{display:block;text-align:left;background:#ffffff12!important;color:var(--c)!important;border:1px solid #ffffff33!important}
+#interviewOptions .selected{border-color:var(--a)!important;background:#F2B84B33!important}.interviewOption:disabled{opacity:.7}
+#interviewClose{float:right;background:#ffffff1a!important;color:var(--c)!important}
 </style></head><body>
 <canvas id="cv"></canvas>
 <div id="login">
@@ -66,6 +71,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 </div>
 <div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="out">Sair</button></div>
 <section id="careerPanel" hidden><button id="careerClose">Fechar</button><h2>Central de carreiras</h2><p id="careerMsg">Carregando...</p><h3>Meu currículo</h3><label for="resumeSummary">Resumo (280 caracteres)</label><textarea id="resumeSummary" maxlength="280" rows="3"></textarea><label for="resumeExperience">Experiência desbloqueada</label><input id="resumeExperience" type="number" min="0" step="1"><div id="resumeSkills"></div><button id="resumeSave">Salvar currículo</button><h3>Vagas abertas</h3><div id="careerJobs"></div></section>
+<section id="interviewPanel" hidden><button id="interviewClose">Fechar</button><h2 id="interviewTitle">Entrevista</h2><p id="interviewStatus"></p><div id="interviewQuestion"></div><div id="interviewOptions"></div><button id="interviewNext" hidden>Responder</button><button id="interviewFinish" hidden>Finalizar entrevista</button></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden>E</button><button id="leaveRoom" hidden>← Voltar à cidade</button>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
 <input id="ch" maxlength="120" placeholder="Digite e aperte Enter..." autocomplete="off" hidden><div id="cl"></div>
@@ -886,6 +892,7 @@ async function completeMission(id,event){
 }
 const CAREER_SKILLS={atendimento:'Atendimento ao público',organizacao:'Organização',comunicacao:'Comunicação',manutencao:'Manutenção'};
 let careerData=null;
+let interviewState=null;
 function careerText(text){return document.createTextNode(text)}
 function renderResume(resume){
  $('resumeSummary').value=resume?.summary||'';
@@ -905,11 +912,44 @@ function renderCareers(data){
   const card=document.createElement('div');card.className='job';
   const title=document.createElement('b');title.textContent=job.title;card.append(title);
   const info=document.createElement('small');info.textContent=`${job.building} · ${job.vacancies} vaga(s) · habilidades: ${job.requiredSkills.join(', ')}`;card.append(info);
-  const button=document.createElement('button');button.textContent=job.applied?'Candidatura enviada':'Candidatar-se';button.disabled=!!job.applied;
-  button.onclick=async()=>{button.disabled=true;try{const r=await fetch(API+'/career/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id})});const j=await r.json().catch(()=>({}));$('careerMsg').textContent=r.ok?'Candidatura registrada.':(j.err||'Não foi possível candidatar-se.');if(r.ok)button.textContent='Candidatura enviada';else button.disabled=false}catch(e){button.disabled=false;$('careerMsg').textContent='Não foi possível conectar à central.'}};
-  card.append(button);box.append(card);
+  const application=job.application;
+  const applyButton=document.createElement('button');applyButton.textContent=job.applied?'Candidatura enviada':'Candidatar-se';applyButton.disabled=!!job.applied;
+  applyButton.onclick=async()=>{applyButton.disabled=true;try{const r=await fetch(API+'/career/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id})});const j=await r.json().catch(()=>({}));$('careerMsg').textContent=r.ok?'Candidatura registrada.':(j.err||'Não foi possível candidatar-se.');if(r.ok){applyButton.textContent='Candidatura enviada';loadCareers()}else applyButton.disabled=false}catch(e){applyButton.disabled=false;$('careerMsg').textContent='Não foi possível conectar à central.'}};
+  card.append(applyButton);
+  if(application){
+   const result=document.createElement('small');result.textContent=application.interview_feedback||`Entrevista: ${application.interview_status}`;card.append(result);
+   if(application.status!=='hired'){
+    const interviewButton=document.createElement('button');interviewButton.textContent=application.interview_status==='active'?'Continuar entrevista':'Iniciar entrevista';
+    interviewButton.onclick=()=>startInterview(job.id,job.title);card.append(interviewButton);
+   }else{const hired=document.createElement('small');hired.textContent='Contratado';hired.style.color='#2DD4BF';card.append(hired)}
+  }
+  box.append(card);
  });
 }
+function showInterviewQuestion(){
+ const q=interviewState.question;$('interviewQuestion').textContent=q?`Pergunta ${interviewState.index+1} de ${interviewState.total}: ${q.prompt}`:'';
+ const box=$('interviewOptions');box.replaceChildren();$('interviewNext').hidden=!q;$('interviewFinish').hidden=!!q;
+ if(!q)return;
+ q.options.forEach((option,index)=>{const b=document.createElement('button');b.className='interviewOption';b.textContent=option;b.onclick=()=>{interviewState.answer=index;box.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');$('interviewNext').disabled=false};box.append(b)});
+ $('interviewNext').disabled=true;
+}
+async function startInterview(jobId,title){
+ $('interviewPanel').hidden=false;$('interviewTitle').textContent='Entrevista · '+title;$('interviewStatus').textContent='Carregando perguntas...';
+ try{const r=await fetch(API+'/career/interview/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Não foi possível iniciar a entrevista');interviewState={jobId,title,sessionId:j.sessionId,index:j.index,total:j.total,question:j.question};$('interviewStatus').textContent='A pontuação considera respostas, currículo e experiência. O gabarito fica no servidor.';showInterviewQuestion()}
+ catch(e){$('interviewStatus').textContent=e.message}
+}
+$('interviewNext').onclick=async()=>{
+ if(!interviewState?.question)return;
+ $('interviewNext').disabled=true;
+ try{const r=await fetch(API+'/career/interview/answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:interviewState.jobId,sessionId:interviewState.sessionId,questionId:interviewState.question.id,answer:interviewState.answer})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Resposta rejeitada');interviewState.index=j.index;interviewState.question=j.question;interviewState.answer=null;showInterviewQuestion();if(j.done)$('interviewStatus').textContent='Todas as perguntas foram respondidas. Finalize para receber o resultado.'}
+ catch(e){$('interviewStatus').textContent=e.message;$('interviewNext').disabled=false}
+};
+$('interviewFinish').onclick=async()=>{
+ $('interviewFinish').disabled=true;
+ try{const r=await fetch(API+'/career/interview/finish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:interviewState.jobId,sessionId:interviewState.sessionId})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Não foi possível finalizar');$('interviewStatus').textContent=`${j.feedback} Cooldown: ${j.cooldownUntil?'24 horas':'não aplicável'}.`;user=j.player;$('hm').textContent=user.money;$('interviewQuestion').textContent='Resultado persistido na candidatura.';$('interviewOptions').replaceChildren();$('interviewFinish').hidden=true;loadCareers()}
+ catch(e){$('interviewStatus').textContent=e.message;$('interviewFinish').disabled=false}
+};
+$('interviewClose').onclick=()=>{$('interviewPanel').hidden=true};
 async function loadCareers(){
  $('careerPanel').hidden=false;$('careerMsg').textContent='Carregando vagas...';
  try{const r=await fetch(API+'/careers');const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.err||'Erro');renderCareers(j);$('careerMsg').textContent='Currículo e vagas carregados.'}
@@ -949,7 +989,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
 if(matchMedia('(pointer:coarse)').matches)$('bE').hidden=false;const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('careerPanel').hidden=true;mode='menu';$('login').hidden=false;['hud','tip','dlg','bE','mm','mp'].forEach(i=>$(i).hidden=true);omap(false);open=false};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;mode='menu';$('login').hidden=false;['hud','tip','dlg','bE','mm','mp'].forEach(i=>$(i).hidden=true);omap(false);open=false};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 function save(){if(user){user.x=px;user.y=py;sv()}}
 addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);
