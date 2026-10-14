@@ -65,6 +65,55 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 #workPanel h2{margin:0 0 8px;color:#9ff0e4}#workPanel h3{margin:15px 0 6px;color:var(--a)}
 #workClose{float:right;background:#ffffff1a!important;color:var(--c)!important}
 #workTask{border:1px solid #ffffff33;border-radius:9px;padding:12px;margin:10px 0}.workAction{margin:6px 4px 0 0;padding:8px 10px;border:0;border-radius:7px;background:var(--a);color:var(--n);font-weight:700;cursor:pointer}
+
+/* --- Centro de carreiras: formulário legível e salas profissionais --- */
+#careerPanel{inset:4% 5%;z-index:20;overflow:auto;background:linear-gradient(145deg,rgba(9,17,33,.99),rgba(16,31,52,.99));border:1px solid #4f8b9b;border-radius:20px;padding:clamp(16px,2.5vw,28px);box-shadow:0 18px 60px #000d;color:#F5EFE3;overscroll-behavior:contain}
+#careerPanel *{box-sizing:border-box}
+#careerPanel .careerHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:2px 48px 14px 0;border-bottom:1px solid #ffffff18}
+#careerPanel .careerKicker{margin:0 0 5px;color:#77ded1;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+#careerPanel h2{margin:0 0 5px;color:#F2B84B;font-size:clamp(23px,3vw,32px);line-height:1.15}
+#careerPanel .careerIntro{margin:0;color:#c3d2e0;font-size:13px;line-height:1.5;max-width:620px}
+#careerPanel .careerXpBadge{flex:none;display:flex;flex-direction:column;gap:4px;padding:10px 14px;min-width:112px;background:#2DD4BF14;border:1px solid #2DD4BF55;border-radius:12px;text-align:center}
+#careerPanel .careerXpBadge span{font-size:10px;color:#b4cfda;text-transform:uppercase;letter-spacing:.08em}
+#careerPanel .careerXpBadge strong{font-size:24px;color:#77ded1;line-height:1.1}
+#careerPanel .careerMessage{margin:12px 0;padding:10px 12px;background:#ffffff08;border:1px solid #ffffff14;border-radius:10px;color:#d6e5ef;font-size:13px;line-height:1.45}
+#careerPanel .careerLayout{display:grid;grid-template-columns:minmax(270px,.92fr) minmax(320px,1.08fr);gap:16px;align-items:start;margin-top:14px}
+#careerPanel .careerCard{min-width:0;background:linear-gradient(150deg,#15253a,#101b2e);border:1px solid #ffffff1c;border-radius:15px;padding:16px;box-shadow:inset 0 1px #ffffff09}
+#careerPanel .careerSectionHeading{display:flex;gap:10px;align-items:center;margin-bottom:13px}
+#careerPanel .careerStep{display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:10px;background:#2DD4BF18;border:1px solid #2DD4BF66;color:#77ded1;font-size:12px;font-weight:800}
+#careerPanel h3{margin:0 0 4px;color:#F2B84B;font-size:17px}
+#careerPanel .careerSectionHeading p{margin:0;color:#afc2d3;font-size:12px;line-height:1.45}
+#careerPanel .careerFieldLabel{display:block;margin:14px 0 7px;color:#e5edf5;font-size:12px;font-weight:750;opacity:1}
+#careerPanel textarea,#careerPanel input[type="number"]{display:block;width:100%;max-width:100%;text-align:left;font-family:inherit;font-size:14px;line-height:1.5;padding:11px 12px;border:1px solid #648096;background:#0a1425;color:#F5EFE3;-webkit-text-fill-color:#F5EFE3;caret-color:#F2B84B;border-radius:9px;outline:none;box-shadow:inset 0 2px 5px #0004;transition:border-color .18s,box-shadow .18s}
+#careerPanel textarea{min-height:116px;resize:vertical;white-space:pre-wrap}
+#careerPanel textarea::placeholder,#careerPanel input::placeholder{color:#8fa6bb;-webkit-text-fill-color:#8fa6bb;opacity:1}
+#careerPanel textarea:focus,#careerPanel input[type="number"]:focus{border-color:#2DD4BF;box-shadow:0 0 0 3px #2DD4BF20,inset 0 2px 5px #0004}
+#careerPanel #resumeCounter{display:block;margin-top:5px;text-align:right;color:#9eb6c7;font-size:11px}
+#careerPanel .careerHint{margin:7px 0 0;color:#9eb2c4;font-size:11px;line-height:1.5}
+#careerPanel .resumeSkillsTitle{margin-top:16px;color:#e5edf5;font-size:12px;font-weight:750}
+#careerPanel .resumeSkillList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:9px}
+#careerPanel label.resumeSkill{display:flex;gap:8px;align-items:center;min-width:0;margin:0;padding:9px;background:#0c1728;border:1px solid #ffffff18;border-radius:9px;color:#dce7f0;font-size:12px;line-height:1.35;opacity:1;cursor:pointer}
+#careerPanel .resumeSkill input[type="checkbox"]{appearance:auto;flex:none;width:15px;height:15px;margin:0;accent-color:#2DD4BF;cursor:pointer}
+#careerPanel .resumeSkill:has(input:checked){border-color:#2DD4BF88;background:#2DD4BF10}
+#careerPanel button{margin:6px 4px 0 0;padding:9px 12px;border:1px solid transparent;border-radius:9px;background:linear-gradient(100deg,#F2B84B,#ffd37a);color:#111a2b;font:750 12px system-ui,sans-serif;cursor:pointer;transition:transform .15s,filter .15s}
+#careerPanel button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+#careerPanel button:focus-visible{outline:2px solid #77ded1;outline-offset:3px}
+#careerPanel button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+#careerPanel .careerSaveButton{width:100%;margin:17px 0 0;padding:12px;background:linear-gradient(100deg,#2DD4BF,#93eee2);font-size:13px}
+#careerPanel .careerJobsHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}
+#careerPanel .careerJobsHeading p{margin:0;color:#afc2d3;font-size:12px;line-height:1.45}
+#careerPanel .job{background:#0c1728;border:1px solid #ffffff20;border-radius:11px;padding:12px;margin:9px 0}
+#careerPanel .job>b{display:block;color:#f3f6f9;font-size:14px;margin-bottom:5px}
+#careerPanel .job small{display:block;color:#b7c8d8;font-size:11px;line-height:1.5;opacity:1;margin-top:4px}
+#careerPanel .job .careerXpTrack{height:7px;background:#ffffff18;border-radius:99px;overflow:hidden;margin:8px 0 3px}
+#careerPanel .job .careerXpFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2DD4BF,#F2B84B);transition:width .3s ease}
+#careerPanel .job .careerXpNote{display:block;font-size:11px;color:#cde2e7}
+#careerPanel .job button{margin-top:9px}
+#careerClose{position:absolute;top:16px;right:16px;z-index:2;background:#ffffff0d!important;border-color:#ffffff24!important;color:#F5EFE3!important}
+#workPanel{z-index:25}
+#interviewPanel{z-index:30}
+@media(max-width:760px){#careerPanel{inset:2% 2%;padding:14px;border-radius:14px}#careerPanel .careerHeader{padding-right:45px;gap:8px}#careerPanel .careerXpBadge{min-width:78px;padding:8px}#careerPanel .careerXpBadge strong{font-size:20px}#careerPanel .careerIntro{font-size:12px}#careerPanel .careerLayout{grid-template-columns:minmax(0,1fr)}#careerPanel .careerCard{padding:12px}#careerPanel .resumeSkillList{grid-template-columns:minmax(0,1fr)}#careerPanel .careerJobsHeading{display:block}}
+
 </style></head><body>
 <canvas id="cv"></canvas>
 <div id="login">
@@ -77,7 +126,22 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 <button id="go" class="main">Entrar</button><div id="msg"></div>
 </div>
 <div id="hud" hidden><b id="hn"></b><span id="hr"></span><span id="on">⚪ offline</span><span>Nv <span id="hl"></span></span><i id="xb"><u id="xf"></u></i><span>R$ <span id="hm"></span></span><span id="hc"></span><button id="careerBtn">Carreiras</button><button id="workBtn">Meu trabalho</button><button id="out">Sair</button></div>
-<section id="careerPanel" hidden><button id="careerClose">Fechar</button><h2>Central de carreiras</h2><p id="careerMsg">Carregando...</p><h3>Meu currículo</h3><label for="resumeSummary">Resumo (280 caracteres)</label><textarea id="resumeSummary" maxlength="280" rows="3"></textarea><label for="resumeExperience">Experiência desbloqueada</label><input id="resumeExperience" type="number" min="0" step="1"><div id="resumeSkills"></div><button id="resumeSave">Salvar currículo</button><h3>Vagas abertas</h3><div id="careerJobs"></div></section>
+<section id="careerPanel" hidden aria-labelledby="careerTitle">
+ <button id="careerClose" type="button">Fechar</button>
+ <div class="careerHeader"><div><p class="careerKicker">Sorokiba 2 · Recrutamento</p><h2 id="careerTitle">Central de carreiras</h2><p class="careerIntro">Prepare seu currículo, confira os requisitos e candidate-se às vagas da cidade.</p></div><div class="careerXpBadge"><span>Seu XP geral</span><strong id="careerPlayerXp">0</strong></div></div>
+ <p id="careerMsg" class="careerMessage" aria-live="polite">Carregando vagas e currículo...</p>
+ <div class="careerLayout">
+  <section class="careerCard" id="resumeCard" aria-labelledby="resumeTitle">
+   <div class="careerSectionHeading"><span class="careerStep">01</span><div><h3 id="resumeTitle">Meu currículo</h3><p>Apresente suas habilidades e experiência para o recrutador.</p></div></div>
+   <label class="careerFieldLabel" for="resumeSummary">Apresentação profissional</label><textarea id="resumeSummary" maxlength="280" rows="4" placeholder="Conte brevemente quais são seus pontos fortes e por que deseja essa profissão..." spellcheck="true"></textarea><small id="resumeCounter">0 / 280 caracteres</small>
+   <div><label class="careerFieldLabel" for="resumeExperience">Experiência desbloqueada</label><input id="resumeExperience" type="number" min="0" max="20" step="1" inputmode="numeric"><p class="careerHint">O limite depende do seu XP geral. A experiência precisa ser conquistada no jogo.</p></div>
+   <div class="resumeSkillsTitle">Habilidades disponíveis</div><p class="careerHint">Marque apenas as habilidades já desbloqueadas. Elas ajudam o recrutador a avaliar sua candidatura.</p><div id="resumeSkills" class="resumeSkillList"></div>
+   <button id="resumeSave" class="careerSaveButton" type="button">Salvar currículo</button>
+   <p class="careerHint">Suas alterações não serão apagadas ao interagir com o cenário. Clique em “Salvar currículo” para gravá-las na conta.</p>
+  </section>
+  <section class="careerCard" id="careerJobsCard" aria-labelledby="careerJobsTitle"><div class="careerJobsHeading"><div><h3 id="careerJobsTitle">Vagas disponíveis</h3><p>Confira o XP mínimo, as habilidades e o local de trabalho.</p></div><span class="careerStep">02</span></div><div id="careerJobs"></div></section>
+ </div>
+</section>
 <section id="interviewPanel" hidden><button id="interviewClose">Fechar</button><h2 id="interviewTitle">Entrevista</h2><p id="interviewStatus"></p><div id="interviewQuestion"></div><div id="interviewOptions"></div><button id="interviewNext" hidden>Responder</button><button id="interviewFinish" hidden>Finalizar entrevista</button></section>
 <section id="workPanel" hidden><button id="workClose">Fechar</button><h2>Meu trabalho</h2><p id="workMsg">Carregando...</p><div id="workSummary"></div><div id="workProgress"></div><div id="workTraining"></div><button id="workPromotionRequest" class="workAction">Solicitar promoção</button><button id="workPromotionConfirm" class="workAction">Confirmar promoção</button><button id="workSupervisor" class="workAction">Falar com supervisor</button><button id="workStart" class="workAction">Iniciar turno</button><button id="workNext" class="workAction">Receber próxima tarefa</button><div id="workTask"></div><div id="workHistory"></div></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden>E</button><button id="leaveRoom" hidden>← Voltar à cidade</button>
@@ -426,6 +490,10 @@ const hit=(x,y)=>bl(x-.2,y-.2)||bl(x+.2,y-.2)||bl(x-.2,y+.2)||bl(x+.2,y+.2);
 function roomItem(type,x,y,w,d,h,col,top,side,solid=true){return{type,x,y,w,d,h,col,top:top||col,side:side||col,solid}}
 function pointClear(room,x,y){
  if(x<.4||x>room.width-.4||y<.3||y>room.depth-.25)return false;
+ const wallHit=(room.dividers||[]).some(w=>w.axis==='v'
+  ? Math.abs(x-w.pos)<.32&&y>w.from-.12&&y<w.to+.12
+  : Math.abs(y-w.pos)<.32&&x>w.from-.12&&x<w.to+.12);
+ if(wallHit)return false;
  return !room.items.some(o=>o.solid!==false&&x>o.x-.31&&x<o.x+o.w+.31&&y>o.y-.3&&y<o.y+o.d+.3);
 }
 function findRoomSpot(room,x,y){
@@ -542,16 +610,18 @@ function makeInterior(building){
   add('counter',8,1,1.9,.8,18,'#765640','#ba9369','#493628');add('bed',2,2.8,2.1,1.5,12,'#826b60','#e0c7b4','#4e4038');add('table',6,4.4,1.3,1,12,'#926d4b','#c7a37a','#5e4530');add('chair',5.5,5.6,.7,.7,10,'#7d6045','#a9855c','#4e3b2c');
   z('Recepção',8.7,2.2,'Área de entrada e recepção do prédio.');z('Quarto',4.5,4,'Área de descanso e acomodação.');z('Sala',7.8,5.8,'Espaço comum do interior.');
  }else if(family==='employment'){
-  add('counter',2.6,1.1,3.2,.85,25,'#5a6e79','#d4e0e2','#354853');
-  add('desk',6.5,3.1,2.4,.9,20,'#6b6258','#c0a77d','#3c4244');
-  add('desk',9.2,4.8,1.8,.85,19,'#6b6258','#c0a77d','#3c4244');
-  add('chair',1.9,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',3,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',4.1,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');
+  add('counter',1.3,1.1,2.6,.85,25,'#5a6e79','#d4e0e2','#354853');
+  add('desk',5.2,3.1,2.6,.9,20,'#6b6258','#c0a77d','#3c4244');
+  add('desk',9.2,5.4,1.7,.85,19,'#6b6258','#c0a77d','#3c4244');
+  add('chair',1.5,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',2.3,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',3.1,4.3,.65,.65,9,'#5b7182','#94abb8','#364855');
+  add('chair',5.0,5.8,.65,.65,9,'#5b7182','#94abb8','#364855');add('chair',5.8,5.8,.65,.65,9,'#5b7182','#94abb8','#364855');
   add('board',9.1,1.05,1.45,.14,32,'#284b51','#4d8a86','#1c3137',false);
   z('Balcão de recepção',4.1,2.2,'A recepção explica como procurar vagas, preparar o currículo e participar do processo seletivo.');
   z('Painel de vagas',9.7,2.05,'Consulte as profissões, os requisitos de XP geral, as habilidades necessárias e as vagas disponíveis.');
-  z('Mesa de recrutamento',7.55,4.05,'O recrutador analisa seu currículo, verifica os requisitos e conduz a entrevista para a vaga escolhida.');
-  z('Sala de entrevistas',9.5,6.2,'Prepare-se para responder perguntas sobre a profissão e demonstrar suas habilidades.');
-  z('Orientação e treinamentos',2.9,6.1,'Consulte as habilidades e os treinamentos que podem ajudar a liberar profissões mais avançadas.');
+  z('Mesa de recrutamento',7.2,2.9,'O recrutador revisa seu currículo e explica os requisitos da vaga antes da entrevista.');
+  z('Sala de espera',6.3,6.1,'Aguarde aqui enquanto o recrutador analisa sua candidatura ou prepara a entrevista.');
+  z('Sala de entrevistas',9.5,6.2,'Entre na área de entrevistas para conversar com o recrutador e responder às perguntas da profissão.');
+  z('Orientação e treinamentos',9.4,2.9,'A orientação profissional explica como desenvolver habilidades e alcançar os requisitos de carreiras mais avançadas.');
  }else if(family==='school'){
   add('counter',4.1,1,3.6,.8,21,'#765e43','#c0a06e','#4e3c2d');add('desk',2,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',5,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',8,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('board',9.6,1,1.1,.12,34,'#34504c','#608479','#20342f',false);
   z('Secretaria',6,2.2,'Secretaria para orientação de alunos e visitantes.');z('Sala de aula',6,5.3,'Sala de aula com mesas e quadro.');z('Biblioteca',10,2.1,'Área reservada para leitura e materiais de estudo.');
@@ -564,7 +634,19 @@ function makeInterior(building){
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[15,11,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
- const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],exit:{x:dimensions[0]/2,y:dimensions[1]-.55}};
+ const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],dividers:family==='employment' ? [
+  {axis:'v',pos:dimensions[0]*.38,from:dimensions[1]*.14,to:dimensions[1]*.39},
+  {axis:'v',pos:dimensions[0]*.38,from:dimensions[1]*.51,to:dimensions[1]*.9},
+  {axis:'v',pos:dimensions[0]*.72,from:dimensions[1]*.14,to:dimensions[1]*.37},
+  {axis:'v',pos:dimensions[0]*.72,from:dimensions[1]*.47,to:dimensions[1]*.56},
+  {axis:'v',pos:dimensions[0]*.72,from:dimensions[1]*.66,to:dimensions[1]*.9},
+  {axis:'h',pos:dimensions[1]*.52,from:dimensions[0]*.38,to:dimensions[0]*.45},
+  {axis:'h',pos:dimensions[1]*.52,from:dimensions[0]*.55,to:dimensions[0]*.72},
+  {axis:'h',pos:dimensions[1]*.5,from:dimensions[0]*.72,to:dimensions[0]*.8},
+  {axis:'h',pos:dimensions[1]*.5,from:dimensions[0]*.87,to:dimensions[0]*.98},
+  {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.72,to:dimensions[0]*.8},
+  {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.87,to:dimensions[0]*.98}
+ ] : [],exit:{x:dimensions[0]/2,y:dimensions[1]-.55}};
  const sx=room.width/12,sy=room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
@@ -582,13 +664,14 @@ function makeInterior(building){
   home:[['Recepcionista','Recepção',8.7,2.1,'staff','#a77a65','#d5a681','#302921'],['Morador','Morador',4.6,5.8,'visitor','#7184ab','#ce9d74','#2d2521'],['Visitante','Visitante',9.5,5.7,'visitor','#b17866','#ddb28e','#3c2d24']],
   school:[['Lúcia','Secretária',6,2,'staff','#d9a441','#d8a77d','#31261e'],['Paulo','Professor',9,5.7,'staff','#5b7aa1','#bb865f','#30271e'],['Estudante','Aluno',3.4,6.1,'visitor','#65a19b','#d7a981','#2f2924'],['Estudante','Aluno',7.7,6.2,'visitor','#c27b9a','#a87857','#292421']],
   office:[['Beatriz','Recepcionista',6,2,'staff','#6d8c9a','#d5a783','#292520'],['Funcionário','Funcionário',9.5,4.7,'staff','#5b718a','#b77d57','#292520'],['Visitante','Visitante',3.6,6.1,'visitor','#8c87b4','#d5a783','#292520']],
-  employment:[['Marta','Recepcionista',4.2,2.1,'staff','#477E91','#d5a783','#292520'],['Daniel','Recrutador',7.55,4.15,'staff','#2D8D89','#c8946b','#202f3e'],['Renata','Orientadora profissional',9.3,5.7,'staff','#ba8750','#d5a783','#342b2a'],['Candidato','Candidato',5.4,6.2,'visitor','#6d8c9a','#c8946b','#292520']]
+  employment:[['Marta','Recepcionista',3.8,2.1,'staff','#477E91','#d5a783','#292520'],['Daniel','Recrutador',7.1,2.8,'staff','#2D8D89','#c8946b','#202f3e'],['Renata','Orientadora profissional',9.2,2.8,'staff','#ba8750','#d5a783','#342b2a'],['Carla','Entrevistadora',9.3,6.0,'staff','#5b718a','#d5a783','#292520'],['Candidato','Candidato',5.4,6.2,'visitor','#6d8c9a','#c8946b','#292520']]
  }[family];
  for(const [name,role,x,y,kind,shirt,skin,hair]of crowd){
   const route=kind==='visitor'?[[x,y],[x+.65,y-.35],[x+.3,y+.35],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e conduzir a entrevista para a vaga que você escolher.':
+   dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
+    (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
     (family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. As consultas e os exames ainda serão conectados ao sistema clínico.':
@@ -707,10 +790,10 @@ function drawRoomArchitecture(room,Q,U){
  }else if(room.shape==='school-wing'){
   wall(w*.24,d*.26,w*.76,d*.26,U*.7,'rgba(169,146,91,.35)');wall(w*.76,d*.26,w*.76,d*.48,U*.7,'rgba(169,146,91,.35)');line(w*.28,d*.31,w*.72,d*.31,'rgba(255,255,255,.22)',2);
  }else if(room.shape==='career-center'){
-  wall(w*.38,d*.22,w*.38,d*.88,U*.85,'rgba(70,118,130,.35)');wall(w*.72,d*.22,w*.72,d*.88,U*.85,'rgba(70,118,130,.35)');
-  wall(w*.38,d*.52,w*.72,d*.52,U*.65,'rgba(70,118,130,.25)');
-  line(w*.08,d*.2,w*.31,d*.2,'rgba(242,184,75,.7)',3);line(w*.77,d*.2,w*.92,d*.2,'rgba(45,212,191,.65)',3);
-  const sign=Q(w*.5,d*.08,U*1.65);c.fillStyle='#203e50';c.fillRect(sign[0]-28,sign[1]-9,56,18);c.strokeStyle='#F2B84B';c.lineWidth=1.5;c.strokeRect(sign[0]-28,sign[1]-9,56,18);c.fillStyle='#e7f1f2';c.font='bold 9px system-ui';c.textAlign='center';c.fillText('CARREIRAS',sign[0],sign[1]+3);
+  const doorWall='rgba(70,118,130,.64)';
+  for(const part of room.dividers){if(part.axis==='v')wall(part.pos,part.from,part.pos,part.to,U*.86,doorWall);else wall(part.from,part.pos,part.to,part.pos,U*.78,doorWall)}
+  const sign=(label,x,y,col)=>{const q=Q(x,y,U*1.55);c.fillStyle='#14273b';c.strokeStyle=col;c.lineWidth=1.4;c.beginPath();c.roundRect(q[0]-41,q[1]-10,82,20,5);c.fill();c.stroke();c.fillStyle='#edf5fa';c.font='bold 9px system-ui';c.textAlign='center';c.fillText(label,q[0],q[1]+3)};
+  sign('RECEPÇÃO',w*.18,d*.09,'#2DD4BF');sign('RECRUTAMENTO',w*.55,d*.08,'#F2B84B');sign('VAGAS',w*.85,d*.08,'#2DD4BF');sign('SALA DE ESPERA',w*.53,d*.82,'#F2B84B');sign('ENTREVISTAS',w*.86,d*.84,'#b8a7ff');
  }else if(room.shape==='office-suite'){
   wall(w*.33,d*.32,w*.33,d*.78,U*.8,'rgba(100,132,148,.35)');wall(w*.33,d*.32,w*.61,d*.32,U*.8,'rgba(100,132,148,.35)');wall(w*.7,d*.46,w*.7,d*.8,U*.8,'rgba(100,132,148,.35)');
  }
@@ -722,6 +805,14 @@ function renderInterior(t,h){
  const U=Math.max(12,Math.min(42,(W-80)/((w+d)*.64),(H-170)/((w+d)*.31+2.35))),wallH=U*2.15;
  const Q=(x,y,z=0)=>[W/2+(x-y-(w-d)/2)*U*.64,H*.17+(x+y)*U*.31-z];
  for(let y=0;y<d;y++)for(let x=0;x<w;x++){const shade=(x*7+y*11)%13===0;roomPoly([Q(x,y),Q(x+1,y),Q(x+1,y+1),Q(x,y+1)],shade?room.floor2:((x+y)%2?room.floor:room.floor2),'rgba(58,57,48,.12)')}
+ if(room.shape==='career-center'){
+  roomPoly([Q(.25,.25),Q(w*.37,.25),Q(w*.37,d-.25),Q(.25,d-.25)],'rgba(45,212,191,.075)',null);
+  roomPoly([Q(w*.39,.25),Q(w*.71,.25),Q(w*.71,d*.5),Q(w*.39,d*.5)],'rgba(242,184,75,.065)',null);
+  roomPoly([Q(w*.39,d*.54),Q(w*.71,d*.54),Q(w*.71,d-.25),Q(w*.39,d-.25)],'rgba(242,184,75,.035)',null);
+  roomPoly([Q(w*.74,.25),Q(w-.25,.25),Q(w-.25,d*.48),Q(w*.74,d*.48)],'rgba(45,212,191,.075)',null);
+  roomPoly([Q(w*.74,d*.52),Q(w-.25,d*.52),Q(w-.25,d*.69),Q(w*.74,d*.69)],'rgba(111,137,190,.05)',null);
+  roomPoly([Q(w*.74,d*.74),Q(w-.25,d*.74),Q(w-.25,d-.25),Q(w*.74,d-.25)],'rgba(184,167,255,.07)',null);
+ }
  roomPoly([Q(0,0),Q(w,0),Q(w,0,wallH),Q(0,0,wallH)],room.wall,'rgba(255,255,255,.16)');
  roomPoly([Q(0,0),Q(0,d),Q(0,d,wallH),Q(0,0,wallH)],room.side,'rgba(255,255,255,.12)');
  roomPoly([Q(0,0,8),Q(w,0,8),Q(w,0,13),Q(0,0,13)],room.accent,'rgba(255,255,255,.15)');
@@ -755,11 +846,12 @@ function renderInterior(t,h){
 
 const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.'];
 function act(){
+ if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden)return;
  if(open){open=false;$('dlg').hidden=true;tone(440,.06,'sine',.07);return}
  if(interior){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
-   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
+   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
   }
   if(near?.t==='interiorSpot'){
@@ -772,7 +864,18 @@ function act(){
  else if(near&&near.t=='d'){enterBuilding(near.o)}
 }
 $('dlg').onclick=act;$('bE').onclick=act;
-addEventListener('keydown',e=>{if(mode!='game'||document.activeElement===$('ch'))return;const k=e.key.toLowerCase();if(k=='enter'){openChat();e.preventDefault();return}if(k=='m'&&!interior){omap(!fmO);return}if(k=='e'||k==' '){act();e.preventDefault()}keys[k]=1;if(k.startsWith('arrow'))e.preventDefault()});
+addEventListener('keydown',e=>{
+ const target=e.target;
+ if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
+ if(mode!=='game'||document.activeElement===$('ch'))return;
+ const k=e.key.toLowerCase();
+ const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ if(k==='enter'){openChat();e.preventDefault();return}
+ if(k==='m'&&!interior){omap(!fmO);return}
+ if(k==='e'||k===' '){act();e.preventDefault()}
+ keys[k]=1;if(k.startsWith('arrow'))e.preventDefault()
+});
 addEventListener('keyup',e=>{delete keys[e.key.toLowerCase()]});
 cv.onpointerdown=e=>{tp={x:e.clientX,y:e.clientY}};cv.onpointermove=e=>{if(!tp)return;const dx=e.clientX-tp.x,dy=e.clientY-tp.y,l=Math.hypot(dx,dy);tv=l>12?[dx/l,dy/l]:null};cv.onpointerup=cv.onpointercancel=()=>{tp=null;tv=null};
 function dk(h){return h>=20||h<5?1:h>=18?(h-18)/2:h>=5&&h<7?1-(h-5)/2:0}
@@ -933,22 +1036,30 @@ async function completeMission(id,event){
 }
 const CAREER_SKILLS={atendimento:'Atendimento ao público',organizacao:'Organização',comunicacao:'Comunicação',manutencao:'Manutenção'};
 let careerData=null;
+let resumeDirty=false;
 let interviewState=null;
 let workState=null;
 function careerText(text){return document.createTextNode(text)}
-function renderResume(resume){
+function updateResumeCounter(){const field=$('resumeSummary'),counter=$('resumeCounter');if(counter)counter.textContent=field.value.length+' / 280 caracteres'}
+function renderResume(resume,force=false){
+ if(resumeDirty&&!force)return;
  $('resumeSummary').value=resume?.summary||'';
  $('resumeExperience').value=resume?.experience||0;
  $('resumeExperience').max=Math.min(20,Math.floor((Number(user?.xp)||0)/100));
  const box=$('resumeSkills');box.replaceChildren();
  Object.entries(CAREER_SKILLS).forEach(([id,label])=>{
   const labelEl=document.createElement('label'),check=document.createElement('input');
-  check.type='checkbox';check.value=id;check.checked=!!resume?.skills?.includes(id);
+  labelEl.className='resumeSkill';check.type='checkbox';check.value=id;check.checked=!!resume?.skills?.includes(id);
+  check.addEventListener('change',()=>{resumeDirty=true});
   labelEl.append(check,careerText(' '+label));box.append(labelEl);
  });
+ resumeDirty=false;updateResumeCounter();
 }
+$('resumeSummary').addEventListener('input',()=>{resumeDirty=true;updateResumeCounter()});
+$('resumeExperience').addEventListener('input',()=>{resumeDirty=true});
 function renderCareers(data){
  careerData=data;renderResume(data.resume||user.resume||{});
+ $('careerPlayerXp').textContent=Number(data.currentXp??user?.xp??0).toLocaleString('pt-BR');
  const box=$('careerJobs');box.replaceChildren();
  data.careers.forEach(job=>{
   const card=document.createElement('div');card.className='job';
@@ -1046,6 +1157,7 @@ async function loadCareers(context){
   const guidance={
    'Recrutador':'Daniel, do recrutamento, pode revisar seu currículo. Escolha uma vaga compatível e envie a candidatura para iniciar a entrevista.',
    'Orientadora profissional':'Renata pode orientar você sobre XP, habilidades e treinamentos necessários para alcançar cada carreira.',
+   'Entrevistadora':'Carla conduz as entrevistas. Escolha uma vaga, envie o currículo e inicie a candidatura para responder às perguntas específicas da profissão.',
    'Recepcionista':'Marta pode explicar como funcionam as vagas. Consulte os requisitos antes de enviar o currículo.',
    'Painel de vagas':'Escolha uma vaga para ver os requisitos de XP, habilidades e o processo de seleção.',
    'Mesa de recrutamento':'Confira seu currículo e selecione uma vaga. Após se candidatar, você poderá iniciar a entrevista profissional.',
@@ -1063,7 +1175,7 @@ $('resumeSave').onclick=async()=>{
  try{
   const r=await fetch(API+'/career/resume',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({summary:$('resumeSummary').value,experience:Number($('resumeExperience').value),skills})});
   const j=await r.json().catch(()=>({}));$('careerMsg').textContent=r.ok?'Currículo salvo.':(j.err||'Currículo inválido.');
-  if(r.ok){user=j.player;renderResume(j.resume)}
+  if(r.ok){user=j.player;resumeDirty=false;renderResume(j.resume,true)}
  }catch(e){$('careerMsg').textContent='Não foi possível salvar o currículo.'}
 };
 function oOf(a){return{pn:a.pn,st:a.st|0,f:a.body=='f',dr:a.dr,bp:a.ac==3?'#8a5a38':0,hat:a.ac==1?'#d9534f':0,gl:a.ac==2,bd:a.ac==4,crown:a.role=='prefeito'}}

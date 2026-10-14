@@ -184,3 +184,24 @@ test('an interview score of 53 can enter the training outcome', () => {
   const server = read('sorokiba2-server.js');
   assert.match(server, /const status = score >= 75 \? 'hired' : score >= 53 \? 'training' : 'rejected'/);
 });
+
+
+test('curriculum editor has readable high-contrast fields and preserves edits on refresh', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /#careerPanel textarea[^\{]*\{[^}]*color:#F5EFE3/);
+  assert.match(client, /#careerPanel textarea[^\{]*\{[^}]*caret-color:#F2B84B/);
+  assert.match(client, /function renderResume\(resume,force=false\)/);
+  assert.match(client, /if\(resumeDirty&&!force\)return/);
+  assert.match(client, /addEventListener\('keydown',e=>\{\s*const target=e\.target/);
+});
+
+test('employment center has separate walkable rooms and an interview NPC', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /dividers:family==='employment'/);
+  assert.match(client, /const wallHit=\(room\.dividers\|\|\[\]\)\.some/);
+  assert.match(client, /sign\('RECEPÇÃO'/);
+  assert.match(client, /sign\('RECRUTAMENTO'/);
+  assert.match(client, /sign\('ENTREVISTAS'/);
+  assert.match(client, /'Carla','Entrevistadora'/);
+  assert.match(client, /near\.o\.role==='Entrevistadora'/);
+});

@@ -95,7 +95,7 @@ Treinamentos são desbloqueados por XP profissional e concluídos pelo endpoint 
 
 ## Expansão da cidade e requisitos de carreira
 
-A cidade foi ampliada de 96 × 68 para 96 × 84 células, com uma nova região ao sul e um prédio explorável chamado **Centro de Empregos**. O interior inclui recepção, painel de vagas, mesa de recrutamento, sala de entrevistas, orientação profissional e NPCs com funções específicas. Falar com o recrutador ou interagir com o painel de vagas abre a central existente, reaproveitando currículo, candidaturas e entrevistas persistidas.
+A cidade foi ampliada de 96 × 68 para 96 × 84 células, com uma nova região ao sul e um prédio explorável chamado **Centro de Empregos**. O interior agora separa visualmente e por colisão a recepção, sala de espera, recrutamento, painel de vagas, orientação profissional e sala de entrevistas, com portas e placas identificando cada setor. Há uma NPC entrevistadora dedicada. Falar com o recrutador, a entrevistadora ou interagir com o painel de vagas abre a central existente, reaproveitando currículo, candidaturas e entrevistas persistidas. O editor de currículo utiliza campos de alto contraste, contador de caracteres e preserva rascunhos não salvos durante atualizações da central.
 
 Cada profissão tem um requisito de XP geral verificado pelo servidor: Entregador 0 XP; Fast-food 50 XP; Recepcionista hospitalar, atendente de restaurante e assistente de biblioteca 100 XP; Mecânico 250 XP; Eletricista 300 XP; Assistente escolar 400 XP. A central mostra o progresso e impede candidaturas sem XP suficiente. O XP profissional continua separado e é usado para a progressão dentro da carreira.
 
