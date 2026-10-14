@@ -1135,16 +1135,25 @@ if((st==='r'||(st==='y'&&ds>.45))&&ds>-.1&&ds<5.5){
  de=Math.min(de,Math.sqrt(2*4.0*gap));
  if(ds<=.3)de=0;
 }
+/* Reduz velocidade para acompanhar o carro da frente ou parar atrás de um veículo acidentado. */
 cars.forEach(b=>{
- if(b===a||b.crashedUntil||b.dx!==a.dx||b.dy!==a.dy)return;
+ if(b===a||b.dx!==a.dx||b.dy!==a.dy)return;
  const sameLane=a.dx?Math.abs(b.y-a.y)<.16:Math.abs(b.x-a.x)<.16;
  if(!sameLane)return;
  const centerGap=a.dx?(b.x-a.x)*a.dx:(b.y-a.y)*a.dy;
  if(centerGap<=0)return;
  const freeGap=centerGap-(CM[a.m][0]+CM[b.m][0])/2;
- const safeGap=2.25+a.s*.4;
- if(freeGap<safeGap){const safe=Math.max(0,freeGap-.12);de=Math.min(de,safe<.12?0:Math.sqrt(2*4.2*safe))}
+ const safeGap=2.25+a.s*.4,targetSpeed=b.crashedUntil?0:b.s;
+ if(freeGap<safeGap)de=Math.min(de,Math.max(0,targetSpeed+(freeGap-safeGap)*.7));
 });
+/* Um acidente na faixa é um obstáculo para qualquer carro que se aproxime. */
+for(const inc of accidents){
+ const sameLane=a.dx?Math.abs(inc.y-a.y)<.85:Math.abs(inc.x-a.x)<.85;
+ if(!sameLane)continue;
+ const gap=a.dx?(inc.x-a.x)*a.dx:(inc.y-a.y)*a.dy;
+ if(gap<=-.5||gap>4.5)continue;
+ const safe=Math.max(0,gap-1.7);de=Math.min(de,safe<.18?0:Math.sqrt(2*4.2*safe));
+}
 let playerBlocking=false,playerInside=false;
 if(gm&&!interior){
  const [carLength,carWidth]=CM[a.m],forward=(px-a.x)*a.dx+(py-a.y)*a.dy,lateral=a.dx?Math.abs(py-a.y):Math.abs(px-a.x),halfLength=carLength/2,halfWidth=carWidth/2;

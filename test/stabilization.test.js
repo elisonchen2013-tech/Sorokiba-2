@@ -324,3 +324,11 @@ test('the selected accident victim remains at the scene until ambulance pickup',
   assert.match(client, /victim\.state='injured';victim\.injuredUntil=inc\.startedAt\+20000/);
   assert.match(client, /if\(n\.injuredUntil&&nowNpc<n\.injuredUntil\)/);
 });
+
+
+test('traffic slows to match a lead vehicle and brakes for accident scene obstacles', () => {
+  const client = read('sorokiba2.html');
+  assert.match(client, /targetSpeed=b\.crashedUntil\?0:b\.s/);
+  assert.match(client, /for\(const inc of accidents\)/);
+  assert.match(client, /gap>4\.5/);
+});
