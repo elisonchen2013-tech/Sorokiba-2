@@ -234,3 +234,31 @@ test('account screen no longer displays the first-account-mayor notice', () => {
   assert.ok(!client.includes("$('mh').hidden"));
   assert.match(client, /Criar conta e entrar/);
 });
+
+
+test('mobile gameplay requests landscape orientation and shows a rotate fallback', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(client.includes("screen.orientation.lock('landscape')"));
+  assert.ok(client.includes('id="rotatePrompt"'));
+  assert.ok(client.includes('innerHeight>innerWidth'));
+  assert.ok(client.includes('id="rotateRetry"'));
+  assert.ok(client.includes('requestLandscapeMode()'));
+});
+
+test('cars stop at the player, the player collides with cars, and a horn is triggered', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(client.includes('const vehicleHit=(x,y)=>cars.some'));
+  assert.ok(client.includes('!vehicleHit(px+vx,py)'));
+  assert.ok(client.includes('let playerBlocking=false,playerInside=false'));
+  assert.ok(client.includes('if(playerInside){de=0;a.s=0}'));
+  assert.ok(client.includes('playCarHorn();a.hornCooldown=2.15'));
+  assert.ok(client.includes("c.fillText('BIP!'"));
+});
+
+test('cinematic CSS treatment and motion respect reduced-motion preferences', () => {
+  const client = read('sorokiba2.html');
+  assert.ok(client.includes('id="visualFx"'));
+  assert.ok(client.includes('@keyframes cityLightSweep'));
+  assert.ok(client.includes('filter:saturate(1.09) contrast(1.035)'));
+  assert.ok(client.includes('@media(prefers-reduced-motion:reduce)'));
+});

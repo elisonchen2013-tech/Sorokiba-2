@@ -136,8 +136,39 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
  #bE{width:62px;height:62px}
 }
 
+
+/* Cinematic finish: subtle color grading, vignette and animated city light */
+#cv{filter:saturate(1.09) contrast(1.035);will-change:transform}
+#visualFx{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .5s ease;overflow:hidden}
+body.game-on #visualFx{opacity:1}
+#visualFx:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 44%,transparent 43%,rgba(4,9,19,.12) 72%,rgba(3,6,14,.38) 100%);opacity:.92}
+#visualFx:after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 38%,rgba(130,245,229,.025) 48%,rgba(255,224,158,.055) 50%,rgba(130,245,229,.02) 52%,transparent 63%);background-size:220% 100%;animation:cityLightSweep 28s ease-in-out infinite;mix-blend-mode:screen}
+@keyframes cityLightSweep{0%,12%{background-position:130% 0}68%,100%{background-position:-130% 0}}
+body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
+@keyframes hudAppear{from{opacity:0;transform:translateY(-8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+#tip:not([hidden]){animation:tipPop .24s cubic-bezier(.2,.9,.25,1.3)}
+@keyframes tipPop{from{opacity:0;transform:translate(-50%,7px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+#bE{transition:transform .12s,box-shadow .2s,filter .2s}
+#bE:active{transform:scale(.9);filter:brightness(1.12);box-shadow:0 0 0 5px #f2b84b28}
+#visualFx,#moveStick,#bE{-webkit-tap-highlight-color:transparent}
+#rotatePrompt{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 35%,rgba(28,53,73,.98),rgba(5,10,23,.99) 72%);color:#f5efe3;text-align:center}
+#rotatePrompt .rotateCard{width:min(370px,100%);display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 24px;border:1px solid #2dd4bf55;border-radius:24px;background:linear-gradient(145deg,#13263b,#0b1324);box-shadow:0 22px 65px #0009,inset 0 1px #ffffff10}
+#rotatePrompt .rotatePhoneStage{position:relative;width:150px;height:105px;display:grid;place-items:center;margin-bottom:4px}
+#rotatePrompt .rotatePhone{width:44px;height:76px;border:3px solid #def5f1;border-radius:9px;background:linear-gradient(145deg,#2dd4bf,#1d5570);box-shadow:0 0 28px #2dd4bf36;transform:rotate(0deg);animation:rotatePhoneHint 1.8s ease-in-out infinite}
+#rotatePrompt .rotatePhone:after{content:"";display:block;width:4px;height:4px;border-radius:50%;background:#eafaf4;margin:4px auto}
+#rotatePrompt .rotateArrow{position:absolute;right:12px;top:19px;width:45px;height:45px;border:3px solid #f2b84b;border-left-color:transparent;border-radius:50%;color:#f2b84b;font:700 23px system-ui;display:grid;place-items:center;animation:arrowSpin 1.8s ease-in-out infinite}
+@keyframes rotatePhoneHint{0%,15%{transform:rotate(0deg)}55%,85%{transform:rotate(90deg)}100%{transform:rotate(90deg)}}
+@keyframes arrowSpin{0%,15%{transform:rotate(-10deg)}60%,100%{transform:rotate(75deg)}}
+#rotatePrompt h2{margin:0;color:#f2b84b;font-size:25px}
+#rotatePrompt p{margin:0;color:#d7e6ee;font-size:14px;line-height:1.55}
+#rotatePrompt small{color:#9cb5c7;font-size:11px;line-height:1.5}
+#rotateRetry{border:0;border-radius:12px;padding:12px 18px;margin-top:5px;font:800 14px system-ui;color:#0b1020;background:linear-gradient(100deg,#f2b84b,#ffe0a0);box-shadow:0 5px 18px #f2b84b28}
+#rotateRetry:active{transform:scale(.97)}
+@media(pointer:coarse),(max-width:760px){body.game-on #visualFx:after{animation-duration:34s}body.game-on #cv{filter:saturate(1.06) contrast(1.025)}}
+@media(prefers-reduced-motion:reduce){#visualFx:after,#rotatePrompt .rotatePhone,#rotatePrompt .rotateArrow,body.game-on #hud{animation:none!important}#visualFx{transition:none}}
+
 </style></head><body>
-<canvas id="cv"></canvas>
+<canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
 <h1>SOROKIBA 2</h1><p class="sub">Mundo aberto · 2.5D</p>
 <div class="tabs"><button id="t1" class="on">Entrar</button><button id="t2">Criar conta</button></div>
@@ -166,7 +197,7 @@ input{transition:border-color .2s,box-shadow .2s}input:focus{box-shadow:0 8px 14
 </section>
 <section id="interviewPanel" hidden><button id="interviewClose">Fechar</button><h2 id="interviewTitle">Entrevista</h2><p id="interviewStatus"></p><div id="interviewQuestion"></div><div id="interviewOptions"></div><button id="interviewNext" hidden>Responder</button><button id="interviewFinish" hidden>Finalizar entrevista</button></section>
 <section id="workPanel" hidden><button id="workClose">Fechar</button><h2>Meu trabalho</h2><p id="workMsg">Carregando...</p><div id="workSummary"></div><div id="workProgress"></div><div id="workTraining"></div><button id="workPromotionRequest" class="workAction">Solicitar promoção</button><button id="workPromotionConfirm" class="workAction">Confirmar promoção</button><button id="workSupervisor" class="workAction">Falar com supervisor</button><button id="workStart" class="workAction">Iniciar turno</button><button id="workNext" class="workAction">Receber próxima tarefa</button><div id="workTask"></div><div id="workHistory"></div></section>
-<div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button>
+<div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
 <input id="ch" maxlength="120" placeholder="Digite e aperte Enter..." autocomplete="off" hidden><div id="cl"></div>
 <div id="fm" hidden><b>Mapa de Sorokiba</b><canvas id="fc"></canvas><small>M ou toque para fechar</small></div>
@@ -412,6 +443,7 @@ MG=AC.createGain();MG.gain.value=mute?0:.6;MG.connect(AC.destination);const sr=A
 const ns=(fr,ty)=>{const sc=AC.createBufferSource();sc.buffer=NZ;sc.loop=true;const fl=AC.createBiquadFilter();fl.type=ty;fl.frequency.value=fr;const g2=AC.createGain();g2.gain.value=0;sc.connect(fl);fl.connect(g2);g2.connect(MG);sc.start();return g2};
 gT=ns(320,'lowpass');gR=ns(2600,'highpass');oE=AC.createOscillator();oE.type='sawtooth';oE.frequency.value=60;const fe=AC.createBiquadFilter();fe.type='lowpass';fe.frequency.value=380;gE=AC.createGain();gE.gain.value=0;oE.connect(fe);fe.connect(gE);gE.connect(MG);oE.start()}
 function tone(fr,d,ty,v,f2){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g2=AC.createGain();o.type=ty||'sine';o.frequency.setValueAtTime(fr,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g2.gain.setValueAtTime(.0001,t);g2.gain.linearRampToValueAtTime(v||.1,t+.02);g2.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g2);g2.connect(MG);o.start(t);o.stop(t+d+.05)}
+function playCarHorn(){if(!AC||AC.state!=='running'||mute)return;tone(392,.28,'sawtooth',.065,330);tone(294,.3,'square',.035,260)}
 function burst(fr,d,v){if(!AC)return;const t=AC.currentTime,sc=AC.createBufferSource();sc.buffer=NZ;const fl=AC.createBiquadFilter();fl.type='bandpass';fl.frequency.value=fr;const g2=AC.createGain();g2.gain.setValueAtTime(v,t);g2.gain.exponentialRampToValueAtTime(.0001,t+d);sc.connect(fl);fl.connect(g2);g2.connect(MG);sc.start(t,Math.random());sc.stop(t+d+.02)}
 function sound(t,dt,D,rn,gm){if(!AC||AC.state!='running')return;const T=AC.currentTime,fx0=(cam.x/32+cam.y/16)/2,fy0=(cam.y/16-cam.x/32)/2;
 gT.gain.setTargetAtTime(.05+.05*(1-D),T,.4);gR.gain.setTargetAtTime(rn*.1,T,.4);
@@ -486,7 +518,10 @@ if(a.col=='#F2B84B')box(c,cx-.1,cy-.08,.2,.16,zt,zt+5,'#fff','#fff');if(a.m==2)b
 [-1,1].forEach(k=>wheel(c,hz?P(a.x+k*l*.3,a.y+hy,5):P(a.x+hx,a.y+k*l*.3,5),rot));
 const fr=a.dx+a.dy>0;c.fillStyle=fr?'#fff3b0':a.br?'#ff3b30':'#7a1c18';
 [-1,1].forEach(k=>{const q=hz?P(a.x+hx,a.y+k*wd*.28,8):P(a.x+k*wd*.28,a.y+hy,8);c.fillRect(q[0]-1.5,q[1]-1.5,3,3)});
-const pl=hz?P(a.x+hx,a.y,6.5):P(a.x,a.y+hy,6.5);c.fillStyle='#e8e8e8';c.fillRect(pl[0]-2,pl[1]-1,4,2.5)}
+const frontX=a.x+a.dx*l*.53,frontY=a.y+a.dy*l*.53;
+if(curD>.18){const beamAlpha=Math.min(.2,curD*.23);poly(c,[P(frontX+a.dy*wd*.27,frontY-a.dx*wd*.27,3),P(frontX+a.dx*2.5+a.dy*.78,frontY+a.dy*2.5-a.dx*.78,0),P(frontX+a.dx*2.5-a.dy*.78,frontY+a.dy*2.5+a.dx*.78,0),P(frontX-a.dy*wd*.27,frontY+a.dx*wd*.27,3)],`rgba(255,234,170,${beamAlpha})`)}
+[-1,1].forEach(k=>{const front=hz?P(a.x+a.dx*l*.5,a.y+k*wd*.28,8):P(a.x+k*wd*.28,a.y+a.dy*l*.5,8),rear=hz?P(a.x-a.dx*l*.47,a.y+k*wd*.28,8):P(a.x+k*wd*.28,a.y-a.dy*l*.47,8);c.save();c.fillStyle='#fff0b1';c.shadowColor=curD>.1?'rgba(255,223,139,.8)':'transparent';c.shadowBlur=curD*8;c.fillRect(front[0]-1.5,front[1]-1.5,3,3);c.shadowBlur=0;c.fillStyle=a.br?'#ff3933':'#7a1c18';c.fillRect(rear[0]-1.5,rear[1]-1.5,3,3);c.restore()});
+if(a.playerBlocking&&a.hornFlash>0){const q=P(frontX,frontY,hb+hc+17),alpha=Math.min(1,a.hornFlash*2.2);c.save();c.globalAlpha=alpha;c.font='900 10px system-ui';c.textAlign='center';const tw=c.measureText('BIP!').width+12;c.fillStyle='#F2B84B';c.beginPath();c.roundRect(q[0]-tw/2,q[1]-9,tw,17,6);c.fill();c.strokeStyle='#fff2c9';c.lineWidth=.8;c.stroke();c.fillStyle='#142033';c.fillText('BIP!',q[0],q[1]+3);c.restore()}}
 /* ---------- CIDADE ---------- */
 function spawn(){npcs=[];const sd2=[];for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)if(g[y][x]==2)sd2.push([x,y]);
 const nm=['Marta','Caio','Dona Zefa','Leo','Bia','Tomás','Nina','Zeca','Rita','Beto','Lia','Davi','Pedro','Sara','Hugo','Alice','Nico','Vera'],cl=['#C8643C','#6D8CFF','#E86AA6','#7BC47F','#B08A5A','#9b6bd1','#2DD4BF','#F2B84B','#d9534f','#4a90d9','#8bc34a','#ff9f43'],sk=['#f1c7a0','#d9a273','#a8704a','#6f4630'],hr=['#2b1b12','#d9a441','#111','#7a4a28','#a0522d','#c9c9c9'];
@@ -507,6 +542,7 @@ IX.forEach(i=>[[i+.5,1,1.35],[i+2.5,-1,1.5]].forEach(([x,d,v])=>{for(let k=0;k<2
 spawn();
 const bl=(x,y)=>{if(x<0||y<0)return 1;const a=g[y|0];if(!a)return 1;const v=a[x|0];return v===undefined||v==3||v==4};
 const hit=(x,y)=>bl(x-.2,y-.2)||bl(x+.2,y-.2)||bl(x-.2,y+.2)||bl(x+.2,y+.2);
+const vehicleHit=(x,y)=>cars.some(a=>{const [len,width]=CM[a.m],hx=(a.dx?len:width)/2+.22,hy=(a.dx?width:len)/2+.22;return Math.abs(x-a.x)<hx&&Math.abs(y-a.y)<hy});
 
 /* ---------- INTERIORES EXPLORÁVEIS ---------- */
 function roomItem(type,x,y,w,d,h,col,top,side,solid=true){return{type,x,y,w,d,h,col,top:top||col,side:side||col,solid}}
@@ -901,21 +937,24 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{delete keys[e.key.toLowerCase()]});
 const coarsePointer=window.matchMedia('(pointer: coarse)');
 let touchDevice=coarsePointer.matches||(navigator.maxTouchPoints||0)>0;
-function syncDeviceControls(){touchDevice=coarsePointer.matches||(navigator.maxTouchPoints||0)>0;const active=touchDevice&&mode==='game';$('mobileControls').hidden=!active;$('bE').hidden=!active;if(!active){stickVector=null;stickPointer=null;resetStick()}}
+function syncDeviceControls(){touchDevice=coarsePointer.matches||(navigator.maxTouchPoints||0)>0;const active=touchDevice&&mode==='game';$('mobileControls').hidden=!active;$('bE').hidden=!active;if(!active){stickVector=null;stickPointer=null;resetStick()}syncOrientationPrompt()}
+function syncOrientationPrompt(){const portrait=touchDevice&&mode==='game'&&innerHeight>innerWidth;$('rotatePrompt').hidden=!portrait;if(portrait){tv=null;stickVector=null;resetStick()}}
+async function requestLandscapeMode(){if(!touchDevice)return;try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen({navigationUI:'hide'});if(screen.orientation&&typeof screen.orientation.lock==='function')await screen.orientation.lock('landscape')}catch(e){}syncOrientationPrompt()}
+function leaveLoginFullscreen(){if(mode!=='game'&&document.fullscreenElement&&document.exitFullscreen)try{document.exitFullscreen().catch(()=>{})}catch(e){}}
 function resetStick(){const knob=$('moveStickKnob');if(knob){knob.style.left='50%';knob.style.top='50%'}stickVector=null}
 function moveStickAt(e){const rect=$('moveStick').getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const radius=rect.width*.29,length=Math.hypot(dx,dy);if(length>radius){dx=dx/length*radius;dy=dy/length*radius}$('moveStickKnob').style.left='calc(50% + '+dx+'px)';$('moveStickKnob').style.top='calc(50% + '+dy+'px)';const magnitude=Math.hypot(dx,dy)/radius;stickVector=magnitude<.13?null:[dx/radius,dy/radius]}
 $('moveStick').addEventListener('pointerdown',e=>{if(!touchDevice||mode!=='game')return;stickPointer=e.pointerId;try{$('moveStick').setPointerCapture(e.pointerId)}catch(err){}moveStickAt(e);e.preventDefault();e.stopPropagation()});
 $('moveStick').addEventListener('pointermove',e=>{if(e.pointerId!==stickPointer)return;moveStickAt(e);e.preventDefault();e.stopPropagation()});
 function releaseStick(e){if(stickPointer!==null&&(!e||e.pointerId===stickPointer)){stickPointer=null;resetStick()}}
 $('moveStick').addEventListener('pointerup',e=>{releaseStick(e);e.preventDefault();e.stopPropagation()});$('moveStick').addEventListener('pointercancel',releaseStick);$('moveStick').addEventListener('lostpointercapture',releaseStick);
-if(coarsePointer.addEventListener)coarsePointer.addEventListener('change',syncDeviceControls);else if(coarsePointer.addListener)coarsePointer.addListener(syncDeviceControls);addEventListener('resize',syncDeviceControls);addEventListener('orientationchange',syncDeviceControls);syncDeviceControls();
+if(coarsePointer.addEventListener)coarsePointer.addEventListener('change',syncDeviceControls);else if(coarsePointer.addListener)coarsePointer.addListener(syncDeviceControls);addEventListener('resize',syncDeviceControls);addEventListener('orientationchange',syncDeviceControls);if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',syncDeviceControls);$('rotateRetry').onclick=()=>requestLandscapeMode();syncDeviceControls();
 cv.onpointerdown=e=>{tp={x:e.clientX,y:e.clientY}};cv.onpointermove=e=>{if(!tp)return;const dx=e.clientX-tp.x,dy=e.clientY-tp.y,l=Math.hypot(dx,dy);tv=l>12?[dx/l,dy/l]:null};cv.onpointerup=cv.onpointercancel=()=>{tp=null;tv=null};
 function dk(h){return h>=20||h<5?1:h>=18?(h-18)/2:h>=5&&h<7?1-(h-5)/2:0}
 function update(dt,t,gm,h){cityHour=h;
 if(gm&&interior){updateInterior(dt);return}
 if(gm){let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
 const moveVector=stickVector||tv;if(moveVector){ix=moveVector[0];iy=moveVector[1]}const l=Math.hypot(ix,iy);
-if(l>0){ix/=l;iy/=l;const s=dt*120/64,vx=(ix+2*iy)*s,vy=(2*iy-ix)*s;if(!hit(px+vx,py))px+=vx;if(!hit(px,py+vy))py+=vy;pd=Math.abs(ix)>=Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);pf+=dt*8}else pf=0}
+if(l>0){ix/=l;iy/=l;const s=dt*120/64,vx=(ix+2*iy)*s,vy=(2*iy-ix)*s;if(!hit(px+vx,py)&&!vehicleHit(px+vx,py))px+=vx;if(!hit(px,py+vy)&&!vehicleHit(px,py+vy))py+=vy;pd=Math.abs(ix)>=Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);pf+=dt*8}else pf=0}
 RP.forEach(q=>{const a=Math.min(1,dt*9);q.x+=(q.tx-q.x)*a;q.y+=(q.ty-q.y)*a});
 npcs.forEach(n=>{
  if(n.k)return;
@@ -959,6 +998,17 @@ if((st==='r'||(st==='y'&&ds>.45))&&ds>-.1&&ds<3.5){
  if(ds<=.22)de=0;
 }
 cars.forEach(b=>{if(b===a||b.dx!=a.dx||b.dy!=a.dy)return;const gp=(a.dx?(b.x-a.x)*a.dx:(b.y-a.y)*a.dy)-1.6;if((a.dx?b.y==a.y:b.x==a.x)&&gp>-.05&&gp<1.6)de=Math.min(de,Math.max(0,(gp-.25)*2))});
+let playerBlocking=false,playerInside=false;
+if(gm&&!interior){
+ const [carLength,carWidth]=CM[a.m],forward=(px-a.x)*a.dx+(py-a.y)*a.dy,lateral=a.dx?Math.abs(py-a.y):Math.abs(px-a.x),halfLength=carLength/2,halfWidth=carWidth/2;
+ if(lateral<halfWidth+.34&&forward>-halfLength-.2&&forward<halfLength+3.1){
+  playerBlocking=true;playerInside=Math.abs(forward)<halfLength+.22&&lateral<halfWidth+.2;
+  if(playerInside){de=0;a.s=0}
+  else if(forward>=halfLength-.05){const safeGap=Math.max(0,forward-halfLength-.34);de=Math.min(de,Math.sqrt(2*3.5*safeGap));if(safeGap<.12)de=0}
+ }
+}
+a.playerBlocking=playerBlocking;a.hornCooldown=Math.max(0,(a.hornCooldown||0)-dt);a.hornFlash=Math.max(0,(a.hornFlash||0)-dt);
+if(playerBlocking&&a.s<.42&&a.hornCooldown<=0){playCarHorn();a.hornCooldown=2.15;a.hornFlash=.72}
 a.br=de<a.s-.05||a.s<.3;a.s+=Math.max(-7*dt,Math.min(4*dt,de-a.s));
 a.d+=a.s*dt;a.x+=a.dx*a.s*dt;a.y+=a.dy*a.s*dt;if(a.x>MW+3)a.x=-3;if(a.x<-3)a.x=MW+3;if(a.y>MH+3)a.y=-3;if(a.y<-3)a.y=MH+3});
 near=null;if(!gm)return;let bd=1.1;npcs.forEach(n=>{const d=Math.hypot(n.x-px,n.y-py);if(d<bd){bd=d;near={t:'n',o:n}}});
@@ -1225,16 +1275,17 @@ $('t1').onclick=()=>tab(0);$('t2').onclick=()=>tab(1);
 $('go').onclick=async()=>{aud();const n=$('u').value.trim(),p=$('p').value,k=n.toLowerCase();
 if(!/^[A-Za-z0-9_]{3,14}$/.test(n))return say('Usuário: 3 a 14 letras, números ou _');
 if(p.length<4)return say('A senha precisa ter 4 ou mais caracteres');
+if(touchDevice&&innerHeight>innerWidth)requestLandscapeMode();
 say('Conectando...');let rs=null;
-try{const x=await fetch(API+(isNew?'/register':'/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,pass:p,look:LK})});const j=await x.json().catch(()=>({}));if(!x.ok){if(!DEV_OFFLINE)return say(j.err||'A API não está disponível')}else rs=j}catch(e){if(!DEV_OFFLINE)return say('Não foi possível conectar à API. Tente novamente.')}
+try{const x=await fetch(API+(isNew?'/register':'/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,pass:p,look:LK})});const j=await x.json().catch(()=>({}));if(!x.ok){if(!DEV_OFFLINE){leaveLoginFullscreen();return say(j.err||'A API não está disponível')}}else rs=j}catch(e){if(!DEV_OFFLINE){leaveLoginFullscreen();return say('Não foi possível conectar à API. Tente novamente.')}}
 if(rs){token=rs.token;say('');return start(rs.player)}
 if(!DEV_OFFLINE)return;
 say('');
 if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor'];db[k]={name:n,h:hs(p),col:LK.col,skin:LK.skin,hr:LK.hr,pn:LK.pn,body:LK.body,st:LK.st,ac:LK.ac,dr:LK.dr,money:fm?1000:100,xp:0,x:27.5,y:14.5,role:fm?'prefeito':'cidadão'};if(fm)db['#mayor']=k;sv();start(db[k])}
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
-function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
+function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 function save(){if(user){user.x=px;user.y=py;sv()}}
 addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);
