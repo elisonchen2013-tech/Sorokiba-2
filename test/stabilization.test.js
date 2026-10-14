@@ -385,3 +385,19 @@ test('local and remote seated avatars render at the height of the bench seat', (
   assert.match(client, /P\(q\.x,q\.y,q\.o\.seated\?5:0\)/);
   assert.match(client, /P\(px,py,isSeated\?5:0\)/);
 });
+
+
+test('mayor control panel exposes protected city controls and global announcements', () => {
+  const client = read('sorokiba2.html');
+  const server = read('sorokiba2-server.js');
+  assert.match(client, /id="mayorPanel"/);
+  assert.match(client, /id="mayorStartAccident"/);
+  assert.match(client, /id="mayorEndAccidents"/);
+  assert.match(client, /id="mayorTrafficToggle"/);
+  assert.match(client, /id="mayorSendAnnouncement"/);
+  assert.match(client, /mayorAnnouncement/);
+  assert.match(server, /if \(m\.t === 'mayorAction'\)/);
+  assert.match(server, /me\.lk\?\.role !== 'prefeito'/);
+  assert.match(server, /traffic_toggle/);
+  assert.match(server, /mayorAnnouncement/);
+});
