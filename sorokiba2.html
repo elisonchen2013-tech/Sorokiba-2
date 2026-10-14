@@ -909,7 +909,7 @@ function makeInterior(building){
   z('Café e refeições',10.25,6.1,'Área de café da manhã e refeições rápidas, com bancada, mesas e cadeiras.');
   z('Quarto modelo',2.15,4.25,'Quarto decorado para mostrar como uma unidade residencial pode ser mobiliada.');
   z('Concierge',5.35,5.8,'Peça ajuda com orientações do prédio e serviços de recepção.');
-  z('Elevadores',6.9,5.85,'Você encontrou o núcleo dos elevadores. A faixa dourada e o guia no canto superior direito ajudam a localizar esta área. A seleção funcional de andares ainda será conectada ao sistema imobiliário.');
+  z('Elevadores',14.4,9.05,'Você encontrou o núcleo dos elevadores. A faixa dourada e o guia no canto superior direito ajudam a localizar esta área. A seleção funcional de andares ainda será conectada ao sistema imobiliário.');
   z('Sala de reuniões',3.4,6.1,'Sala reservada para reuniões de condomínio, encontros de moradores e avisos administrativos.');
  }else if(family==='employment'){
   add('counter',1.3,1.1,2.6,.85,25,'#5a6e79','#d4e0e2','#354853');
@@ -934,7 +934,7 @@ function makeInterior(building){
  const dimensions={
   market:[18,12,'market-aisles'],hospital:[20,15,'hospital-wing'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
-  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[15,11,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
+  workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
  const room={title,family,wall:colors[0],side:colors[1],floor:colors[2],floor2:colors[3],accent:colors[4],subtitle:colors[5],width:dimensions[0],depth:dimensions[1],shape:dimensions[2],items,zones,people:[],dividers:family==='employment' ? [
   {axis:'v',pos:dimensions[0]*.38,from:dimensions[1]*.14,to:dimensions[1]*.39},
@@ -1104,7 +1104,7 @@ function renderInterior(t,h){
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
- const U=Math.max(12,Math.min(42,(W-80)/((w+d)*.64),(H-170)/((w+d)*.31+2.35))),wallH=U*2.15;
+ const U=Math.max(10,Math.min(35,(W-140)/((w+d)*.64),(H-225)/((w+d)*.31+2.35))),wallH=U*1.9;
  const Q=(x,y,z=0)=>[W/2+(x-y-(w-d)/2)*U*.64,H*.17+(x+y)*U*.31-z];
  for(let y=0;y<d;y++)for(let x=0;x<w;x++){const shade=(x*7+y*11)%13===0;roomPoly([Q(x,y),Q(x+1,y),Q(x+1,y+1),Q(x,y+1)],shade?room.floor2:((x+y)%2?room.floor:room.floor2),'rgba(58,57,48,.12)')}
  if(room.shape==='career-center'){
@@ -1128,10 +1128,10 @@ function renderInterior(t,h){
  drawRoomArchitecture(room,Q,U);
  // Sinalização, iluminação e núcleo de elevadores dedicado para residenciais/hotéis.
  if(room.family==='home'){
-  const ex=6.9,ey=5.35,eq=Q(ex,ey);
+  const ex=14.4,ey=8.4,eq=Q(ex,ey);
   // Tapete de orientação que conduz visualmente ao elevador
   c.save();c.setLineDash([5,5]);c.lineWidth=2;c.strokeStyle='rgba(242,184,75,.62)';
-  const start=Q(w/2,d-1.0),mid=Q(w/2,d-2.4),end=Q(ex,ey+.45);
+  const start=Q(w/2,d-1.0),mid=Q(w/2,d-2.4),end=Q(ex,ey+.65);
   c.beginPath();c.moveTo(start[0],start[1]);c.lineTo(mid[0],mid[1]);c.lineTo(end[0],end[1]);c.stroke();c.restore();
   // Caixa do elevador e portas metálicas desenhadas em perspectiva
   const ew=1.45,eh=1.72;
@@ -1141,7 +1141,7 @@ function renderInterior(t,h){
   const panel=Q(ex+ew/2+.16,ey-.17,1.05*U);c.fillStyle='#f2b84b';c.beginPath();c.roundRect(panel[0]-3,panel[1]-7,6,14,2);c.fill();
   const tag=Q(ex,ey-.2,eh*U+16);c.fillStyle='rgba(8,13,25,.94)';c.strokeStyle='#f2b84b';c.lineWidth=1;c.beginPath();c.roundRect(tag[0]-42,tag[1]-13,84,24,7);c.fill();c.stroke();c.fillStyle='#fff1c9';c.font='700 11px system-ui';c.textAlign='center';c.fillText('ELEVADORES',tag[0],tag[1]+3);
   // Diretório fixo no canto superior direito, sempre visível
-  const pxPanel=Math.max(12,W-202),pyPanel=88;
+  const pxPanel=Math.max(12,W-202),pyPanel=112;
   c.fillStyle='rgba(8,13,25,.88)';c.strokeStyle='rgba(242,184,75,.6)';c.lineWidth=1;c.beginPath();c.roundRect(pxPanel,pyPanel,188,120,12);c.fill();c.stroke();
   c.textAlign='left';c.fillStyle='#f2b84b';c.font='800 11px system-ui';c.fillText('GUIA DO PRÉDIO',pxPanel+12,pyPanel+19);
   const guide=[['1','Recepção / Concierge'],['2','Lounge e reuniões'],['3','Café e refeições'],['4','Quarto modelo']];
