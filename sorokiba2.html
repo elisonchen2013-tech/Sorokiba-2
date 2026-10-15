@@ -238,9 +238,18 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
  <div class="mayorControlGrid">
   <article class="mayorControlCard"><span class="mayorControlIcon">01</span><h3>Trânsito e acidentes</h3><p>Inicie uma ocorrência visível no mapa, com veículos parados e resposta de emergência.</p><button id="mayorStartAccident" type="button">Iniciar acidente de teste</button><button id="mayorEndAccidents" class="mayorSecondary" type="button">Encerrar ocorrências</button></article>
   <article class="mayorControlCard"><span class="mayorControlIcon">02</span><h3>Fluxo da cidade</h3><p>Ative um congestionamento de teste para reduzir a velocidade dos veículos no mundo.</p><button id="mayorTrafficToggle" type="button">Ativar congestionamento</button></article>
+  <article class="mayorControlCard"><span class="mayorControlIcon">04</span><h3>Recuperação de conta</h3><p>Solicite que um jogador crie uma nova senha. A senha atual nunca será exibida.</p><label for="mayorResetUsername">Nome de usuário do jogador</label><input id="mayorResetUsername" maxlength="14" autocomplete="off" placeholder="Nome do jogador"><button id="mayorRequestPasswordReset" type="button">Solicitar redefinição</button><p id="mayorResetStatus" aria-live="polite"></p></article>
   <article class="mayorControlCard mayorAnnouncementCard"><span class="mayorControlIcon">03</span><h3>Comunicado global</h3><p>Envie um aviso para todos os jogadores. O comunicado aparece com som.</p><label for="mayorAnnouncementInput">Mensagem para a cidade</label><textarea id="mayorAnnouncementInput" maxlength="160" rows="3" placeholder="Ex.: Atenção, cidadãos! A Prefeitura iniciou um teste de trânsito."></textarea><button id="mayorSendAnnouncement" type="button">Transmitir comunicado</button></article>
  </div>
  <p class="mayorFootnote">Ações protegidas pelo servidor. Os controles não ficam disponíveis para contas de cidadão.</p>
+</section>
+<section id="passwordResetPanel" hidden role="dialog" aria-modal="true" aria-labelledby="passwordResetTitle" style="position:fixed;z-index:10000;inset:0;background:#10141dcc;display:none;align-items:center;justify-content:center;padding:20px">
+ <div style="width:min(420px,100%);background:#fff;color:#202020;border-radius:16px;padding:24px;box-shadow:0 20px 70px #0008">
+  <h2 id="passwordResetTitle">Redefinir senha</h2><p>A Prefeitura solicitou que você atualize a senha da sua conta. Escolha uma nova senha abaixo.</p>
+  <form id="passwordResetForm"><label for="passwordResetNew">Nova senha (4 a 64 caracteres)</label><input id="passwordResetNew" type="password" minlength="4" maxlength="64" autocomplete="new-password" required style="display:block;width:100%;padding:12px;margin:8px 0 14px">
+  <label for="passwordResetConfirm">Confirmar nova senha</label><input id="passwordResetConfirm" type="password" minlength="4" maxlength="64" autocomplete="new-password" required style="display:block;width:100%;padding:12px;margin:8px 0 14px">
+  <p id="passwordResetError" role="status"></p><button type="submit">Salvar nova senha</button></form>
+ </div>
 </section>
 <section id="careerPanel" hidden aria-labelledby="careerTitle">
  <button id="careerClose" type="button">Fechar</button>
@@ -2134,6 +2143,33 @@ $('mayorStartAccident').onclick=()=>sendMayorAction('accident_start');
 $('mayorEndAccidents').onclick=()=>sendMayorAction('accident_end');
 $('mayorTrafficToggle').onclick=()=>sendMayorAction('traffic_toggle',{active:!mayorTrafficSlowdown});
 $('mayorSendAnnouncement').onclick=()=>{const field=$('mayorAnnouncementInput'),message=field.value.trim();if(!message)return setMayorStatus('Digite uma mensagem antes de transmitir.');sendMayorAction('announcement',{message});};
+$('mayorRequestPasswordReset').onclick=async()=>{
+ const username=$('mayorResetUsername').value.trim();
+ const status=$('mayorResetStatus');status.textContent='Enviando solicitação...';
+ try{const r=await fetch('/api/sk2/mayor/password-reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})});const j=await r.json().catch(()=>({}));
+ status.textContent=r.ok?(j.message||'Solicitação enviada.'): (j.err||'Não foi possível enviar a solicitação.');
+ }catch(e){status.textContent='Erro de conexão ao solicitar redefinição.';}
+};
+let activePasswordResetId='';
+async function checkPasswordResetRequest(){
+ if(!user)return;
+ try{const r=await fetch('/api/sk2/password-reset/pending',{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.request?.id&&j.request.id!==activePasswordResetId){
+ activePasswordResetId=j.request.id;$('passwordResetError').textContent='';$('passwordResetForm').reset();
+ const panel=$('passwordResetPanel');panel.hidden=false;panel.style.display='flex';
+ }}catch(e){}
+}
+$('passwordResetForm').onsubmit=async ev=>{
+ ev.preventDefault();const a=$('passwordResetNew').value,b=$('passwordResetConfirm').value,err=$('passwordResetError');
+ if(a!==b){err.textContent='As senhas não coincidem.';return;}
+ if(a.length<4||a.length>64){err.textContent='Use uma senha entre 4 e 64 caracteres.';return;}
+ const submit=$('passwordResetForm').querySelector('button[type="submit"]');submit.disabled=true;err.textContent='Salvando...';
+ try{const r=await fetch('/api/sk2/password-reset/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:activePasswordResetId,newPassword:a})});const j=await r.json().catch(()=>({}));
+ if(!r.ok){err.textContent=j.err||'Não foi possível alterar a senha.';return;}
+ $('passwordResetPanel').hidden=true;$('passwordResetPanel').style.display='none';activePasswordResetId='';alert('Senha alterada. Entre novamente com a nova senha.');location.reload();
+ }catch(e){err.textContent='Erro de conexão. Tente novamente.';}finally{submit.disabled=false;}
+};
+setInterval(checkPasswordResetRequest,10000);
+
 
 async function completeMission(id,event){
  if(!user||user.missions?.[id]||(id==='welcome'&&user.mission?.done))return 'Objetivo já concluído.';
