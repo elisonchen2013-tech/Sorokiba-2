@@ -204,6 +204,33 @@ async function attachSorokiba2(app, server, opt = {}) {
     try { const row = await db.login(c.name, c.pass); row ? reply(req, res, row) : res.status(401).json({ err: 'Usuário ou senha incorretos' }); }
     catch (e) { res.status(500).json({ err: 'Erro no servidor' }); console.error('[sk2]', e.message); }
   });
+  app.post('/api/sk2/mayor/password-reset', json, async (req, res) => {
+    try {
+      const mayor = await authUser(req);
+      if (!mayor) return res.status(401).json({ err: 'Sessão expirada' });
+      if (mayor.role !== 'prefeito') return res.status(403).json({ err: 'Somente o prefeito pode solicitar redefinições' });
+      const result = await db.requestPasswordReset(mayor.username, req.body?.username);
+      if (result.err) return res.status(result.err === 'Jogador não encontrado' ? 404 : 400).json({ err: result.err });
+      res.json({ ok: 1, message: 'Solicitação enviada para ' + result.playerName + '.' });
+    } catch (e) { console.error('[sk2] password reset request:', e.message); res.status(500).json({ err: 'Não foi possível solicitar a redefinição' }); }
+  });
+  app.get('/api/sk2/password-reset/pending', async (req, res) => {
+    try {
+      const player = await authUser(req);
+      if (!player) return res.status(401).json({ err: 'Sessão expirada' });
+      res.json({ request: await db.pendingPasswordReset(player.username) });
+    } catch (e) { res.status(500).json({ err: 'Não foi possível verificar solicitações' }); }
+  });
+  app.post('/api/sk2/password-reset/complete', json, async (req, res) => {
+    try {
+      const player = await authUser(req);
+      if (!player) return res.status(401).json({ err: 'Sessão expirada' });
+      const result = await db.completePasswordReset(player.username, String(req.body?.requestId || ''), req.body?.newPassword);
+      if (result.err) return res.status(400).json({ err: result.err });
+      clearSession(res);
+      res.json({ ok: 1, message: 'Senha alterada. Entre novamente com a nova senha.' });
+    } catch (e) { console.error('[sk2] password reset complete:', e.message); res.status(500).json({ err: 'Não foi possível alterar a senha' }); }
+  });
   app.get('/api/sk2/session', async (req, res) => {
     try {
       const row = await authUser(req);
