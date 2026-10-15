@@ -2168,10 +2168,10 @@ $('mayorRequestPasswordReset').onclick=async()=>{
  status.textContent=r.ok?(j.message||'Solicitação enviada.'): (j.err||'Não foi possível enviar a solicitação.');
  }catch(e){status.textContent='Erro de conexão ao solicitar redefinição.';}
 };
-let activePasswordResetId='';
+let activePasswordResetId='',passwordResetUsername='';
 async function checkPasswordResetRequest(){
  if(!user)return;
- try{const r=await fetch('/api/sk2/password-reset/pending',{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.request?.id&&j.request.id!==activePasswordResetId){
+ try{const r=await fetch('/api/sk2/password-reset/pending?username='+encodeURIComponent(user.username),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.request?.id&&j.request.id!==activePasswordResetId){
  activePasswordResetId=j.request.id;$('passwordResetError').textContent='';$('passwordResetForm').reset();
  const panel=$('passwordResetPanel');panel.hidden=false;panel.style.display='flex';
  }}catch(e){}
@@ -2181,7 +2181,7 @@ $('passwordResetForm').onsubmit=async ev=>{
  if(a!==b){err.textContent='As senhas não coincidem.';return;}
  if(a.length<4||a.length>64){err.textContent='Use uma senha entre 4 e 64 caracteres.';return;}
  const submit=$('passwordResetForm').querySelector('button[type="submit"]');submit.disabled=true;err.textContent='Salvando...';
- try{const r=await fetch('/api/sk2/password-reset/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:activePasswordResetId,newPassword:a})});const j=await r.json().catch(()=>({}));
+ try{const r=await fetch('/api/sk2/password-reset/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:passwordResetUsername||user?.username,requestId:activePasswordResetId,newPassword:a})});const j=await r.json().catch(()=>({}));
  if(!r.ok){err.textContent=j.err||'Não foi possível alterar a senha.';return;}
  $('passwordResetPanel').hidden=true;$('passwordResetPanel').style.display='none';activePasswordResetId='';alert('Senha alterada. Entre novamente com a nova senha.');location.reload();
  }catch(e){err.textContent='Erro de conexão. Tente novamente.';}finally{submit.disabled=false;}
@@ -2398,6 +2398,20 @@ $('go').onclick=async()=>{aud();const n=$('u').value.trim(),p=$('p').value,k=n.t
 if(!/^[A-Za-z0-9_]{3,14}$/.test(n))return say('Usuário: 3 a 14 letras, números ou _');
 if(p.length<4)return say('A senha precisa ter 4 ou mais caracteres');
 if(touchDevice&&innerHeight>innerWidth)requestLandscapeMode();
+if(!isNew){
+ try{
+  const check=await fetch('/api/sk2/password-reset/pending?username='+encodeURIComponent(n),{cache:'no-store'});
+  const pending=await check.json().catch(()=>({}));
+  if(pending.request?.id){
+   activePasswordResetId=pending.request.id;passwordResetUsername=n;
+   $('passwordResetTitle').textContent='Redefinir senha';
+   $('passwordResetPanel').querySelector('p').textContent='A Prefeitura solicitou uma troca de senha para @'+n+'. Crie uma nova senha para continuar.';
+   $('passwordResetError').textContent='';$('passwordResetForm').reset();
+   $('passwordResetPanel').hidden=false;$('passwordResetPanel').style.display='flex';
+   return;
+  }
+ }catch(e){}
+}
 say('Conectando...');let rs=null;
 try{const x=await fetch(API+(isNew?'/register':'/login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,pass:p,look:LK})});const j=await x.json().catch(()=>({}));if(!x.ok){if(!DEV_OFFLINE){leaveLoginFullscreen();return say(j.err||'A API não está disponível')}}else rs=j}catch(e){if(!DEV_OFFLINE){leaveLoginFullscreen();return say('Não foi possível conectar à API. Tente novamente.')}}
 if(rs){token=rs.token;say('');return start(rs.player)}
