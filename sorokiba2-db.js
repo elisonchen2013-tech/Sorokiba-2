@@ -331,7 +331,7 @@ async function requestPasswordReset(requestedBy, targetName) {
   });
 }
 async function pendingPasswordReset(username) {
-  const r = await q("SELECT id,created_at FROM sk2_password_reset_requests WHERE username=$1 AND status='pending' ORDER BY created_at DESC LIMIT 1", [username]);
+  const r = await q("SELECT id,created_at FROM sk2_password_reset_requests WHERE lower(username)=lower($1) AND status='pending' ORDER BY created_at DESC LIMIT 1", [username]);
   return r.rows[0] || null;
 }
 async function completePasswordReset(username, requestId, newPass) {
@@ -339,9 +339,9 @@ async function completePasswordReset(username, requestId, newPass) {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = await hashPw(newPass, salt);
   return withTx(async client => {
-    const request = await client.query("SELECT id FROM sk2_password_reset_requests WHERE id=$1 AND username=$2 AND status='pending' FOR UPDATE", [requestId,username]);
+    const request = await client.query("SELECT id FROM sk2_password_reset_requests WHERE id=$1 AND lower(username)=lower($2) AND status='pending' FOR UPDATE", [requestId,username]);
     if (!request.rowCount) return { err: 'Solicitação inválida ou expirada' };
-    const update = await client.query('UPDATE sk2_players SET salt=$2, hash=$3 WHERE username=$1 RETURNING username', [username,salt,hash]);
+    const update = await client.query('UPDATE sk2_players SET salt=$2, hash=$3 WHERE lower(username)=lower($1) RETURNING username', [username,salt,hash]);
     if (!update.rowCount) return { err: 'Conta não encontrada' };
     await client.query("UPDATE sk2_password_reset_requests SET status='completed',completed_at=now() WHERE id=$1", [requestId]);
     return { ok: true, username };
