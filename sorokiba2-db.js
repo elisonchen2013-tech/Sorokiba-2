@@ -119,6 +119,15 @@ async function init() {
     PRIMARY KEY (username, job_id, training_id)
   );
   CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_mayor ON sk2_players(role) WHERE role = 'prefeito';
+  CREATE TABLE IF NOT EXISTS sk2_password_reset_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    requested_by TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','completed','cancelled')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    completed_at TIMESTAMPTZ
+  );
+  CREATE INDEX IF NOT EXISTS sk2_password_reset_pending ON sk2_password_reset_requests(username,status);
   CREATE TABLE IF NOT EXISTS sk2_food_inventory (
     username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
     item_id TEXT NOT NULL, quantity INT NOT NULL DEFAULT 0 CHECK(quantity >= 0),
@@ -302,6 +311,37 @@ async function setUnitOpen(username, id, open) {
   return r.rowCount > 0;
 }
 
+async function requestPasswordReset(requestedBy, targetName) {
+  const target = String(targetName || '').trim().toLowerCase();
+  if (!validName(target)) return { err: 'Nome de usuário inválido' };
+  return withTx(async client => {
+    const mayor = await client.query("SELECT role FROM sk2_players WHERE username=$1 FOR UPDATE", [requestedBy]);
+    if (!mayor.rowCount || mayor.rows[0].role !== 'prefeito') return { err: 'Somente o prefeito pode solicitar redefinições' };
+    const player = await client.query('SELECT username,name FROM sk2_players WHERE username=$1', [target]);
+    if (!player.rowCount) return { err: 'Jogador não encontrado' };
+    const pending = await client.query("SELECT id FROM sk2_password_reset_requests WHERE username=$1 AND status='pending' LIMIT 1", [target]);
+    if (pending.rowCount) return { err: 'Já existe uma solicitação pendente para esse jogador' };
+    const result = await client.query("INSERT INTO sk2_password_reset_requests(username,requested_by) VALUES($1,$2) RETURNING id,username,created_at", [target,requestedBy]);
+    return { request: result.rows[0], playerName: player.rows[0].name };
+  });
+}
+async function pendingPasswordReset(username) {
+  const r = await q("SELECT id,created_at FROM sk2_password_reset_requests WHERE username=$1 AND status='pending' ORDER BY created_at DESC LIMIT 1", [username]);
+  return r.rows[0] || null;
+}
+async function completePasswordReset(username, requestId, newPass) {
+  if (!validPass(newPass)) return { err: 'A senha precisa ter de 4 a 64 caracteres' };
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = await hashPw(newPass, salt);
+  return withTx(async client => {
+    const request = await client.query("SELECT id FROM sk2_password_reset_requests WHERE id=$1 AND username=$2 AND status='pending' FOR UPDATE", [requestId,username]);
+    if (!request.rowCount) return { err: 'Solicitação inválida ou expirada' };
+    const update = await client.query('UPDATE sk2_players SET salt=$2, hash=$3 WHERE username=$1 RETURNING username', [username,salt,hash]);
+    if (!update.rowCount) return { err: 'Conta não encontrada' };
+    await client.query("UPDATE sk2_password_reset_requests SET status='completed',completed_at=now() WHERE id=$1", [requestId]);
+    return { ok: true, username };
+  });
+}
 async function completeWelcome(username) {
   return completeMission(username, 'welcome', 250, 100);
 }
@@ -569,4 +609,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, requestPasswordReset, pendingPasswordReset, completePasswordReset, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
