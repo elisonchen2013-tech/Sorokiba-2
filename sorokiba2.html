@@ -1364,7 +1364,46 @@ const fr=a.dx+a.dy>0;c.fillStyle=fr?'#fff3b0':a.br?'#ff3b30':'#7a1c18';
 const pl=hz?P(a.x+hx,a.y,6.5):P(a.x,a.y+hy,6.5);c.fillStyle='#e8e8e8';c.fillRect(pl[0]-2,pl[1]-1,4,2.5)}}
    
    const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.']; const npcConversation=n=>{const hour=cityHour|0;const routine=n.routine==='trabalho'?'Estou no meu turno. Espero que o dia seja tranquilo!':n.routine==='compras'?'Estou procurando algumas coisas nas lojas da cidade.':n.routine==='casa'?'Estou indo para casa descansar um pouco.':'Estou passeando pela cidade. Tem muita coisa para conhecer!';const time=hour<6?'A cidade está bem calma a esta hora.':hour<12?'Bom dia! A cidade está começando a acordar.':hour<18?'Boa tarde! Está aproveitando o dia?':'Boa noite! As luzes da cidade estão bonitas.';return [routine,time,'Você pode explorar os prédios e conversar com outras pessoas. Se encontrar algum problema, avise a administração.'];}; function faceNpcToPlayer(n){const dx=px-n.x,dy=py-n.y;n.face=Math.abs(dx)>=Math.abs(dy)?(dx<0?2:3):(dy<0?1:0);n.playerTalking=true;n.playerResumeState=n.state;n.f=0;} function releaseNpcConversation(n){if(!n)return;n.playerTalking=false;if(n.state==='talking')return;n.state=n.playerResumeState||'resting';n.wait=Math.max(n.wait||0,.8);n.playerResumeState=null;} function showNpcChoices(n){const dlg=$('dlg');dlg.innerHTML='<b>'+n.n+'</b><p>O que você quer perguntar?</p><div class="npc-questions"><button type="button" data-q="city">O que você acha da cidade?</button><button type="button" data-q="routine">O que você está fazendo?</button><button type="button" data-q="help">Tem alguma dica para mim?</button></div><small>Escolha uma pergunta. Pressione E para encerrar.</small>';dlg.querySelectorAll('[data-q]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const q=btn.dataset.q;const answers={city:'Gosto da cidade! Seria ótimo ver mais lugares e pessoas por aqui.',routine:n.routine==='trabalho'?'Estou trabalhando. Cada morador tem sua própria rotina.':n.routine==='compras'?'Estou fazendo compras e olhando as lojas.':n.routine==='casa'?'Estou voltando para casa para descansar.':'Estou passeando e conhecendo a cidade.',help:'Explore os prédios, conheça os serviços e converse com os moradores. Você pode descobrir coisas novas!'};dlg.innerHTML='<b>'+n.n+'</b><p>'+answers[q]+'</p><button type="button" id="npcAskAgain">Fazer outra pergunta</button><small>Ou pressione E para encerrar.</small>';dlg.querySelector('#npcAskAgain').addEventListener('click',ev=>{ev.stopPropagation();showNpcChoices(n)});tone(590,.07,'sine',.06)}));};
-   function act(){
+   function enterBuilding(building){
+ if(!building||mode!=='game')return;
+ let panel=$('buildingInteriorModal');
+ if(!panel){
+  panel=document.createElement('section');panel.id='buildingInteriorModal';panel.hidden=true;
+  panel.style.cssText='position:fixed;inset:0;z-index:120;background:rgba(5,9,18,.95);color:#f5efe3;display:none;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;font-family:system-ui,sans-serif';
+  panel.innerHTML='<div style="width:min(900px,100%);max-height:100%;overflow:auto;border:1px solid #2dd4bf66;border-radius:18px;background:linear-gradient(145deg,#13263b,#0b1324);padding:18px;box-sizing:border-box"><header style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><small style="color:#77ded1;letter-spacing:.16em;font-weight:800">SOROKIBA · INTERIOR</small><h2 id="buildingInteriorTitle" style="margin:5px 0 2px;font-size:clamp(22px,4vw,32px)"></h2><p style="margin:0;color:#bdcbd8">Use WASD ou as setas para explorar.</p></div><button id="buildingInteriorExit" style="border:1px solid #f2b84b88;background:#f2b84b;color:#172033;border-radius:10px;padding:10px 15px;font-weight:800;cursor:pointer">Sair do prédio ✕</button></header><canvas id="buildingInteriorCanvas" width="760" height="430" style="display:block;width:100%;height:auto;max-height:62vh;object-fit:contain;margin:16px auto 8px;border-radius:12px;background:#172331;border:1px solid #ffffff22"></canvas><p id="buildingInteriorHint" style="margin:8px 0 0;text-align:center;color:#d6e1eb;font-size:13px"></p></div>';
+  document.body.appendChild(panel);
+  $('buildingInteriorExit').addEventListener('click',()=>{panel.hidden=true;panel.style.display='none'});
+  addEventListener('keydown',function buildingInteriorKeys(e){
+   const p=$('buildingInteriorModal');if(!p||p.hidden||mode!=='game')return;
+   const k=e.key.toLowerCase();if(!['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(k))return;
+   e.preventDefault();e.stopPropagation();const state=p._player;if(!state)return;
+   const step=12;state.x=Math.max(55,Math.min(705,state.x+(['arrowright','d'].includes(k)?step:['arrowleft','a'].includes(k)?-step:0)));state.y=Math.max(95,Math.min(365,state.y+(['arrowdown','s'].includes(k)?step:['arrowup','w'].includes(k)?-step:0)));
+   drawBuildingInterior(p._building,state);
+  },true);
+ }
+ panel.hidden=false;panel.style.display='flex';panel._building=building;panel._player={x:380,y:320};
+ const title=building.n.replace(/^✚\s*/,'').trim();$('buildingInteriorTitle').textContent=title;
+ $('buildingInteriorHint').textContent='Você entrou em '+title+'. Explore o ambiente e clique em “Sair do prédio” para voltar à cidade.';
+ drawBuildingInterior(building,panel._player);
+}
+function drawBuildingInterior(building,player){
+ const canvas=$('buildingInteriorCanvas');if(!canvas)return;const c=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+ c.clearRect(0,0,w,h);c.fillStyle='#8b7862';c.fillRect(0,0,w,h);c.fillStyle='#d8cbb4';c.fillRect(30,30,w-60,h-60);
+ for(let y=36;y<h-36;y+=32)for(let x=36;x<w-36;x+=32){c.fillStyle=((x/32+y/32)|0)%2?'rgba(80,91,100,.07)':'rgba(255,255,255,.08)';c.fillRect(x,y,30,30)}
+ c.fillStyle='#26374b';c.fillRect(30,30,w-60,42);c.fillStyle='#f5efe3';c.font='bold 16px system-ui';c.textAlign='center';c.fillText(building.n.replace(/^✚\s*/,'').trim().toUpperCase(),w/2,57);
+ const name=building.n.toLowerCase();
+ const items=name.includes('hospital')?[['RECEPÇÃO',85,115,190,60,'#b7d7d1'],['LEITO',330,140,95,120,'#e9efef'],['LEITO',470,140,95,120,'#e9efef']]:
+ name.includes('banco')?[['ATENDIMENTO',90,120,220,60,'#b99a70'],['CAIXA',490,125,150,60,'#b99a70'],['ASSENTOS',270,285,190,45,'#7e8d9c']]:
+ name.includes('restaurante')?[['BALCÃO',90,120,220,55,'#9b6d46'],['MESA',360,170,85,65,'#a47a4a'],['MESA',510,275,85,65,'#a47a4a']]:
+ name.includes('mercado')||name.includes('loja')||name.includes('padaria')?[['PRATELEIRAS',80,120,65,205,'#9b744e'],['PRATELEIRAS',200,120,65,205,'#9b744e'],['CAIXA',490,120,150,55,'#7d9f8d'],['REFRIGERADOR',500,250,140,65,'#8eb9c7']]:
+ name.includes('prefeitura')?[['RECEPÇÃO',85,125,200,60,'#b99a70'],['BALCÃO',430,125,220,55,'#9b7b5b'],['QUADRO DE AVISOS',300,270,170,45,'#6d8c9a']]:
+ [['RECEPÇÃO',85,125,200,60,'#b99a70'],['MESA',390,150,110,65,'#a47a4a'],['ASSENTOS',500,275,150,45,'#7e8d9c']];
+ items.forEach(([label,x,y,fw,fh,color])=>{c.fillStyle='rgba(0,0,0,.18)';c.fillRect(x+5,y+6,fw,fh);c.fillStyle=color;c.fillRect(x,y,fw,fh);c.strokeStyle='#594b3b';c.lineWidth=2;c.strokeRect(x,y,fw,fh);c.fillStyle='#172033';c.font='bold 11px system-ui';c.textAlign='center';c.fillText(label,x+fw/2,y+fh/2+4,fw-8)});
+ c.fillStyle='#5b4230';c.fillRect(w/2-50,h-46,100,16);c.fillStyle='#f2b84b';c.fillRect(w/2-38,h-44,76,12);
+ c.fillStyle='rgba(8,15,28,.65)';c.fillRect(32,h-27,w-64,18);c.fillStyle='#f5efe3';c.font='12px system-ui';c.textAlign='center';c.fillText('ENTRADA / SAÍDA',w/2,h-14);
+ c.fillStyle='rgba(0,0,0,.22)';c.beginPath();c.ellipse(player.x,player.y+10,15,6,0,0,Math.PI*2);c.fill();c.fillStyle='#2dd4bf';c.beginPath();c.arc(player.x,player.y,12,0,Math.PI*2);c.fill();c.strokeStyle='#f5efe3';c.lineWidth=3;c.stroke();c.fillStyle='#10202a';c.beginPath();c.arc(player.x-4,player.y-2,1.8,0,Math.PI*2);c.arc(player.x+4,player.y-2,1.8,0,Math.PI*2);c.fill();
+}
+function act(){
     if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden)return;
     if(open){const n=near?.t==='n'?near.o:null;if(n&&n.playerTalking){open=false;$('dlg').hidden=true;releaseNpcConversation(n);tone(440,.06,'sine',.07);return}if(n&&Array.isArray(n.dialogLines)&&(n.dialogStep||0)<n.dialogLines.length-1){n.dialogStep=(n.dialogStep||0)+1;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+n.dialogLines[n.dialogStep]+'</p><small>Toque ou pressione E para continuar</small>';tone(520,.06,'sine',.06);return}open=false;$('dlg').hidden=true;if(n){n.dialogLines=null;n.dialogStep=0}tone(440,.06,'sine',.07);return}
     if(!interior&&near?.t==='icecream'){openIceCreamShop();return}
@@ -1418,8 +1457,8 @@ const pl=hz?P(a.x+hx,a.y,6.5):P(a.x,a.y+hy,6.5);c.fillStyle='#e8e8e8';c.fillRect
     if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
     if(mode!=='game'||document.activeElement===$('ch'))return;
     const k=e.key.toLowerCase();
-    const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('fm').hidden;
-    if(panelOpen){if(k==='escape'){if(!$('condoPanel').hidden){$('condoPanel').hidden=true;open=false}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+    const buildingPanel=$('buildingInteriorModal');const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('fm').hidden||!!(buildingPanel&&!buildingPanel.hidden);
+    if(panelOpen){if(k==='escape'){if($('buildingInteriorModal')&&!$('buildingInteriorModal').hidden){$('buildingInteriorModal').hidden=true;$('buildingInteriorModal').style.display='none';open=false}else if(!$('condoPanel').hidden){$('condoPanel').hidden=true;open=false}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
     if(k==='enter'){openChat();e.preventDefault();return}
     if(k==='m'&&!interior){omap(!fmO);return}
     if(k==='e'||k===' '){act();e.preventDefault()}
