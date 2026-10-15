@@ -1081,7 +1081,7 @@
     }else if(family==='church'){
      add('counter',5,1,2,.5,12,'#b29f7f','#dfd0ab','#8d7b5e');for(let row=0;row<3;row++)for(let col=0;col<2;col++)add('bench',2+col*5,2.4+row*1.2,2.1,.45,9,'#76543a','#a57b52','#4d3828');
      z('Altar',6,1.9,'Altar e área principal do salão.');z('Bancos',3.8,6.2,'Área de assentos para os visitantes.');
-    }else if(family==='condo'){
+    }}
      /* ---------- CONDOMÍNIO ---------- */
 const UT={A:{a:40,w:8,h:5,n:'Studio',dy:2},B:{a:54,w:9,h:6,n:'1 quarto',dy:3},C:{a:77,w:11,h:7,n:'2 quartos',dy:3},D:{a:104,w:13,h:8,n:'3 quartos',dy:3}};
 const LAY={
@@ -1298,7 +1298,7 @@ RP.forEach(q=>{const u=P(q.x,q.y,44),nm=(q.lk.role=='prefeito'?'👑 ':'')+q.n;c
 AP.spots.forEach(s=>{if(AP.near===s){const q=P(s.x,s.y);c.strokeStyle='rgba(242,184,75,.85)';c.lineWidth=2;c.beginPath();c.ellipse(q[0],q[1],20,10,0,0,7);c.stroke()}});
 if(AP.deco&&AP.hv&&AP.mine){const[x,y]=AP.hv;if(AP.sel>=0){const[w,hh]=fsz(AP.sel,AP.rot),ok=canPlace(AP.sel,x,y,AP.rot);c.globalAlpha=.6;FD[AP.sel](c,x,y,w,hh);c.globalAlpha=1;poly(c,[P(x,y),P(x+w,y),P(x+w,y+hh),P(x,y+hh)],ok?'rgba(80,220,120,.35)':'rgba(240,80,80,.4)')}else poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],'rgba(240,80,80,.35)')}
 c.setTransform(1,0,0,1,0,0);if(D>0){c.fillStyle='rgba(10,14,40,'+D*.3+')';c.fillRect(0,0,W,H)}tf();
-AP.items.forEach(([t0,x,y,r])=>{if(D>.15&&(t0==10||t0==4||t0==12)){const[w,hh]=fsz(t0,r),q=P(x+w/2,y+hh/2,t0==10?48:28);[[60,.1],[38,.12],[20,.14]].forEach(([rd,a])=>{c.fillStyle=(t0==10?'rgba(255,214,120,':'rgba(120,180,255,')+a*D+')';c.beginPath();c.arc(q[0],q[1],rd,0,7);c.fill()})}})}
+AP.items.forEach(([t0,x,y,r])=>{if(D>.15&&(t0==10||t0==4||t0==12)){const[w,hh]=fsz(t0,r),q=P(x+w/2,y+hh/2,t0==10?48:28);[[60,.1],[38,.12],[20,.14]].forEach(([rd,a])=>{c.fillStyle=(t0==10?'rgba(255,214,120,':'rgba(120,180,255,')+a*D+')';c.beginPath();c.arc(q[0],q[1],rd,0,7);c.fill()})}});
 /* ---------- ONLINE ---------- */
 function conn(){try{ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host+'/sk2ws')}catch(e){ws=null;return}
 const w=ws;w.onopen=()=>w.send(JSON.stringify({t:'hi',token}));
