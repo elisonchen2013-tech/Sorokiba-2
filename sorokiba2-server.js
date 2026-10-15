@@ -224,16 +224,17 @@ async function attachSorokiba2(app, server, opt = {}) {
   });
   app.get('/api/sk2/password-reset/pending', async (req, res) => {
     try {
-      const player = await authUser(req);
-      if (!player) return res.status(401).json({ err: 'Sessão expirada' });
-      res.json({ request: await db.pendingPasswordReset(player.username) });
+      const username = String(req.query.username || '').trim();
+      if (!/^[A-Za-z0-9_]{3,14}$/.test(username)) return res.json({ request: null });
+      res.set('Cache-Control', 'no-store');
+      res.json({ request: await db.pendingPasswordReset(username) });
     } catch (e) { res.status(500).json({ err: 'Não foi possível verificar solicitações' }); }
   });
   app.post('/api/sk2/password-reset/complete', json, async (req, res) => {
     try {
-      const player = await authUser(req);
-      if (!player) return res.status(401).json({ err: 'Sessão expirada' });
-      const result = await db.completePasswordReset(player.username, String(req.body?.requestId || ''), req.body?.newPassword);
+      const username = String(req.body?.username || '').trim();
+      if (!/^[A-Za-z0-9_]{3,14}$/.test(username)) return res.status(400).json({ err: 'Usuário inválido' });
+      const result = await db.completePasswordReset(username, String(req.body?.requestId || ''), req.body?.newPassword);
       if (result.err) return res.status(400).json({ err: result.err });
       clearSession(res);
       res.json({ ok: 1, message: 'Senha alterada. Entre novamente com a nova senha.' });
