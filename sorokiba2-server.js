@@ -682,10 +682,11 @@ async function attachSorokiba2(app, server, opt = {}) {
   const connectionsByIp = new Map();
   let activeConnections = 0;
   let nid = 1;
-  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, lk: o.lk, seated: !!o.seated });
+  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, d: o.d, f: o.f, lk: o.lk, seated: !!o.seated, room: o.room || 'city' });
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
-  const flush = list => db.savePositions(list.map(o => ({ u: o.u, x: o.x, y: o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
+  const toRoom = (room, m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && (o.room || 'city') === room && o.ws.readyState === 1) o.ws.send(s); };
+  const flush = list => db.savePositions(list.filter(o => (o.room || 'city') === 'city').map(o => ({ u: o.u, x: o.worldX ?? o.x, y: o.worldY ?? o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
   let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0, mayorTrafficSlowdown = false;
   const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
 
@@ -710,14 +711,27 @@ async function attachSorokiba2(app, server, opt = {}) {
         if (P.size >= MAX_PLAYERS) { ws.send(JSON.stringify({ t: 'f' })); return ws.close(); }
         let row; try { row = await db.load(u); } catch (e) { return ws.close(); }
         if (!row) return ws.close();
-        for (const o of [...P.values()]) if (o.u === u) { P.delete(o.id); flush([o]); toAll({ t: 'l', id: o.id }); o.ws.close(); }   // um login por conta
+        for (const o of [...P.values()]) if (o.u === u) { toRoom(o.room || 'city', { t: 'l', id: o.id }, o); P.delete(o.id); flush([o]); o.ws.close(); }   // um login por conta
         if (trafficAuthority && !P.has(trafficAuthority)) { trafficAuthority = P.values().next().value?.id || 0; if (trafficAuthority) toAll({ t: 'a', id: trafficAuthority, c: trafficState }); }
-        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
-        const peers = [...P.values()].map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
-        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } }); P.set(me.id, me); toAll({ t: 'j', p: pub(me), authority: trafficAuthority }, me);
+        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, worldX: row.x, worldY: row.y, room: 'city', d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now(), lastRoomChange: 0 };
+        const peers = [...P.values()].filter(o => (o.room || 'city') === 'city').map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
+        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } }); P.set(me.id, me); toRoom('city', { t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'mayorAction') {
+      if (m.t === 'room') {
+        const room = typeof m.r === 'string' ? m.r : '';
+        const x = Number(m.x), y = Number(m.y), now = Date.now();
+        const validRoom = room === 'city' || /^building:[a-z0-9_-]{1,56}$/.test(room);
+        const validPosition = Number.isFinite(x) && Number.isFinite(y) && x > 0 && y > 0 && (room === 'city' ? x < MW && y < MH : x < 100 && y < 100);
+        if (!validRoom || !validPosition) return;
+        const oldRoom = me.room || 'city';
+        if (oldRoom !== room) toRoom(oldRoom, { t: 'l', id: me.id }, me);
+        me.room = room; me.x = x; me.y = y; me.d = Number.isInteger(m.d) ? m.d & 3 : me.d; me.f = Number.isInteger(m.f) ? m.f & 3 : 0; me.seated = false; me.last = now; me.lastRoomChange = now;
+        if (room === 'city') { me.worldX = x; me.worldY = y; me.dirty = true; }
+        me.moved = false;
+        send(me, { t: 'roomState', r: room, p: [...P.values()].filter(o => o !== me && (o.room || 'city') === room).map(pub) });
+        toRoom(room, { t: 'j', p: pub(me) }, me);
+      } else if (m.t === 'mayorAction') {
         const now = Date.now();
         if (me.lk?.role !== 'prefeito') { send(me, { t: 'mayorActionResult', ok: false, message: 'Somente o Prefeito pode controlar a cidade.' }); return; }
         const action = String(m.action || '');
@@ -767,16 +781,18 @@ async function attachSorokiba2(app, server, opt = {}) {
         trafficState=clean;toAll({t:'v',c:clean},me);
       } else if (m.t === 'p') {
         const x = +m.x, y = +m.y, now = Date.now(), dt = Math.max(.05, (now - me.last) / 1000);
-        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || (m.s!==undefined&&m.s!==0&&m.s!==1) || !(x > 0 && x < MW && y > 0 && y < MH)) return;
+        const room = me.room || 'city';
+        if (m.r !== undefined && m.r !== room) return;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || (m.s!==undefined&&m.s!==0&&m.s!==1) || !(x > 0 && y > 0 && (room === 'city' ? x < MW && y < MH : x < 100 && y < 100))) return;
         if (Math.hypot(x - me.x, y - me.y) > 8 * dt + 2) return;
-        me.x=x;me.y=y;me.d=(m.d|0)&3;me.f=(m.f|0)&3;me.seated=m.s===1;me.last=now;me.dirty=true;me.moved=true;
+        me.x=x;me.y=y;me.d=(m.d|0)&3;me.f=(m.f|0)&3;me.seated=m.s===1;me.last=now;if(room==='city'){me.worldX=x;me.worldY=y;me.dirty=true}me.moved=true;
       } else if (m.t === 'c') {
         const now = Date.now(); if (now - me.lc < 1200) return; me.lc = now;
         if (typeof m.m !== 'string') return;
         const msg = m.m.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 120);
         if (!msg) return;
         const s = JSON.stringify({ t: 'c', id: me.id, n: me.n, m: msg });
-        for (const o of P.values()) if (Math.hypot(o.x - me.x, o.y - me.y) < 30 && o.ws.readyState === 1) o.ws.send(s);
+        for (const o of P.values()) if ((o.room || 'city') === (me.room || 'city') && Math.hypot(o.x - me.x, o.y - me.y) < 30 && o.ws.readyState === 1) o.ws.send(s);
       }
     });
     ws.on('close', () => {
@@ -784,7 +800,7 @@ async function attachSorokiba2(app, server, opt = {}) {
       const left = (connectionsByIp.get(ip) || 1) - 1;
       if (left > 0) connectionsByIp.set(ip, left); else connectionsByIp.delete(ip);
       clearTimeout(timer);
-      if (me && P.get(me.id) === me) { const wasTrafficAuthority=trafficAuthority===me.id;P.delete(me.id);flush([me]);toAll({t:'l',id:me.id});if(wasTrafficAuthority){trafficAuthority=P.values().next().value?.id||0;toAll({t:'a',id:trafficAuthority,c:trafficState});} }
+      if (me && P.get(me.id) === me) { const wasTrafficAuthority=trafficAuthority===me.id;toRoom(me.room||'city',{t:'l',id:me.id},me);P.delete(me.id);flush([me]);if(wasTrafficAuthority){trafficAuthority=P.values().next().value?.id||0;toAll({t:'a',id:trafficAuthority,c:trafficState});} }
     });
   });
 
@@ -792,9 +808,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   addInterval(() => {
     const moved = [...P.values()].filter(o => o.moved);
     if (!moved.length) return;
-    const all = moved.map(o => [o.id, Math.round(o.x * 100), Math.round(o.y * 100), o.d, o.f, o.seated ? 1 : 0]);
     for (const o of P.values()) {
-      const p = all.filter(a => a[0] !== o.id);
+      const p = moved.filter(a => a !== o && (a.room || 'city') === (o.room || 'city')).map(a => [a.id, Math.round(a.x * 100), Math.round(a.y * 100), a.d, a.f, a.seated ? 1 : 0]);
       if (p.length) send(o, { t: 's', p });
     }
     moved.forEach(o => { o.moved = false; });
