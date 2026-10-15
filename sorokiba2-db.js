@@ -202,6 +202,11 @@ async function login(name, pass) {
   return a.length === b.length && crypto.timingSafeEqual(a, b) ? row : null;
 }
 
+async function listAccounts() {
+  const r = await q('SELECT username, name, role, created_at FROM sk2_players ORDER BY lower(name) ASC LIMIT 500');
+  return r.rows.map(row => ({ username: row.username, name: row.name, role: row.role, createdAt: row.created_at }));
+}
+
 async function load(username) {
   const r = await q('SELECT * FROM sk2_players WHERE username=$1', [username]);
   return r.rows[0] || null;
@@ -609,4 +614,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, requestPasswordReset, pendingPasswordReset, completePasswordReset, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, listAccounts, requestPasswordReset, pendingPasswordReset, completePasswordReset, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
