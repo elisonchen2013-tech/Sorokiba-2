@@ -204,6 +204,14 @@ async function attachSorokiba2(app, server, opt = {}) {
     try { const row = await db.login(c.name, c.pass); row ? reply(req, res, row) : res.status(401).json({ err: 'Usuário ou senha incorretos' }); }
     catch (e) { res.status(500).json({ err: 'Erro no servidor' }); console.error('[sk2]', e.message); }
   });
+  app.get('/api/sk2/mayor/accounts', async (req, res) => {
+    try {
+      const mayor = await authUser(req);
+      if (!mayor) return res.status(401).json({ err: 'Sessão expirada' });
+      if (mayor.role !== 'prefeito') return res.status(403).json({ err: 'Somente o prefeito pode ver a lista de contas' });
+      res.json({ accounts: await db.listAccounts() });
+    } catch (e) { console.error('[sk2] mayor accounts:', e.message); res.status(500).json({ err: 'Não foi possível carregar as contas' }); }
+  });
   app.post('/api/sk2/mayor/password-reset', json, async (req, res) => {
     try {
       const mayor = await authUser(req);
