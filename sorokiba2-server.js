@@ -280,7 +280,8 @@ async function attachSorokiba2(app, server, opt = {}) {
 
   // Imóveis usam o saldo já existente em sk2_players e ficam isolados em sk2_units.
   const condoNegotiations = new Map();
-  addInterval(() => { const now = Date.now(); for (const [key, deal] of condoNegotiations) if (deal.expires < now) condoNegotiations.delete(key); }, 5 * 60e3);
+  const condoInvites = new Map();      // usuário -> Map(unidade -> validade) · convites para apartamentos
+  addInterval(() => { const now = Date.now(); for (const [key, deal] of condoNegotiations) if (deal.expires < now) condoNegotiations.delete(key); for (const [u, iv] of condoInvites) { for (const [id, exp] of iv) if (exp < now) iv.delete(id); if (!iv.size) condoInvites.delete(u); } }, 5 * 60e3);
   const condoGuard = fn => async (req, res) => {
     try {
       const row = await authUser(req);
@@ -299,7 +300,8 @@ async function attachSorokiba2(app, server, opt = {}) {
     const id = String(req.params.id);
     if (!db.unitOk(id)) return res.status(400).json({ err: 'Unidade inválida' });
     const unit = await db.getUnit(id);
-    if (unit && unit.owner !== row.username && !unit.open) return res.status(403).json({ err: 'Este apartamento é privado.' });
+    const invited = (condoInvites.get(row.username)?.get(id) || 0) > Date.now();
+    if (unit && unit.owner !== row.username && !unit.open && !invited) return res.status(403).json({ err: 'Este apartamento é privado. Peça um convite ao morador.' });
     res.json({ ok: 1, unit: unit ? { id, owner: unit.name, open: !!unit.open, layout: unit.layout } : null, isOwner: !!unit && unit.owner === row.username, price: db.unitPrice(id) });
   }));
   app.post('/api/sk2/condo/negotiate', json, condoGuard(async (req, res, row) => {
@@ -345,6 +347,7 @@ async function attachSorokiba2(app, server, opt = {}) {
     if (!db.unitOk(id) || !items) return res.status(400).json({ err: 'Dados de decoração inválidos' });
     const result = await db.saveUnitLayout(row.username, id, items);
     if (result.err) return res.status(409).json({ err: result.err });
+    cast('apt:' + id, { t: 'lay', u: id, layout: items });      // visitantes veem a decoração nova na hora
     res.json({ ok: 1, money: result.money, cost: result.cost, player: db.pub(await db.load(row.username)) });
   }));
   app.post('/api/sk2/condo/open', json, condoGuard(async (req, res, row) => {
@@ -682,11 +685,31 @@ async function attachSorokiba2(app, server, opt = {}) {
   const connectionsByIp = new Map();
   let activeConnections = 0;
   let nid = 1;
-  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, d: o.d, f: o.f, lk: o.lk, seated: !!o.seated, room: o.room || 'city' });
+  const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, lk: o.lk, seated: !!o.seated });
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
-  const toRoom = (room, m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && (o.room || 'city') === room && o.ws.readyState === 1) o.ws.send(s); };
-  const flush = list => db.savePositions(list.filter(o => (o.room || 'city') === 'city').map(o => ({ u: o.u, x: o.worldX ?? o.x, y: o.worldY ?? o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
+  const flush = list => db.savePositions(list.map(o => ({ u: o.u, x: roomOf(o) === 'city' ? o.x : o.cx, y: roomOf(o) === 'city' ? o.y : o.cy }))).catch(e => console.error('[sk2] salvar:', e.message));
+  // Salas: 'city' (cidade), 'ground' e 'floor:N' (térreo e corredores do condomínio) e 'apt:ID' (apartamentos).
+  // Cada sala só vê as posições e o chat de quem está nela; o resto (trânsito, acidentes, Prefeitura) continua global.
+  function roomOf(o) { return o.room || 'city'; }
+  const inRoom = (r, except) => [...P.values()].filter(o => roomOf(o) === r && o !== except);
+  const cast = (r, m, except) => { const s = JSON.stringify(m); for (const o of inRoom(r, except)) if (o.ws.readyState === 1) o.ws.send(s); };
+  const validRoom = r => r === 'city' || r === 'ground' || /^floor:(1[0-5]|[1-9])$/.test(r) || /^apt:(1[0-5]|[1-9])[A-D]$/.test(r);
+  const cityRoster = me => ({ t: 'r', id: me.id, p: inRoom('city', me).map(pub), authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } });
+  function setRoom(me, r, x, y) {
+    const old = roomOf(me);
+    if (old === r) return;
+    if (old === 'city') { me.cx = me.x; me.cy = me.y; toAll({ t: 'l', id: me.id }, me); } else cast(old, { t: 'rl', id: me.id }, me);
+    me.room = r; me.moved = false; me.last = Date.now(); me.seated = false;
+    if (r === 'city') {
+      const ok = Number.isFinite(x) && Number.isFinite(y) && x > 0 && x < MW && y > 0 && y < MH;
+      me.x = ok ? x : me.cx; me.y = ok ? y : me.cy; me.dirty = true;
+      send(me, cityRoster(me)); cast('city', { t: 'j', p: pub(me), authority: trafficAuthority }, me);
+    } else {
+      if (Number.isFinite(x) && Number.isFinite(y)) { me.x = Math.max(0, Math.min(32, x)); me.y = Math.max(0, Math.min(32, y)); }
+      send(me, { t: 'rr', room: r, p: inRoom(r, me).map(pub) }); cast(r, { t: 'rj', p: pub(me) }, me);
+    }
+  }
   let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0, mayorTrafficSlowdown = false;
   const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
 
@@ -711,27 +734,14 @@ async function attachSorokiba2(app, server, opt = {}) {
         if (P.size >= MAX_PLAYERS) { ws.send(JSON.stringify({ t: 'f' })); return ws.close(); }
         let row; try { row = await db.load(u); } catch (e) { return ws.close(); }
         if (!row) return ws.close();
-        for (const o of [...P.values()]) if (o.u === u) { toRoom(o.room || 'city', { t: 'l', id: o.id }, o); P.delete(o.id); flush([o]); o.ws.close(); }   // um login por conta
+        for (const o of [...P.values()]) if (o.u === u) { P.delete(o.id); flush([o]); toAll({ t: 'l', id: o.id }); if (roomOf(o) !== 'city') cast(roomOf(o), { t: 'rl', id: o.id }); o.ws.close(); }   // um login por conta
         if (trafficAuthority && !P.has(trafficAuthority)) { trafficAuthority = P.values().next().value?.id || 0; if (trafficAuthority) toAll({ t: 'a', id: trafficAuthority, c: trafficState }); }
-        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, worldX: row.x, worldY: row.y, room: 'city', d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now(), lastRoomChange: 0 };
-        const peers = [...P.values()].filter(o => (o.room || 'city') === 'city').map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
-        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } }); P.set(me.id, me); toRoom('city', { t: 'j', p: pub(me), authority: trafficAuthority }, me);
+        me = { id: nid++, u, n: row.name, lk: { ...db.cleanLook(row.look), role: row.role }, x: row.x, y: row.y, cx: row.x, cy: row.y, room: 'city', d: 0, f: 0, seated: false, ws, dirty: false, moved: false, lc: 0, last: Date.now() };
+        const peers = inRoom('city').map(pub); if (!trafficAuthority) trafficAuthority = peers[0]?.id || me.id;
+        send(me, { t: 'r', id: me.id, p: peers, authority: trafficAuthority, traffic: trafficState, incidents: liveAccidents(), cityEvents: { trafficSlowdown: mayorTrafficSlowdown } }); P.set(me.id, me); cast('city', { t: 'j', p: pub(me), authority: trafficAuthority }, me);
         return;
       }
-      if (m.t === 'room') {
-        const room = typeof m.r === 'string' ? m.r : '';
-        const x = Number(m.x), y = Number(m.y), now = Date.now();
-        const validRoom = room === 'city' || /^building:[a-z0-9_-]{1,56}$/.test(room);
-        const validPosition = Number.isFinite(x) && Number.isFinite(y) && x > 0 && y > 0 && (room === 'city' ? x < MW && y < MH : x < 100 && y < 100);
-        if (!validRoom || !validPosition) return;
-        const oldRoom = me.room || 'city';
-        if (oldRoom !== room) toRoom(oldRoom, { t: 'l', id: me.id }, me);
-        me.room = room; me.x = x; me.y = y; me.d = Number.isInteger(m.d) ? m.d & 3 : me.d; me.f = Number.isInteger(m.f) ? m.f & 3 : 0; me.seated = false; me.last = now; me.lastRoomChange = now;
-        if (room === 'city') { me.worldX = x; me.worldY = y; me.dirty = true; }
-        me.moved = false;
-        send(me, { t: 'roomState', r: room, p: [...P.values()].filter(o => o !== me && (o.room || 'city') === room).map(pub) });
-        toRoom(room, { t: 'j', p: pub(me) }, me);
-      } else if (m.t === 'mayorAction') {
+      if (m.t === 'mayorAction') {
         const now = Date.now();
         if (me.lk?.role !== 'prefeito') { send(me, { t: 'mayorActionResult', ok: false, message: 'Somente o Prefeito pode controlar a cidade.' }); return; }
         const action = String(m.action || '');
@@ -781,18 +791,39 @@ async function attachSorokiba2(app, server, opt = {}) {
         trafficState=clean;toAll({t:'v',c:clean},me);
       } else if (m.t === 'p') {
         const x = +m.x, y = +m.y, now = Date.now(), dt = Math.max(.05, (now - me.last) / 1000);
-        const room = me.room || 'city';
-        if (m.r !== undefined && m.r !== room) return;
-        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || (m.s!==undefined&&m.s!==0&&m.s!==1) || !(x > 0 && y > 0 && (room === 'city' ? x < MW && y < MH : x < 100 && y < 100))) return;
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isInteger(m.d) || !Number.isInteger(m.f) || (m.s!==undefined&&m.s!==0&&m.s!==1) || !(x > 0 && x < (roomOf(me) === 'city' ? MW : 32) && y > 0 && y < (roomOf(me) === 'city' ? MH : 32))) return;
         if (Math.hypot(x - me.x, y - me.y) > 8 * dt + 2) return;
-        me.x=x;me.y=y;me.d=(m.d|0)&3;me.f=(m.f|0)&3;me.seated=m.s===1;me.last=now;if(room==='city'){me.worldX=x;me.worldY=y;me.dirty=true}me.moved=true;
+        me.x=x;me.y=y;me.d=(m.d|0)&3;me.f=(m.f|0)&3;me.seated=m.s===1;me.last=now;me.dirty=roomOf(me)==='city';me.moved=true;
       } else if (m.t === 'c') {
         const now = Date.now(); if (now - me.lc < 1200) return; me.lc = now;
         if (typeof m.m !== 'string') return;
         const msg = m.m.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 120);
         if (!msg) return;
         const s = JSON.stringify({ t: 'c', id: me.id, n: me.n, m: msg });
-        for (const o of P.values()) if ((o.room || 'city') === (me.room || 'city') && Math.hypot(o.x - me.x, o.y - me.y) < 30 && o.ws.readyState === 1) o.ws.send(s);
+        const city = roomOf(me) === 'city';
+        for (const o of inRoom(roomOf(me))) if ((!city || Math.hypot(o.x - me.x, o.y - me.y) < 30) && o.ws.readyState === 1) o.ws.send(s);
+      } else if (m.t === 'room') {
+        const now = Date.now(), r = String(m.r || '');
+        if (!validRoom(r) || now - (me.lr || 0) < 300) return; me.lr = now;
+        if (r.startsWith('apt:')) {
+          const id = r.slice(4), un = await db.getUnit(id);
+          if (P.get(me.id) !== me) return;
+          const invited = (condoInvites.get(me.u)?.get(id) || 0) > Date.now();
+          if (!un || !(un.owner === me.u || un.open || invited)) { send(me, { t: 'no', m: 'A porta está trancada. Peça um convite ao morador.' }); return; }
+        }
+        setRoom(me, r, +m.x, +m.y);
+      } else if (m.t === 'condoInvite') {
+        const id = String(m.u || ''), now = Date.now();
+        if (!db.unitOk(id) || now - (me.li || 0) < 1500) return; me.li = now;
+        const un = await db.getUnit(id);
+        if (!un || un.owner !== me.u) return;
+        const to = String(m.to || '').toLowerCase(), target = [...P.values()].find(o => o.n.toLowerCase() === to);
+        if (!target) { send(me, { t: 'no', m: 'Esse jogador não está online.' }); return; }
+        if (target === me) return;
+        let iv = condoInvites.get(target.u); if (!iv) condoInvites.set(target.u, iv = new Map());
+        iv.set(id, now + 10 * 60e3);
+        send(target, { t: 'inv', from: me.n, u: id });
+        send(me, { t: 'ok', m: 'Convite enviado para ' + target.n + '.' });
       }
     });
     ws.on('close', () => {
@@ -800,7 +831,7 @@ async function attachSorokiba2(app, server, opt = {}) {
       const left = (connectionsByIp.get(ip) || 1) - 1;
       if (left > 0) connectionsByIp.set(ip, left); else connectionsByIp.delete(ip);
       clearTimeout(timer);
-      if (me && P.get(me.id) === me) { const wasTrafficAuthority=trafficAuthority===me.id;toRoom(me.room||'city',{t:'l',id:me.id},me);P.delete(me.id);flush([me]);if(wasTrafficAuthority){trafficAuthority=P.values().next().value?.id||0;toAll({t:'a',id:trafficAuthority,c:trafficState});} }
+      if (me && P.get(me.id) === me) { const wasTrafficAuthority=trafficAuthority===me.id;P.delete(me.id);flush([me]);toAll({t:'l',id:me.id});if(roomOf(me)!=='city')cast(roomOf(me),{t:'rl',id:me.id});if(wasTrafficAuthority){trafficAuthority=P.values().next().value?.id||0;toAll({t:'a',id:trafficAuthority,c:trafficState});} }
     });
   });
 
@@ -808,8 +839,9 @@ async function attachSorokiba2(app, server, opt = {}) {
   addInterval(() => {
     const moved = [...P.values()].filter(o => o.moved);
     if (!moved.length) return;
+    const all = moved.map(o => [o.id, Math.round(o.x * 100), Math.round(o.y * 100), o.d, o.f, o.seated ? 1 : 0, roomOf(o)]);
     for (const o of P.values()) {
-      const p = moved.filter(a => a !== o && (a.room || 'city') === (o.room || 'city')).map(a => [a.id, Math.round(a.x * 100), Math.round(a.y * 100), a.d, a.f, a.seated ? 1 : 0]);
+      const p = all.filter(a => a[0] !== o.id && a[6] === roomOf(o)).map(a => a.slice(0, 6));
       if (p.length) send(o, { t: 's', p });
     }
     moved.forEach(o => { o.moved = false; });
