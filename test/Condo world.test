@@ -1,0 +1,31 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+
+test('condo rooms are server-side and keep city broadcasts global', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /const validRoom = r =>/);
+  assert.match(server, /function setRoom\(me, r, x, y\)/);
+  assert.match(server, /t: 'rr', room: r/);
+  assert.match(server, /m\.t === 'room'/);
+  assert.match(server, /m\.t === 'condoInvite'/);
+  assert.match(server, /condoInvites\.get\(row\.username\)/);
+  assert.match(server, /cast\('apt:' \+ id, \{ t: 'lay'/);
+  assert.match(server, /roomOf\(o\) === 'city' \? o\.x : o\.cx/);
+  assert.match(server, /toAll\(\{ t: 'a'/);
+});
+
+test('walkable corridors, apartments and elevator use the stored furniture catalog', () => {
+  const client = read('sorokiba2.html');
+  for (const fn of ['cwElevator', 'cwRide', 'cwEnterFloor', 'cwEnterApt', 'cwRender', 'cwSave', 'cwShowInvite']) {
+    assert.match(client, new RegExp('function ' + fn + '\\('));
+  }
+  assert.match(client, /const CW_MAP=\{0:1,1:0,2:2,3:3,4:4,5:6,8:8,11:11,13:5,14:7,15:9,16:10,17:12\}/);
+  assert.match(client, /condoRequest\('\/layout',\{u:s\.id,items:s\.items\}\)/);
+  assert.match(client, /if\(view==='floor'\)\{cwElevator\(\);return\}/);
+  assert.match(client, /interior\.room\.shape==='condo-scene'\)\{cwRender\(t,h\)/);
+  assert.match(client, /function toast\(m\)/);
+});
