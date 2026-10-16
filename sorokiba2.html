@@ -199,6 +199,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 .mayorTool{border:1px solid #f2b84b99!important;background:linear-gradient(135deg,#f2b84b,#ffdc91)!important;color:#111827!important;border-radius:9px!important;padding:7px 11px!important;font-weight:800;cursor:pointer}
 .mayorPanel{position:fixed;z-index:12;inset:clamp(10px,3vh,28px) clamp(10px,4vw,48px);overflow:auto;padding:clamp(16px,3vw,30px);border:1px solid #f2b84b77;border-radius:22px;background:linear-gradient(145deg,rgba(10,16,31,.97),rgba(20,32,53,.96));box-shadow:0 24px 80px #000b;backdrop-filter:blur(18px);color:#f5efe3}
 .mayorPanelHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.mayorPanelHeader h2{margin:3px 0 6px;font-size:clamp(24px,4vw,36px);letter-spacing:-.03em}.mayorPanelHeader p{margin:0;color:#c5d0dd;max-width:640px;line-height:1.5}.mayorPanelHeader .mayorKicker{color:#f2b84b;font-size:11px;font-weight:900;letter-spacing:.18em}.mayorPanelHeader button,.mayorControlCard button{border:1px solid #ffffff25;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer;background:#f2b84b;color:#101725}.mayorPanelHeader button{background:#ffffff10;color:#f5efe3}.mayorStatusRow{display:flex;align-items:center;gap:9px;margin:22px 0;padding:12px 14px;border:1px solid #2dd4bf44;border-radius:12px;background:#2dd4bf0b;color:#d9e7ef;font-size:13px}.mayorStatusDot{width:8px;height:8px;border-radius:50%;background:#f2b84b;box-shadow:0 0 12px currentColor;flex:none}.mayorControlGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.mayorControlCard{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:0;padding:18px;border:1px solid #ffffff18;border-radius:16px;background:linear-gradient(150deg,#ffffff0b,#ffffff04)}.mayorControlIcon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#f2b84b1c;color:#f2b84b;font-size:12px;font-weight:900}.mayorControlCard h3{margin:2px 0 0;font-size:18px}.mayorControlCard p{margin:0 0 8px;color:#aebdcc;font-size:13px;line-height:1.55;flex:1}.mayorControlCard button{width:100%;min-height:42px}.mayorControlCard button:disabled{opacity:.55;cursor:wait}.mayorControlCard button.mayorSecondary{background:#ffffff0b;color:#f5efe3;border-color:#ffffff24}.mayorAnnouncementCard label{font-size:12px;font-weight:700;color:#d9e7ef}.mayorAnnouncementCard textarea{width:100%;resize:vertical;min-height:76px;border:1px solid #ffffff2c;border-radius:10px;padding:10px;background:#080f1d;color:#f5efe3;font:inherit;font-size:13px;text-align:left;outline:none}.mayorAnnouncementCard textarea:focus{border-color:#f2b84b;box-shadow:0 0 0 3px #f2b84b1c}.mayorFootnote{color:#8e9eaf;font-size:12px;margin:18px 0 0}.mayorPanel[hidden]{display:none!important}
+.mayorMoneyCard label{font-size:12px;font-weight:700;color:#d9e7ef}.mayorMoneyCard input{width:100%;box-sizing:border-box;border:1px solid #ffffff2c;border-radius:10px;padding:10px;background:#080f1d;color:#f5efe3;font:inherit;font-size:15px;outline:none}.mayorMoneyCard input:focus{border-color:#f2b84b;box-shadow:0 0 0 3px #f2b84b1c}
 @media(max-width:800px){.mayorControlGrid{grid-template-columns:1fr}.mayorPanel{inset:8px;padding:16px;border-radius:16px}.mayorPanelHeader{gap:8px}.mayorPanelHeader button{padding:8px}.mayorControlCard{padding:14px}}
 
 
@@ -257,6 +258,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
  <div class="mayorControlGrid">
   <article class="mayorControlCard"><span class="mayorControlIcon">01</span><h3>Trânsito e acidentes</h3><p>Inicie uma ocorrência visível no mapa, com veículos parados e resposta de emergência.</p><button id="mayorStartAccident" type="button">Iniciar acidente de teste</button><button id="mayorEndAccidents" class="mayorSecondary" type="button">Encerrar ocorrências</button></article>
   <article class="mayorControlCard"><span class="mayorControlIcon">02</span><h3>Fluxo da cidade</h3><p>Ative um congestionamento de teste para reduzir a velocidade dos veículos no mundo.</p><button id="mayorTrafficToggle" type="button">Ativar congestionamento</button></article>
+  <article class="mayorControlCard mayorMoneyCard"><span class="mayorControlIcon">05</span><h3>Saldo do prefeito</h3><p>Defina quanto dinheiro sua conta terá no jogo.</p><label for="mayorMoneyAmount">Novo saldo em R$</label><input id="mayorMoneyAmount" type="number" min="0" max="2147483647" step="1" inputmode="numeric" value="1000"><small>Limite: R$ 2.147.483.647</small><button id="mayorSetMoney" type="button">Atualizar meu saldo</button><p id="mayorMoneyStatus" aria-live="polite"></p></article>
   <article class="mayorControlCard"><span class="mayorControlIcon">04</span><h3>Recuperação de conta</h3><p>Solicite que um jogador crie uma nova senha. A senha atual nunca será exibida.</p><label for="mayorResetUsername">Contas cadastradas</label><select id="mayorResetUsername"><option value="">Carregando contas...</option></select><button id="mayorRefreshAccounts" class="mayorSecondary" type="button">Atualizar lista</button><button id="mayorRequestPasswordReset" type="button">Solicitar redefinição</button><p id="mayorResetStatus" aria-live="polite"></p></article>
   <article class="mayorControlCard mayorAnnouncementCard"><span class="mayorControlIcon">03</span><h3>Comunicado global</h3><p>Envie um aviso para todos os jogadores. O comunicado aparece com som.</p><label for="mayorAnnouncementInput">Mensagem para a cidade</label><textarea id="mayorAnnouncementInput" maxlength="160" rows="3" placeholder="Ex.: Atenção, cidadãos! A Prefeitura iniciou um teste de trânsito."></textarea><button id="mayorSendAnnouncement" type="button">Transmitir comunicado</button></article>
  </div>
@@ -2398,12 +2400,28 @@ function sendMayorAction(action,extra={}){
  if(!ws||ws.readyState!==1)return missionFeedback('Conecte-se ao multiplayer para controlar a cidade.');
  ws.send(JSON.stringify({t:'mayorAction',action,...extra}));setMayorStatus('Enviando comando ao servidor...');
 }
-$('mayorControlsBtn').onclick=()=>{if(user?.role!=='prefeito')return;$('mayorPanel').hidden=false;setMayorStatus(ON?'Conectado ao mundo multiplayer.':'Conecte-se ao multiplayer para controlar a cidade.');updateMayorTrafficButton();tone(620,.07,'sine',.05)};
+ $('mayorControlsBtn').onclick=()=>{if(user?.role!=='prefeito')return;$('mayorPanel').hidden=false;$('mayorMoneyAmount').value=String(user.money??0);$('mayorMoneyStatus').textContent='';setMayorStatus(ON?'Conectado ao mundo multiplayer.':'Conecte-se ao multiplayer para controlar a cidade.');updateMayorTrafficButton();tone(620,.07,'sine',.05)};
 $('mayorClose').onclick=()=>{$('mayorPanel').hidden=true};
 $('mayorStartAccident').onclick=()=>sendMayorAction('accident_start');
 $('mayorEndAccidents').onclick=()=>sendMayorAction('accident_end');
 $('mayorTrafficToggle').onclick=()=>sendMayorAction('traffic_toggle',{active:!mayorTrafficSlowdown});
 $('mayorSendAnnouncement').onclick=()=>{const field=$('mayorAnnouncementInput'),message=field.value.trim();if(!message)return setMayorStatus('Digite uma mensagem antes de transmitir.');sendMayorAction('announcement',{message});};
+async function setMayorMoney(){
+ const field=$('mayorMoneyAmount'),status=$('mayorMoneyStatus'),button=$('mayorSetMoney'),raw=field.value.trim();
+ if(!/^\d+$/.test(raw)){status.textContent='Digite um valor inteiro entre R$ 0 e R$ 2.147.483.647.';return}
+ const money=Number(raw);
+ if(!Number.isSafeInteger(money)||money>2147483647){status.textContent='O limite é R$ 2.147.483.647.';return}
+ button.disabled=true;status.textContent='Atualizando seu saldo...';
+ try{
+  const headers={'Content-Type':'application/json'};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch('/api/sk2/mayor/money',{method:'POST',headers,body:JSON.stringify({money})});
+  const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível atualizar o saldo.');
+  user=data.player;$('hm').textContent=user.money;field.value=String(user.money);
+  status.textContent='Saldo atualizado para R$ '+Number(user.money).toLocaleString('pt-BR')+'.';
+ }catch(error){status.textContent=error.message||'Erro ao atualizar o saldo.'}
+ finally{button.disabled=false}
+}
+ $('mayorSetMoney').onclick=setMayorMoney;
 async function loadMayorAccounts(){
  const select=$('mayorResetUsername'),status=$('mayorResetStatus');
  select.innerHTML='<option value="">Carregando contas...</option>';

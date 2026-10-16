@@ -214,6 +214,11 @@ async function load(username) {
   return r.rows[0] || null;
 }
 
+async function setPlayerMoney(username, money) {
+  const r = await q('UPDATE sk2_players SET money=$2 WHERE username=$1 RETURNING *', [username, money]);
+  return r.rows[0] || null;
+}
+
 // Salva várias posições de uma vez (uma única consulta)
 async function savePositions(list) {
   if (!list.length) return;
@@ -616,4 +621,4 @@ function verifyToken(t) {
   try { const o = JSON.parse(Buffer.from(b, 'base64url').toString()); return o.e > Date.now() ? o.u : null; } catch (e) { return null; }
 }
 
-module.exports = { setPool, init, health, close, register, login, load, listAccounts, requestPasswordReset, pendingPasswordReset, completePasswordReset, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };
+module.exports = { setPool, init, health, close, register, login, load, listAccounts, setPlayerMoney, requestPasswordReset, pendingPasswordReset, completePasswordReset, savePositions, completeWelcome, completeMission, getResume, saveResume, applyForCareer, listApplications, getApplication, startInterview, answerInterview, finalizeInterview, getWorkState, startWorkShift, assignWorkTask, completeWorkTask, advanceWorkTask, listTraining, completeTraining, requestPromotion, getPendingPromotion, confirmPromotion, getIceCreamInventory, buyIceCream, eatIceCream, condoInfo, getUnit, unitOk, unitPrice, cleanUnitLayout, buyUnit, saveUnitLayout, setUnitOpen, pub, sign, verifyToken, cleanLook, validName, validPass, validateConfig };

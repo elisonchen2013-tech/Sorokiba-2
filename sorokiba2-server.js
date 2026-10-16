@@ -212,6 +212,23 @@ async function attachSorokiba2(app, server, opt = {}) {
       res.json({ accounts: await db.listAccounts() });
     } catch (e) { console.error('[sk2] mayor accounts:', e.message); res.status(500).json({ err: 'Não foi possível carregar as contas' }); }
   });
+  app.post('/api/sk2/mayor/money', json, async (req, res) => {
+    try {
+      const mayor = await authUser(req);
+      if (!mayor) return res.status(401).json({ err: 'Sessão expirada' });
+      if (mayor.role !== 'prefeito') return res.status(403).json({ err: 'Somente o prefeito pode alterar o próprio saldo' });
+      const money = Number(req.body?.money);
+      if (!Number.isSafeInteger(money) || money < 0 || money > 2147483647) {
+        return res.status(400).json({ err: 'Informe um valor inteiro entre R$ 0 e R$ 2.147.483.647.' });
+      }
+      const player = await db.setPlayerMoney(mayor.username, money);
+      if (!player) return res.status(404).json({ err: 'Conta do prefeito não encontrada' });
+      res.json({ ok: 1, player: db.pub(player) });
+    } catch (e) {
+      console.error('[sk2] mayor money:', e.message);
+      res.status(500).json({ err: 'Não foi possível atualizar o saldo do prefeito.' });
+    }
+  });
   app.post('/api/sk2/mayor/password-reset', json, async (req, res) => {
     try {
       const mayor = await authUser(req);
