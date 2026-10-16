@@ -172,6 +172,7 @@ async function attachSorokiba2(app, server, opt = {}) {
   // Arquivos separados da interface do jogo. O HTML do condomínio é carregado
   // antes do motor para que todos os elementos existam quando os scripts iniciarem.
   app.get('/condominio.html', (_req, res) => res.sendFile(path.join(__dirname, 'condominio.html')));
+  app.get('/empresas.html', (_req, res) => res.sendFile(path.join(__dirname, 'empresas.html')));
   app.get('/sorokiba2-game.js', (_req, res) => res.type('application/javascript').sendFile(path.join(__dirname, 'sorokiba2-game.js')));
   app.get('/health', async (req, res) => {
     try {
