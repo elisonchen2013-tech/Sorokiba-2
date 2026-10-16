@@ -1601,7 +1601,7 @@ function act(){
   }
   if(near?.t==='interiorSpot'){
    if(near.o.action){tone(620,.09,'sine',.06);near.o.action();return}
-   if(interior.room.family==='condo'&&['Quadro de unidades','Elevadores','Maquete do prédio','Recepção principal'].includes(near.o.label)){openCondoPanel(near.o.label==='Elevadores'?'floor':'units');tone(620,.09,'sine',.06);return}
+   if(interior.room.family==='condo'&&['Quadro de unidades','Elevadores','Maquete do prédio','Recepção principal'].includes(near.o.label)){openCondoPanel(near.o.label==='Elevadores'?'floor':'marta');tone(620,.09,'sine',.06);return}
    if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
    open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
   }
@@ -2100,7 +2100,7 @@ async function condoRequest(path,body){
   throw error;
  }finally{clearTimeout(timeout)}
 }
-function openCondoPanel(view='units'){
+function openCondoPanel(view='marta'){
  if(!interior||interior.room.family!=='condo')return;
  if(view==='floor'){cwElevator();return}
  const requestToken=++condoPanelRequestToken;
