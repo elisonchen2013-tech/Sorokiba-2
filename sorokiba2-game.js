@@ -924,6 +924,12 @@ function makeInterior(building){
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.72,to:dimensions[0]*.8},
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.87,to:dimensions[0]*.98}
  ] : [],exit:family==='condo'?{x:.9,y:7.5}:{x:dimensions[0]/2,y:dimensions[1]-.55}};
+ if(family==='condo'){
+  // O térreo usa uma planta própria em CONDO_ZIP. A colisão também deve vir
+  // dessa planta, senão os móveis antigos ficam invisíveis mas bloqueiam o jogador.
+  room.items=condoGroundCollisionItems();
+  room.dividers=CONDO_ZIP.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));
+ }
  const sx=family==='condo'?1:room.width/12,sy=family==='condo'?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
@@ -1126,6 +1132,22 @@ const CONDO_ZIP={
  items:[[9,2,8,0],[0,2,10,0],[0,5,10,0],[8,1,5,0],[8,11,1,0],[8,1,9,0],[10,10,10,0],[10,6,1,0],[2,14,4,0],[3,14,3,0],[3,15,3,0],[3,14,5,0],[3,15,5,0],[2,17,4,0],[3,17,3,0],[3,18,3,0],[3,17,5,0],[3,18,5,0]],
  dec:[['desk',4,4],['board',2,1],['maquete',8,6],['dj',17,1],['buffet',13,1],['ball',16,3],['treadmill',13,9],['treadmill',14,9],['treadmill',18,9],['bench',17,12],['racks',17,14],['lounger',21,0],['lounger',23,0],['umbrella',25,1],['counter',21,11],['stool',21,13],['stool',23,13],['guarddesk',1,12]]
 };
+function condoGroundCollisionItems(){
+ const sizes=[[2,1],[2,2],[2,1],[1,1],[2,1],[1,1],[1,1],[2,1],[1,1],[2,2],[1,1],[2,1],[2,1]],solids=[];
+ // pointClear já acrescenta a margem do personagem. Recuar a caixa aqui faz
+ // com que a área bloqueada coincida com a peça desenhada, sem ocupar o piso ao redor.
+ const add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ CONDO_ZIP.items.forEach(([type,x,y,rot])=>{
+  if(type===9)return; // Tapete: visual de piso, não é obstáculo.
+  const size=sizes[type];if(!size)return;
+  add(x,y,rot?size[1]:size[0],rot?size[0]:size[1]);
+ });
+ CONDO_ZIP.dec.forEach(([name,x,y])=>{
+  if(name==='ball'||name==='board')return; // Peças suspensas não bloqueiam o chão.
+  const size=DEC[name]?.s||[1,1];add(x,y,size[0],size[1]);
+ });
+ return solids;
+}
 function drawCondoZipItem(type,x,y,w,h){
  if(type===0){const L=w>=h;box(c,x+.04,y+.04,w-.08,h-.08,0,15,'#8fa3b5','#a6b8c9');L?box(c,x+.04,y+.04,w-.08,.26,15,38,'#7a8fa2','#8fa3b5'):box(c,x+.04,y+.04,.26,h-.08,15,38,'#7a8fa2','#8fa3b5');if(L){box(c,x+.04,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5');box(c,x+w-.24,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5')}else{box(c,x+.04,y+.04,w-.08,.2,15,27,'#7a8fa2','#8fa3b5');box(c,x+.04,y+h-.24,w-.08,.2,15,27,'#7a8fa2','#8fa3b5')}}
  else if(type===2){[[.08,.08],[w-.2,.08],[.08,h-.2],[w-.2,h-.2]].forEach(([a,b])=>box(c,x+a,y+b,.12,.12,0,24,'#6b4a2b','#6b4a2b'));box(c,x+.02,y+.1,w-.04,h-.2,24,28,'#a47a4a','#b98a56')}
@@ -1296,7 +1318,7 @@ addEventListener('keydown',e=>{
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
  const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){$('condoPanel').hidden=true;open=false}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ if(panelOpen){if(k==='escape'){if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -1759,25 +1781,34 @@ const CONDO_STARTER={
 };
 const CONDO_STARTER_TYPE={0:1,1:0,2:2,3:3,4:4,5:13,6:5,7:14,8:8,9:15,10:16,11:11,12:17};
 const CONDO_WALLS={A:[],B:[['v',5,0,1],['v',5,3,4],['v',5,5,6],['h',4,5,9]],C:[['v',6,0,1],['v',6,3,4],['v',6,6,7],['h',3,6,11],['h',5,0,1],['h',5,2,3],['v',3,5,7]],D:[['v',7,0,1],['v',7,2,4],['v',7,5,6],['v',7,7,8],['h',3,7,13],['h',5,7,13],['h',6,0,1],['h',6,2,3],['v',3,6,8]]};
-let condoUnits={},condoFloor=1,condoFilter='all',condoSelected=null,condoDetail=null,condoDraft=[],condoNegotiated=null,condoNegotiationAsk=null,condoNegotiationRemaining=5,condoNegotiationLog=[],condoDraftUnitId=null,condoDisplayItems=[],condoSelectedFurniture=null,condoFurnitureRotation=0,condoEditing=false;
+let condoUnits={},condoFloor=1,condoFilter='all',condoSelected=null,condoDetail=null,condoDraft=[],condoNegotiated=null,condoNegotiationAsk=null,condoNegotiationRemaining=5,condoNegotiationLog=[],condoDraftUnitId=null,condoDisplayItems=[],condoSelectedFurniture=null,condoFurnitureRotation=0,condoEditing=false,condoPanelRequestToken=0;
 const condoPrice=id=>CONDO_AREAS[id.slice(-1)]*(300+40*Number.parseInt(id,10));
 const condoMoney=value=>'R$ '+Number(value||0).toLocaleString('pt-BR');
 async function condoRequest(path,body){const r=await fetch(API+'/condo'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível carregar o condomínio.');return data}
 function openCondoPanel(view='units'){
  if(!interior||interior.room.family!=='condo')return;
  if(view==='floor'){cwElevator();return}
+ const requestToken=++condoPanelRequestToken;
  open=true;$('dlg').hidden=true;$('condoPanel').classList.add('zipCondoPanel');$('condoPanel').hidden=false;condoSelected=null;condoDetail=null;condoNegotiated=null;condoNegotiationAsk=null;condoNegotiationRemaining=5;condoFilter='all';
  if(view==='marta'){renderCondoMarta();return}
  $('condoFloor').innerHTML='<option value="0">Térreo</option>'+Array.from({length:15},(_,i)=>`<option value="${i+1}">${i+1}º andar</option>`).join('');
- condoFloor=1;$('condoFloor').value=String(condoFloor);$('condoMsg').textContent='Carregando unidades e saldo...';$('condoBody').innerHTML='';
- condoRequest('').then(data=>{condoUnits=data.units||{};if(user){user.money=Number(data.money)||user.money;$('hm').textContent=user.money}$('condoMoney').textContent=condoMoney(data.money);renderCondoUnits()}).catch(error=>{$('condoMsg').textContent=error.message});
+ condoFloor=1;$('condoFloor').value=String(condoFloor);$('condoMsg').textContent='Carregando unidades e saldo...';$('condoBody').innerHTML='<div class="zipCondoStatus" role="status">Carregando as unidades do condomínio…</div>';
+ condoRequest('').then(data=>{
+  if(requestToken!==condoPanelRequestToken||$('condoPanel').hidden)return;
+  condoUnits=data.units||{};if(user){user.money=Number(data.money)||user.money;$('hm').textContent=user.money}$('condoMoney').textContent=condoMoney(data.money);renderCondoUnits()
+ }).catch(error=>{
+  if(requestToken!==condoPanelRequestToken||$('condoPanel').hidden)return;
+  $('condoMsg').textContent=error.message;
+  $('condoBody').innerHTML=`<div class="zipCondoStatus zipCondoError" role="alert"><b>Não foi possível carregar as unidades.</b><p>${esc(error.message)}</p><button type="button" id="condoRetry">Tentar novamente</button></div>`;
+  $('condoRetry').onclick=()=>openCondoPanel('units');
+ });
 }
 function drawCondoMarta(){const canvas=$('condoMartaFace');if(canvas)person(canvas.getContext('2d'),32,70,0,0,'#b03a48','#f1c7a0','#2b1b12',{f:true,st:2,pn:'#2a2f45',dr:1})}
 function renderCondoMarta(){
  $('condoBody').innerHTML=`<div class="zipCondoMarta"><canvas id="condoMartaFace" width="64" height="74" aria-label="Marta, corretora"></canvas><div class="martaText"><b>Marta · Corretora</b><p>Olá! Bem-vindo à Sorokiba Tower. Posso mostrar as unidades, negociar o melhor preço para você ou explicar como funciona o prédio.</p></div><div class="martaActions"><button type="button" id="condoMartaUnits">📋 Ver unidades à venda</button><button type="button" id="condoMartaNegotiate">🤝 Negociar um apartamento</button><button type="button" id="condoMartaInfo">🏢 Como funciona o prédio</button><button type="button" id="condoMartaBack">Voltar</button></div></div>`;
  drawCondoMarta();$('condoMartaUnits').onclick=()=>openCondoPanel('units');$('condoMartaNegotiate').onclick=()=>openCondoPanel('units');$('condoMartaInfo').onclick=()=>toast('15 andares, 4 unidades por andar (40, 54, 77 e 104 m²). Preço de tabela = m² × (300 + 40 × andar), mas dá para negociar!');$('condoMartaBack').onclick=closeCondoPanel;
 }
-function closeCondoPanel(){$('condoPanel').hidden=true;$('condoPanel').classList.remove('zipCondoPanel');open=false}
+function closeCondoPanel(){condoPanelRequestToken++;$('condoPanel').hidden=true;$('condoPanel').classList.remove('zipCondoPanel');open=false}
 function condoUnitId(floor,suffix){return String(floor)+suffix}
 function condoMiniPlan(id){const layout=CONDO_LAYOUTS[id.slice(-1)],size=CONDO_SIZES[id.slice(-1)],scale=9;return `<div class="condoMiniPlan" style="width:${size[0]*scale}px;height:${size[1]*scale}px" aria-label="Planta do apartamento ${esc(id)}">${layout.r.map(room=>`<span class="condoMiniRoom ${room[5]}" style="left:${room[0]*scale}px;top:${room[1]*scale}px;width:${room[2]*scale}px;height:${room[3]*scale}px"><b>${room[4]}</b></span>`).join('')}</div>`}
 function renderCondoUnits(){
