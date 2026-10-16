@@ -1564,6 +1564,12 @@ function act(){
   return;
  }
  if(interior){
+  // Prioriza a interação com Marta: zonas próximas da recepção podem substituir `near`
+  // e impedir que o ramo de personagem abra o painel imobiliário.
+  if(interior.room.family==='condo'){
+   const marta=interior.room.people.find(p=>p.role==='Corretora'&&p.name==='Marta');
+   if(marta&&Math.hypot(ipx-marta.x,ipy-marta.y)<1.8){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
+  }
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
