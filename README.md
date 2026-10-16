@@ -107,12 +107,6 @@ A corretora Marta e os elevadores abrem o painel imobiliário durante a explora�
 
 Rotas autenticadas: `GET /api/sk2/condo`, `GET /api/sk2/condo/unit/:id`, `POST /api/sk2/condo/negotiate`, `POST /api/sk2/condo/buy`, `POST /api/sk2/condo/layout` e `POST /api/sk2/condo/open`. A inicialização cria `sk2_units` sem alterar tabelas de outros sistemas.
 
-### Andares e apartamentos andáveis
-
-Depois do térreo, o prédio é explorado a pé: o botão **Elevador** (ou a porta dos elevadores) abre o painel com portas animadas e os 15 andares (os andares do morador ficam em dourado). Cada andar é um corredor isométrico com as quatro portas A–D (verde = à venda, vermelha = ocupada, dourada = sua); apertar **E** na porta entra no apartamento. Os apartamentos usam as plantas A–D do repositório, com os cômodos separados por paredes baixas e portas, e o catálogo de móveis já gravado no banco (ids 0–17, incluindo os antigos janela, porta, banheira, chuveiro e quadro). O dono decora ali mesmo (🎨 Decorar → tocar no chão para colocar, R para girar, lixeira para remover, Salvar), abre ou fecha a casa e convida amigos pelo nome.
-
-O servidor organiza o mundo em **salas**: `city`, `ground` (térreo), `floor:N` (corredores) e `apt:ID` (apartamentos). O cliente muda de sala com `{t:'room',r,x,y}`; posições, entrada/saída (`rr`, `rj`, `rl`) e chat só circulam dentro da sala. Trânsito, acidentes e comandos da Prefeitura continuam globais, e a posição gravada no banco é sempre a da cidade. Para entrar em `apt:ID` é preciso ser o dono, a unidade estar aberta ou haver um convite válido (10 minutos): `{t:'condoInvite',to,u}` avisa o convidado com `{t:'inv'}`, e `GET /api/sk2/condo/unit/:id` também libera o convidado. Quando o dono salva a decoração, quem está no apartamento recebe `{t:'lay'}` e vê a mudança na hora.
-
 ## Testes
 
 ```sh
