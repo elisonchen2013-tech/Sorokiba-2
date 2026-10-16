@@ -2083,14 +2083,18 @@ let condoUnits={},condoFloor=1,condoFilter='all',condoSelected=null,condoDetail=
 const condoPrice=id=>CONDO_AREAS[id.slice(-1)]*(300+40*Number.parseInt(id,10));
 const condoMoney=value=>'R$ '+Number(value||0).toLocaleString('pt-BR');
 async function condoRequest(path,body){
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
+ const controller=typeof AbortController==='function'?new AbortController():null;let timeout;
  try{
-  const r=await fetch(API+'/condo'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,signal:controller.signal});
-  const data=await r.json().catch(()=>({}));
-  if(!r.ok)throw new Error(data.err||'Não foi possível carregar o condomínio.');
-  return data;
+  const request=(async()=>{
+   const r=await fetch(API+'/condo'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(data.err||'Não foi possível carregar o condomínio.');
+   return data;
+  })();
+  const deadline=new Promise((_,reject)=>{timeout=setTimeout(()=>{controller?.abort();reject(new Error('O servidor demorou mais de 15 segundos para responder. Confira sua conexão e tente carregar novamente.'))},15000)});
+  return await Promise.race([request,deadline]);
  }catch(error){
-  if(error.name==='AbortError')throw new Error('O servidor demorou mais de 20 segundos para responder. Confira sua conexão e tente carregar novamente.');
+  if(error.name==='AbortError')throw new Error('O servidor demorou mais de 15 segundos para responder. Confira sua conexão e tente carregar novamente.');
   throw error;
  }finally{clearTimeout(timeout)}
 }

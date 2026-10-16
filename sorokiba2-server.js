@@ -293,6 +293,7 @@ async function attachSorokiba2(app, server, opt = {}) {
     }
   };
   app.get('/api/sk2/condo', condoGuard(async (_req, res, row) => {
+    res.set('Cache-Control', 'no-store');
     res.json({ ok: 1, units: await db.condoInfo(row.username), money: Number(row.money) || 0 });
   }));
   app.get('/api/sk2/condo/unit/:id', condoGuard(async (req, res, row) => {
