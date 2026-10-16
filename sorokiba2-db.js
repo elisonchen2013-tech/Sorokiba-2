@@ -21,6 +21,8 @@ function getPool() {
   pool = new Pool({
     connectionString: url,
     max: 3,                                      // pouco: o plano grátis tem 512 MB
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 10000,
     ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false },
   });
   return pool;
