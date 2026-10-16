@@ -21,7 +21,7 @@ test('health and signal shutdown are wired', () => {
 
 test('proxy headers and offline mode require explicit configuration', () => {
   const server = read('sorokiba2-server.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /opt\.trustProxy === true/);
   assert.match(client, /DEV_OFFLINE/);
   assert.match(client, /if\(!DEV_OFFLINE\)return/);
@@ -30,7 +30,7 @@ test('proxy headers and offline mode require explicit configuration', () => {
 test('session, rate limits, payload validation and mission are wired', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /HttpOnly/);
   assert.match(server, /MAX_CONNECTIONS_PER_IP/);
   assert.match(server, /Number\.isFinite\(x\)/);
@@ -43,7 +43,7 @@ test('session, rate limits, payload validation and mission are wired', () => {
 test('reusable missions are server-validated and persisted atomically', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /hospital_visit/);
   assert.match(server, /cityhall_notice/);
   assert.match(server, /library_visit/);
@@ -57,7 +57,7 @@ test('reusable missions are server-validated and persisted atomically', () => {
 test('career center persists validated resumes and unique applications', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /\/api\/sk2\/careers/);
   assert.match(server, /\/api\/sk2\/career\/resume/);
   assert.match(server, /\/api\/sk2\/career\/apply/);
@@ -72,7 +72,7 @@ test('career center persists validated resumes and unique applications', () => {
 test('career interviews hide answers, validate progression and persist outcomes', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /career\/interview\/start/);
   assert.match(server, /career\/interview\/answer/);
   assert.match(server, /career\/interview\/finish/);
@@ -91,7 +91,7 @@ test('career interviews hide answers, validate progression and persist outcomes'
 test('work panel provides server-validated tasks and idempotent payment history', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /api\/sk2\/work/);
   assert.match(server, /api\/sk2\/work\/task\/complete/);
   assert.match(server, /WORK_TASKS/);
@@ -108,7 +108,7 @@ test('work panel provides server-validated tasks and idempotent payment history'
 test('professional minigames keep stages and answers server-side', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /electrician:/);
   assert.match(server, /courier:/);
   assert.match(server, /fastfood_counter:/);
@@ -124,7 +124,7 @@ test('professional minigames keep stages and answers server-side', () => {
 test('career progression validates requirements and records promotions', () => {
   const server = read('sorokiba2-server.js');
   const db = read('sorokiba2-db.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /CAREER_LADDERS/);
   assert.match(server, /work\/promotion\/request/);
   assert.match(server, /work\/promotion\/confirm/);
@@ -141,7 +141,7 @@ test('career progression validates requirements and records promotions', () => {
 
 
 test('map is expanded and the employment center has an explorable interior', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   assert.match(client, /const MW=96,MH=84/);
   assert.match(server, /const MW = 96, MH = 84/);
@@ -153,7 +153,7 @@ test('map is expanded and the employment center has an explorable interior', () 
 
 test('career XP thresholds are exposed to the interface and enforced on the server', () => {
   const server = read('sorokiba2-server.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   for (const [job, xp] of [['courier', 0], ['fastfood_counter', 50], ['hospital_reception', 100],
     ['restaurant_server', 100], ['library_assistant', 100], ['mechanic', 250], ['electrician', 300],
     ['teacher_assistant', 400]]) {
@@ -187,7 +187,7 @@ test('an interview score of 53 can enter the training outcome', () => {
 
 
 test('curriculum editor has readable high-contrast fields and preserves edits on refresh', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /#careerPanel textarea[^\{]*\{[^}]*color:#F5EFE3/);
   assert.match(client, /#careerPanel textarea[^\{]*\{[^}]*caret-color:#F2B84B/);
   assert.match(client, /function renderResume\(resume,force=false\)/);
@@ -196,7 +196,7 @@ test('curriculum editor has readable high-contrast fields and preserves edits on
 });
 
 test('employment center has separate walkable rooms and an interview NPC', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /dividers:family==='employment'/);
   assert.match(client, /const wallHit=\(room\.dividers\|\|\[\]\)\.some/);
   assert.match(client, /sign\('RECEPÇÃO'/);
@@ -208,7 +208,7 @@ test('employment center has separate walkable rooms and an interview NPC', () =>
 
 
 test('device detection enables a virtual joystick only for touch gameplay', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(client.includes("matchMedia('(pointer: coarse)')"));
   assert.ok(client.includes('navigator.maxTouchPoints'));
   assert.ok(client.includes('id="mobileControls"'));
@@ -220,7 +220,7 @@ test('device detection enables a virtual joystick only for touch gameplay', () =
 });
 
 test('keyboard and virtual joystick inputs share the same movement logic', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.equal((client.match(/const moveVector=stickVector\|\|tv/g)||[]).length, 2);
   assert.ok(client.includes('keys[k]=1'));
   assert.ok(client.includes('resetStick()'));
@@ -228,7 +228,7 @@ test('keyboard and virtual joystick inputs share the same movement logic', () =>
 
 
 test('account screen no longer displays the first-account-mayor notice', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(!client.includes('O primeiro a criar conta é o Prefeito!'));
   assert.ok(!client.includes('id="mh"'));
   assert.ok(!client.includes("$('mh').hidden"));
@@ -237,7 +237,7 @@ test('account screen no longer displays the first-account-mayor notice', () => {
 
 
 test('mobile gameplay requests landscape orientation and shows a rotate fallback', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(client.includes("screen.orientation.lock('landscape')"));
   assert.ok(client.includes('id="rotatePrompt"'));
   assert.ok(client.includes('innerHeight>innerWidth'));
@@ -246,7 +246,7 @@ test('mobile gameplay requests landscape orientation and shows a rotate fallback
 });
 
 test('cars stop at the player, the player collides with cars, and a horn is triggered', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(client.includes('const vehicleHit=(x,y)=>cars.some'));
   assert.ok(client.includes('!vehicleHit(px+vx,py)'));
   assert.ok(client.includes('let playerBlocking=false,playerInside=false'));
@@ -256,7 +256,7 @@ test('cars stop at the player, the player collides with cars, and a horn is trig
 });
 
 test('cinematic CSS treatment and motion respect reduced-motion preferences', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(client.includes('id="visualFx"'));
   assert.ok(client.includes('@keyframes cityLightSweep'));
   assert.ok(client.includes('filter:saturate(1.09) contrast(1.035)'));
@@ -265,7 +265,7 @@ test('cinematic CSS treatment and motion respect reduced-motion preferences', ()
 
 
 test('Parque Central has walkable paths, a pond, trees and usable sitting benches', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /const parkBenches=\[/);
   assert.match(client, /function drawBench\(c,b,t\)/);
   assert.match(client, /E · Sentar no banco/);
@@ -275,7 +275,7 @@ test('Parque Central has walkable paths, a pond, trees and usable sitting benche
 });
 
 test('multiplayer shares a traffic snapshot and synchronizes sitting poses', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   assert.match(client, /function applyTrafficSnapshot\(snapshot,hard=false\)/);
   assert.match(client, /myId===trafficAuthorityId/);
@@ -289,7 +289,7 @@ test('multiplayer shares a traffic snapshot and synchronizes sitting poses', () 
 
 
 test('traffic uses adaptive following distance, smooth acceleration and progressive braking', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /const safeGap=2\.65\+a\.s\*\.55/);
   assert.match(client, /Math\.sqrt\(Math\.max\(0,2\*3\.8\*Math\.max\(0,freeGap-\.85\)\)\)/);
   assert.match(client, /Math\.max\(-8\.5\*dt,Math\.min\(2\.8\*dt,de-a\.s\)\)/);
@@ -299,7 +299,7 @@ test('traffic uses adaptive following distance, smooth acceleration and progress
 });
 
 test('cars render with layered body reflections, detailed windows, animated lamps and brake glow', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /function carD\(c,a\)/);
   assert.match(client, /rgba\(255,255,255,\.35\)/);
   assert.match(client, /c\.shadowBlur=curD>\.1\?curD\*10:2/);
@@ -308,7 +308,7 @@ test('cars render with layered body reflections, detailed windows, animated lamp
   assert.match(client, /function wheel\(c,p,r\)/);
 });
 test('shared traffic collisions trigger evacuation, firefighters and ambulance transport', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   assert.match(client, /function activateAccident\(data\)/);
   assert.match(client, /function drawAccidentFire\(c,inc,t,elapsed\)/);
@@ -323,13 +323,13 @@ test('shared traffic collisions trigger evacuation, firefighters and ambulance t
 
 
 test('traffic lights use a shared wall-clock phase across browsers', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.ok(client.includes('tl(Date.now())'));
   assert.ok(!client.includes('tl(performance.now())'));
 });
 
 test('the selected accident victim remains at the scene until ambulance pickup', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /Math\.hypot\(nearest\.x-vx,nearest\.y-vy\)<4\.5/);
   assert.match(client, /victim\.state='injured';victim\.injuredUntil=inc\.startedAt\+20000/);
   assert.match(client, /if\(n\.injuredUntil&&nowNpc<n\.injuredUntil\)/);
@@ -337,7 +337,7 @@ test('the selected accident victim remains at the scene until ambulance pickup',
 
 
 test('traffic slows to match a lead vehicle and brakes for accident scene obstacles', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /targetSpeed=b\.crashedUntil\?0:b\.s/);
   assert.match(client, /for\(const inc of accidents\)/);
   assert.match(client, /gap>4\.5/);
@@ -345,7 +345,7 @@ test('traffic slows to match a lead vehicle and brakes for accident scene obstac
 
 
 test('park seating uses a low, bent seated pose and bench-aligned interaction anchors', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /id:'park-bench-1',x:30\.5,y:78\.15,sitX:30\.5,sitY:78\.35/);
   assert.match(client, /if\(seated\)\{\s*c\.save\(\)/);
   assert.match(client, /c\.fillRect\(x-6,y-20,12,10\)/);
@@ -353,7 +353,7 @@ test('park seating uses a low, bent seated pose and bench-aligned interaction an
 });
 
 test('ice-cream attendant, shop menu, purchase and eating animation are connected', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   const database = read('sorokiba2-db.js');
   assert.match(client, /role:'Atendente da sorveteria'/);
@@ -370,7 +370,7 @@ test('ice-cream attendant, shop menu, purchase and eating animation are connecte
 });
 
 test('only the authenticated mayor can start a shared accident test', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   assert.match(client, /id="mayorTestAccident" class="mayorTool" hidden/);
   assert.match(client, /ws\.send\(JSON\.stringify\(\{t:'testAccident'\}\)\)/);
@@ -381,14 +381,14 @@ test('only the authenticated mayor can start a shared accident test', () => {
 
 
 test('local and remote seated avatars render at the height of the bench seat', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /P\(q\.x,q\.y,q\.o\.seated\?5:0\)/);
   assert.match(client, /P\(px,py,isSeated\?5:0\)/);
 });
 
 
 test('mayor control panel exposes protected city controls and global announcements', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   const server = read('sorokiba2-server.js');
   assert.match(client, /id="mayorPanel"/);
   assert.match(client, /id="mayorStartAccident"/);
@@ -405,7 +405,7 @@ test('mayor control panel exposes protected city controls and global announcemen
 
 test('courier missions require in-world pickup and delivery at a marked destination', () => {
   const server = read('sorokiba2-server.js');
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(server, /destinations: \[/);
   assert.match(server, /targetBuilding: 'Rodoviária'/);
   assert.match(server, /distance > 3\.1/);
@@ -420,7 +420,7 @@ test('courier missions require in-world pickup and delivery at a marked destinat
 
 
 test('courier can toggle a delivery motorcycle and work dashboard is organized responsively', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /let deliveryBike=false/);
   assert.match(client, /function drawDeliveryBike/);
   assert.match(client, /deliveryBike\?1\.7:1/);
@@ -433,7 +433,7 @@ test('courier can toggle a delivery motorcycle and work dashboard is organized r
 
 
 test('delivery bike has improved layered rendering and route destination is visible on world and maps', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /function drawDeliveryBike/);
   assert.match(client, /caixa de entrega visível na traseira/);
   assert.match(client, /workState\?\.task\?\.type==='delivery_route'/);
@@ -444,7 +444,7 @@ test('delivery bike has improved layered rendering and route destination is visi
 
 
 test('courier delivery presents a waiting customer and automatically queues the next delivery after reward', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /fillText\('CLIENTE'/);
   assert.match(client, /Cliente atendido! Recompensa:/);
   assert.match(client, /if\(result\?\.completed\)/);
@@ -454,7 +454,7 @@ test('courier delivery presents a waiting customer and automatically queues the 
 
 
 test('work dashboard organizes mission status and presents a reward confirmation before the next courier task', () => {
-  const client = read('sorokiba2.html') + '\n' + read('condominio.html') + '\n' + read('empresas.html') + '\n' + read('sorokiba2-game.js');
+  const client = read('sorokiba2.html');
   assert.match(client, /workMissionBadge/);
   assert.match(client, /workMissionProgress/);
   assert.match(client, /workRewardClaim/);
