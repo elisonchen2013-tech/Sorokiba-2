@@ -203,10 +203,28 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 
 
 
+#cwToast{position:fixed;top:max(70px,calc(env(safe-area-inset-top) + 62px));left:50%;transform:translateX(-50%);z-index:60;background:#F2B84B;color:#0B1020;font-weight:700;padding:10px 18px;border-radius:22px;box-shadow:0 8px 24px #000a;max-width:90vw;text-align:center}#cwToast[hidden]{display:none}
+#cwInv{position:fixed;top:max(14px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60;background:rgba(11,16,32,.96);border:2px solid #2DD4BF;border-radius:14px;padding:12px 16px;box-shadow:0 8px 24px #000a;text-align:center;max-width:92vw;color:#F5EFE3}#cwInv[hidden]{display:none}#cwInv div{display:flex;gap:8px;justify-content:center;margin-top:8px}#cwInv button{padding:6px 12px;border:0;border-radius:9px;background:#2DD4BF;color:#0B1020;font-weight:800;cursor:pointer}#cwInv button+button{background:#ffffff22;color:#F5EFE3}
+#cwPanel{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(62px,calc(env(safe-area-inset-top) + 58px));z-index:9;width:min(320px,92vw);display:flex;flex-direction:column;gap:8px;background:rgba(11,16,32,.92);backdrop-filter:blur(10px);border:1px solid #F2B84B66;border-radius:16px;padding:12px;max-height:calc(100vh - 90px);overflow:auto;box-shadow:0 10px 30px #000a;color:#F5EFE3}#cwPanel[hidden]{display:none}
+.cwH{display:flex;flex-direction:column;font-size:12px;opacity:.92}.cwH b{color:#F2B84B;font-size:16px}
+.cwB,.cwI,.cwS{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.cwB button,.cwI button,.cwS button{padding:7px 10px;border:0;border-radius:9px;background:#ffffff1a;color:#F5EFE3;font:inherit;font-size:13px;cursor:pointer}.cwB .on,.cwS .sv{background:#2DD4BF;color:#0B1020;font-weight:800}
+.cwI input{flex:1;min-width:0;padding:7px;border-radius:9px;border:1px solid #ffffff33;background:#0008;color:#F5EFE3;font:inherit;font-size:13px}
+.cwCat{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:34vh;overflow:auto}.cwCi{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:7px;border:1px solid #ffffff22;border-radius:10px;background:#ffffff0d;color:#F5EFE3;font:inherit;font-size:12px;cursor:pointer;text-align:left}.cwCi.on{border-color:#F2B84B;background:#F2B84B22}.cwCi i{font-style:normal;font-size:18px}.cwCi small{opacity:.75}#cwCost{flex:1;font-size:12px;color:#F2B84B}
+#cwElev{position:fixed;inset:0;z-index:44;overflow:auto;background:radial-gradient(circle at 50% 30%,#2b2f3d,#0d0f17);color:#F5EFE3}#cwElev[hidden]{display:none}
+.cwEv{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px}.cwEvTop{color:#F2B84B;letter-spacing:.2em;font-weight:800;font-size:13px}
+.cwEvCab{position:relative;width:min(300px,80vw);height:min(300px,36vh);border-radius:10px;border:10px solid #9aa3ad;background:#222;box-shadow:inset 0 0 40px #0008,0 20px 50px #000a;overflow:hidden}
+.cwEvIn{position:absolute;inset:0;background:radial-gradient(circle at 50% 38%,#f6e7c1,#b79e6a 72%),linear-gradient(transparent 86%,#5a4a2c 86%);box-shadow:inset 0 0 60px #0006}
+.cwEvIn:before{content:"";position:absolute;left:0;right:0;top:64%;height:7px;background:linear-gradient(#efe6cf,#8a7a52);box-shadow:0 3px 5px #0006}
+.cwEvIn:after{content:"";position:absolute;left:18%;right:18%;top:18%;bottom:12%;background:linear-gradient(135deg,#ffffff55,#ffffff11);border:3px solid #8a7a52;border-radius:4px}
+.cwEvDoors{position:absolute;inset:0;display:flex;z-index:2}.cwEvDoors i{flex:1;background:repeating-linear-gradient(90deg,#aab2ba 0 3px,#c9d0d6 3px 6px);transition:transform .8s ease;border-right:2px solid #5b636b;box-shadow:inset 0 0 30px #0006}
+.cwEvDoors.open i:first-child{transform:translateX(-100%)}.cwEvDoors.open i:last-child{transform:translateX(100%)}
+.cwEvDisp{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:#100;color:#ff4d4d;font:700 28px monospace;padding:2px 16px;border-radius:6px;text-shadow:0 0 10px #f00;z-index:3;border:2px solid #333}
+.cwEvPan{display:grid;grid-template-columns:repeat(5,46px);gap:8px;padding:12px;background:#1a1d27;border-radius:14px;border:2px solid #444}
+.cwEb{width:46px;height:46px;border-radius:50%;border:3px solid #888;background:radial-gradient(#fff,#bbb);color:#222;font:800 16px system-ui;cursor:pointer}.cwEb.mine{border-color:#F2B84B;box-shadow:0 0 10px #F2B84B}.cwEb.cur{background:radial-gradient(#ffe9a0,#F2B84B)}.cwEb.t{background:radial-gradient(#cfe,#7bd)}
+.cwEvHint{font-size:12px;opacity:.7}.cwBack{margin-bottom:10px;padding:8px 14px;border:0;border-radius:10px;background:linear-gradient(90deg,#F2B84B,#ffd37a);color:#0B1020;font:800 13px system-ui;cursor:pointer}
 </style></head><body>
 <style>
 #condoPanel{position:fixed;inset:4% 5%;z-index:42;overflow:auto;padding:clamp(16px,2.5vw,28px);border:1px solid #4f8b9b;border-radius:20px;background:linear-gradient(145deg,rgba(9,17,33,.99),rgba(16,31,52,.99));box-shadow:0 18px 60px #000d;color:#f5efe3;overscroll-behavior:contain}
-.condoElevator{max-width:520px;margin:20px auto;padding:20px;border:1px solid #ffffff20;border-radius:18px;background:#151c30;text-align:center}.condoElevatorCab{display:flex;align-items:center;justify-content:center;gap:14px;min-height:90px;margin-bottom:18px;border:2px solid #d8bf8a;border-radius:14px;background:linear-gradient(135deg,#273548,#101829)}.condoElevatorCab span{font-size:32px}.condoElevatorCab strong{color:#f2b84b;font-size:30px}.condoElevatorCab small{color:#d5e2f5}.condoElevatorGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.condoElevatorFloor{min-height:48px;border:0;border-radius:11px;background:#282d3b;color:#f5efe3;font-size:16px;font-weight:800;cursor:pointer}.condoElevatorFloor:hover,.condoElevatorFloor.current{background:#2dd4bf;color:#091321}
 .condoHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:14px;border-bottom:1px solid #ffffff20}.condoKicker{margin:0 0 5px;color:#77ded1;font-size:10px;font-weight:800;letter-spacing:.18em}.condoHeader h2{margin:0;color:#f2b84b;font-size:clamp(24px,3vw,34px)}.condoHeader p:not(.condoKicker){margin:5px 0 0;color:#bfcedb;font-size:13px}.condoHeader button,.condoToolbar button,.condoCard button,.condoFurniture button{border:0;border-radius:9px;padding:9px 12px;background:linear-gradient(90deg,#f2b84b,#ffd37a);color:#0b1020;font-weight:800;cursor:pointer}.condoOverview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.condoOverview>div{padding:12px 14px;border:1px solid #ffffff1b;border-radius:12px;background:linear-gradient(145deg,#15253a,#101b2e)}.condoOverview span{display:block;color:#94adbd;font-size:9px;letter-spacing:.12em}.condoOverview strong{display:block;margin-top:5px;color:#f5efe3;font-size:15px}.condoMessage{min-height:20px;margin:9px 0;padding:10px 12px;border-radius:10px;background:#ffffff08;color:#d6e5ef;font-size:13px}.condoToolbar{display:flex;align-items:center;gap:9px;margin:12px 0}.condoToolbar select{padding:9px;border:1px solid #648096;border-radius:8px;background:#0a1425;color:#f5efe3}.condoToolbar button{padding:9px 11px;background:#2dd4bf}.condoUnits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.condoCard{padding:13px;border:1px solid #ffffff20;border-radius:13px;background:linear-gradient(145deg,#15253a,#101b2e)}.condoCard.owned{border-color:#2dd4bf88}.condoCard h3{margin:0 0 5px;color:#f2b84b;font-size:19px}.condoCard p{margin:4px 0;color:#bdccda;font-size:12px}.condoCard button{margin-top:9px;width:100%;font-size:12px}.condoCard button.secondary{background:#2dd4bf}.condoMap{position:relative;width:min(100%,520px);aspect-ratio:1.5;margin:12px auto 18px;overflow:hidden;border:1px solid #ffffff24;border-radius:16px;background:linear-gradient(145deg,#0a1727,#152b3a)}.condoMap:before{content:"";position:absolute;inset:9% 17%;background:repeating-linear-gradient(0deg,transparent 0 24%,#ffffff10 24.3% 25%),repeating-linear-gradient(90deg,transparent 0 24%,#ffffff10 24.3% 25%),linear-gradient(135deg,#d4c8b1,#a89c87);clip-path:polygon(50% 0,100% 26%,100% 74%,50% 100%,0 74%,0 26%);box-shadow:0 10px 30px #0008}.condoMapTitle{position:absolute;left:50%;top:10%;transform:translateX(-50%);color:#ffe2a1;font-weight:900;letter-spacing:.12em;text-shadow:0 2px 5px #000;white-space:nowrap}.condoRoom{position:absolute;display:grid;place-items:center;padding:4px;text-align:center;color:#f5efe3;font-size:clamp(9px,1.6vw,12px);font-weight:800;text-shadow:0 2px 4px #000;border:1px solid #ffffff45;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}.condoRoom.lobby{left:10%;top:34%;width:37%;height:36%;background:#496477}.condoRoom.party{left:51%;top:20%;width:29%;height:29%;background:#554966}.condoRoom.gym{left:37%;top:53%;width:29%;height:28%;background:#45596c}.condoRoom.pool{left:66%;top:42%;width:26%;height:25%;background:#3aa5b6}.condoRoom.cafe{left:55%;top:72%;width:23%;height:19%;background:#8b613d}.condoDoor{position:absolute;display:grid;place-items:center;width:18%;height:20%;border:2px solid #ffe2a1;border-radius:7px;background:linear-gradient(145deg,#6f665b,#b0a391);color:#fff;font-weight:900;text-shadow:0 2px 4px #000}.condoDoor.a{left:23%;top:27%}.condoDoor.b{right:23%;top:27%}.condoDoor.c{left:23%;bottom:19%}.condoDoor.d{right:23%;bottom:19%}.condoHall{position:absolute;left:43%;top:28%;width:14%;height:50%;border:1px solid #ffffff80;background:#536f70;color:#f5efe3;display:grid;place-items:center;font-size:10px;writing-mode:vertical-rl}.condoFloorPlan{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));grid-template-rows:repeat(16,minmax(0,1fr));gap:2px;width:min(100%,360px);aspect-ratio:1;margin:12px auto;padding:8px;border:1px solid #ffffff45;border-radius:10px;background:repeating-linear-gradient(0deg,#e7ddc8 0 24.5%,#cabda6 25% 25.5%),repeating-linear-gradient(90deg,transparent 0 24.5%,#b4a78f 25% 25.5%);box-shadow:0 9px 22px #0007}.condoRoomCell{display:grid;place-items:center;border:1px solid #ffffff55;border-radius:4px;background:#426d7788;color:#fff;font-size:clamp(7px,1.8vw,14px);text-shadow:0 1px 3px #000;font-weight:800}.condoFurniture{padding:13px;border:1px solid #ffffff20;border-radius:13px;background:#101b2e}.condoFurnitureGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.condoFurniture button{margin-top:7px;width:100%;padding:7px 5px;font-size:11px}.condoFurniture .remove{background:#ffffff16;color:#f5efe3}.condoNote{color:#a8bac9;font-size:12px;line-height:1.5}.condoHidden{display:none!important}
 @media(max-width:700px){#condoPanel{inset:2% 3%;padding:15px}.condoOverview{grid-template-columns:1fr}.condoUnits{grid-template-columns:repeat(2,minmax(0,1fr))}.condoToolbar{flex-wrap:wrap}.condoFurnitureGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .zipCondoPanel{position:fixed!important;inset:0!important;z-index:42!important;overflow:auto!important;padding:0!important;border:0!important;border-radius:0!important;background:rgba(6,8,16,.78)!important;backdrop-filter:blur(4px);box-shadow:none!important;color:#f5efe3!important}
@@ -273,6 +291,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="icecreamMenu" hidden aria-labelledby="icecreamTitle"><header class="icecreamHeader"><div><p class="icecreamKicker">Parque Central · Sorveteria</p><h2 id="icecreamTitle">Sorvetes da Luna</h2><p>Escolha um sabor, compre e coma quando quiser.</p></div><button id="icecreamClose" type="button" aria-label="Fechar sorveteria">Fechar</button></header><p id="icecreamMsg" aria-live="polite">Falando com a atendente...</p><div id="icecreamChoices"></div><footer>Seu dinheiro: <strong>R$ <span id="icecreamMoney">0</span></strong> · Os sorvetes comprados ficam no seu inventário.</footer></section>
 <section id="condoPanel" hidden aria-labelledby="condoTitle"><header class="condoHeader"><div><p class="condoKicker">SOROKIBA TOWER · CONDOMÍNIO</p><h2 id="condoTitle">Seu próximo endereço</h2><p id="condoIntro">Consulte os andares, negocie uma unidade e organize seu apartamento.</p></div><button id="condoClose" type="button" aria-label="Fechar condomínio">Fechar</button></header><div class="condoOverview"><div><span>SEU SALDO</span><strong id="condoMoney">R$ 0</strong></div><div><span>TORRE</span><strong>15 andares · 60 unidades</strong></div><div><span>LAZER</span><strong>Academia · piscina · salão</strong></div></div><p id="condoMsg" class="condoMessage" aria-live="polite">Carregando unidades...</p><div class="condoToolbar"><label for="condoFloor">Andar</label><select id="condoFloor"></select><button id="condoMine" type="button">Meus apartamentos</button><button id="condoAll" type="button">Ver unidades</button></div><div id="condoBody"></div></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
+<section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
 <input id="ch" maxlength="120" placeholder="Digite e aperte Enter..." autocomplete="off" hidden><div id="cl"></div>
 <div id="fm" hidden><b>Mapa de Sorokiba</b><canvas id="fc"></canvas><small>M ou toque para fechar</small></div>
@@ -280,9 +299,9 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 const $=i=>document.getElementById(i),cv=$('cv'),c=cv.getContext('2d'),pc=$('pv').getContext('2d');
 
 const MW=96,MH=84,OUTER_MARGIN=28,DR=[[0,1],[0,-1],[-1,0],[1,0]],OP=[1,0,3,2],NM=[2,1,1,3];
-let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,stickVector=null,stickPointer=null,cam={x:0,y:0},isSeated=false,seatBench=null,trafficAuthorityId=0,lastTrafficSend=0,ls=0,accidents=[],lastCrashAt=0,mayorTrafficSlowdown=false,lastInteriorSend=0,lastInteriorRoom='',lastInteriorX=NaN,lastInteriorY=NaN,lastInteriorD=-1,lastInteriorF=-1;
+let W,H,Z,mode='menu',user=null,db={},ST=[],BD=[],FF=[],npcs=[],cars=[],keys={},tv=null,tp=null,stickVector=null,stickPointer=null,cam={x:0,y:0},isSeated=false,seatBench=null,trafficAuthorityId=0,lastTrafficSend=0,ls=0,accidents=[],lastCrashAt=0,mayorTrafficSlowdown=false;
 let px=27.5,py=14.5,pd=0,pf=0,gs=0,last=performance.now(),near=null,hT=0,sT=0,isNew=false,selC='#2DD4BF',selS='#f1c7a0',open=false,deliveryBike=false;
-let interior=null,ipx=6,ipy=6.15,condoSceneFloor=0;
+let interior=null,ipx=6,ipy=6.15;
 const DEV_OFFLINE=window.SK2_DEV_OFFLINE===true||new URLSearchParams(location.search).get('devOffline')==='1';
 if(DEV_OFFLINE)try{db=JSON.parse(localStorage.getItem('sk2')||'{}')}catch(e){}
 const sv=()=>{if(!DEV_OFFLINE)return;try{localStorage.setItem('sk2',JSON.stringify(db))}catch(e){}};
@@ -735,8 +754,7 @@ $('snd').onclick=e=>{e.stopPropagation();aud();mute=!mute;try{localStorage.setIt
 function conn(){try{ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host+'/sk2ws')}catch(e){ws=null;return}
 const w=ws;w.onopen=()=>w.send(JSON.stringify({t:'hi',token}));
 w.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
-if(m.t=='r'){myId=m.id;RP.clear();m.p.forEach(addR);ON=1;trafficAuthorityId=m.authority||0;mayorTrafficSlowdown=!!m.cityEvents?.trafficSlowdown;updateMayorTrafficButton();if(Array.isArray(m.traffic))applyTrafficSnapshot(m.traffic,true);if(Array.isArray(m.incidents))m.incidents.forEach(activateAccident);$('cb').hidden=false;if(interior)syncMultiplayerRoom()}
-else if(m.t==='roomState'){RP.clear();(m.p||[]).forEach(addR)}
+if(m.t=='r'){myId=m.id;RP.clear();cwResync();m.p.forEach(addR);ON=1;trafficAuthorityId=m.authority||0;mayorTrafficSlowdown=!!m.cityEvents?.trafficSlowdown;updateMayorTrafficButton();if(Array.isArray(m.traffic))applyTrafficSnapshot(m.traffic,true);if(Array.isArray(m.incidents))m.incidents.forEach(activateAccident);$('cb').hidden=false}
 else if(m.t=='j'){addR(m.p);if(Number.isInteger(m.authority))trafficAuthorityId=m.authority}
 else if(m.t=='l')RP.delete(m.id);
 else if(m.t=='s')m.p.forEach(([id,x,y,d,f,s])=>{const q=RP.get(id);if(q){q.tx=x/100;q.ty=y/100;q.d=d;q.f=f;q.seated=!!s;q.o.seated=q.seated}});
@@ -748,9 +766,9 @@ else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído
 else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
-else if(m.t=='c')chat(m)};
+else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
-function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:p.d|0,f:p.f|0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
+function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
 const bb={m:m.m,u:performance.now()+6000};if(m.id==myId)myBub=bb;else{const q=RP.get(m.id);if(q)q.bub=bb}if(m.id!=myId)tone(880,.05,'sine',.04)}
 function bub(c,b,x,y){if(!b||performance.now()>b.u)return;const t=b.m.slice(0,28);c.font='11px sans-serif';const w=c.measureText(t).width+12;c.fillStyle='rgba(255,255,255,.95)';c.fillRect(x-w/2,y-16,w,18);c.fillStyle='#111';c.textAlign='center';c.fillText(t,x,y-3)}
@@ -1176,17 +1194,6 @@ function makeInterior(building){
  }else if(family==='school'){
   add('counter',4.1,1,3.6,.8,21,'#765e43','#c0a06e','#4e3c2d');add('desk',2,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',5,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('desk',8,3.2,1.1,.75,15,'#765e43','#c0a06e','#4e3c2d');add('board',9.6,1,1.1,.12,34,'#34504c','#608479','#20342f',false);
   z('Secretaria',6,2.2,'Secretaria para orientação de alunos e visitantes.');z('Sala de aula',6,5.3,'Sala de aula com mesas e quadro.');z('Biblioteca',10,2.1,'Área reservada para leitura e materiais de estudo.');
- }else if(family==='condo'){
-  z('Falar com a corretora Marta',5.5,5.3,'Marta pode mostrar as unidades, negociar um apartamento ou explicar o prédio.');
-  z('Ver o quadro de unidades',2.5,2.4,'Consulte as unidades disponíveis, negocie e compre seu apartamento.');
-  z('Ver a maquete do prédio',7.4,7,'Maquete da torre: 15 andares, 60 apartamentos de 40 a 104 m².');
-  z('Chamar o elevador',9.5,1.4,'Escolha um andar da Sorokiba Tower.');
-  z('Falar com o porteiro',3.2,13,'Seu Zé orienta moradores e visitantes.');
-  z('Ligar / desligar a música',17.5,2.4,'Controle a música do salão de festas.');
-  z('Correr na esteira',13.5,11.5,'Treine na academia da torre.');
-  z('Falar com o personal Paulo',16,12,'Paulo pode dar dicas de treino.');
-  z('Dar um mergulho',23,8.7,'A piscina está aberta para os moradores.');
-  z('Pedir um café (cortesia)',22.5,12.2,'Peça um café no balcão.');
  }else{
   add('counter',3.7,1,4.6,.8,23,'#806448','#c8a77a','#513e2e');add('desk',2,4.1,1.4,.8,16,'#806448','#c8a77a','#513e2e');add('chair',4.3,4.2,.65,.65,10,'#7b6046','#b28a5c','#4b392c');add('chair',5.5,4.2,.65,.65,10,'#7b6046','#b28a5c','#4b392c');add('chair',7.3,4.2,.65,.65,10,'#7b6046','#b28a5c','#4b392c');add('board',9.5,1,1,.12,32,'#5f756d','#91a79b','#35483f',false);
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
@@ -1215,10 +1222,9 @@ function makeInterior(building){
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.72,to:dimensions[0]*.8},
   {axis:'h',pos:dimensions[1]*.72,from:dimensions[0]*.87,to:dimensions[0]*.98}
  ] : [],exit:family==='condo'?{x:.9,y:7.5}:{x:dimensions[0]/2,y:dimensions[1]-.55}};
- if(family==='condo')applyCondoZipCollision(room);
  const sx=family==='condo'?1:room.width/12,sy=family==='condo'?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
- for(const z of room.zones){z.x*=sx;z.y*=sy;if(family!=='condo'){const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}}
+ for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
   market:[['Marina','Caixa',6.6,2.05,'staff','#3c8056','#dfb28b','#203b2c'],['Rafael','Cliente',4.4,6.2,'visitor','#466d98','#e1b991','#2e2a27'],['Lia','Cliente',8.2,6.25,'visitor','#be6f72','#d69b72','#422a21']],
   hospital:[['Helena','Recepcionista',6,2.05,'staff','#3d9b98','#f0c3a0','#3a4b57'],['Caio','Enfermeiro',3.25,6.35,'staff','#e1eee9','#ad744b','#365560'],['Dra. Bia','Médica',8.8,4.65,'staff','#f4f3ed','#e1b991','#375b78'],['Paciente','Paciente',5.8,6.5,'visitor','#c7d8dd','#b37b58','#4a5261']],
@@ -1238,7 +1244,7 @@ function makeInterior(building){
  }[family];
  for(const [name,role,x,y,kind,shirt,skin,hair]of crowd){
   const route=kind==='visitor'?[[x,y],[x+.65,y-.35],[x+.3,y+.35],[x,y]]:[];
-  const start=family==='condo'?{x:x*sx,y:y*sy}:(findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9});
+  const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
    dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
@@ -1254,48 +1260,19 @@ function makeInterior(building){
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- if(interior.room.family==='condo')condoSceneFloor=0;
  const entry=interior.room.family==='condo'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
- pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;if(condoScene)updateCondoScenePanel();$('mm').hidden=true;$('mp').hidden=true;omap(false);
- syncMultiplayerRoom();
+ pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
+ if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
 }
 function leaveInterior(){
- if(!interior)return;const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;syncMultiplayerRoom();tone(390,.09,'sine',.06);save();
+ if(!interior)return;const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
 $('condoSceneElevator').onclick=()=>openCondoPanel('floor');
-function multiplayerRoomKey(){if(!interior)return'city';const name=String(interior.building.n||interior.room.title||'building').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)||'building';const floor=interior.room.family==='condo'||interior.room.family==='condoHall'?`-floor-${condoSceneFloor}`:'';return`building:${name}${floor}`}
-function syncMultiplayerRoom(){if(!ws||ws.readyState!==1)return;RP.clear();const r=multiplayerRoomKey(),x=interior?ipx:px,y=interior?ipy:py;lastInteriorRoom=r;lastInteriorX=x;lastInteriorY=y;lastInteriorD=pd;lastInteriorF=pf|0;ws.send(JSON.stringify({t:'room',r,x:+x.toFixed(2),y:+y.toFixed(2),d:pd,f:pf|0}))}
-function updateCondoScenePanel(){if(!interior||!['condo','condoHall'].includes(interior.room.family))return;const labels=$('condoScenePanel').querySelectorAll('span');if(labels[0])labels[0].textContent=condoSceneFloor?`${condoSceneFloor}º andar · corredor residencial`:'Térreo · recepção e áreas comuns';$('condoSceneElevator').textContent='🛗 Elevador'}
-function buildCondoHall(floor){
- const doors=[3,7,11,15],room={title:`Sorokiba Tower · ${floor}º andar`,family:'condoHall',wall:'#d9d1c0',side:'#b9ad9a',floor:'#ded8cb',floor2:'#cfc8ba',accent:'#4e8e9f',subtitle:'Corredor residencial',width:18,depth:5,shape:'condo-hall',items:[roomItem('bench',5,4,2,.6,12,'#333','#444','#222'),roomItem('bench',12,4,2,.6,12,'#333','#444','#222'),roomItem('freezer',9,0,1,1,34,'#dfe5ea','#f1f5f8','#7d8996')],zones:[],people:[],dividers:[],exit:{x:.9,y:2.5},floorNumber:floor};
- room.zones.push({label:'Elevadores',x:.9,y:2.5,desc:'Volte ao térreo ou escolha outro andar no elevador.',condoElevator:true});
- doors.forEach((x,index)=>{const id=`${floor}${'ABCD'[index]}`,unit=condoUnits[id];room.zones.push({label:`Apto ${id}`,x:x+.5,y:1.05,desc:unit?(unit.mine?'Seu apartamento. Abra para gerenciar e decorar.':`Apartamento de ${unit.o}${unit.open?' · visitas liberadas':' · fechado para visitas'}`):'Unidade disponível para compra ou negociação.',condoUnitId:id,unitState:unit?.mine?'mine':unit?'own':'free'})});
- return room;
-}
-async function enterCondoFloor(floor){
- if(!interior||!['condo','condoHall'].includes(interior.room.family))return;
- try{const data=await condoRequest('');condoUnits=data.units||{};if(data.money!=null&&user)user.money=Number(data.money)}catch(error){toast(error.message)}
- condoSceneFloor=floor;if(floor)condoFloor=floor;
- if(!floor){interior.room=makeInterior(interior.building);ipx=1.25;ipy=7.5}
- else{interior.room=buildCondoHall(floor);ipx=1.7;ipy=2.5}
- near=null;open=false;$('tip').hidden=true;$('condoPanel').hidden=true;updateCondoScenePanel();syncMultiplayerRoom();tone(560,.08,'sine',.05);
-}
-function condoHallDoor(id){
- if(!condoUnits[id]){toast('À venda. Negocie com a corretora Marta, no térreo.');return}
- open=true;$('dlg').hidden=true;$('condoPanel').classList.add('zipCondoPanel');$('condoPanel').hidden=false;condoSelected=null;condoDetail=null;condoNegotiated=null;condoNegotiationAsk=null;condoNegotiationRemaining=5;condoFilter='all';condoFloor=Number.parseInt(id,10);condoReturnToHall=true;
- $('condoFloor').innerHTML='<option value="0">Térreo</option>'+Array.from({length:15},(_,i)=>`<option value="${i+1}">${i+1}º andar</option>`).join('');$('condoFloor').value=String(condoFloor);$('condoMsg').textContent=`Abrindo unidade ${id}...`;openCondoUnit(id)
-}
-function condoBackFromUnit(){if(condoReturnToHall){condoReturnToHall=false;closeCondoPanel();return}condoSelected=null;condoDetail=null;renderCondoUnits()}
-function renderCondoElevator(){
- const floors=Array.from({length:16},(_,i)=>i),buttons=floors.map(f=>`<button type="button" class="condoElevatorFloor ${f===condoSceneFloor?'current':''}" data-condo-ride="${f}">${f?' '+f+'º':'T'}</button>`).join('');
- $('condoTitle').textContent='Elevadores';$('condoIntro').textContent='Escolha o andar da Sorokiba Tower.';$('condoMsg').textContent='Andares residenciais: 1º ao 15º';$('condoBody').innerHTML=`<div class="condoElevator"><div class="condoElevatorCab"><span>🛗</span><strong>${condoSceneFloor||'T'}</strong><small>${condoSceneFloor?'Andar atual':'Térreo'}</small></div><div class="condoElevatorGrid">${buttons}</div><button class="zipCondoBack" id="condoElevatorBack" type="button">← Voltar</button></div>`;
- $('condoBody').querySelectorAll('[data-condo-ride]').forEach(button=>button.onclick=()=>{const f=Number(button.dataset.condoRide);closeCondoPanel();enterCondoFloor(f)});$('condoElevatorBack').onclick=closeCondoPanel;
-}
 function roomPoly(points,fill,stroke='rgba(15,20,28,.25)'){
  c.beginPath();points.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=1;c.stroke()}
 }
@@ -1338,7 +1315,7 @@ function updateInteriorPeople(dt){
  }
 }
 function updateInterior(dt){
- RP.forEach(q=>{const a=Math.min(1,dt*9);q.x+=(q.tx-q.x)*a;q.y+=(q.ty-q.y)*a});
+ cwTick(dt,performance.now()/1000);
  if(open){near=null;return}
  updateInteriorPeople(dt);
  let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
@@ -1346,7 +1323,7 @@ function updateInterior(dt){
  if(l>0){ix/=l;iy/=l;const s=dt*2.75,vx=ix*s,vy=iy*s;if(canWalkInterior(ipx+vx,ipy))ipx+=vx;if(canWalkInterior(ipx,ipy+vy))ipy+=vy;pd=Math.abs(ix)>=Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);pf+=dt*8}else pf=0;
  near=null;let best=1.35;
  for(const p of interior.room.people){const dist=Math.hypot(ipx-p.x,ipy-p.y),limit=p.staff?1.55:.85;if(dist<limit&&dist<best){best=dist;near={t:'interiorPerson',o:p}}}
- for(const z of interior.room.zones){const dist=Math.hypot(ipx-z.x,ipy-z.y);if(dist<.9&&dist<best){best=dist;near={t:'interiorSpot',o:z}}}
+ for(const z of interior.room.zones){const dist=Math.hypot(ipx-z.x,ipy-z.y);if(dist<(z.r||.9)&&dist<best){best=dist;near={t:'interiorSpot',o:z}}}
  const de=Math.hypot(ipx-interior.room.exit.x,ipy-interior.room.exit.y);if(de<.82&&de<best)near={t:'interiorExit',o:{label:'Saída'}};
 }
 function interiorText(zone){return zone.desc||('Você está em '+zone.label.toLowerCase()+' de '+interior.room.title+'.')}
@@ -1447,11 +1424,6 @@ const CONDO_ZIP={
  items:[[9,2,8,0],[0,2,10,0],[0,5,10,0],[8,1,5,0],[8,11,1,0],[8,1,9,0],[10,10,10,0],[10,6,1,0],[2,14,4,0],[3,14,3,0],[3,15,3,0],[3,14,5,0],[3,15,5,0],[2,17,4,0],[3,17,3,0],[3,18,3,0],[3,17,5,0],[3,18,5,0]],
  dec:[['desk',4,4],['board',2,1],['maquete',8,6],['dj',17,1],['buffet',13,1],['ball',16,3],['treadmill',13,9],['treadmill',14,9],['treadmill',18,9],['bench',17,12],['racks',17,14],['lounger',21,0],['lounger',23,0],['umbrella',25,1],['counter',21,11],['stool',21,13],['stool',23,13],['guarddesk',1,12]]
 };
-function applyCondoZipCollision(room){
- const sizes=[[2,1],[2,2],[2,1],[1,1],[2,1],[1,1],[1,1],[2,1],[1,1],[2,2],[1,1],[2,1],[2,1]];
- room.items=CONDO_ZIP.items.map(([type,x,y,rot])=>{const[w,h]=sizes[type],width=rot?h:w,depth=rot?w:h;return roomItem('zip-item-'+type,x,y,width,depth,1,'#000','#000','#000',type!==9)});
- for(const[name,x,y]of CONDO_ZIP.dec){const size=DEC[name]?.s||[1,1];room.items.push(roomItem('zip-deco-'+name,x,y,size[0],size[1],1,'#000','#000','#000',name!=='ball'))}
-}
 function drawCondoZipItem(type,x,y,w,h){
  if(type===0){const L=w>=h;box(c,x+.04,y+.04,w-.08,h-.08,0,15,'#8fa3b5','#a6b8c9');L?box(c,x+.04,y+.04,w-.08,.26,15,38,'#7a8fa2','#8fa3b5'):box(c,x+.04,y+.04,.26,h-.08,15,38,'#7a8fa2','#8fa3b5');if(L){box(c,x+.04,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5');box(c,x+w-.24,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5')}else{box(c,x+.04,y+.04,w-.08,.2,15,27,'#7a8fa2','#8fa3b5');box(c,x+.04,y+h-.24,w-.08,.2,15,27,'#7a8fa2','#8fa3b5')}}
  else if(type===2){[[.08,.08],[w-.2,.08],[.08,h-.2],[w-.2,h-.2]].forEach(([a,b])=>box(c,x+a,y+b,.12,.12,0,24,'#6b4a2b','#6b4a2b'));box(c,x+.02,y+.1,w-.04,h-.2,24,28,'#a47a4a','#b98a56')}
@@ -1465,7 +1437,7 @@ function renderCondoZip(t){
  const Za=Z*1.25,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
  const tf=()=>c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));tf();c.imageSmoothingEnabled=false;
  const tile=(x,y)=>{for(const [rx,ry,rw,rh,,code]of CONDO_ZIP.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'm'};
- const floor=(code,x,y)=>{const a=(x+y)%2;switch(code){case'm':return a?'#efe9dc':'#d9d1c0';case's':return a?'#8a96a3':'#7d8996';case'd':return interior.condoParty?['#c0392b','#8e44ad','#2980b9','#16a085','#f39c12'][(x*7+y*13+(t*2.5|0))%5]:(a?'#4a3f5a':'#40364f');case'g':return a?'#3b3f47':'#33363d';case'k':return a?'#e9d9bf':'#dfcba8';case'q':return a?'#e8dcc4':'#dccfb2';case'p':{const v=Math.sin(t*2+x*.9+y*.7)*.5+.5;return'rgb('+(50+v*30|0)+','+(150+v*40|0)+','+(205+v*30|0)+')'}default:return a?'#b98a5a':'#c19564'}};
+ const floor=(code,x,y)=>{const a=(x+y)%2;switch(code){case'm':return a?'#efe9dc':'#d9d1c0';case's':return a?'#8a96a3':'#7d8996';case'd':return a?'#4a3f5a':'#40364f';case'g':return a?'#3b3f47':'#33363d';case'k':return a?'#e9d9bf':'#dfcba8';case'q':return a?'#e8dcc4':'#dccfb2';case'p':{const v=Math.sin(t*2+x*.9+y*.7)*.5+.5;return'rgb('+(50+v*30|0)+','+(150+v*40|0)+','+(205+v*30|0)+')'}default:return a?'#b98a5a':'#c19564'}};
  for(let y=0;y<16;y++)for(let x=0;x<26;x++){const code=tile(x,y);poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],floor(code,x,y));if(code==='p'){c.strokeStyle='rgba(255,255,255,.22)';c.lineWidth=1;const off=(t*.4+x*.3+y*.17)%1,a=P(x+.2,y+off),b=P(x+.8,y+off);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}}
  c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(255,255,255,.55)';CONDO_ZIP.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
  const V=[],wN=i=>{box(c,i,-.14,1,.14,0,72,'#e9e2d6','#d4cbbd');poly(c,[P(i,0,6),P(i+1,0,6),P(i+1,0),P(i,0)],'rgba(0,0,0,.18)');if(i>=8&&i<=10){poly(c,[P(i+.08,0,62),P(i+.92,0,62),P(i+.92,0,0),P(i+.08,0,0)],'#9aa2aa');poly(c,[P(i+.5,0,62),P(i+.5,0),P(i+.52,0),P(i+.52,0,62)],'#4a525a');const q=P(i+.5,0,68);c.fillStyle='#100';c.fillRect(q[0]-8,q[1]-3,16,6);c.fillStyle=(t*1.5|0)%2?'#ff4d4d':'#7a1c1c';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('▲',q[0],q[1]+3)}else if(i%3==1&&i<25){poly(c,[P(i+.12,0,60),P(i+.88,0,60),P(i+.88,0,26),P(i+.12,0,26)],'#bfe3f7');c.strokeStyle='#f5efe3';c.lineWidth=1.5;c.stroke();ln(c,P(i+.5,0,60),P(i+.5,0,26))}},
@@ -1475,10 +1447,11 @@ function renderCondoZip(t){
  const sizes=[[2,1],[2,2],[2,1],[1,1],[2,1],[1,1],[1,1],[2,1],[1,1],[2,2],[1,1],[2,1],[2,1]];
  CONDO_ZIP.items.forEach(([type,x,y,rot])=>{const dims=sizes[type],w=rot?dims[1]:dims[0],h=rot?dims[0]:dims[1];V.push({k:type===9?x+y-.5:x+y+(w+h)/2,f:()=>drawCondoZipItem(type,x,y,w,h)})});
  CONDO_ZIP.dec.forEach(([name,x,y])=>{const dims=DEC[name]?.s||[1,1];V.push({k:x+y+(dims[0]+dims[1])/2+(name==='ball'?3:0),f:()=>drawDec(c,name,x,y,t)})});
- interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),opts=p.role==='Corretora'?{f:true,st:2,pn:'#2a2f45',dr:1}:p.name==='Seu Zé'?{pn:'#222',st:3,hat:'#2d3748',bd:true}:{pn:'#222',st:0};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,opts)}}));RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}));V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
- c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);RP.forEach(p=>{const q=P(p.x,p.y,44),name=(p.lk.role==='prefeito'?'👑 ':'')+p.n;c.font='bold 9px sans-serif';c.strokeText(name,q[0],q[1]);c.fillStyle='#9ff0e4';c.fillText(name,q[0],q[1]);bub(c,p.bub,q[0],q[1]-14)});interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#ffd7a8';c.fillText(p.name,q[0],q[1])});c.setTransform(1,0,0,1,0,0);
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),opts=p.role==='Corretora'?{f:true,st:2,pn:'#2a2f45',dr:1}:p.name==='Seu Zé'?{pn:'#222',st:3,hat:'#2d3748',bd:true}:{pn:'#222',st:0};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,opts)}}));V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});if(interior.room.net)cwRemotes(V);V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#ffd7a8';c.fillText(p.name,q[0],q[1])});if(interior.room.net)cwRemoteLabels();c.setTransform(1,0,0,1,0,0);
 }
 function renderInterior(t,h){
+ if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
@@ -1519,11 +1492,6 @@ function renderInterior(t,h){
   }
  }
  drawRoomArchitecture(room,Q,U);
- if(room.shape==='condo-hall'){
-  const floorNum=room.floorNumber,doorXs=[3,7,11,15];
-  doorXs.forEach((x,index)=>{const zone=room.zones[index+1],base=Q(x+.12,0,0),topL=Q(x+.12,0,U*1.28),topR=Q(x+1.05,0,U*1.28),baseR=Q(x+1.05,0,0),state=zone?.unitState||'free';roomPoly([base,baseR,topR,topL],state==='mine'?'#5b4938':state==='own'?'#544047':'#705033','#d7bc89');const inner=Q(x+.2,0,U*.12),innerR=Q(x+.97,0,U*.12),innerTop=Q(x+.97,0,U*1.18),innerTopL=Q(x+.2,0,U*1.18);roomPoly([inner,innerR,innerTop,innerTopL],state==='own'?'#785b5b':'#92663e','#c6a16d');const handle=Q(x+.84,0,U*.56);c.fillStyle=state==='mine'?'#f2b84b':state==='own'?'#ff7474':'#65df91';c.beginPath();c.arc(handle[0],handle[1],3,0,Math.PI*2);c.fill();const label=Q(x+.58,0,U*1.42);c.fillStyle='rgba(9,16,29,.94)';c.strokeStyle='#d7bc89';c.lineWidth=1;c.beginPath();c.roundRect(label[0]-26,label[1]-11,52,20,5);c.fill();c.stroke();c.fillStyle='#fff2cf';c.font='800 10px system-ui';c.textAlign='center';c.fillText(`${floorNum}${'ABCD'[index]}`,label[0],label[1]+3)});
-  const lift=Q(.72,2.05,U*.95);c.fillStyle='#344956';c.strokeStyle='#aab9bd';c.lineWidth=2;c.beginPath();c.roundRect(lift[0]-24,lift[1]-34,48,68,5);c.fill();c.stroke();c.fillStyle='#a9cbd1';c.fillRect(lift[0]-17,lift[1]-26,34,56);c.fillStyle='#1b2631';c.fillRect(lift[0]-1,lift[1]-26,2,56);const sign=Q(.72,1.95,U*1.3);c.fillStyle='#0b1020';c.strokeStyle='#f2b84b';c.beginPath();c.roundRect(sign[0]-32,sign[1]-10,64,19,5);c.fill();c.stroke();c.fillStyle='#f2b84b';c.font='800 9px system-ui';c.textAlign='center';c.fillText(`ELEVADOR · ${floorNum}º`,sign[0],sign[1]+3);
- }
  // Sinalização, iluminação e núcleo de elevadores dedicado para residenciais/hotéis.
  if(room.family==='condo'){
   const bx=Math.max(12,W-216),by=112;
@@ -1569,7 +1537,6 @@ function renderInterior(t,h){
  c.fillStyle='#F2B84B';c.font='700 18px system-ui';c.textAlign='left';c.fillText(room.title,29,38);c.fillStyle='#e1e8ee';c.font='12px system-ui';c.fillText(room.subtitle+' · '+w+' × '+d,29,56);
  room.zones.forEach(z=>{const q=Q(z.x,z.y,1),active=near?.t==='interiorSpot'&&near.o===z;c.fillStyle=active?'rgba(242,184,75,.25)':'rgba(15,24,34,.05)';c.beginPath();c.ellipse(q[0],q[1],U*.22,U*.12,0,0,7);c.fill();c.strokeStyle=active?'#F2B84B':'rgba(255,244,211,.26)';c.lineWidth=active?2:1;c.beginPath();c.ellipse(q[0],q[1],U*.22,U*.12,0,0,7);c.stroke()});
  const draws=room.items.map(o=>({depth:o.x+o.y+(o.w+o.d)*.5,draw:()=>drawRoomBox(o,Q)}));
- RP.forEach(p=>draws.push({depth:p.x+p.y+.02,draw:()=>{const q=Q(p.x,p.y,12);person(c,q[0],q[1],p.d,p.f,p.lk.col,p.lk.skin,p.lk.hr||'#2b1b12',p.o);const label=Q(p.x,p.y,44),name=(p.lk.role==='prefeito'?'👑 ':'')+p.n;c.font='700 10px system-ui';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';c.strokeText(name,label[0],label[1]);c.fillStyle='#9ff0e4';c.fillText(name,label[0],label[1]);bub(c,p.bub,label[0],label[1]-14)}}));
  room.people.forEach(p=>draws.push({depth:p.x+p.y+.025,draw:()=>{
   const bob=p.staff?Math.sin(t*2+p.phase)*.65:Math.sin(t*5+p.phase)*.9,q=Q(p.x,p.y,12+bob);
   person(c,q[0],q[1],p.face||0,p.staff?(t*1.4+p.phase|0):(p.walkFrame|0),p.shirt,p.skin,p.hair,{pn:'#29394c',st:p.staff?1:0,dr:0,gl:false,bd:false});
@@ -1583,7 +1550,7 @@ function renderInterior(t,h){
 
 const LINES=['Que noite bonita em Sorokiba!','Dizem que vão abrir novos prédios por aqui.','Você já falou com o Kiba? Ele anda pela praça.']; const npcConversation=n=>{const hour=cityHour|0;const routine=n.routine==='trabalho'?'Estou no meu turno. Espero que o dia seja tranquilo!':n.routine==='compras'?'Estou procurando algumas coisas nas lojas da cidade.':n.routine==='casa'?'Estou indo para casa descansar um pouco.':'Estou passeando pela cidade. Tem muita coisa para conhecer!';const time=hour<6?'A cidade está bem calma a esta hora.':hour<12?'Bom dia! A cidade está começando a acordar.':hour<18?'Boa tarde! Está aproveitando o dia?':'Boa noite! As luzes da cidade estão bonitas.';return [routine,time,'Você pode explorar os prédios e conversar com outras pessoas. Se encontrar algum problema, avise a administração.'];}; function faceNpcToPlayer(n){const dx=px-n.x,dy=py-n.y;n.face=Math.abs(dx)>=Math.abs(dy)?(dx<0?2:3):(dy<0?1:0);n.playerTalking=true;n.playerResumeState=n.state;n.f=0;} function releaseNpcConversation(n){if(!n)return;n.playerTalking=false;if(n.state==='talking')return;n.state=n.playerResumeState||'resting';n.wait=Math.max(n.wait||0,.8);n.playerResumeState=null;} function showNpcChoices(n){const dlg=$('dlg');dlg.innerHTML='<b>'+n.n+'</b><p>O que você quer perguntar?</p><div class="npc-questions"><button type="button" data-q="city">O que você acha da cidade?</button><button type="button" data-q="routine">O que você está fazendo?</button><button type="button" data-q="help">Tem alguma dica para mim?</button></div><small>Escolha uma pergunta. Pressione E para encerrar.</small>';dlg.querySelectorAll('[data-q]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const q=btn.dataset.q;const answers={city:'Gosto da cidade! Seria ótimo ver mais lugares e pessoas por aqui.',routine:n.routine==='trabalho'?'Estou trabalhando. Cada morador tem sua própria rotina.':n.routine==='compras'?'Estou fazendo compras e olhando as lojas.':n.routine==='casa'?'Estou voltando para casa para descansar.':'Estou passeando e conhecendo a cidade.',help:'Explore os prédios, conheça os serviços e converse com os moradores. Você pode descobrir coisas novas!'};dlg.innerHTML='<b>'+n.n+'</b><p>'+answers[q]+'</p><button type="button" id="npcAskAgain">Fazer outra pergunta</button><small>Ou pressione E para encerrar.</small>';dlg.querySelector('#npcAskAgain').addEventListener('click',ev=>{ev.stopPropagation();showNpcChoices(n)});tone(590,.07,'sine',.06)}));};
 function act(){
- if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden)return;
+ if(!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden)return;
  if(open){const n=near?.t==='n'?near.o:null;if(n&&n.playerTalking){open=false;$('dlg').hidden=true;releaseNpcConversation(n);tone(440,.06,'sine',.07);return}if(n&&Array.isArray(n.dialogLines)&&(n.dialogStep||0)<n.dialogLines.length-1){n.dialogStep=(n.dialogStep||0)+1;$('dlg').innerHTML='<b>'+n.n+'</b><p>'+n.dialogLines[n.dialogStep]+'</p><small>Toque ou pressione E para continuar</small>';tone(520,.06,'sine',.06);return}open=false;$('dlg').hidden=true;if(n){n.dialogLines=null;n.dialogStep=0}tone(440,.06,'sine',.07);return}
  if(!interior&&near?.t==='icecream'){openIceCreamShop();return}
  if(!interior&&near?.t==='workTarget'&&near.o?.type==='delivery_route'){
@@ -1604,23 +1571,7 @@ function act(){
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
   }
   if(near?.t==='interiorSpot'){
-   if(interior.room.family==='condoHall'&&near.o.condoElevator){openCondoPanel('floor');tone(620,.09,'sine',.06);return}
-   if(interior.room.family==='condoHall'&&near.o.condoUnitId){condoHallDoor(near.o.condoUnitId);tone(620,.09,'sine',.06);return}
-   if(interior.room.family==='condo'){
-    const condoActions={
-     'Falar com a corretora Marta':()=>openCondoPanel('marta'),
-     'Ver o quadro de unidades':()=>openCondoPanel('units'),
-     'Ver a maquete do prédio':()=>toast('Maquete: 15 andares, 60 apartamentos de 40 a 104 m². Fale com a Marta para negociar!'),
-     'Chamar o elevador':()=>openCondoPanel('floor'),
-     'Falar com o porteiro':()=>toast('Seu Zé: Boa tarde! Qualquer coisa, é só chamar.'),
-     'Ligar / desligar a música':()=>{interior.condoParty=!interior.condoParty;toast(interior.condoParty?'🎵 Festa ligada! Aumenta o som!':'Música desligada.')},
-     'Correr na esteira':()=>{toast('Você correu 5 minutos na esteira. 💪');burst(300,.2,.2)},
-     'Falar com o personal Paulo':()=>toast('Paulo: Bora treinar! Começa pela esteira.'),
-     'Dar um mergulho':()=>{toast('Você deu um mergulho refrescante! 🏊');burst(900,.4,.25)},
-     'Pedir um café (cortesia)':()=>toast('Léo: Um café fresquinho saindo! ☕')
-    };
-    const action=condoActions[near.o.label];if(action){action();tone(620,.09,'sine',.06);return}
-   }
+   if(near.o.action){tone(620,.09,'sine',.06);near.o.action();return}
    if(interior.room.family==='condo'&&['Quadro de unidades','Elevadores','Maquete do prédio','Recepção principal'].includes(near.o.label)){openCondoPanel(near.o.label==='Elevadores'?'floor':'units');tone(620,.09,'sine',.06);return}
    if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
    open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
@@ -1636,8 +1587,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('condoPanel').hidden){$('condoPanel').hidden=true;open=false}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){$('condoPanel').hidden=true;open=false}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -2016,7 +1967,7 @@ for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>1&&cr(up[up.length-2
 function wn(c,it,gl){const tx=it.tx,ty=it.ty,q=(a,d,z)=>[P(a[0],a[1],z+18),P(d[0],d[1],z+18),P(d[0],d[1],z),P(a[0],a[1],z)];
 [[it.fl,it.zf,0],[it.fr,it.zr,1]].forEach(([o,zb,k])=>{if(!o)return;for(let z0=zb+34;z0+18<it.z-6;z0+=30){const on=((tx*7+ty*13+z0)%7)<4&&curD>((tx*3+ty*5+z0)%10)/12+.12;if(gl&&!on)continue;poly(c,k?q([tx+1,ty+.25],[tx+1,ty+.75],z0):q([tx+.25,ty+1],[tx+.75,ty+1],z0),gl||on?'#F2B84B':curD<.2?'#6f8fb8':'#27385c');if(!gl){c.strokeStyle='rgba(235,240,248,.55)';c.lineWidth=.8;c.stroke()}}})}
 function frame(now){const t=now/1000,dt=Math.min(.05,(now-last)/1000);last=now;const gm=mode=='game',h=gm?(16.5+(now-gs)/30000)%24:(now/6250)%24;
-update(dt,t,gm,h);render(t,h,gm);if(gm&&ws&&ws.readyState==1){const nw=performance.now();if(interior){const r=multiplayerRoomKey();if(nw-lastInteriorSend>200&&(r!==lastInteriorRoom||ipx!==lastInteriorX||ipy!==lastInteriorY||pd!==lastInteriorD||(pf|0)!==lastInteriorF)){lastInteriorSend=nw;lastInteriorRoom=r;lastInteriorX=ipx;lastInteriorY=ipy;lastInteriorD=pd;lastInteriorF=pf|0;ws.send(JSON.stringify({t:'p',r,x:+ipx.toFixed(2),y:+ipy.toFixed(2),d:pd,f:(pf|0)&3,s:0}))}}else if(nw-lastSend>200&&(px!=lx||py!=ly||pd!=ld||(pf|0)!=lf||(isSeated?1:0)!==ls)){lastSend=nw;lx=px;ly=py;ld=pd;lf=pf|0;ls=isSeated?1:0;ws.send(JSON.stringify({t:'p',r:'city',x:+px.toFixed(2),y:+py.toFixed(2),d:pd,f:(pf|0)&3,s:ls}))}}
+update(dt,t,gm,h);render(t,h,gm);if(gm&&(!interior||interior.room.net)&&ws&&ws.readyState==1){const nw=performance.now(),sx=interior?ipx:px,sy=interior?ipy:py;if(nw-lastSend>200&&(sx!=lx||sy!=ly||pd!=ld||(pf|0)!=lf||(isSeated?1:0)!==ls)){lastSend=nw;lx=sx;ly=sy;ld=pd;lf=pf|0;ls=isSeated?1:0;ws.send(JSON.stringify({t:'p',x:+sx.toFixed(2),y:+sy.toFixed(2),d:pd,f:(pf|0)&3,s:ls}))}}
 if(gm&&ON&&ws&&ws.readyState===1&&myId===trafficAuthorityId){const nw=performance.now();if(nw-lastTrafficSend>200){lastTrafficSend=nw;const snapshot=cars.map(a=>[Math.round(a.x*100),Math.round(a.y*100),Math.round(a.s*100),a.br?1:0]);ws.send(JSON.stringify({t:'v',c:snapshot}))}}
 sound(t,dt,dk(h),Math.max(0,Math.min(1,(Math.sin(t/60+1)-.55)*3)),gm);if(gm&&!interior){drawMM(t);if(fmO)drawFM(t)}
 if(gm){const tip=$('tip');if(near&&!open){tip.hidden=false;tip.textContent=near.t==='icecream'?'E · Comprar sorvetes com '+near.o.name:near.t=='n'?'E · Falar com '+near.o.n:near.t==='bench'?(isSeated?'E · Levantar do banco':'E · Sentar no banco'):near.t==='d'?'E · Entrar: '+near.o.n:near.t==='interiorSpot'?'E · Interagir: '+near.o.label:'E · Sair para a cidade'}else tip.hidden=true;
@@ -2100,17 +2051,18 @@ const CONDO_STARTER={
 };
 const CONDO_STARTER_TYPE={0:1,1:0,2:2,3:3,4:4,5:13,6:5,7:14,8:8,9:15,10:16,11:11,12:17};
 const CONDO_WALLS={A:[],B:[['v',5,0,1],['v',5,3,4],['v',5,5,6],['h',4,5,9]],C:[['v',6,0,1],['v',6,3,4],['v',6,6,7],['h',3,6,11],['h',5,0,1],['h',5,2,3],['v',3,5,7]],D:[['v',7,0,1],['v',7,2,4],['v',7,5,6],['v',7,7,8],['h',3,7,13],['h',5,7,13],['h',6,0,1],['h',6,2,3],['v',3,6,8]]};
-let condoUnits={},condoFloor=1,condoFilter='all',condoSelected=null,condoDetail=null,condoDraft=[],condoNegotiated=null,condoNegotiationAsk=null,condoNegotiationRemaining=5,condoNegotiationLog=[],condoDraftUnitId=null,condoDisplayItems=[],condoSelectedFurniture=null,condoFurnitureRotation=0,condoEditing=false,condoReturnToHall=false;
+let condoUnits={},condoFloor=1,condoFilter='all',condoSelected=null,condoDetail=null,condoDraft=[],condoNegotiated=null,condoNegotiationAsk=null,condoNegotiationRemaining=5,condoNegotiationLog=[],condoDraftUnitId=null,condoDisplayItems=[],condoSelectedFurniture=null,condoFurnitureRotation=0,condoEditing=false;
 const condoPrice=id=>CONDO_AREAS[id.slice(-1)]*(300+40*Number.parseInt(id,10));
 const condoMoney=value=>'R$ '+Number(value||0).toLocaleString('pt-BR');
 async function condoRequest(path,body){const r=await fetch(API+'/condo'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível carregar o condomínio.');return data}
 function openCondoPanel(view='units'){
- if(!interior||!['condo','condoHall'].includes(interior.room.family))return;
- open=true;$('dlg').hidden=true;$('condoPanel').classList.add('zipCondoPanel');$('condoPanel').hidden=false;condoSelected=null;condoDetail=null;condoNegotiated=null;condoNegotiationAsk=null;condoNegotiationRemaining=5;condoFilter='all';condoReturnToHall=false;
+ if(!interior||interior.room.family!=='condo')return;
+ if(view==='floor'){cwElevator();return}
+ open=true;$('dlg').hidden=true;$('condoPanel').classList.add('zipCondoPanel');$('condoPanel').hidden=false;condoSelected=null;condoDetail=null;condoNegotiated=null;condoNegotiationAsk=null;condoNegotiationRemaining=5;condoFilter='all';
  if(view==='marta'){renderCondoMarta();return}
  $('condoFloor').innerHTML='<option value="0">Térreo</option>'+Array.from({length:15},(_,i)=>`<option value="${i+1}">${i+1}º andar</option>`).join('');
- condoFloor=Math.max(1,Math.min(15,condoSceneFloor||condoFloor||1));$('condoFloor').value=String(condoFloor);$('condoMsg').textContent='Carregando unidades e saldo...';$('condoBody').innerHTML='';
- condoRequest('').then(data=>{condoUnits=data.units||{};if(user){user.money=Number(data.money)||user.money;$('hm').textContent=user.money}$('condoMoney').textContent=condoMoney(data.money);if(view==='floor')renderCondoElevator();else renderCondoUnits()}).catch(error=>{$('condoMsg').textContent=error.message});
+ condoFloor=1;$('condoFloor').value=String(condoFloor);$('condoMsg').textContent='Carregando unidades e saldo...';$('condoBody').innerHTML='';
+ condoRequest('').then(data=>{condoUnits=data.units||{};if(user){user.money=Number(data.money)||user.money;$('hm').textContent=user.money}$('condoMoney').textContent=condoMoney(data.money);renderCondoUnits()}).catch(error=>{$('condoMsg').textContent=error.message});
 }
 function drawCondoMarta(){const canvas=$('condoMartaFace');if(canvas)person(canvas.getContext('2d'),32,70,0,0,'#b03a48','#f1c7a0','#2b1b12',{f:true,st:2,pn:'#2a2f45',dr:1})}
 function renderCondoMarta(){
@@ -2137,7 +2089,7 @@ function confirmCondoBuy(button){if(!button.dataset.confirm){button.dataset.conf
 async function beginCondoNegotiation(id){await openCondoUnit(id);if(condoDetail&&!condoDetail.unit){condoNegotiationLog=[];await negotiateCondo(id,0,false,true)}}
 async function openCondoUnit(id){
  condoSelected=id;condoNegotiated=null;condoNegotiationAsk=null;condoNegotiationRemaining=5;condoNegotiationLog=[];condoDraftUnitId=null;condoSelectedFurniture=null;$('condoMsg').textContent=`Consultando apartamento ${id}...`;
- try{condoDetail=await condoRequest('/unit/'+encodeURIComponent(id));renderCondoDetail()}catch(error){$('condoMsg').textContent=error.message}
+ try{condoDetail=await condoRequest('/unit/'+encodeURIComponent(id));if(condoDetail.unit&&interior){closeCondoPanel();cwEnterApt(id,condoDetail);return}renderCondoDetail()}catch(error){$('condoMsg').textContent=error.message}
 }
 function condoFloorPlan(){return '<canvas id="condoPlanCanvas" class="condoPlanCanvas" width="700" height="368" aria-label="Planta isométrica interativa do apartamento"></canvas>'}
 function condoStarter(letter){return CONDO_STARTER[letter].map(([type,x,y,r])=>[CONDO_STARTER_TYPE[type],x,y,r])}
@@ -2177,11 +2129,11 @@ function renderCondoDetail(){
   condoDisplayItems=condoDraft;condoEditing=true;
   const catalog=CONDO_CATALOG.map(type=>{const item=CONDO_FURNITURE[type];return `<button type="button" class="${condoSelectedFurniture===type?'selected':''}" data-condo-add="${type}">${item[0]} ${item[1]} · ${condoMoney(item[2])}</button>`}).join('');
   $('condoBody').innerHTML=`<div class="condoEditBar"><button type="button" id="condoBackToUnits">← Voltar ao corredor</button></div><h3>Seu apartamento · planta decorável</h3><p class="condoNote">Planta e cômodos correspondem ao tipo ${letter} do ZIP. Selecione um móvel e toque em um espaço para posicioná-lo. Móveis iniciais sem custo; mover não cobra; remover não devolve.</p>${condoFloorPlan()}<div class="condoFurniture"><h3>Catálogo de móveis</h3><div class="condoFurnitureGrid">${catalog}</div><div class="condoEditBar"><button type="button" id="condoRemoveMode">🗑 Remover móvel</button><button type="button" id="condoRotateFurniture">↻ Girar ${condoFurnitureRotation?'90°':'0°'}</button><button type="button" id="condoSaveLayout">Salvar decoração</button><button type="button" id="condoToggleOpen">${unit.open?'🔓 Fechar para visitas':'🔒 Abrir para visitas'}</button></div><p class="condoNote">Unidade ${esc(id)} · ${CONDO_AREAS[letter]} m² · ${condoDraft.length} móveis · saldo ${condoMoney(user?.money)}</p></div>`;
-  drawCondoPlan();$('condoBackToUnits').onclick=condoBackFromUnit;$('condoBody').querySelectorAll('[data-condo-add]').forEach(button=>button.onclick=()=>addCondoFurniture(Number(button.dataset.condoAdd)));$('condoRemoveMode').onclick=()=>{condoSelectedFurniture=-1;renderCondoDetail()};$('condoRotateFurniture').onclick=()=>{condoFurnitureRotation^=1;renderCondoDetail()};$('condoSaveLayout').onclick=saveCondoLayout;$('condoToggleOpen').onclick=()=>toggleCondoOpen(!unit.open);return
+  drawCondoPlan();$('condoBackToUnits').onclick=()=>{condoSelected=null;condoDetail=null;renderCondoUnits()};$('condoBody').querySelectorAll('[data-condo-add]').forEach(button=>button.onclick=()=>addCondoFurniture(Number(button.dataset.condoAdd)));$('condoRemoveMode').onclick=()=>{condoSelectedFurniture=-1;renderCondoDetail()};$('condoRotateFurniture').onclick=()=>{condoFurnitureRotation^=1;renderCondoDetail()};$('condoSaveLayout').onclick=saveCondoLayout;$('condoToggleOpen').onclick=()=>toggleCondoOpen(!unit.open);return
  }
- if(unit){condoEditing=false;condoDisplayItems=Array.isArray(unit.layout)?unit.layout:[];$('condoBody').innerHTML=`<div class="condoEditBar"><button type="button" id="condoBackToUnits">← Voltar ao corredor</button></div><div class="condoCard"><div class="condoUnitInfo"><h3>Unidade ${esc(id)}</h3><p>Proprietário: ${esc(unit.owner)}</p><p>O apartamento está ${unit.open?'aberto para visitantes':'fechado para visitantes'}.</p>${unit.open?'<button type="button" id="condoVisit">Entrar no apartamento</button>':'<p class="condoNote">O proprietário precisa liberar a visita pelo painel de acesso.</p>'}</div></div>${condoFloorPlan()}`;drawCondoPlan();$('condoBackToUnits').onclick=condoBackFromUnit;$('condoVisit')?.addEventListener('click',()=>showCondoApartment(id,unit));return}
+ if(unit){condoEditing=false;condoDisplayItems=Array.isArray(unit.layout)?unit.layout:[];$('condoBody').innerHTML=`<div class="condoEditBar"><button type="button" id="condoBackToUnits">← Voltar ao corredor</button></div><div class="condoCard"><div class="condoUnitInfo"><h3>Unidade ${esc(id)}</h3><p>Proprietário: ${esc(unit.owner)}</p><p>O apartamento está ${unit.open?'aberto para visitantes':'fechado para visitantes'}.</p>${unit.open?'<button type="button" id="condoVisit">Entrar no apartamento</button>':'<p class="condoNote">O proprietário precisa liberar a visita pelo painel de acesso.</p>'}</div></div>${condoFloorPlan()}`;drawCondoPlan();$('condoBackToUnits').onclick=()=>{condoSelected=null;condoDetail=null;renderCondoUnits()};$('condoVisit')?.addEventListener('click',()=>showCondoApartment(id,unit));return}
  const negotiated=condoNegotiated?.id===id,ask=condoNegotiationAsk??condoDetail.price;$('condoBody').innerHTML=`<div class="zipCondoChat"><div class="zipCondoChatHead"><canvas id="condoMartaFace" width="64" height="74"></canvas><div><b>Marta · Corretora</b><small>Apto ${esc(id)} · ${CONDO_AREAS[letter]} m² · tabela ${condoMoney(condoDetail.price)}</small></div></div><div class="zipCondoLog" id="condoNegotiationMessages">${condoNegotiationLog.map(message=>`<div class="zipCondoBubble ${message.w}">${esc(message.t)}</div>`).join('')}</div>${negotiated?`<div class="zipCondoChatActions"><button type="button" class="pay" id="condoBuyDeal">✍️ Assinar e pagar ${condoMoney(condoNegotiated.price)}</button><button type="button" id="condoBackToUnits">Sair da negociação</button></div>`:`<div class="zipCondoOffers">${[.95,.9,.85,.8].map(p=>`<button type="button" data-condo-offer="${Math.round(ask*p)}">${condoMoney(Math.round(ask*p))}</button>`).join('')}</div><div class="zipCondoInput"><input id="condoOffer" inputmode="numeric" placeholder="Sua proposta em R$"><button type="button" id="condoNegotiate">Fazer proposta</button></div><div class="zipCondoChatActions"><button type="button" id="condoAccept">Aceitar ${condoMoney(ask)}</button><button type="button" id="condoBackToUnits">Sair da negociação</button></div>`}<div class="zipCondoChatStatus">Pedido atual: ${condoMoney(ask)} · ${condoNegotiationRemaining} rodadas · seu saldo ${condoMoney(user?.money)}</div></div>`;
- drawCondoMarta();$('condoBackToUnits').onclick=condoBackFromUnit;
+ drawCondoMarta();$('condoBackToUnits').onclick=()=>{condoSelected=null;condoDetail=null;renderCondoUnits()};
  $('condoNegotiate')?.addEventListener('click',()=>submitCondoOffer());$('condoOffer')?.addEventListener('keydown',event=>{if(event.key==='Enter')submitCondoOffer()});$('condoBody').querySelectorAll('[data-condo-offer]').forEach(button=>button.onclick=()=>negotiateCondo(id,Number(button.dataset.condoOffer),false));$('condoAccept')?.addEventListener('click',()=>negotiateCondo(id,0,true));$('condoBuyDeal')?.addEventListener('click',()=>buyCondo(id,true));
 }
 function submitCondoOffer(){const offer=Number(String($('condoOffer')?.value||'').replace(/\D/g,''));if(!offer)return toast('Digite o valor da sua proposta.');negotiateCondo(condoSelected,offer,false)}
@@ -2203,6 +2155,188 @@ async function toggleCondoOpen(value){try{if(value&&condoDetail.unit.layout===nu
 function showCondoApartment(id,unit){$('condoTitle').textContent=`Apartamento ${id}`;$('condoIntro').textContent=`Visita aberta · ${unit.owner}`;condoEditing=false;condoDisplayItems=unit.layout||[];$('condoBody').innerHTML=`<div class="condoEditBar"><button type="button" id="condoBackUnit">← Voltar ao corredor</button></div>${condoFloorPlan()}`;drawCondoPlan();$('condoBackUnit').onclick=()=>{ $('condoTitle').textContent='Seu próximo endereço';$('condoIntro').textContent='Consulte os andares, negocie uma unidade e organize seu apartamento.';renderCondoDetail()}}
 $('condoFloor').onchange=()=>{condoSelected=null;condoDetail=null;renderCondoUnits()};$('condoMine').onclick=()=>{condoFilter='mine';const owned=Object.keys(condoUnits).find(id=>condoUnits[id].mine);if(owned){condoFloor=Number.parseInt(owned,10);$('condoFloor').value=String(condoFloor)}condoSelected=null;condoDetail=null;renderCondoUnits()};$('condoAll').onclick=()=>{condoFilter='all';condoSelected=null;condoDetail=null;renderCondoUnits()};
 $('condoClose').onclick=closeCondoPanel;
+/* ---------- SOROKIBA TOWER: elevador, andares e apartamentos andáveis ---------- */
+function toast(m){const e=$('cwToast');e.textContent=m;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{e.hidden=true},4200)}
+const CW_FD=[
+(c,x,y,w,h)=>{const L=w>=h;box(c,x+.04,y+.04,w-.08,h-.08,0,15,'#8fa3b5','#a6b8c9');L?box(c,x+.04,y+.04,w-.08,.26,15,38,'#7a8fa2','#8fa3b5'):box(c,x+.04,y+.04,.26,h-.08,15,38,'#7a8fa2','#8fa3b5');
+if(L){box(c,x+.04,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5');box(c,x+w-.24,y+.04,.2,h-.08,15,27,'#7a8fa2','#8fa3b5')}else{box(c,x+.04,y+.04,w-.08,.2,15,27,'#7a8fa2','#8fa3b5');box(c,x+.04,y+h-.24,w-.08,.2,15,27,'#7a8fa2','#8fa3b5')}},
+(c,x,y,w,h)=>{box(c,x+.04,y+.04,w-.08,h-.08,0,9,'#6b4a2b','#6b4a2b');box(c,x+.1,y+.1,w-.2,h-.2,9,17,'#efe9dc','#f7f2e8');
+if(w>=h){box(c,x+.04,y+.04,.16,h-.08,9,36,'#5a3d22','#6b4a2b');box(c,x+.25,y+.2,.35,h*.38,17,22,'#fff','#fff');box(c,x+.25,y+h*.58,.35,h*.38,17,22,'#fff','#fff');box(c,x+.7,y+.12,w-.85,h-.24,17,19,'#6d8cff','#7f9bff')}
+else{box(c,x+.04,y+.04,w-.08,.16,9,36,'#5a3d22','#6b4a2b');box(c,x+.2,y+.25,w*.38,.35,17,22,'#fff','#fff');box(c,x+w*.58,y+.25,w*.38,.35,17,22,'#fff','#fff');box(c,x+.12,y+.7,w-.24,h-.85,17,19,'#6d8cff','#7f9bff')}},
+(c,x,y,w,h)=>{[[.08,.08],[w-.2,.08],[.08,h-.2],[w-.2,h-.2]].forEach(([a,b])=>box(c,x+a,y+b,.12,.12,0,24,'#6b4a2b','#6b4a2b'));box(c,x+.02,y+.1,w-.04,h-.2,24,28,'#a47a4a','#b98a56')},
+(c,x,y)=>{[[.15,.15],[.65,.15],[.15,.65],[.65,.65]].forEach(([a,b])=>box(c,x+a,y+b,.1,.1,0,13,'#6b4a2b','#6b4a2b'));box(c,x+.1,y+.1,.8,.8,13,17,'#c9a06a','#d9b27c');box(c,x+.1,y+.1,.8,.12,17,38,'#b88d58','#c9a06a')},
+(c,x,y,w,h)=>{box(c,x+.05,y+.1,w-.1,h-.2,0,13,'#3a2f28','#4a3d34');if(w>=h){box(c,x+.3,y+.38,w-.6,.1,13,38,'#0e0e12','#111');poly(c,[P(x+.36,y+.48,35),P(x+w-.36,y+.48,35),P(x+w-.36,y+.48,16),P(x+.36,y+.48,16)],'#2f6fb8')}else{box(c,x+.38,y+.3,.1,h-.6,13,38,'#0e0e12','#111');poly(c,[P(x+.48,y+.36,35),P(x+.48,y+h-.36,35),P(x+.48,y+h-.36,16),P(x+.48,y+.36,16)],'#2f6fb8')}},
+(c,x,y,w,h)=>{box(c,x+.06,y+.06,w-.12,h-.12,0,66,'#7a4f2a','#8a5c33');c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=1.2;[22,44].forEach(z=>ln(c,P(x+.06,y+h-.06,z),P(x+w-.06,y+h-.06,z)));[['#c0392b',12],['#2e86ab',34],['#f1c40f',56]].forEach(([col,z])=>poly(c,[P(x+.2,y+h-.06,z+9),P(x+.5,y+h-.06,z+9),P(x+.5,y+h-.06,z),P(x+.2,y+h-.06,z)],col))},
+(c,x,y,w,h)=>{box(c,x+.06,y+.06,w-.12,h-.12,0,64,'#dfe5ea','#f1f5f8');c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=1;ln(c,P(x+.06,y+h-.06,38),P(x+w-.06,y+h-.06,38));poly(c,[P(x+.8,y+h-.06,30),P(x+.86,y+h-.06,30),P(x+.86,y+h-.06,18),P(x+.8,y+h-.06,18)],'#8a949e')},
+(c,x,y,w,h)=>{box(c,x+.04,y+.06,w-.08,h-.12,0,28,'#8d99a5','#4a4f57');const L=w>=h;[.3,.7].forEach(a=>{const q=P(x+(L?w*a:.5),y+(L?.5:h*a),28);c.fillStyle='#222';c.beginPath();c.ellipse(q[0],q[1],5,2.5,0,0,7);c.fill();c.fillStyle='#e74c3c';c.beginPath();c.ellipse(q[0],q[1],1.8,.9,0,0,7);c.fill()})},
+(c,x,y)=>{box(c,x+.3,y+.3,.4,.4,0,12,'#b5651d','#c9772a');const q=P(x+.5,y+.5,12);[['#2f8f4e',13,22],['#3fae63',10,31],['#4ccb78',7,38]].forEach(([col,r,z])=>{c.fillStyle=col;c.beginPath();c.arc(q[0],q[1]-z+12,r,0,7);c.fill()})},
+(c,x,y,w,h)=>{poly(c,[P(x+.05,y+.05,1),P(x+w-.05,y+.05,1),P(x+w-.05,y+h-.05,1),P(x+.05,y+h-.05,1)],'#a83240');poly(c,[P(x+.25,y+.25,1.5),P(x+w-.25,y+.25,1.5),P(x+w-.25,y+h-.25,1.5),P(x+.25,y+h-.25,1.5)],'#c9485a')},
+(c,x,y)=>{box(c,x+.42,y+.42,.16,.16,0,3,'#333','#333');box(c,x+.47,y+.47,.06,.06,3,44,'#444','#555');box(c,x+.3,y+.3,.4,.4,40,54,'#f3e3b3','#fff3c4')},
+(c,x,y,w,h)=>{box(c,x+.05,y+.05,w-.1,h-.1,0,68,'#c9b79c','#d9ccb4');c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=1;w>=h?ln(c,P(x+w/2,y+h-.05,68),P(x+w/2,y+h-.05,0)):ln(c,P(x+w-.05,y+h/2,68),P(x+w-.05,y+h/2,0))},
+(c,x,y,w,h)=>{const L=w>=h;[[.08,.1],[w-.2,.1],[.08,h-.22],[w-.2,h-.22]].forEach(([a,b])=>box(c,x+a,y+b,.12,.12,0,22,'#bbb','#bbb'));box(c,x+.02,y+.1,w-.04,h-.2,22,25,'#e6e6e6','#f4f4f4');
+const mx=x+(L?w*.4:.3),my=y+(L?.25:h*.4);box(c,mx,my,L?.5:.12,L?.12:.5,25,45,'#111','#222');poly(c,L?[P(mx+.04,my+.12,43),P(mx+.46,my+.12,43),P(mx+.46,my+.12,28),P(mx+.04,my+.12,28)]:[P(mx+.12,my+.04,43),P(mx+.12,my+.46,43),P(mx+.12,my+.46,28),P(mx+.12,my+.04,28)],'#4aa3ff')}];
+// ids do catálogo gravado no banco -> desenho; ids antigos (janela, porta, banheira, chuveiro, quadro) têm desenho próprio
+const CW_MAP={0:1,1:0,2:2,3:3,4:4,5:6,8:8,11:11,13:5,14:7,15:9,16:10,17:12};
+const CW_LEG={
+6:(c,x,y)=>{box(c,x+.1,y+.42,.8,.1,0,60,'#e9e2d6','#d4cbbd');poly(c,[P(x+.18,y+.52,52),P(x+.82,y+.52,52),P(x+.82,y+.52,14),P(x+.18,y+.52,14)],'#bfe3f7')},
+7:(c,x,y)=>{box(c,x+.12,y+.42,.76,.1,0,58,'#7a4f2a','#8a5c33');const q=P(x+.75,y+.52,28);c.fillStyle='#F2B84B';c.fillRect(q[0]-1,q[1]-1,3,3)},
+9:(c,x,y,w,h)=>{box(c,x+.05,y+.05,w-.1,h-.1,0,18,'#f4f7f9','#f4f7f9');poly(c,[P(x+.25,y+.25,14),P(x+w-.25,y+.25,14),P(x+w-.25,y+h-.25,14),P(x+.25,y+h-.25,14)],'#9fd4e8')},
+10:(c,x,y)=>{box(c,x+.2,y+.2,.6,.6,0,2,'#cfd6de','#dfe5ea');box(c,x+.4,y+.4,.2,.2,2,62,'#cfd6de','#e8edf2')},
+12:(c,x,y,w)=>{box(c,x+.1,y+.4,w-.2,.08,10,54,'#3a2a1a','#4a3a2a');poly(c,[P(x+.2,y+.48,48),P(x+w-.2,y+.48,48),P(x+w-.2,y+.48,16),P(x+.2,y+.48,16)],'#7da6c9')}};
+function cwDrawItem(c,type,x,y,w,h){const m=CW_MAP[type];if(m!==undefined)CW_FD[m](c,x,y,w,h);else if(CW_LEG[type])CW_LEG[type](c,x,y,w,h)}
+function cwFloorCol(ty,x,y,t,party){const a=(x+y)%2;switch(ty){
+case'm':return a?'#efe9dc':'#d9d1c0';case't':return a?'#d8dde2':'#cdd3d9';case'c':return a?'#7b6b8d':'#85759a';case'g':return a?'#3b3f47':'#33363d';
+case'k':return a?'#e9d9bf':'#dfcba8';case's':return a?'#8a96a3':'#7d8996';case'q':return a?'#e8dcc4':'#dccfb2';
+case'p':{const v=Math.sin(t*2+x*.9+y*.7)*.5+.5;return'rgb('+(50+v*30|0)+','+(150+v*40|0)+','+(205+v*30|0)+')'}
+case'd':return party?['#c0392b','#8e44ad','#2980b9','#16a085','#f39c12'][(x*7+y*13+(t*2.5|0))%5]:(a?'#4a3f5a':'#40364f');
+default:return a?'#b98a5a':'#c19564'}}
+let cwSel=0,cwRot=0,cwHover=null,cwInvData=null,cwRiding=false;
+const cwScene=()=>interior&&interior.room&&interior.room.shape==='condo-scene'?interior.room.cw:null;
+const cwOwn=u=>!!(u&&u.mine);
+function cwNet(room,x,y){RP.clear();if(ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:room,x:+x.toFixed(2),y:+y.toFixed(2)}))}
+function cwResync(){if(!interior||!interior.room||!interior.room.net||!ws||ws.readyState!==1)return;const r=interior.room.net;ws.send(JSON.stringify({t:'room',r,x:+ipx.toFixed(2),y:+ipy.toFixed(2)}))}
+function cwBuildRoom(s){
+ const items=[],blk=(x,y,w,d)=>items.push({x:x+.3,y:y+.3,w:Math.max(.1,w-.6),d:Math.max(.1,d-.6),h:0,solid:true});
+ (s.items||[]).forEach(([t,x,y,r])=>{if(t===15)return;const[w,h]=condoFurnitureSize(t,r);blk(x,y,w,h)});
+ (s.dec||[]).forEach(([n,x,y])=>{if(n==='ball')return;const d=DEC[n]?.s||[1,1];blk(x,y,d[0],d[1])});
+ (s.blk||[]).forEach(b=>blk(b[0],b[1],b[2],b[3]));
+ return{title:s.title,family:'condo',shape:'condo-scene',subtitle:s.subtitle||'',width:s.w,depth:s.h,items,
+  zones:(s.spots||[]).map(p=>({label:p.label,x:p.x,y:p.y,r:p.r||1.1,desc:p.desc||'',action:p.action})),people:[],
+  dividers:(s.walls||[]).map(([axis,pos,from,to])=>({axis,pos,from,to})),exit:{x:-50,y:-50},net:s.net||null,cw:s}}
+function cwEnterRoom(spec,sx,sy){
+ if(!interior)return;const room=cwBuildRoom(spec);room.cw.party=false;room.cw.nb=0;
+ interior.room=room;interior.cwCam=null;interior.zipCamera=null;
+ const st=findRoomSpot(room,sx,sy)||{x:sx,y:sy};ipx=st.x;ipy=st.y;pd=0;pf=0;near=null;open=false;cwHover=null;$('dlg').hidden=true;
+ cwHidePanels();cwPanels();if(room.net)cwNet(room.net,ipx,ipy)}
+function cwEnterGround(){
+ if(!interior)return;const room=makeInterior(interior.building),entry={x:1.25,y:7.5},st=findRoomSpot(room,entry.x,entry.y);
+ room.net='ground';interior.room=room;interior.cwCam=null;interior.zipCamera=null;ipx=st?.x??entry.x;ipy=st?.y??entry.y;pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;
+ cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
+function cwPanels(){const r=interior&&interior.room,sc=$('condoScenePanel');if(!sc)return;
+ const scene=r&&r.shape==='condo-scene',apt=scene&&r.cw.kind==='apt',ground=r&&r.shape==='condo-ground';
+ sc.hidden=!(ground||(scene&&!apt));
+ if(!sc.hidden){sc.querySelector('b').textContent='Sorokiba Tower';sc.querySelector('span').textContent=ground?'Térreo · recepção e áreas comuns':r.cw.title+' · corredor do prédio';$('condoSceneExit').hidden=!ground}
+ $('cwPanel').hidden=!apt;if(apt)cwAptUI()}
+function cwHidePanels(){$('cwElev').hidden=true;$('cwPanel').hidden=true}
+/* ----- elevador ----- */
+async function cwElevator(){
+ if(!interior||cwRiding)return;open=true;try{const data=await condoRequest('');condoUnits=data.units||condoUnits;if(user&&Number.isFinite(Number(data.money)))user.money=Number(data.money)}catch(_){}
+ const cur=interior.room.shape==='condo-scene'&&interior.room.cw.kind==='floor'?interior.room.cw.floor:0;
+ let b='<button type="button" class="cwEb t'+(cur===0?' cur':'')+'" data-f="0">T</button>';
+ for(let i=1;i<=15;i++){const mine=['A','B','C','D'].some(L=>cwOwn(condoUnits[i+L]));b+='<button type="button" class="cwEb'+(mine?' mine':'')+(i===cur?' cur':'')+'" data-f="'+i+'">'+i+'</button>'}
+ const e=$('cwElev');e.innerHTML='<div class="cwEv"><div class="cwEvTop">SOROKIBA TOWER · ELEVADOR</div><div class="cwEvCab"><div class="cwEvIn"></div><div class="cwEvDoors open" id="cwEd"><i></i><i></i></div><div class="cwEvDisp" id="cwEdp">'+(cur||'T')+'</div></div><div class="cwEvPan">'+b+'</div><div class="cwEvHint">Escolha o andar · os botões dourados são os seus</div><button type="button" class="cwBack" id="cwElevBack">← Voltar</button></div>';
+ e.hidden=false;e.dataset.cur=cur;
+ e.querySelectorAll('.cwEb').forEach(btn=>btn.onclick=()=>cwRide(Number(btn.dataset.f)));$('cwElevBack').onclick=cwCloseElev;tone(520,.08,'sine',.05)}
+function cwCloseElev(){if(cwRiding)return;$('cwElev').hidden=true;open=false}
+function cwRide(f){
+ const e=$('cwElev'),cur=Number(e.dataset.cur);if(cwRiding)return;if(f===cur){cwCloseElev();return}
+ cwRiding=true;const d=$('cwEd'),dp=$('cwEdp'),dir=f>cur?1:-1;let n=cur;d.classList.remove('open');
+ setTimeout(()=>{const iv=setInterval(()=>{n+=dir;dp.textContent=n||'T';tone(520,.05,'square',.03);if(n===f){clearInterval(iv);tone(880,.3,'sine',.07);d.classList.add('open');setTimeout(async()=>{
+  try{const data=await condoRequest('');condoUnits=data.units||condoUnits;if(user&&Number.isFinite(Number(data.money)))user.money=Number(data.money)}catch(_){}
+  cwRiding=false;e.hidden=true;open=false;if(!interior)return;if(f)cwEnterFloor(f);else cwEnterGround()},1100)}},320)},700)}
+/* ----- corredores ----- */
+function cwEnterFloor(f,doorIndex){
+ const dx=[3,7,11,15],ids=['A','B','C','D'].map(L=>f+L),st=id=>{const u=condoUnits[id];return cwOwn(u)?'mine':u?'own':'free'};
+ const spec={kind:'floor',floor:f,title:f+'º andar',w:18,h:5,rooms:[[0,0,18,5,'Corredor','c']],walls:[],net:'floor:'+f,
+  items:[[8,1,0,0],[8,17,0,0],[16,17,4,0],[8,0,4,0]],dec:[['bench2',5,4],['bench2',12,4],['cooler',9,0]],
+  spots:[{label:'Chamar o elevador',x:.9,y:2.5,r:1.3,action:cwElevator}].concat(ids.map((id,k)=>({x:dx[k]+.5,y:1.2,r:1.1,label:st(id)==='mine'?'Entrar em casa (Apto '+id+')':st(id)==='own'?'Bater na porta de '+condoUnits[id].o+' (Apto '+id+')':'Apto '+id+' · à venda',action:()=>cwDoor(id)}))),
+  dN:(i,t)=>{const k=dx.indexOf(i);if(k<0)return false;const id=ids[k],s=st(id);poly(c,[P(i+.1,0,58),P(i+.9,0,58),P(i+.9,0,0),P(i+.1,0,0)],'#7a4f2a');c.strokeStyle='#d8c9a8';c.lineWidth=1.5;c.stroke();poly(c,[P(i+.22,0,50),P(i+.78,0,50),P(i+.78,0,34),P(i+.22,0,34)],'#6a4423');
+   const q=P(i+.5,0,66);c.fillStyle=s==='mine'?'#F2B84B':s==='own'?'#ff6b6b':'#7bf07b';c.beginPath();c.arc(q[0],q[1],3,0,7);c.fill();const n=P(i+.5,0,42);c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#F2B84B';c.fillText(id,n[0],n[1]+3);const g=P(i+.8,0,26);c.fillStyle='#F2B84B';c.fillRect(g[0]-1,g[1]-1,3,3);return true},
+  dW:j=>{if(j!==2)return false;poly(c,[P(0,j+.08,62),P(0,j+.5,62),P(0,j+.5,0),P(0,j+.08,0)],'#aab2ba');poly(c,[P(0,j+.5,62),P(0,j+.92,62),P(0,j+.92,0),P(0,j+.5,0)],'#9aa2aa');const q=P(0,j+.5,68);c.fillStyle='#100';c.fillRect(q[0]-8,q[1]-3,16,6);c.fillStyle='#ff4d4d';c.font='bold 8px monospace';c.textAlign='center';c.fillText(String(f),q[0],q[1]+3);return true}};
+ cwEnterRoom(spec,doorIndex==null?1.7:dx[doorIndex]+.5,doorIndex==null?2.5:2.3)}
+async function cwDoor(id){
+ const u=condoUnits[id];if(!u){toast('À venda. Negocie com a corretora Marta, no térreo.');return}
+ try{const detail=await condoRequest('/unit/'+encodeURIComponent(id));cwEnterApt(id,detail)}catch(e){toast(e.message||'A porta está trancada. Peça um convite ao morador.')}}
+/* ----- apartamento ----- */
+function cwEnterApt(id,detail){
+ if(!interior||!detail||!detail.unit)return;const L=id.slice(-1),size=CONDO_SIZES[L],dy=CONDO_ENTRY_DY[L],own=!!detail.isOwner,unit=detail.unit;
+ const first=own&&unit.layout===null,items=Array.isArray(unit.layout)?unit.layout.map(i=>i.slice()):(first?condoStarter(L):[]);
+ const spec={kind:'apt',id,L,title:'Apto '+id,w:size[0],h:size[1],rooms:CONDO_LAYOUTS[L].r,walls:CONDO_WALLS[L],net:'apt:'+id,items,saved:JSON.stringify(items),old:Array.isArray(unit.layout)?unit.layout.map(i=>i.slice()):null,
+  own,owner:unit.owner,open:!!unit.open,dy,deco:false,spots:[{label:'Sair do apartamento',x:.8,y:dy+.5,r:1.2,action:()=>cwExitApt()}]};
+ cwSel=CONDO_CATALOG[0];cwRot=0;cwHover=null;cwEnterRoom(spec,1.2,dy+.5);
+ if(first)cwSave(true)}
+function cwItemOk(s,type,x,y,rot,skip){
+ const[w,h]=condoFurnitureSize(type,rot);if(x<0||y<0||x+w>s.w||y+h>s.h)return false;if(y<=s.dy&&y+h>s.dy&&x<2)return false;
+ for(const[axis,pos,from,to]of s.walls){if(axis==='v'?(x<pos&&x+w>pos&&y<to&&y+h>from):(y<pos&&y+h>pos&&x<to&&x+w>from))return false}
+ if(type===15)return true;
+ return !s.items.some((it,i)=>{if(i===skip||it[0]===15)return false;const[ow,oh]=condoFurnitureSize(it[0],it[3]);return x<it[1]+ow&&x+w>it[1]&&y<it[2]+oh&&y+h>it[2]})}
+function cwRefreshColl(){const r=interior.room,s=r.cw,items=[];
+ s.items.forEach(([t,x,y,rot])=>{if(t===15)return;const[w,h]=condoFurnitureSize(t,rot);items.push({x:x+.3,y:y+.3,w:Math.max(.1,w-.6),d:Math.max(.1,h-.6),h:0,solid:true})});r.items=items}
+function cwCost(){const s=cwScene();if(!s||!s.old)return 0;const n=Array(CONDO_FURNITURE.length).fill(0);s.items.forEach(i=>n[i[0]]++);s.old.forEach(i=>n[i[0]]--);return n.reduce((sum,v,t)=>sum+(v>0?v*CONDO_FURNITURE[t][2]:0),0)}
+async function cwSave(first){
+ const s=cwScene();if(!s||!s.own)return;
+ try{const r=await condoRequest('/layout',{u:s.id,items:s.items});if(r.player)user=r.player;$('hm').textContent=user.money;s.old=s.items.map(i=>i.slice());s.saved=JSON.stringify(s.items);cwCostLabel();if(!first){toast('Decoração salva!');tone(660,.1,'sine',.08)}}
+ catch(e){if(!first)toast(e.message)}}
+function cwCostLabel(){const e=$('cwCost');if(e){const c=cwCost();e.textContent=c?'Custo: '+condoMoney(c):'Sem custo extra'}}
+function cwAptUI(){
+ const s=cwScene(),e=$('cwPanel');if(!s)return;e.hidden=false;
+ let h='<div class="cwH"><b>Apto '+s.id+'</b><span>'+CONDO_AREAS[s.L]+' m² · '+['Studio','1 quarto','2 quartos','3 quartos'][['A','B','C','D'].indexOf(s.L)]+'</span><span>Dono: '+s.owner+'</span></div><div class="cwB"><button type="button" id="cwExit">🚪 Sair</button>';
+ if(s.own)h+='<button type="button" id="cwDeco" class="'+(s.deco?'on':'')+'">🎨 Decorar</button><button type="button" id="cwOpen">'+(s.open?'🔓 Aberta':'🔒 Fechada')+'</button>';
+ h+='</div>';if(s.own)h+='<div class="cwI"><input id="cwFriend" maxlength="14" placeholder="Convidar amigo (nome)" autocomplete="off"><button type="button" id="cwInvite">Convidar</button></div>';
+ if(s.own&&s.deco)h+='<div class="cwCat">'+CONDO_CATALOG.map(t=>'<button type="button" class="cwCi'+(cwSel===t?' on':'')+'" data-t="'+t+'"><i>'+CONDO_FURNITURE[t][0]+'</i><b>'+CONDO_FURNITURE[t][1]+'</b><small>'+condoMoney(CONDO_FURNITURE[t][2])+'</small></button>').join('')+'<button type="button" class="cwCi'+(cwSel===-1?' on':'')+'" data-t="-1"><i>🗑️</i><b>Remover</b><small>toque no móvel</small></button></div><div class="cwS"><span id="cwCost"></span><button type="button" id="cwRot">↻ Girar (R)</button><button type="button" id="cwSave" class="sv">Salvar</button></div>';
+ e.innerHTML=h;$('cwExit').onclick=()=>cwExitApt();
+ if(s.own){$('cwDeco').onclick=()=>{s.deco=!s.deco;cwHover=null;cwAptUI()};$('cwOpen').onclick=cwToggleOpen;$('cwInvite').onclick=cwSendInvite;$('cwFriend').onkeydown=ev=>{ev.stopPropagation();if(ev.key==='Enter')cwSendInvite()};
+  e.querySelectorAll('.cwCi').forEach(b=>b.onclick=()=>{cwSel=Number(b.dataset.t);cwAptUI()});if(s.deco){$('cwRot').onclick=()=>{cwRot^=1};$('cwSave').onclick=()=>cwSave(false);cwCostLabel()}}}
+async function cwToggleOpen(){const s=cwScene();if(!s)return;const v=!s.open;
+ try{if(v&&s.old===null){await cwSave(true)}await condoRequest('/open',{u:s.id,open:v});s.open=v;cwAptUI();toast(v?'Casa aberta: qualquer jogador pode visitar.':'Casa fechada: só com convite.')}catch(e){toast(e.message)}}
+function cwSendInvite(){const s=cwScene();if(!s)return;const n=$('cwFriend').value.trim();if(!n)return;if(!ws||ws.readyState!==1)return toast('Convites só funcionam online.');ws.send(JSON.stringify({t:'condoInvite',to:n,u:s.id}));$('cwFriend').value=''}
+async function cwExitApt(){
+ const s=cwScene();if(!s||s.leaving)return;s.leaving=true;if(s.own&&JSON.stringify(s.items)!==s.saved)toast('As alterações não salvas foram descartadas.');
+ try{const data=await condoRequest('');condoUnits=data.units||condoUnits;if(user&&Number.isFinite(Number(data.money)))user.money=Number(data.money)}catch(_){}
+ if(!interior)return;cwEnterFloor(Number.parseInt(s.id,10),['A','B','C','D'].indexOf(s.L))}
+function cwShowInvite(m){cwInvData=m;const e=$('cwInv');e.hidden=false;e.textContent='';const b=document.createElement('b');b.textContent=m.from;e.append(b,' convidou você para o apto '+m.u);
+ const row=document.createElement('div'),ok=document.createElement('button'),no=document.createElement('button');ok.textContent='Aceitar';no.textContent='Agora não';ok.onclick=cwAcceptInvite;no.onclick=()=>{e.hidden=true};row.append(ok,no);e.append(row);
+ tone(740,.12,'sine',.07);clearTimeout(cwShowInvite.t);cwShowInvite.t=setTimeout(()=>{e.hidden=true},20000)}
+async function cwAcceptInvite(){
+ $('cwInv').hidden=true;const m=cwInvData;if(!m)return;const building=B.find(b=>b.n==='Condomínio');if(!building)return;
+ if(!interior)enterBuilding(building);
+ try{const data=await condoRequest('');condoUnits=data.units||condoUnits}catch(_){}
+ try{const detail=await condoRequest('/unit/'+encodeURIComponent(m.u));cwEnterApt(m.u,detail)}catch(e){toast(e.message)}}
+/* ----- ações e atualização por quadro ----- */
+function cwTick(dt,t){
+ const room=interior&&interior.room;if(!room||!room.net)return;
+ RP.forEach(q=>{const a=Math.min(1,dt*9);q.x+=(q.tx-q.x)*a;q.y+=(q.ty-q.y)*a});
+ const s=room.cw;if(s&&s.party&&t>s.nb){s.nb=t+.5;burst(110,.1,.3);tone(220,.12,'square',.03)}}
+function cwRemotes(V){RP.forEach(q=>V.push({k:q.x+q.y,f:()=>{const p=P(q.x,q.y);person(c,p[0],p[1],q.d,q.f,q.lk.col,q.lk.skin,q.lk.hr||'#2b1b12',q.o)}}))}
+function cwRemoteLabels(){c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';
+ const mine=P(ipx,ipy,44);bub(c,myBub,mine[0],mine[1]-14);
+ RP.forEach(q=>{const u=P(q.x,q.y,44),nm=(q.lk.role==='prefeito'?'👑 ':'')+q.n;c.font='bold 10px sans-serif';c.strokeText(nm,u[0],u[1]);c.fillStyle=q.lk.role==='prefeito'?'#F2B84B':'#9ff0e4';c.fillText(nm,u[0],u[1]);bub(c,q.bub,u[0],u[1]-14)})}
+function cwPtw(e){const S=interior.room.cw,Za=S.Za,cc=S.cc,sx=(e.clientX-(S.ox-cc[0]*Za))/Za,sy=(e.clientY-(H/2+8-cc[1]*Za))/Za;return[(sx/32+sy/16)/2,(sy/16-sx/32)/2]}
+function cwHoverAt(e){const s=cwScene();if(!s)return;const[x,y]=cwPtw(e);if(cwSel>=0){const[w,h]=condoFurnitureSize(cwSel,cwRot);cwHover=[Math.floor(x-w/2+.5),Math.floor(y-h/2+.5)]}else cwHover=[Math.floor(x),Math.floor(y)]}
+function cwPointAt(e){const s=cwScene();if(!s)return;cwHoverAt(e);const[x,y]=cwHover;
+ if(cwSel>=0){if(cwItemOk(s,cwSel,x,y,cwRot,-1)&&s.items.length<80){s.items.push([cwSel,x,y,cwRot]);cwRefreshColl();cwCostLabel();tone(520,.05,'sine',.06)}else tone(180,.08,'square',.04)}
+ else{let idx=-1;s.items.forEach(([t,ix,iy,r],k)=>{const[w,h]=condoFurnitureSize(t,r);if(x>=ix&&x<ix+w&&y>=iy&&y<iy+h)idx=k});if(idx>=0){s.items.splice(idx,1);cwRefreshColl();cwCostLabel();tone(300,.07,'triangle',.06)}}}
+cv.addEventListener('pointerdown',e=>{const s=cwScene();if(s&&s.kind==='apt'&&s.deco&&s.own){e.stopImmediatePropagation();cwPointAt(e)}},true);
+cv.addEventListener('pointermove',e=>{const s=cwScene();if(s&&s.kind==='apt'&&s.deco&&s.own)cwHoverAt(e)},true);
+addEventListener('keydown',e=>{const s=cwScene();if(!s||s.kind!=='apt'||!s.deco||document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))return;if(e.key.toLowerCase()==='r'){cwRot^=1;e.preventDefault()}});
+function cwRender(t,h){
+ const room=interior.room,S=room.cw,D=dk(h),wc=D>.4?'#243a63':'#bfe3f7';
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const g2=c.createLinearGradient(0,0,0,H);g2.addColorStop(0,'#1c1728');g2.addColorStop(1,'#0d0b13');c.fillStyle=g2;c.fillRect(0,0,W,H);
+ const apt=S.kind==='apt',av=apt&&W>760?W-340:W,w=S.w,hh=S.h;
+ const Za=apt?Math.min(av/((w+hh)*32+90),(H-90)/((w+hh)*16+140)):Z*1.25,cc=apt?P(w/2,hh/2,30):(()=>{const tg=P(ipx,ipy,20);interior.cwCam??={x:tg[0],y:tg[1]};interior.cwCam.x+=(tg[0]-interior.cwCam.x)*.14;interior.cwCam.y+=(tg[1]-interior.cwCam.y)*.14;return[interior.cwCam.x,interior.cwCam.y]})(),ox=apt?av/2:W/2;
+ S.Za=Za;S.cc=cc;S.ox=ox;const tf=()=>c.setTransform(Za,0,0,Za,Math.round(ox-cc[0]*Za),Math.round(H/2+8-cc[1]*Za));tf();c.imageSmoothingEnabled=false;
+ const ft=[];S.rooms.forEach(r=>{for(let y=r[1];y<r[1]+r[3];y++)for(let x=r[0];x<r[0]+r[2];x++)ft[y*40+x]=r[5]});
+ const vw=W/2/Za+80,vh=H/2/Za+90;
+ for(let y=0;y<hh;y++)for(let x=0;x<w;x++){const ty=ft[y*40+x]||'w',s=P(x+.5,y+.5);if(Math.abs(s[0]-cc[0])>vw||Math.abs(s[1]-cc[1])>vh)continue;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],cwFloorCol(ty,x,y,t,S.party));
+  c.lineWidth=1;c.strokeStyle='rgba(0,0,0,.12)';if(ty==='w'){ln(c,P(x,y+.33),P(x+1,y+.33));ln(c,P(x,y+.66),P(x+1,y+.66))}}
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(255,255,255,.55)';S.rooms.forEach(r=>{if(!r[4])return;const q=P(r[0]+r[2]/2,r[1]+r[3]/2);c.fillText(r[4],q[0],q[1])});
+ const wN=i=>{box(c,i,-.14,1,.14,0,72,'#e9e2d6','#d4cbbd');poly(c,[P(i,0,6),P(i+1,0,6),P(i+1,0),P(i,0)],'rgba(0,0,0,.18)');if(S.dN&&S.dN(i,t)){}else if(i%3===1&&i<w-1){poly(c,[P(i+.12,0,60),P(i+.88,0,60),P(i+.88,0,26),P(i+.12,0,26)],wc);c.strokeStyle='#f5efe3';c.lineWidth=1.5;c.stroke();ln(c,P(i+.5,0,60),P(i+.5,0,26))}};
+ const wW=j=>{box(c,-.14,j,.14,1,0,72,'#e9e2d6','#d4cbbd');poly(c,[P(0,j,6),P(0,j+1,6),P(0,j+1),P(0,j)],'rgba(0,0,0,.18)');
+  if(apt&&j===S.dy){poly(c,[P(0,j+.1,56),P(0,j+.9,56),P(0,j+.9),P(0,j+.1)],'#7a4f2a');c.strokeStyle='#d8c9a8';c.lineWidth=1.5;c.stroke();const q=P(0,j+.78,26);c.fillStyle='#F2B84B';c.fillRect(q[0]-1,q[1]-1,3,3);poly(c,[P(0,j+.2,66),P(0,j+.8,66),P(0,j+.8,60),P(0,j+.2,60)],'#2ecc71')}
+  else if(S.dW&&S.dW(j,t)){}else if(j%3===1&&j>0){poly(c,[P(0,j+.12,60),P(0,j+.88,60),P(0,j+.88,26),P(0,j+.12,26)],wc);c.strokeStyle='#f5efe3';c.lineWidth=1.5;c.stroke();ln(c,P(0,j+.5,60),P(0,j+.5,26))}};
+ const V=[];for(let i=0;i<w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<hh;j++)V.push({k:j+.43,f:()=>wW(j)});V.push({k:-.1,f:()=>box(c,-.14,-.14,.14,.14,0,72,'#e9e2d6','#d4cbbd')});
+ S.walls.forEach(([o,k,a,b])=>{for(let u=a;u<b;u++)V.push(o==='v'?{k:k+u+.5,f:()=>box(c,k-.06,u,.12,1,0,38,'#efe8dc','#d9d0c2')}:{k:u+.5+k,f:()=>box(c,u,k-.06,1,.12,0,38,'#efe8dc','#d9d0c2')})});
+ S.items.forEach(([type,x,y,rot])=>{const[iw,ih]=condoFurnitureSize(type,rot);V.push({k:type===15?x+y-.5:x+y+(iw+ih)/2,f:()=>cwDrawItem(c,type,x,y,iw,ih)})});
+ (S.dec||[]).forEach(([n,x,y])=>{const d=DEC[n]?.s||[1,1];V.push({k:x+y+(d[0]+d[1])/2+(n==='ball'?3:0),f:()=>drawDec(c,n,x,y,t)})});
+ V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});cwRemotes(V);
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const lab=(user.role==='prefeito'?'👑 ':'')+user.name,q0=P(ipx,ipy,44);c.strokeText(lab,q0[0],q0[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(lab,q0[0],q0[1]);cwRemoteLabels();
+ if(near&&near.t==='interiorSpot'){const z=near.o,q=P(z.x,z.y);c.strokeStyle='rgba(242,184,75,.85)';c.lineWidth=2;c.beginPath();c.ellipse(q[0],q[1],20,10,0,0,7);c.stroke();c.font='700 12px system-ui';const tw=c.measureText(z.label).width+16,yy=q[1]-46;c.fillStyle='rgba(8,13,25,.9)';c.fillRect(q[0]-tw/2,yy-14,tw,22);c.fillStyle='#F2B84B';c.fillText(z.label,q[0],yy+2)}
+ if(apt&&S.deco&&S.own&&cwHover){const[x,y]=cwHover;if(cwSel>=0){const[iw,ih]=condoFurnitureSize(cwSel,cwRot),ok=cwItemOk(S,cwSel,x,y,cwRot,-1);c.globalAlpha=.6;cwDrawItem(c,cwSel,x,y,iw,ih);c.globalAlpha=1;poly(c,[P(x,y),P(x+iw,y),P(x+iw,y+ih),P(x,y+ih)],ok?'rgba(80,220,120,.35)':'rgba(240,80,80,.4)')}else poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],'rgba(240,80,80,.35)')}
+ c.setTransform(1,0,0,1,0,0);if(D>0){c.fillStyle='rgba(10,14,40,'+D*.3+')';c.fillRect(0,0,W,H)}tf();
+ S.items.forEach(([type,x,y,rot])=>{if(D>.15&&(type===16||type===4||type===17)){const[iw,ih]=condoFurnitureSize(type,rot),q=P(x+iw/2,y+ih/2,type===16?48:28);[[60,.1],[38,.12],[20,.14]].forEach(([rd,a])=>{c.fillStyle=(type===16?'rgba(255,214,120,':'rgba(120,180,255,')+a*D+')';c.beginPath();c.arc(q[0],q[1],rd,0,7);c.fill()})}});
+ c.setTransform(1,0,0,1,0,0)}
+
 function setMayorStatus(message){const el=$('mayorStatus');if(el)el.textContent=String(message||'');}
 function updateMayorTrafficButton(){const b=$('mayorTrafficToggle');if(b)b.textContent=mayorTrafficSlowdown?'Desativar congestionamento':'Ativar congestionamento';}
 function sendMayorAction(action,extra={}){
