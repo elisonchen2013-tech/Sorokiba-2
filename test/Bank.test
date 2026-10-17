@@ -1,0 +1,166 @@
+'use strict';
+// Testes de COMPORTAMENTO do Banco (executam o código, não procuram texto no fonte).
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const bank = require('../sorokiba2-bank');
+const db = require('../sorokiba2-db');
+const { BANK } = bank;
+
+test('amountOf só aceita inteiros positivos dentro do limite', () => {
+  assert.equal(bank.amountOf(50, 100), 50);
+  assert.equal(bank.amountOf('50', 100), 50);
+  for (const bad of [0, -1, 1.5, '1.5', 'abc', null, undefined, NaN, Infinity, 101, {}, [], '1e3', '-5'])
+    assert.equal(bank.amountOf(bad, 100), null, String(bad));
+});
+
+test('tarifa de transferência: 2%, arredondada para cima, mínimo R$ 1', () => {
+  assert.equal(bank.transferFee(1), 1);
+  assert.equal(bank.transferFee(50), 1);
+  assert.equal(bank.transferFee(51), 2);
+  assert.equal(bank.transferFee(1000), 20);
+  assert.equal(bank.transferFee(5000), 100);
+});
+
+test('rendimento: 0,5% por dia completo, com teto de base, de dias e de poupança', () => {
+  assert.equal(bank.interestFor(1000, 0), 0);
+  assert.equal(bank.interestFor(1000, 1), 5);
+  assert.equal(bank.interestFor(1000, 10), 50);
+  assert.equal(bank.interestFor(0, 30), 0);
+  assert.equal(bank.interestFor(900_000, 1), 250, 'só os primeiros R$ 50.000 rendem');
+  assert.equal(bank.interestFor(BANK.SAVINGS_MAX, 5), 0, 'poupança cheia não rende mais');
+  assert.equal(bank.interestFor(1000, 400), bank.interestFor(1000, BANK.INTEREST_MAX_DAYS), 'acumula no máximo 30 dias');
+  assert.equal(bank.interestFor(BANK.SAVINGS_MAX - 2, 30), 2, 'nunca passa do teto da poupança');
+  assert.equal(bank.interestFor(-5, 3), 0);
+});
+
+test('limite de empréstimo cresce com XP e respeita mínimo e teto', () => {
+  assert.equal(bank.loanLimit(0), 0);
+  assert.equal(bank.loanLimit(99), 0);
+  assert.equal(bank.loanLimit(100), 800);
+  assert.equal(bank.loanLimit(300), 1800);
+  assert.equal(bank.loanLimit(100000), BANK.LOAN_MAX);
+  assert.equal(bank.loanLimit('abc'), 0);
+});
+
+test('total do empréstimo = principal + juros arredondados para cima', () => {
+  assert.equal(bank.loanTotal(1000, 1200), 1120);
+  assert.equal(bank.loanTotal(333, 1200), 333 + 40);
+  assert.equal(bank.loanTotal(100, 600), 106);
+});
+
+test('negociação: começa na taxa de tabela e a gerente nunca cobra menos que a reserva', () => {
+  const deal = bank.makeDeal(1000, 0, () => 0);      // reserva mínima = 700
+  assert.equal(deal.ask, BANK.LOAN_BASE_RATE_BP);
+  assert.equal(deal.reserve, BANK.LOAN_MIN_RATE_BP + 100);
+  assert.equal(bank.stepDeal(deal, {}).result, 'start');
+  assert.equal(bank.stepDeal(deal, { offer: 100 }).result, 'low', 'oferta absurda é recusada');
+  const counter = bank.stepDeal(deal, { offer: 650 });
+  assert.equal(counter.result, 'counter');
+  assert.ok(counter.ask < BANK.LOAN_BASE_RATE_BP && counter.ask >= deal.reserve);
+  const ok = bank.stepDeal(deal, { offer: 800 });
+  assert.equal(ok.result, 'deal');
+  assert.equal(ok.rate, 800);
+  assert.equal(deal.accepted, 800);
+});
+
+test('negociação: oferta acima da tabela fecha na tabela, e as rodadas acabam', () => {
+  const deal = bank.makeDeal(500, 0, () => 1);       // reserva máxima = 900
+  assert.equal(bank.stepDeal(deal, { offer: 1500 }).rate, BANK.LOAN_BASE_RATE_BP);
+  const d2 = bank.makeDeal(500, 0, () => 1);
+  let last;
+  for (let i = 0; i < BANK.NEGOTIATION_ROUNDS; i++) last = bank.stepDeal(d2, { offer: 650 });
+  assert.equal(last.result, 'final');
+  assert.equal(bank.stepDeal(d2, { offer: 899 }).result, 'final', 'sem rodadas, não fecha mais por oferta');
+  assert.equal(bank.stepDeal(d2, { accept: true }).result, 'deal', 'mas ainda pode aceitar a última proposta');
+  assert.ok(d2.accepted >= d2.reserve);
+});
+
+/* ---------- rotas (com o banco de dados trocado por um falso) ---------- */
+function makeApp() {
+  const routes = {};
+  const reg = method => (path, ...h) => { routes[method + ' ' + path] = h[h.length - 1]; };
+  return { routes, app: { get: reg('GET'), post: reg('POST') } };
+}
+function call(handler, body) {
+  return new Promise(resolve => {
+    const res = { code: 200, headers: {}, set(k, v) { this.headers[k] = v; return this; },
+      status(c) { this.code = c; return this; }, json(b) { this.headersSent = true; resolve({ code: this.code, body: b }); return this; } };
+    handler({ body }, res);
+  });
+}
+function setup({ user = { username: 'ana', xp: 500, money: 1000 }, over = false } = {}) {
+  const { routes, app } = makeApp();
+  const store = new Map();
+  const limited = (s, k, max) => { const n = (store.get(k) || 0) + 1; store.set(k, n); return over || n > max; };
+  const notified = [];
+  bank.registerRoutes({ app, json: null, authUser: async () => user, limited, userTries: store,
+    addInterval: () => ({}), notify: (u, m) => notified.push([u, m]) });
+  return { routes, notified, anon: async () => null };
+}
+
+test('rotas recusam valores inválidos antes de tocar no banco de dados', async () => {
+  const realTx = db.withTx; let touched = 0; db.withTx = async () => { touched++; return {}; };
+  try {
+    const { routes } = setup();
+    for (const path of ['deposit', 'withdraw', 'transfer', 'loan/take', 'loan/repay'])
+      for (const amount of [0, -5, 2.5, 'x', null]) {
+        const r = await call(routes['POST /api/sk2/bank/' + path], { amount, to: 'bob' });
+        assert.equal(r.code, 400, `${path} ${amount}`);
+      }
+    assert.equal(touched, 0);
+  } finally { db.withTx = realTx; }
+});
+
+test('sem sessão ou acima do limite de uso, as rotas respondem 401 e 429', async () => {
+  const { routes, app } = makeApp();
+  bank.registerRoutes({ app, json: null, authUser: async () => null, limited: () => false, userTries: new Map(), addInterval: () => ({}) });
+  assert.equal((await call(routes['GET /api/sk2/bank'])).code, 401);
+  assert.equal((await call(routes['POST /api/sk2/bank/deposit'], { amount: 5 })).code, 401);
+  const busy = setup({ over: true });
+  assert.equal((await call(busy.routes['POST /api/sk2/bank/transfer'], { amount: 5, to: 'bob' })).code, 429);
+});
+
+test('transferência bem-sucedida avisa o destinatário em tempo real', async () => {
+  const realTx = db.withTx;
+  db.withTx = async () => ({ playerRow: { username: 'ana', name: 'Ana', role: 'cidadão', look: {}, money: 900, xp: 500 },
+    bank: { savings: 0 }, amount: 100, fee: 2, toUser: 'bob', toName: 'Bob', toMoney: 1100, fromName: 'Ana' });
+  try {
+    const { routes, notified } = setup();
+    const r = await call(routes['POST /api/sk2/bank/transfer'], { to: 'bob', amount: 100 });
+    assert.equal(r.code, 200);
+    assert.equal(r.body.player.money, 900);
+    assert.equal(notified.length, 1);
+    assert.equal(notified[0][0], 'bob');
+    assert.equal(notified[0][1].t, 'bank');
+    assert.equal(notified[0][1].money, 1100);
+  } finally { db.withTx = realTx; }
+});
+
+test('erro de negócio devolve o status da regra e não notifica ninguém', async () => {
+  const realTx = db.withTx;
+  db.withTx = async () => ({ err: 'Saldo insuficiente na poupança.', status: 409 });
+  try {
+    const { routes, notified } = setup();
+    const r = await call(routes['POST /api/sk2/bank/withdraw'], { amount: 10 });
+    assert.equal(r.code, 409);
+    assert.match(r.body.err, /Saldo insuficiente/);
+    const t = await call(routes['POST /api/sk2/bank/transfer'], { to: 'bob', amount: 10 });
+    assert.equal(t.code, 409);
+    assert.equal(notified.length, 0);
+  } finally { db.withTx = realTx; }
+});
+
+test('negociar com XP baixo é recusado; com XP suficiente começa na taxa de tabela', async () => {
+  const realQuery = db.query; db.query = async () => ({ rowCount: 0, rows: [] });
+  try {
+    const poor = setup({ user: { username: 'novo', xp: 10, money: 0 } });
+    assert.equal((await call(poor.routes['POST /api/sk2/bank/loan/negotiate'], { amount: 200 })).code, 403);
+    const ok = setup({ user: { username: 'ana', xp: 300, money: 0 } });
+    const r = await call(ok.routes['POST /api/sk2/bank/loan/negotiate'], { amount: 1000 });
+    assert.equal(r.code, 200);
+    assert.equal(r.body.result, 'start');
+    assert.equal(r.body.ask, BANK.LOAN_BASE_RATE_BP);
+    const over = await call(ok.routes['POST /api/sk2/bank/loan/negotiate'], { amount: 4000 });
+    assert.equal(over.code, 409, 'pedido acima do limite do XP');
+  } finally { db.query = realQuery; }
+});
