@@ -7,6 +7,7 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const db = require('./sorokiba2-db');
 const bank = require('./sorokiba2-bank');
+const hospital = require('./sorokiba2-hospital');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -133,7 +134,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => console.log('[sk2] banco de dados e Banco de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => console.log('[sk2] banco de dados, Banco e Hospital de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -376,6 +377,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   // Banco: mesma lógica do condomínio (validado no servidor, transações, painel aberto pelos NPCs do prédio).
   let bankNotify = () => {};
   bank.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m) });
+  // Hospital: doenças por chance, triagem, exames de horas reais e tratamento em sessões (estado no servidor).
+  hospital.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m) });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
@@ -599,6 +602,8 @@ async function attachSorokiba2(app, server, opt = {}) {
       if (!row) return res.status(401).json({ err: 'Sessão expirada' });
       const jobId = row.employment?.jobId;
       if (!WORK_TASKS[jobId]) return res.status(409).json({ err: 'Seu emprego ainda não tem tarefas jogáveis' });
+      const unfit = await hospital.workGate(row.username);
+      if (unfit) return res.status(409).json({ err: unfit });
       const shift = await db.startWorkShift(row.username, jobId);
       if (!shift) return res.status(409).json({ err: 'Não foi possível iniciar o turno' });
       res.status(201).json({ ok: 1, shift: { id: shift.id, status: shift.status, startedAt: shift.started_at }, supervisor: WORK_TASKS[jobId].supervisor });
