@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const db = require('./sorokiba2-db');
+const bank = require('./sorokiba2-bank');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -132,7 +133,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => console.log('[sk2] banco pronto'));
+  const initPromise = db.init().then(() => bank.init()).then(() => console.log('[sk2] banco de dados e Banco de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -372,6 +373,9 @@ async function attachSorokiba2(app, server, opt = {}) {
     if (!updated) return res.status(404).json({ err: 'Esta unidade não é sua.' });
     res.json({ ok: 1, open: !!req.body.open });
   }));
+  // Banco: mesma lógica do condomínio (validado no servidor, transações, painel aberto pelos NPCs do prédio).
+  let bankNotify = () => {};
+  bank.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m) });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
@@ -704,6 +708,7 @@ async function attachSorokiba2(app, server, opt = {}) {
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
   const toRoom = (room, m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && (o.room || 'city') === room && o.ws.readyState === 1) o.ws.send(s); };
+  bankNotify = (username, msg) => { for (const o of P.values()) if (o.u === username) send(o, msg); };
   const flush = list => db.savePositions(list.filter(o => (o.room || 'city') === 'city').map(o => ({ u: o.u, x: o.worldX ?? o.x, y: o.worldY ?? o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
   let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0, mayorTrafficSlowdown = false;
   const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
