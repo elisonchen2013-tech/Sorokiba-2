@@ -1,0 +1,181 @@
+'use strict';
+// Testes de COMPORTAMENTO do Hospital (executam o código, não procuram texto no fonte).
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const hosp = require('../sorokiba2-hospital');
+const db = require('../sorokiba2-db');
+const { HOSPITAL, DISEASES, EXAMS, RISKS } = hosp;
+
+const seq = values => { let i = 0; return () => values[Math.min(i++, values.length - 1)]; };
+
+test('catálogo é consistente: exames existem, sintomas e tratamento completos', () => {
+  for (const [id, d] of Object.entries(DISEASES)) {
+    assert.ok(d.name && d.weight > 0, id);
+    assert.ok(d.severity >= 0 && d.severity <= 3, id);
+    assert.ok(d.symptoms.length >= 2, id);
+    for (const e of d.exams) { assert.ok(EXAMS[e], `${id} usa exame inexistente ${e}`); assert.ok(d.findings[e], `${id} sem resultado para ${e}`); }
+    assert.ok(['ward', 'er'].includes(d.treatment.site), id);
+    assert.ok(d.treatment.sessions >= 1 && d.treatment.sessionPrice > 0, id);
+  }
+  for (const [id, e] of Object.entries(EXAMS)) { assert.ok(['lab', 'imaging'].includes(e.site), id); assert.ok(e.minutes[0] <= e.minutes[1] && e.minutes[0] >= 60, `${id}: exames levam de 1 a 2 horas`); }
+});
+
+test('sorteio de doença: sem sorte não adoece; câncer é raro e os leves são comuns', () => {
+  assert.equal(hosp.rollIllness(8, () => .99), null);
+  assert.equal(hosp.rollIllness(0, () => 0), null, 'sem sorteios acumulados, nada acontece');
+  assert.equal(hosp.rollIllness(1, seq([0, 0])), 'resfriado');
+  assert.equal(hosp.rollIllness(1, seq([0, .9999])), 'cancer', 'o fim da roleta é a doença mais rara');
+  let cancer = 0, light = 0;
+  for (let i = 0; i < 20000; i++) { const d = hosp.weightedPick(Object.fromEntries(Object.entries(DISEASES).map(([k, v]) => [k, v.weight]))); if (d === 'cancer') cancer++; if (d === 'resfriado') light++; }
+  assert.ok(cancer / 20000 < .04 && cancer > 0, `câncer ${cancer}`);
+  assert.ok(light / 20000 > .25, `resfriado ${light}`);
+});
+
+test('sem tratamento a doença piora de gravidade com o tempo, até o limite', () => {
+  assert.equal(hosp.effectiveSeverity(0, 0), 0);
+  assert.equal(hosp.effectiveSeverity(0, HOSPITAL.WORSEN_AFTER_MIN), 1);
+  assert.equal(hosp.effectiveSeverity(2, HOSPITAL.WORSEN_AFTER_MIN * 5), 3, 'nunca passa do vermelho');
+  assert.equal(hosp.effectiveSeverity(0, 99999), HOSPITAL.MAX_WORSEN);
+});
+
+test('saúde: doente perde por hora (mais rápido quanto mais grave) e saudável se recupera', () => {
+  assert.equal(hosp.settleHealth(100, 0, 1), 100);
+  assert.equal(hosp.settleHealth(100, 2, 0), 97);
+  assert.equal(hosp.settleHealth(100, 2, 3), 84);
+  assert.equal(hosp.settleHealth(30, 1000, 3), HOSPITAL.HEALTH_FLOOR, 'tem piso');
+  assert.equal(hosp.settleHealth(50, 2, null), 70);
+  assert.equal(hosp.settleHealth(95, 5, null), 100, 'tem teto');
+  assert.equal(hosp.settleHealth(80, -3, 2), 80, 'relógio para trás não cura nem machuca');
+});
+
+test('sinais vitais seguem o perfil da doença e pioram junto com a gravidade', () => {
+  for (let i = 0; i < 200; i++) {
+    const v = hosp.makeVitals('pneumonia', 2, Math.random);
+    assert.ok(v.temp >= 38 && v.temp <= 39.6 && v.spo2 <= 94 && v.bpm >= 95);
+    const h = hosp.makeVitals(null, 0, Math.random);
+    assert.ok(h.temp <= 37 && h.spo2 >= 97 && h.sys >= 105 && h.sys <= 125);
+  }
+  const base = hosp.makeVitals('gripe', 1, () => .5), worse = hosp.makeVitals('gripe', 3, () => .5);
+  assert.ok(worse.temp > base.temp && worse.bpm > base.bpm && worse.spo2 < base.spo2);
+  assert.deepEqual(hosp.vitalFlags({ temp: 39, bpm: 120, spo2: 90, sys: 150 }), ['febre', 'taquicardia', 'oxigenação baixa', 'pressão alta']);
+  assert.deepEqual(hosp.vitalFlags({ temp: 36.5, bpm: 70, spo2: 98, sys: 118 }), []);
+});
+
+test('espera pela consulta depende da cor de risco; vermelho passa na frente', () => {
+  assert.equal(hosp.triageWaitMs(3), 0);
+  assert.ok(hosp.triageWaitMs(0) > hosp.triageWaitMs(1) && hosp.triageWaitMs(1) > hosp.triageWaitMs(2) && hosp.triageWaitMs(2) > 0);
+  assert.equal(RISKS.length, 4);
+});
+
+test('exames levam de 1 a 2 horas reais (na escala 1)', () => {
+  for (const id of Object.keys(EXAMS)) for (const r of [0, .5, .9999]) {
+    const m = hosp.examDurationMs(id, () => r) / 60e3;
+    assert.ok(m >= 60 && m <= 120, `${id} ${m}`);
+  }
+});
+
+test('planos: só doenças de várias sessões têm plano intensivo (menos sessões, mais caro por sessão)', () => {
+  assert.deepEqual(hosp.plansFor('resfriado').map(p => p.id), ['padrao']);
+  const c = hosp.plansFor('cancer');
+  assert.deepEqual(c.map(p => p.id), ['padrao', 'intensivo']);
+  assert.equal(c[0].sessions, 3);
+  assert.equal(c[1].sessions, 2);
+  assert.ok(c[1].sessionPrice > c[0].sessionPrice);
+  assert.equal(c[0].total, 3 * 350);
+  assert.equal(hosp.plansFor('apendicite')[0].total, 650);
+});
+
+test('hipóteses do médico: 3 nomes distintos que sempre incluem o diagnóstico verdadeiro', () => {
+  for (const id of Object.keys(DISEASES)) for (let i = 0; i < 20; i++) {
+    const h = hosp.hypotheses(id);
+    assert.equal(h.length, 3);
+    assert.equal(new Set(h).size, 3);
+    assert.ok(h.includes(DISEASES[id].name), id);
+  }
+});
+
+test('máquina de estados: cada etapa libera só a ação certa, no lugar certo', () => {
+  const now = 1_000_000;
+  assert.deepEqual(hosp.stageInfo(null).actions, [{ id: 'checkin', site: 'reception' }]);
+  assert.deepEqual(hosp.stageInfo({ status: 'registered' }, [], now).actions, [{ id: 'triage', site: 'triage' }]);
+  const waiting = hosp.stageInfo({ status: 'triaged', readyAt: now + 30_000 }, [], now);
+  assert.equal(waiting.waitMs, 30_000);
+  assert.deepEqual(waiting.actions, [], 'durante a espera não há ação');
+  assert.deepEqual(hosp.stageInfo({ status: 'triaged', readyAt: now - 1 }, [], now).actions, [{ id: 'consult', site: 'consult1' }]);
+  const exams = [{ id: 'hemograma', status: 'ordered' }, { id: 'raiox', status: 'ordered' }];
+  assert.deepEqual(hosp.stageInfo({ status: 'exams' }, exams, now).actions, [{ id: 'collect', exam: 'hemograma', site: 'lab' }, { id: 'collect', exam: 'raiox', site: 'imaging' }]);
+  const running = [{ id: 'hemograma', status: 'running', readyAt: now + 3_600_000 }, { id: 'raiox', status: 'running', readyAt: now + 60_000 }];
+  const inLab = hosp.stageInfo({ status: 'exams' }, running, now);
+  assert.equal(inLab.waitMs, 3_600_000, 'espera o exame mais demorado');
+  assert.deepEqual(inLab.actions, []);
+  const ready = hosp.stageInfo({ status: 'exams' }, running.map(e => ({ ...e, readyAt: now - 5 })), now);
+  assert.deepEqual(ready.actions, [{ id: 'results', site: 'consult2' }]);
+  assert.deepEqual(hosp.stageInfo({ status: 'diagnosed' }, [], now).actions, [{ id: 'plan', site: 'consult2' }]);
+  const treating = { status: 'treating', nextSessionAt: now + 5000, sessionSite: 'er' };
+  assert.deepEqual(hosp.stageInfo(treating, [], now).actions, []);
+  assert.deepEqual(hosp.stageInfo({ ...treating, nextSessionAt: now }, [], now).actions, [{ id: 'session', site: 'er' }]);
+  assert.equal(hosp.stageInfo({ status: 'discharged' }, [], now).step, 6);
+});
+
+/* ---------- rotas (com o banco de dados trocado por um falso) ---------- */
+function makeApp() { const routes = {}; const reg = m => (p, ...h) => { routes[m + ' ' + p] = h[h.length - 1]; }; return { routes, app: { get: reg('GET'), post: reg('POST') } }; }
+function call(handler, body) {
+  return new Promise(resolve => {
+    const res = { code: 200, set() { return this; }, status(c) { this.code = c; return this; }, json(b) { this.headersSent = true; resolve({ code: this.code, body: b }); return this; } };
+    handler({ body }, res);
+  });
+}
+function setup({ user = { username: 'ana' }, over = false } = {}) {
+  const { routes, app } = makeApp(), store = new Map();
+  hosp.registerRoutes({ app, json: null, authUser: async () => user, limited: (s, k, max) => { const n = (store.get(k) || 0) + 1; store.set(k, n); return over || n > max; },
+    userTries: store, addInterval: () => ({}), notify: () => {} });
+  return routes;
+}
+
+test('rotas validam exame e plano antes de tocar no banco de dados', async () => {
+  const real = db.withTx; let touched = 0; db.withTx = async () => { touched++; return {}; };
+  try {
+    const r = setup();
+    for (const exam of [undefined, null, 5, 'xyz', '__proto__', 'constructor', 'toString']) assert.equal((await call(r['POST /api/sk2/hospital/exams/collect'], { exam })).code, 400, String(exam));
+    for (const plan of [undefined, 'premium', 'PADRAO', 1, null, {}]) assert.equal((await call(r['POST /api/sk2/hospital/treatment/plan'], { plan })).code, 400, String(plan));
+    assert.equal(touched, 0);
+  } finally { db.withTx = real; }
+});
+
+test('sem sessão ou acima do limite as rotas respondem 401 e 429', async () => {
+  const { routes, app } = makeApp();
+  hosp.registerRoutes({ app, json: null, authUser: async () => null, limited: () => false, userTries: new Map(), addInterval: () => ({}) });
+  assert.equal((await call(routes['GET /api/sk2/hospital'])).code, 401);
+  assert.equal((await call(routes['POST /api/sk2/hospital/checkin'], {})).code, 401);
+  assert.equal((await call(setup({ over: true })['POST /api/sk2/hospital/triage'], {})).code, 429);
+});
+
+test('erro de regra devolve o status da regra; sucesso devolve evento, mensagem e prontuário', async () => {
+  const real = db.withTx;
+  try {
+    db.withTx = async () => ({ err: 'Aguarde a sua vez: faltam 40 s.', status: 409 });
+    const r = setup();
+    const bad = await call(r['POST /api/sk2/hospital/consult'], {});
+    assert.equal(bad.code, 409);
+    assert.match(bad.body.err, /Aguarde/);
+    db.withTx = async () => ({ playerRow: { username: 'ana', name: 'Ana', role: 'cidadão', look: {}, money: 900, xp: 10 }, hospital: { patient: { health: 80 } },
+      event: { kind: 'triage', risk: 'amarelo' }, message: 'Triagem concluída' });
+    const ok = await call(r['POST /api/sk2/hospital/triage'], {});
+    assert.equal(ok.code, 200);
+    assert.equal(ok.body.event.kind, 'triage');
+    assert.equal(ok.body.hospital.patient.health, 80);
+    assert.equal(ok.body.player.money, 900);
+  } finally { db.withTx = real; }
+});
+
+test('bloqueio de trabalho: debilitado não começa turno; saudável, sim', async () => {
+  const real = db.withTx;
+  try {
+    db.withTx = async () => ({ health: 20 });
+    assert.match(await hosp.workGate('ana'), /debilitado/);
+    db.withTx = async () => ({ health: HOSPITAL.WORK_MIN_HEALTH });
+    assert.equal(await hosp.workGate('ana'), null);
+    db.withTx = async () => ({});
+    assert.equal(await hosp.workGate('fantasma'), null, 'jogador inexistente não é bloqueado aqui');
+  } finally { db.withTx = real; }
+});
