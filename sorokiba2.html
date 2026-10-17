@@ -288,6 +288,55 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #bankPanel.busy button,#bankPanel.busy input{pointer-events:none;opacity:.6}
 #bankPanel button:focus-visible,#bankPanel input:focus-visible{outline:2px solid #f2b84b;outline-offset:2px}
 @media(max-width:520px){.bankBalances{grid-template-columns:1fr}.bankBalances div{display:flex;justify-content:space-between;align-items:baseline}.bankBalances strong{margin:0}}
+
+/* ---------- Hospital de Sorokiba ---------- */
+#hospitalPanel{position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,95vw);max-height:90vh;overflow:auto;padding:clamp(14px,3vw,24px);border:1px solid #3d9b9888;border-radius:16px;background:linear-gradient(155deg,#102329 0%,#08141a 100%);box-shadow:0 24px 80px #000d;color:#eef6f4;overscroll-behavior:contain}
+.hospHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:1px solid #3d9b9855}
+.hospKicker{margin:0 0 4px;color:#6fd3cc;font-size:12px;font-weight:700}
+.hospHead h2{margin:0;color:#e9fffb;font-size:clamp(22px,4vw,30px)}
+.hospHead p:not(.hospKicker){margin:5px 0 0;color:#b4cdd0;font-size:13px}
+#hospitalPanel button{font:inherit;cursor:pointer}
+#hospClose{border:1px solid #ffffff33;border-radius:9px;padding:8px 12px;background:#ffffff10;color:#eef6f4}
+.hospHealth{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin:14px 0 4px}
+.hospHealth span{color:#a9c6c9;font-size:12px}
+.hospBar{height:10px;border-radius:99px;background:#ffffff14;overflow:hidden}
+.hospBar i{display:block;height:100%;width:0;border-radius:99px;transition:width .4s}
+.hospHealth strong{font-variant-numeric:tabular-nums;color:#e9fffb}
+#hospSymptoms{margin:4px 0 10px;color:#cfe3e4;font-size:13px}
+.hospWarn{color:#ffb9ad;font-weight:700}
+.hospSteps{display:flex;gap:4px;flex-wrap:wrap;list-style:none;margin:6px 0 8px;padding:0}
+.hospSteps li{flex:1 1 90px;padding:6px 8px;border-radius:8px;background:#ffffff0a;color:#8fb0b3;font-size:12px;text-align:center;border:1px solid transparent}
+.hospSteps li.done{color:#8fe0b4;background:#3fae6314}
+.hospSteps li.now{color:#08141a;background:#6fd3cc;font-weight:700}
+.hospMsg{min-height:20px;margin:6px 0 8px;color:#bfeadf;font-size:13px}
+.hospMsg.err{color:#ffb9ad}
+.hospTell{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.hospFace{flex:none;width:64px;height:72px;border-radius:10px;background:#ffffff0d}
+.hospTell p{margin:0;color:#e0eeef;font-size:14px;line-height:1.45}
+.hospCard{padding:14px;border:1px solid #ffffff1c;border-radius:12px;background:#ffffff08;margin-bottom:10px}
+.hospCard h3{margin:0 0 6px;color:#e9fffb;font-size:16px}
+.hospHint{margin:0 0 10px;color:#aac4c7;font-size:12.5px;line-height:1.45}
+.hospRisk{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:99px;color:#0b1418;font-size:12px;font-weight:700;vertical-align:middle}
+.hospActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hospActions button,.hospList button{border:0;border-radius:9px;padding:10px 16px;background:linear-gradient(90deg,#3fd0c7,#8de8dd);color:#06181b;font-weight:800}
+.hospActions button.alt{background:#ffffff14;color:#eef6f4;border:1px solid #ffffff33}
+.hospDl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0 0 8px}
+.hospDl div{padding:8px 10px;border-radius:9px;background:#07121866}
+.hospDl dt{color:#a9c6c9;font-size:12px}
+.hospDl dd{margin:2px 0 0;font-variant-numeric:tabular-nums}
+.hospList{list-style:none;margin:0;padding:0}
+.hospList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted #ffffff30}
+.hospList li.tot{font-weight:800;border-bottom:0}
+.hospList small{display:block;margin-top:2px;color:#9fbcc0;font-size:12px}
+.hospList button{padding:7px 12px;font-size:13px}
+.hospRight{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.hospTag{padding:3px 9px;border-radius:99px;background:#ffffff14;font-size:12px;white-space:nowrap}
+.hospTag.wait{background:#e3b93b24;color:#ffd77a}.hospTag.ok{background:#3fae6330;color:#8fe0b4}
+.hospCount{font-variant-numeric:tabular-nums}
+.hospNote{padding:18px;text-align:center;color:#bcd3d5}
+#hospitalPanel.busy button{pointer-events:none;opacity:.6}
+#hospitalPanel button:focus-visible{outline:2px solid #6fd3cc;outline-offset:2px}
+@media(max-width:520px){.hospSteps li{flex:1 1 70px;font-size:11px}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -341,6 +390,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="icecreamMenu" hidden aria-labelledby="icecreamTitle"><header class="icecreamHeader"><div><p class="icecreamKicker">Parque Central · Sorveteria</p><h2 id="icecreamTitle">Sorvetes da Luna</h2><p>Escolha um sabor, compre e coma quando quiser.</p></div><button id="icecreamClose" type="button" aria-label="Fechar sorveteria">Fechar</button></header><p id="icecreamMsg" aria-live="polite">Falando com a atendente...</p><div id="icecreamChoices"></div><footer>Seu dinheiro: <strong>R$ <span id="icecreamMoney">0</span></strong> · Os sorvetes comprados ficam no seu inventário.</footer></section>
 <section id="condoPanel" hidden aria-labelledby="condoTitle"><header class="condoHeader"><div><p class="condoKicker">SOROKIBA TOWER · CONDOMÍNIO</p><h2 id="condoTitle">Seu próximo endereço</h2><p id="condoIntro">Consulte os andares, negocie uma unidade e organize seu apartamento.</p></div><button id="condoClose" type="button" aria-label="Fechar condomínio">Fechar</button></header><div class="condoOverview"><div><span>SEU SALDO</span><strong id="condoMoney">R$ 0</strong></div><div><span>TORRE</span><strong>15 andares · 60 unidades</strong></div><div><span>LAZER</span><strong>Academia · piscina · salão</strong></div></div><p id="condoMsg" class="condoMessage" aria-live="polite">Carregando unidades...</p><div class="condoToolbar"><label for="condoFloor">Andar</label><select id="condoFloor"></select><button id="condoMine" type="button">Meus apartamentos</button><button id="condoAll" type="button">Ver unidades</button></div><div id="condoBody"></div></section>
 <section id="bankPanel" hidden role="dialog" aria-labelledby="bankTitle"><header class="bankHead"><div><p class="bankKicker">Banco de Sorokiba</p><h2 id="bankTitle">Atendimento</h2><p id="bankIntro"></p></div><button id="bankClose" type="button" aria-label="Fechar banco">Fechar</button></header><div class="bankBalances"><div><span>Carteira</span><strong id="bankMoney">R$ 0</strong></div><div><span>Poupança</span><strong id="bankSavings">…</strong></div><div><span>Dívida</span><strong id="bankDebt">…</strong></div></div><nav class="bankTabs" id="bankTabs" role="tablist" aria-label="Serviços do banco"><button type="button" role="tab" data-bank-tab="account">Poupança</button><button type="button" role="tab" data-bank-tab="transfer">Transferir</button><button type="button" role="tab" data-bank-tab="loan">Empréstimo</button><button type="button" role="tab" data-bank-tab="statement">Extrato</button></nav><p id="bankMsg" class="bankMsg" aria-live="polite"></p><div id="bankBody"></div></section>
+<section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
@@ -818,7 +868,7 @@ else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído
 else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
-else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
+else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='hospital'){toast(m.m);tone(784,.1,'sine',.05);if(!$('hospitalPanel').hidden&&!hospBusy)hospLoad(true)}else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
@@ -1113,14 +1163,16 @@ function makeInterior(building){
   z('Caixa',6.6,2.45,'Este é o caixa do estabelecimento. O catálogo e a cobrança ainda não estão conectados.');
   z('Refrigeradores',8.2,5.7,'Refrigeradores para produtos que precisam ficar gelados.');
  }else if(family==='hospital'){
-  add('counter',4.1,1,3.8,.8,24,'#e7e9e5','#faf8ef','#9ba7a5');add('bed',1.3,3.55,1.35,2,10,'#dfe7e6','#f8f8f1','#8ca5a6');
-  add('bed',4.1,4.25,1.35,2,10,'#dfe7e6','#f8f8f1','#8ca5a6');add('desk',7.65,3.15,1.8,.85,18,'#896b50','#c5a27b','#5e4837');
-  add('machine',9.85,4.35,.8,.85,20,'#a9c5c7','#e1efec','#657c7d');
-  z('Recepção',6,2.25,'A recepção organiza a chegada dos pacientes e orienta quem precisa de atendimento.');
-  z('Triagem',3.15,5.85,'Área de triagem para registrar sintomas e encaminhar pacientes. O sistema clínico ainda não está conectado.');
-  z('Consultório',8.55,4.9,'Consultório médico para conversar com a equipe e encaminhar atendimentos.');
-  z('Exames',10.65,5.65,'Área reservada a exames e equipamentos de diagnóstico.');
- }else if(family==='bank'){
+   z('Recepção',7.5,3.9,'Recepção do hospital: abra a ficha, pegue a senha e acompanhe o seu atendimento.');
+   z('Sala de espera',6.5,11.5,'Sala de espera. Aguarde aqui até ser chamado.');
+   z('Triagem',17.5,4.7,'Triagem: a enfermeira mede os sinais vitais e define a cor de risco.');
+   z('Consultório 1',23.8,4.7,'Consultório 1: consulta com a médica.');
+   z('Consultório 2',30.2,4.7,'Consultório 2: leitura de resultados e escolha do tratamento.');
+   z('Laboratório',17.4,16.8,'Laboratório: coleta de sangue e biópsias.');
+   z('Imagem',25.4,14.9,'Imagem: raio-X, ultrassom e tomografia.');
+   z('Pronto-socorro',30.6,14.6,'Pronto-socorro: procedimentos e cirurgias.');
+   z('Internação',7,17.6,'Internação: medicação, soro e quimioterapia.');
+  }else if(family==='bank'){
   add('counter',2.8,1.1,6,.9,25,'#77583f','#c6a16d','#49352a');add('desk',2,4,1.4,.8,17,'#8c6a49','#c7a57b','#59412f');add('atm',9.5,4,.8,.8,19,'#51666c','#90a7a7','#2c424a');
   z('Caixa',5.9,2.4,'Área de atendimento bancário.');z('Mesa de atendimento',2.75,5.15,'Atendimento para dúvidas e serviços bancários.');
   z('Caixa eletrônico',10.45,5.8,'Saldo atual da sua carteira: R$ '+Number(user?.money||0).toLocaleString('pt-BR')+'. Use para depositar, sacar e consultar a poupança.');
@@ -1251,7 +1303,7 @@ function makeInterior(building){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[20,15,'hospital-wing'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1280,12 +1332,13 @@ function makeInterior(building){
   room.items=condoGroundCollisionItems();
   room.dividers=CONDO_ZIP.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));
  }
- const sx=family==='condo'?1:room.width/12,sy=family==='condo'?1:room.depth/8;
+ if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
+  const flat=family==='condo'||family==='hospital',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
   market:[['Marina','Caixa',6.6,2.05,'staff','#3c8056','#dfb28b','#203b2c'],['Rafael','Cliente',4.4,6.2,'visitor','#466d98','#e1b991','#2e2a27'],['Lia','Cliente',8.2,6.25,'visitor','#be6f72','#d69b72','#422a21']],
-  hospital:[['Helena','Recepcionista',6,2.05,'staff','#3d9b98','#f0c3a0','#3a4b57'],['Caio','Enfermeiro',3.25,6.35,'staff','#e1eee9','#ad744b','#365560'],['Dra. Bia','Médica',8.8,4.65,'staff','#f4f3ed','#e1b991','#375b78'],['Paciente','Paciente',5.8,6.5,'visitor','#c7d8dd','#b37b58','#4a5261']],
+   hospital:[['Helena','Recepcionista',7.5,1.5,'staff','#3d9b98','#f0c3a0','#3a4b57'],['Joana','Enfermeira de triagem',17.5,3.2,'staff','#e1eee9','#d7a781','#2a3138'],['Dra. Bia','Médica',23.8,3.4,'staff','#f4f3ed','#e1b991','#375b78'],['Dr. Henrique','Médico',30.2,3.4,'staff','#f4f3ed','#b9835d','#2f2a26'],['Lívia','Enfermeira de coleta',17.2,14.6,'staff','#e1eee9','#c99572','#4a2f22'],['Marcelo','Técnico de imagem',25.8,13.6,'staff','#7aa0b8','#bb865f','#222a33'],['Dr. Lucas','Cirurgião',30.8,15.2,'staff','#3f8f8c','#d0a17b','#2b2b30'],['Caio','Enfermeiro',7,18.6,'staff','#e1eee9','#ad744b','#365560'],['Paciente','Paciente',4.5,6.5,'visitor','#c7d8dd','#b37b58','#4a5261'],['Acompanhante','Visitante',11,11,'visitor','#8aa0c4','#d4a078','#382d25']],
   bank:[['Marcos','Caixa',5.8,2.05,'staff','#c5a05c','#d2a17d','#27394f'],['Ana','Gerente',2.5,5.5,'staff','#435c7b','#c28f6a','#202c3d'],['Cliente','Cliente',9,5.8,'visitor','#4a9c8a','#d7aa82','#30271f']],
   cityhall:[['Sofia','Recepcionista',5.2,2.05,'staff','#b08a5a','#d2a17d','#3f3940'],['Roberto','Servidor municipal',9,5.05,'staff','#46678c','#b77a55','#28283b'],['Moradora','Cidadã',3,6,'visitor','#bc7654','#c99a78','#3d3228']],
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
@@ -1301,14 +1354,14 @@ function makeInterior(building){
   employment:[['Marta','Recepcionista',3.8,2.1,'staff','#477E91','#d5a783','#292520'],['Daniel','Recrutador',7.1,2.8,'staff','#2D8D89','#c8946b','#202f3e'],['Renata','Orientadora profissional',9.2,2.8,'staff','#ba8750','#d5a783','#342b2a'],['Carla','Entrevistadora',9.3,6.0,'staff','#5b718a','#d5a783','#292520'],['Candidato','Candidato',5.4,6.2,'visitor','#6d8c9a','#c8946b','#292520']]
  }[family];
  for(const [name,role,x,y,kind,shirt,skin,hair]of crowd){
-  const route=kind==='visitor'?[[x,y],[x+.65,y-.35],[x+.3,y+.35],[x,y]]:[];
+  const sp=family==='hospital'?3.2:1,route=kind==='visitor'?[[x,y],[x+.65*sp,y-.35*sp],[x+.3*sp,y+.35*sp],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
    dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
-    (family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. As consultas e os exames ainda serão conectados ao sistema clínico.':
+    (family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. Posso abrir a sua ficha e orientar o atendimento.':
     (family==='market'&&role==='Caixa')?'Olá! Sou a pessoa responsável pelo caixa. O catálogo e os pagamentos ainda serão conectados aqui.':
     (family==='bank'&&role==='Caixa')?'Olá! Sou o atendente do banco. Posso ajudar com poupança, transferências e extrato.':
     'Olá! Sou '+name+' e trabalho como '+role.toLowerCase()+'. Como posso ajudar?',
@@ -1318,7 +1371,7 @@ function makeInterior(building){
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='condo'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
@@ -1326,7 +1379,7 @@ function enterBuilding(building){
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
 }
 function leaveInterior(){
- if(!interior)return;const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -1524,9 +1577,123 @@ function renderCondoZip(t){
  interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),opts=p.role==='Corretora'?{f:true,st:2,pn:'#2a2f45',dr:1}:p.name==='Seu Zé'?{pn:'#222',st:3,hat:'#2d3748',bd:true}:{pn:'#222',st:0};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,opts)}}));V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});if(interior.room.net)cwRemotes(V);V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
  c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#ffd7a8';c.fillText(p.name,q[0],q[1])});if(interior.room.net)cwRemoteLabels();c.setTransform(1,0,0,1,0,0);
 }
+/* ---------- HOSPITAL: planta própria (mesma ideia do térreo do condomínio) ---------- */
+Object.assign(DEC,{
+ recdesk:{s:[5,1],p:[[.05,.1,4.9,.8,0,24,'#dfe8e6','#f4f8f7'],[.0,.05,5,.9,24,27,'#3d9b98','#58b9b4'],[.5,.35,.5,.1,27,42,'#111','#222'],[3.9,.35,.5,.1,27,42,'#111','#222']]},
+ waitseats:{s:[3,1],p:[[.05,.25,2.9,.6,0,12,'#4d6b7a','#6a8a9a'],[.05,.12,2.9,.15,12,34,'#3f5967','#4d6b7a']]},
+ hbed:{s:[1,2],p:[[.08,.08,.84,1.84,0,10,'#aeb9bd','#c8d2d5'],[.12,.2,.76,1.7,10,16,'#e9f0f0','#fbfdfd'],[.18,.22,.64,.4,16,20,'#cfe3ea','#e6f3f7'],[.1,.05,.8,.1,10,26,'#aeb9bd','#c8d2d5']]},
+ stretcher:{s:[1,2],p:[[.15,.1,.7,1.8,0,8,'#7f8a8e','#a9b4b8'],[.1,.2,.8,1.6,8,13,'#d9e6ea','#f2f9fb'],[.1,.2,.8,.35,13,17,'#f0d9d6','#fbe9e6']]},
+ xray:{s:[2,2],p:[[.1,.1,1.8,1.8,0,10,'#8fa0a6','#aab9bf'],[.7,.1,.6,.6,10,70,'#c9d3d6','#e3eaec'],[.3,.5,1.4,.5,70,80,'#c9d3d6','#e3eaec'],[.45,.8,1,.4,45,70,'#2b3a42','#3b4c55']]},
+ scanner:{s:[3,3],p:[[.2,.3,2.6,2.4,0,12,'#7f8f95','#9fb0b6'],[.4,.2,2.2,.45,12,62,'#e4ecee','#f6fafb'],[.4,2.35,2.2,.45,12,62,'#e4ecee','#f6fafb'],[.4,.2,.45,2.6,12,62,'#e4ecee','#f6fafb'],[2.15,.2,.45,2.6,12,62,'#e4ecee','#f6fafb'],[.9,.95,1.2,1.4,12,24,'#47606a','#5d7983']],
+  f:(c,x,y,t)=>{const q=P(x+1.5,y+1.5,40),a=.25+.2*Math.sin(t*3);c.fillStyle='rgba(120,230,240,'+a+')';c.beginPath();c.ellipse(q[0],q[1],17,9,0,0,7);c.fill()}},
+ labbench:{s:[3,1],p:[[.05,.1,2.9,.8,0,24,'#b9c6c9','#e6efef'],[.3,.3,.35,.35,24,36,'#4b5a60','#5d6e75'],[1.2,.35,.25,.25,24,40,'#9fd4e8','#bfe9ff'],[2,.35,.25,.25,24,36,'#e86a6a','#ff8c8c']]},
+ cabinet:{s:[1,1],p:[[.12,.15,.76,.7,0,52,'#d7e0e0','#eef4f4'],[.45,.82,.1,.05,10,48,'#8fa0a0','#9fb0b0']]},
+ monitor:{s:[1,1],p:[[.35,.35,.3,.3,0,18,'#6a767b','#8a979c'],[.15,.3,.7,.2,30,46,'#1f2b30','#2c3f47']],
+  f:(c,x,y,t)=>{const a=P(x+.2,y+.52,38),w=P(x+.8,y+.52,38);c.strokeStyle='#5cf0a8';c.lineWidth=1;c.beginPath();c.moveTo(a[0],a[1]);for(let i=1;i<=10;i++){const u=i/10,pk=((t*1.4+u)%1)<.12?-6:0;c.lineTo(a[0]+(w[0]-a[0])*u,a[1]+(w[1]-a[1])*u+pk)}c.stroke()}},
+ plant:{s:[1,1],p:[[.3,.3,.4,.4,0,12,'#b5651d','#c9772a']],f:(c,x,y)=>{const q=P(x+.5,y+.5,12);[['#2f8f4e',11,20],['#3fae63',8,28],['#4ccb78',5,34]].forEach(([col,r,z])=>{c.fillStyle=col;c.beginPath();c.arc(q[0],q[1]-z+12,r,0,7);c.fill()})}},
+ scale:{s:[1,1],p:[[.2,.25,.6,.5,0,5,'#3a4a50','#5d6e75'],[.4,.35,.2,.1,5,6,'#9fb0b6','#cfe0e5']]}
+});
+const HZ={
+ w:34,h:22,
+ rooms:[[0,0,14,14,'Recepção e espera','h'],[0,14,14,8,'Internação','n'],[14,0,7,7,'Triagem','t'],[21,0,6,7,'Consultório 1','c'],[27,0,7,7,'Consultório 2','c'],[14,7,20,3,'','k'],[14,10,7,12,'Laboratório','l'],[21,10,7,12,'Imagem','i'],[28,10,6,12,'Pronto-socorro','e']],
+ walls:[['v',14,0,3],['v',14,5,7],['v',14,10,22],['h',14,0,5],['h',14,9,14],['v',21,0,7],['v',27,0,7],
+  ['h',7,14,17],['h',7,19,23],['h',7,25,29],['h',7,31,34],['h',10,14,17],['h',10,19,23],['h',10,25,30],['h',10,32,34],['v',21,10,22],['v',28,10,22]],
+ doors:[['v',14,3,5,'TRIAGEM'],['v',14,7,10,'CORREDOR'],['h',14,5,9,'INTERNAÇÃO'],['h',7,17,19,'TRIAGEM'],['h',7,23,25,'CONSULTÓRIO 1'],['h',7,29,31,'CONSULTÓRIO 2'],['h',10,17,19,'LABORATÓRIO'],['h',10,23,25,'IMAGEM'],['h',10,30,32,'PRONTO-SOCORRO']],
+ signs:[[7,'RECEPÇÃO'],[17.5,'TRIAGEM'],[24,'CONSULTÓRIO 1'],[30.5,'CONSULTÓRIO 2']],
+ dec:[['recdesk',5,2],['waitseats',1,10.5],['waitseats',1,12.5],['waitseats',9,10.5],['waitseats',9,12.5],['plant',1,1],['plant',12,1],['plant',12.8,12.8],['cooler',11,5],
+  ['desk',15,1],['cabinet',19.6,.4],['scale',19,4.3],
+  ['desk',22,1.2],['hbed',25.6,3.6],
+  ['desk',28.2,1.2],['monitor',32.4,1.2],['hbed',32.2,3.6],
+  ['cooler',14.6,8.2],['plant',33,7.4],
+  ['labbench',15,12],['cabinet',19.6,10.5],['stool',18.6,15.4],['labbench',15,19],['plant',20,20.6],
+  ['xray',21.8,11.5],['monitor',26.6,11.2],['scanner',23.2,17],
+  ['stretcher',28.8,12],['stretcher',32,12],['stretcher',28.8,17.5],['stretcher',32,17.5],['monitor',33,10.6],['cabinet',28.2,20.4],
+  ['hbed',1.2,16.4],['hbed',3,16.4],['hbed',10.4,16.4],['hbed',12.2,16.4],['monitor',5,16.4],['monitor',9,16.4],['desk',5,20.2]]
+};
+HZ.grid=Array.from({length:HZ.h},(_,y)=>Array.from({length:HZ.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of HZ.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'h'}));
+function hospitalCollisionItems(){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ HZ.dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ return solids;
+}
+const HOSP_FLOOR={h:['#eef3f1','#dde7e4'],n:['#e3eef2','#d3e3e9'],t:['#e8f0ec','#d8e5df'],c:['#f1ede2','#e3dccb'],k:['#d9e0e2','#cbd4d7'],l:['#dfe9ef','#cfdde6'],i:['#d8dfe8','#c8d1de'],e:['#efe0de','#e3cfcc']};
+const HOSP_STAFF={Helena:{f:1},Joana:{f:1,hat:'#f6f8f8'},'Dra. Bia':{f:1,gl:1},'Dr. Henrique':{gl:1},Lívia:{f:1,hat:'#f6f8f8'},Marcelo:{},Caio:{hat:'#f6f8f8'},'Dr. Lucas':{}};
+function renderHospitalZip(t){
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0e1a22');bg.addColorStop(1,'#071017');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.3,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ for(let y=0;y<HZ.h;y++)for(let x=0;x<HZ.w;x++){const code=HZ.grid[y][x],f=HOSP_FLOOR[code]||HOSP_FLOOR.h;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ poly(c,[P(14,8.43),P(34,8.43),P(34,8.57),P(14,8.57)],'rgba(61,155,152,.6)');
+ poly(c,[P(.6,6.5),P(2.6,6.5),P(2.6,8.5),P(.6,8.5)],'rgba(61,155,152,.35)');
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(30,70,72,.36)';HZ.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
+ const V=[],WALL='#f4f8f7',WALLS='#dfe7e5',TOP=72;
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,WALL,WALLS);poly(c,[P(i,0,6),P(i+1,0,6),P(i+1,0),P(i,0)],'rgba(0,0,0,.14)');if(i%4===1&&(i<14||i>=15)){poly(c,[P(i+.12,0,60),P(i+.88,0,60),P(i+.88,0,28),P(i+.12,0,28)],'#cdeaf5');c.strokeStyle='#f5efe3';c.lineWidth=1.3;c.stroke();ln(c,P(i+.5,0,60),P(i+.5,0,28))}};
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,WALL,WALLS);poly(c,[P(0,j,6),P(0,j+1,6),P(0,j+1),P(0,j)],'rgba(0,0,0,.14)');
+  if(j===7){poly(c,[P(0,j+.05,60),P(0,j+.95,60),P(0,j+.95,0),P(0,j+.05,0)],'rgba(190,230,250,.55)');c.strokeStyle='#3d9b98';c.lineWidth=1.6;c.stroke();ln(c,P(0,j+.5,60),P(0,j+.5,0));const q=P(0,j+.5,66);c.fillStyle='#2ecc71';c.fillRect(q[0]-9,q[1]-3,18,5)}
+  else if(j%3===1){poly(c,[P(0,j+.12,60),P(0,j+.88,60),P(0,j+.88,28),P(0,j+.12,28)],'#cdeaf5');c.strokeStyle='#f5efe3';c.lineWidth=1.3;c.stroke();ln(c,P(0,j+.5,60),P(0,j+.5,28))}};
+ for(let i=0;i<HZ.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<HZ.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ V.push({k:7.9,f:()=>{poly(c,[P(6.8,0,60),P(7.2,0,60),P(7.2,0,28),P(6.8,0,28)],'#d9534f');poly(c,[P(6.4,0,48),P(7.6,0,48),P(7.6,0,40),P(6.4,0,40)],'#d9534f')}});
+ HZ.signs.forEach(([x,text])=>V.push({k:x+.9,f:()=>{poly(c,[P(x-1.3,0,66),P(x+1.3,0,66),P(x+1.3,0,54),P(x-1.3,0,54)],'#2f7f7c');c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#fff';const q=P(x,0,57);c.fillText(text,q[0],q[1])}}));
+ HZ.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++)V.push(axis==='v'?{k:pos+u+.5,f:()=>box(c,pos-.06,u,.12,1,0,TOP,WALL,WALLS)}:{k:u+.5+pos,f:()=>box(c,u,pos-.06,1,.12,0,TOP,WALL,WALLS)})});
+ HZ.doors.forEach(([axis,pos,a,b,text])=>{const m=(a+b)/2;V.push({k:axis==='v'?pos+m+.6:m+pos+.6,f:()=>{
+  if(axis==='v'){box(c,pos-.06,a,.12,b-a,54,TOP,'#2f7f7c','#58b9b4');const q=P(pos+.07,m,62);c.font='bold 7px sans-serif';c.textAlign='center';c.fillStyle='#fff';c.fillText(text,q[0],q[1])}
+  else{box(c,a,pos-.06,b-a,.12,54,TOP,'#2f7f7c','#58b9b4');const q=P(m,pos+.07,62);c.font='bold 7px sans-serif';c.textAlign='center';c.fillStyle='#fff';c.fillText(text,q[0],q[1])}}})});
+ HZ.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1];V.push({k:x+y+(d[0]+d[1])/2,f:()=>drawDec(c,name,x,y,t)})});
+ const med=interior.med;
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=HOSP_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.f?2:0,pn:'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl})}}));
+ V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',med&&med.sit?{...myO,seated:true}:myO)}});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#bfeee6';c.fillText(p.name,q[0],q[1])});
+ if(med)hospitalMedOverlay(t,med);
+ c.setTransform(1,0,0,1,0,0);
+}
+/* Animação das enfermeiras: caminham até o paciente e usam o instrumento de cada etapa */
+function hospitalMedOverlay(t,m){
+ const k=Math.min(1,(performance.now()-m.t0)/m.ms),pt=P(ipx,ipy),n=m.nurse,nq=n?P(n.x,n.y):pt;
+ const hx=(nq[0]+pt[0])/2,hy=Math.min(nq[1],pt[1])-18,pulse=.5+.5*Math.sin(t*9);
+ c.save();c.lineCap='round';
+ if(m.kind==='triage'){
+  if(k<.34){ // termômetro na testa
+   c.strokeStyle='#e9eef0';c.lineWidth=2.4;ln(c,[hx-8,hy+4],[pt[0]+4,pt[1]-30]);c.strokeStyle='#e04b4b';c.lineWidth=1.2;ln(c,[pt[0]-1,pt[1]-32],[pt[0]+4,pt[1]-30])}
+  else if(k<.67){ // estetoscópio no peito
+   c.strokeStyle='#2b3a42';c.lineWidth=1.5;c.beginPath();c.moveTo(nq[0]-4,nq[1]-26);c.quadraticCurveTo(hx,hy+14,pt[0],pt[1]-16);c.stroke();c.fillStyle='#9fb0b6';c.beginPath();c.arc(pt[0],pt[1]-16,3+pulse,0,7);c.fill()}
+  else{ // braçadeira de pressão
+   c.fillStyle='#4d6b7a';c.fillRect(pt[0]+5,pt[1]-20,6,9);c.fillStyle='#d9534f';c.beginPath();c.arc(hx,hy+10,2.5+pulse*1.6,0,7);c.fill();c.strokeStyle='#2b3a42';c.lineWidth=1;ln(c,[hx,hy+12],[pt[0]+8,pt[1]-16])}
+ }else if(m.kind==='exam'){ // seringa e tubo enchendo
+  c.strokeStyle='#e9eef0';c.lineWidth=2;ln(c,[hx-6,hy+6],[pt[0]+7,pt[1]-16]);c.fillStyle='#b3262e';c.fillRect(hx-6,hy+3,Math.max(1,10*k),3);
+  c.fillStyle='#e9eef0';c.fillRect(pt[0]+14,pt[1]-30,5,12);c.fillStyle='#b3262e';c.fillRect(pt[0]+14,pt[1]-18-12*k,5,12*k)}
+ else if(m.kind==='imaging'){ // varredura
+  const sw=pt[1]-44+k*44;c.fillStyle='rgba(120,230,240,.35)';c.fillRect(pt[0]-18,sw,36,4);c.strokeStyle='rgba(180,250,255,.8)';c.lineWidth=1;c.strokeRect(pt[0]-18,pt[1]-44,36,46)}
+ else if(m.kind==='treat'){ // soro gotejando
+  const px=pt[0]+16;c.strokeStyle='#9fb0b6';c.lineWidth=1.5;ln(c,[px,pt[1]],[px,pt[1]-52]);c.fillStyle='#cfe9f2';c.fillRect(px-4,pt[1]-60,8,12);c.fillStyle='#8fd0e6';c.fillRect(px-3,pt[1]-58+k*6,6,10-k*6);
+  for(let i=0;i<3;i++){const u=(t*1.6+i/3)%1;c.fillStyle='rgba(143,208,230,'+(1-u)+')';c.fillRect(px-.7,pt[1]-47+u*20,1.5,3)}c.strokeStyle='rgba(143,208,230,.8)';ln(c,[px,pt[1]-42],[pt[0]+6,pt[1]-14])}
+ c.restore();
+ c.font='bold 8px sans-serif';const bw=Math.max(64,Math.ceil(c.measureText(m.label).width)+14),bx=pt[0]-bw/2,by=pt[1]-70;c.fillStyle='rgba(8,18,24,.82)';c.fillRect(bx-2,by-13,bw+4,22);c.fillStyle='#bfeee6';c.textAlign='center';c.fillText(m.label,pt[0],by-5);c.fillStyle='#254149';c.fillRect(bx,by,bw,4);c.fillStyle='#3fd0c7';c.fillRect(bx,by,bw*k,4);
+}
+function hospitalAnimate(kind,role,ms,label){
+ return new Promise(resolve=>{
+  const room=interior&&interior.room;if(!room||room.family!=='hospital'){resolve();return}
+  const n=room.people.find(p=>p.role===role)||null,home=n?{x:n.x,y:n.y}:null,m={kind,label,ms,t0:performance.now(),nurse:n,sit:kind==='treat'};interior.med=m;open=true;
+  const side=findRoomSpot(room,ipx+.85,ipy+.1)||findRoomSpot(room,ipx-.85,ipy+.1)||{x:ipx,y:ipy};
+  if(n){n.path=[];n.wait=0}
+  let last=performance.now();
+  const step=now=>{
+   if(!interior||interior.med!==m){resolve();return}
+   const dt=Math.min(.05,(now-last)/1000);last=now;const k=Math.min(1,(now-m.t0)/ms);
+   if(n){const tx=k<.82?side.x:home.x,ty=k<.82?side.y:home.y,dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);
+    if(d>.04){const sp=3.2*dt;n.x+=dx/d*Math.min(d,sp);n.y+=dy/d*Math.min(d,sp);n.face=Math.abs(dx)>Math.abs(dy)?(dx<0?2:3):(dy<0?1:0);n.walkFrame+=dt*8}
+    else if(k<.82){n.face=n.x>ipx?2:3}}
+   if(n&&k<.82)pd=n.x>=ipx?3:2;
+   if(k>=1){if(n){n.x=home.x;n.y=home.y}interior.med=null;resolve();return}
+   requestAnimationFrame(step);
+  };requestAnimationFrame(step);
+ });
+}
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
+  if(interior.room.shape==='hospital-zip'){renderHospitalZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -1647,14 +1814,16 @@ function act(){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
-   if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
+   if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
   }
   if(near?.t==='interiorSpot'){
    if(near.o.action){tone(620,.09,'sine',.06);near.o.action();return}
    if(interior.room.family==='condo'&&['Quadro de unidades','Elevadores','Maquete do prédio','Recepção principal'].includes(near.o.label)){openCondoPanel(near.o.label==='Elevadores'?'floor':'marta');tone(620,.09,'sine',.06);return}
-   if(interior.room.family==='bank'&&['Caixa','Caixa eletrônico','Mesa de atendimento'].includes(near.o.label)){openBankPanel(near.o.label==='Mesa de atendimento'?'loan':'account');tone(620,.09,'sine',.06);return}
+   if(interior.room.family==='hospital'&&HOSP_ZONE_SITE[near.o.label]){openHospitalPanel(HOSP_ZONE_SITE[near.o.label]);tone(620,.09,'sine',.06);return}
+    if(interior.room.family==='bank'&&['Caixa','Caixa eletrônico','Mesa de atendimento'].includes(near.o.label)){openBankPanel(near.o.label==='Mesa de atendimento'?'loan':'account');tone(620,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
    open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
   }
@@ -1669,8 +1838,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -2750,10 +2919,159 @@ say('');
 if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor'];db[k]={name:n,h:hs(p),col:LK.col,skin:LK.skin,hr:LK.hr,pn:LK.pn,body:LK.body,st:LK.st,ac:LK.ac,dr:LK.dr,money:fm?1000:100,xp:0,x:27.5,y:14.5,role:fm?'prefeito':'cidadão'};if(fm)db['#mayor']=k;sv();start(db[k])}
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
-syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
+/* ---------- HOSPITAL: painel do paciente ---------- */
+const HOSP_SITES={
+ reception:{title:'Recepção',who:'Helena · Recepcionista',tell:['Helena','#3d9b98','#f0c3a0','#3a4b57',1]},
+ triage:{title:'Triagem',who:'Joana · Enfermeira de triagem',tell:['Joana','#e1eee9','#d7a781','#2a3138',1]},
+ consult1:{title:'Consultório 1',who:'Dra. Bia · Médica',tell:['Bia','#f4f3ed','#e1b991','#375b78',1]},
+ consult2:{title:'Consultório 2',who:'Dr. Henrique · Resultados e tratamento',tell:['Henrique','#f4f3ed','#b9835d','#2f2a26',0]},
+ lab:{title:'Laboratório',who:'Lívia · Enfermeira de coleta',tell:['Livia','#e1eee9','#c99572','#4a2f22',1]},
+ imaging:{title:'Imagem',who:'Marcelo · Técnico de imagem',tell:['Marcelo','#7aa0b8','#bb865f','#222a33',0]},
+ er:{title:'Pronto-socorro',who:'Dr. Lucas · Cirurgião',tell:['Lucas','#3f8f8c','#d0a17b','#2b2b30',0]},
+ ward:{title:'Internação',who:'Caio · Enfermeiro',tell:['Caio','#e1eee9','#ad744b','#365560',0]}
+};
+const HOSP_ROLE_SITE={'Recepcionista':'reception','Enfermeira de triagem':'triage','Médica':'consult1','Médico':'consult2','Enfermeira de coleta':'lab','Técnico de imagem':'imaging','Cirurgião':'er','Enfermeiro':'ward'};
+const HOSP_ZONE_SITE={'Recepção':'reception','Triagem':'triage','Consultório 1':'consult1','Consultório 2':'consult2','Laboratório':'lab','Imagem':'imaging','Pronto-socorro':'er','Internação':'ward'};
+const HOSP_STEPS=['Recepção','Triagem','Consulta','Exames','Diagnóstico','Tratamento','Alta'];
+const HOSP_RISK_COLOR={verde:'#3fae63',amarelo:'#e3b93b',laranja:'#e8873a',vermelho:'#d9534f'};
+let hosp=null,hospSite='reception',hospBusy=false,hospReq=0,hospOffset=0,hospTimer=0,hospReloaded=false;
+const hospNow=()=>Date.now()+hospOffset;
+const hospMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
+const hospWait=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=3600?Math.floor(s/3600)+' h '+String(Math.ceil((s%3600)/60)).padStart(2,'0')+' min':s>=60?Math.ceil(s/60)+' min':s+' s'};
+const hospCount=until=>'<b class="hospCount" data-until="'+until+'">'+hospWait(until-hospNow())+'</b>';
+async function hospRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{
+  const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/hospital'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.err||'Não foi possível falar com o hospital.');
+  return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('O hospital demorou para responder. Tente novamente.');throw e}
+ finally{clearTimeout(timer)}
+}
+function hospApply(d){if(d.player){user=d.player;$('hm').textContent=user.money}if(d.hospital){hosp=d.hospital;hospOffset=hosp.serverNow-Date.now();hospReloaded=false}}
+function hospSay(text,bad){const e=$('hospMsg');e.textContent=text||'';e.classList.toggle('err',!!bad)}
+function hospFace(site){const t=(HOSP_SITES[site]||HOSP_SITES.reception).tell;return '<canvas class="hospFace" data-face="'+site+'" width="64" height="72" aria-hidden="true"></canvas>'}
+function hospDrawFaces(){document.querySelectorAll('#hospitalPanel canvas[data-face]').forEach(cv=>{const t=HOSP_SITES[cv.dataset.face].tell,g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,64,72);g.setTransform(1.8,0,0,1.8,0,0);person(g,18,38,0,0,t[1],t[2],t[3],{f:!!t[4],st:t[4]?2:0,pn:'#2a2f45',dr:0,hat:/Enferm/.test(HOSP_SITES[cv.dataset.face].who)?'#f6f8f8':0})})}
+function hospSiteName(id){return(HOSP_SITES[id]||{}).title||id}
+function hospTell(site,text){return '<div class="hospTell">'+hospFace(site)+'<p>'+esc(text)+'</p></div>'}
+function hospHere(site){const v=hosp?.visit;return v?v.stage.actions.filter(a=>a.site===site):[]}
+function hospNext(){const v=hosp?.visit;if(!v)return 'Abra a ficha na Recepção.';const a=v.stage.actions[0];
+ if(a)return 'Seu próximo passo: '+hospSiteName(a.site)+'.';
+ if(v.stage.waitMs)return 'Aguardando: '+hospCount(hospNow()+v.stage.waitMs)+'.';return ''}
+function hospVitalsHtml(tr,risk){if(!tr)return '';const v=tr.vitals;
+ return '<div class="hospCard"><h3>Sinais vitais'+(risk?' <span class="hospRisk" style="background:'+HOSP_RISK_COLOR[risk.id]+'">'+esc(risk.label)+'</span>':'')+'</h3><dl class="hospDl"><div><dt>Temperatura</dt><dd>'+v.temp.toLocaleString('pt-BR')+' °C</dd></div><div><dt>Pressão</dt><dd>'+v.sys+'/'+v.dia+'</dd></div><div><dt>Batimentos</dt><dd>'+v.bpm+' bpm</dd></div><div><dt>Oxigênio</dt><dd>'+v.spo2+'%</dd></div></dl>'+(tr.flags.length?'<p class="hospHint">Alertas: '+tr.flags.map(esc).join(', ')+'.</p>':'<p class="hospHint">Sem alertas nos sinais vitais.</p>')+'</div>'}
+function hospExamsHtml(v,site){const list=v.exams.filter(e=>!site||e.site===site);if(!list.length)return '';
+ return '<div class="hospCard"><h3>Exames</h3><ul class="hospList">'+list.map(e=>{
+  const st=e.status==='ordered'?'<span class="hospTag">A coletar · '+hospMoney(e.price)+'</span>':e.status==='running'?'<span class="hospTag wait">Em análise · '+hospCount(e.readyAt)+'</span>':'<span class="hospTag ok">Pronto</span>';
+  const act=e.status==='ordered'&&site?'<button type="button" data-hosp="collect" data-exam="'+e.id+'">Coletar</button>':'';
+  return '<li><span>'+esc(e.name)+(e.result?'<small>'+esc(e.result.finding)+'</small>':'')+(!site?'<small>Local: '+hospSiteName(e.site==='lab'?'lab':'imaging')+'</small>':'')+'</span><span class="hospRight">'+st+act+'</span></li>'}).join('')+'</ul></div>'}
+function hospBillHtml(v){if(!v||!v.charges.length)return '';return '<div class="hospCard"><h3>Conta do atendimento</h3><ul class="hospList">'+v.charges.map(c=>'<li><span>'+esc(c.label)+'</span><span>'+hospMoney(c.amount)+'</span></li>').join('')+'<li class="tot"><span>Total pago</span><span>'+hospMoney(v.total)+'</span></li></ul></div>'}
+function hospView(site){
+ const h=hosp,v=h.visit,here=hospHere(site),P_=h.patient,S=HOSP_SITES[site];let html='';
+ const none=text=>'<div class="hospCard"><p class="hospHint" style="margin:0">'+text+'</p></div>';
+ if(site==='reception'){
+  html+=hospTell('reception',v?'Sua ficha está aberta. Senha '+v.ticket+(v.queueAhead?' · '+v.queueAhead+' pessoa(s) na frente.':'.'):'Bem-vindo ao Hospital de Sorokiba. Vou abrir a sua ficha e você segue para a triagem.');
+  if(!v)html+='<div class="hospCard"><h3>Abrir ficha</h3><dl class="hospDl"><div><dt>Tipo sanguíneo</dt><dd>'+esc(P_.blood)+'</dd></div><div><dt>Saúde</dt><dd>'+P_.health+'%</dd></div><div><dt>Consulta</dt><dd>'+hospMoney(h.fees.consult)+'</dd></div></dl><p class="hospHint">Você paga cada etapa na hora: consulta, exames e tratamento. Exames levam de 1 a 2 horas reais, e você pode sair e voltar depois.</p><div class="hospActions"><button type="button" data-hosp="checkin">Retirar senha e abrir ficha</button></div></div>';
+  else html+=hospBillHtml(v)+'<div class="hospCard"><h3>Atendimento em andamento</h3><p class="hospHint">'+hospNext()+'</p><div class="hospActions"><button type="button" class="alt" data-hosp="leave">Encerrar atendimento</button></div></div>';
+ }else if(site==='triage'){
+  const a=here.find(x=>x.id==='triage');
+  html+=hospTell('triage',a?'Vou medir temperatura, pressão e oxigenação. É rápido.':v&&v.triage?'Triagem feita. A cor do seu risco define quem é chamado primeiro.':'A triagem avalia a urgência de cada paciente.');
+  if(a)html+='<div class="hospCard"><h3>Triagem</h3><p class="hospHint">A enfermeira vai medir os seus sinais vitais.</p><div class="hospActions"><button type="button" data-hosp="triage">Iniciar triagem</button></div></div>';
+  else if(v&&v.triage)html+=hospVitalsHtml(v.triage,v.risk)+none(hospNext());
+  else html+=none(hospNext());
+ }else if(site==='consult1'){
+  const a=here.find(x=>x.id==='consult');
+  html+=hospTell('consult1',a?'Pode entrar. Vamos conversar sobre o que você está sentindo.':'Atendo por ordem de chegada e de urgência.');
+  if(a)html+='<div class="hospCard"><h3>Consulta</h3><p class="hospHint">Valor da consulta: '+hospMoney(h.fees.consult)+'.</p><div class="hospActions"><button type="button" data-hosp="consult">Entrar na consulta ('+hospMoney(h.fees.consult)+')</button></div></div>';
+  else html+=none(hospNext());
+  if(v&&v.consult&&v.consult.hypotheses.length)html+='<div class="hospCard"><h3>Hipóteses da médica</h3><p class="hospHint">Ainda não é o diagnóstico: depende dos exames.</p><ul class="hospList">'+v.consult.hypotheses.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ul></div>';
+  if(v&&v.exams.length)html+=hospExamsHtml(v,null);
+ }else if(site==='lab'||site==='imaging'){
+  html+=hospTell(site,site==='lab'?'Aqui coletamos sangue e amostras. O resultado leva de 1 a 2 horas.':'Fazemos raio-X, ultrassom e tomografia. O laudo leva de 1 a 2 horas.');
+  const mine=v?v.exams.filter(e=>e.site===site):[];
+  html+=mine.length?hospExamsHtml(v,site):none(v&&v.status==='exams'?'Nenhum exame seu é feito aqui. '+hospNext():'Você não tem exames pedidos para esta sala.');
+ }else if(site==='consult2'){
+  const r=here.find(x=>x.id==='results'),pl=here.find(x=>x.id==='plan');
+  html+=hospTell('consult2',r?'Os seus exames ficaram prontos. Vamos ver o resultado.':pl?'Já tenho o diagnóstico. Escolha como quer tratar.':'Aqui eu leio resultados e defino o tratamento.');
+  if(r)html+='<div class="hospCard"><h3>Resultados prontos</h3><div class="hospActions"><button type="button" data-hosp="results">Ler resultados e diagnóstico</button></div></div>';
+  if(v&&v.exams.length&&v.exams.every(e=>e.status==='done'))html+=hospExamsHtml(v,null);
+  if(v&&v.diagnosis)html+='<div class="hospCard"><h3>Diagnóstico: '+esc(v.diagnosis.name)+'</h3></div>';
+  if(pl&&v.plans)html+='<div class="hospPlans">'+v.plans.map(p=>'<div class="hospCard"><h3>'+esc(p.name)+'</h3><p class="hospHint">'+p.sessions+' sessão(ões) de '+hospMoney(p.sessionPrice)+(p.cooldownMin&&p.sessions>1?' · intervalo de '+hospWait(p.cooldownMin*60e3):'')+' · total '+hospMoney(p.total)+'</p><div class="hospActions"><button type="button" data-hosp="plan" data-plan="'+p.id+'">Escolher</button></div></div>').join('')+'</div>';
+  if(!r&&!pl&&!(v&&v.diagnosis))html+=none(hospNext());
+ }else if(site==='er'||site==='ward'){
+  const a=here.find(x=>x.id==='session'),t=v&&v.treatment;
+  html+=hospTell(site,a?'Pode se deitar. Vamos começar a sessão.':site==='er'?'O pronto-socorro faz procedimentos e cirurgias.':'Aqui ficam as medicações, o soro e a internação.');
+  if(a)html+='<div class="hospCard"><h3>'+esc(t.what)+'</h3><p class="hospHint">Sessão '+(t.sessionsDone+1)+' de '+t.sessionsTotal+'.</p><div class="hospActions"><button type="button" data-hosp="session">Iniciar sessão ('+hospMoney(t.sessionPrice)+')</button></div></div>';
+  else if(t)html+='<div class="hospCard"><h3>'+esc(t.what)+'</h3><p class="hospHint">Sessões feitas: '+t.sessionsDone+' de '+t.sessionsTotal+'. '+(t.site!==site?'Seu tratamento é no(a) '+hospSiteName(t.site)+'.':'Próxima sessão em '+hospCount(t.nextAt)+'.')+'</p></div>';
+  else html+=none(hospNext());
+ }
+ return html;
+}
+function renderHospital(){
+ const h=hosp,S=HOSP_SITES[hospSite]||HOSP_SITES.reception;$('hospWho').textContent=S.who;$('hospTitle').textContent=S.title;
+ const body=$('hospBody');
+ if(!h){body.innerHTML='<div class="hospNote">Abrindo o prontuário…</div>';$('hospSteps').innerHTML='';return}
+ const P_=h.patient;$('hospBarFill').style.width=P_.health+'%';$('hospBarFill').style.background=P_.health>=60?'#3fae63':P_.health>=35?'#e3b93b':'#d9534f';$('hospHealthNum').textContent=P_.health+'%';
+ $('hospSymptoms').innerHTML=P_.sick?'Você sente: <b>'+P_.symptoms.map(esc).join(', ')+'</b>.'+(!P_.canWork?' <span class="hospWarn">Debilitado: não pode trabalhar.</span>':''):'Nenhum sintoma no momento.';
+ const step=h.visit?h.visit.stage.step:0;
+ $('hospSteps').innerHTML=HOSP_STEPS.map((s,i)=>'<li class="'+(i<step?'done':i===step?'now':'')+'">'+s+'</li>').join('');
+ body.innerHTML=hospView(hospSite);hospDrawFaces();
+}
+async function hospLoad(keepMsg){
+ const id=++hospReq;
+ try{const d=await hospRequest('');if(id!==hospReq||$('hospitalPanel').hidden)return;hospApply(d);if(!keepMsg)hospSay('');renderHospital()}
+ catch(e){if(id!==hospReq||$('hospitalPanel').hidden)return;hosp=null;$('hospBody').innerHTML='<div class="hospNote" role="alert">'+esc(e.message)+'<div class="hospActions" style="justify-content:center"><button type="button" data-hosp="retry">Tentar novamente</button></div></div>'}
+}
+function openHospitalPanel(site){
+ if(!interior||interior.room.family!=='hospital')return;
+ open=true;$('dlg').hidden=true;hospSite=site||'reception';hosp=null;hospSay('');$('hospitalPanel').hidden=false;renderHospital();hospLoad();
+ clearInterval(hospTimer);hospTimer=setInterval(hospTick,1000);
+}
+function closeHospitalPanel(){hospReq++;clearInterval(hospTimer);hospTimer=0;if($('hospitalPanel').hidden)return;$('hospitalPanel').hidden=true;open=false}
+function hospTick(){
+ if($('hospitalPanel').hidden||!hosp)return;let expired=false;
+ document.querySelectorAll('#hospitalPanel .hospCount').forEach(e=>{const left=Number(e.dataset.until)-hospNow();e.textContent=hospWait(left);if(left<=0)expired=true});
+ if(expired&&!hospReloaded&&!hospBusy){hospReloaded=true;hospLoad(true)}
+}
+const HOSP_ANIM={
+ triage:()=>['triage','Enfermeira de triagem',4600,'Aferindo sinais vitais…'],
+ exam:e=>e.site==='imaging'?['imaging','Técnico de imagem',3800,'Realizando o exame…']:['exam','Enfermeira de coleta',3800,'Coletando amostra…'],
+ session:e=>['treat',e.site==='er'?'Cirurgião':'Enfermeiro',4800,e.site==='er'?'Realizando o procedimento…':'Aplicando o tratamento…']
+};
+async function hospAct(path,body){
+ if(hospBusy)return;hospBusy=true;$('hospitalPanel').classList.add('busy');
+ try{
+  const d=await hospRequest(path,body);hospApply(d);
+  const mk=d.event&&HOSP_ANIM[d.event.kind];
+  if(mk){const a=mk(d.event);$('hospitalPanel').hidden=true;await hospitalAnimate(...a);if(!interior||interior.room.family!=='hospital')return;$('hospitalPanel').hidden=false;open=true}
+  renderHospital();hospSay(d.message||'Pronto.');tone(880,.1,'sine',.05);
+ }catch(e){hospSay(e.message,true);tone(190,.14,'square',.04)}
+ finally{hospBusy=false;$('hospitalPanel').classList.remove('busy')}
+}
+$('hospClose').onclick=closeHospitalPanel;
+$('hospBody').onclick=e=>{
+ const b=e.target.closest('[data-hosp]');if(!b)return;const a=b.dataset.hosp;
+ if(a==='retry')return hospLoad();
+ if(a==='checkin')hospAct('/checkin',{});
+ else if(a==='triage')hospAct('/triage',{});
+ else if(a==='consult')hospAct('/consult',{});
+ else if(a==='collect')hospAct('/exams/collect',{exam:b.dataset.exam});
+ else if(a==='results')hospAct('/exams/results',{});
+ else if(a==='plan')hospAct('/treatment/plan',{plan:b.dataset.plan});
+ else if(a==='session')hospAct('/treatment/session',{});
+ else if(a==='leave'){if(confirm('Encerrar o atendimento? Os valores já pagos não são devolvidos.'))hospAct('/leave',{})}
+};
+async function hospitalPing(){
+ try{const d=await hospRequest('');const p=d.hospital.patient;
+  if(p.sick)toast('Você não está se sentindo bem ('+p.symptoms.join(', ')+'). Procure o Hospital.');
+  else if(!p.canWork)toast('Sua saúde está baixa. Procure o Hospital antes de trabalhar.')}catch{}
+}
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
 let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
