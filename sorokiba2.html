@@ -240,6 +240,54 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 .condoUnits{grid-template-columns:repeat(2,minmax(0,1fr))}.condoCard{display:flex;gap:12px;align-items:center}.condoCard .condoUnitInfo{flex:1;min-width:0}.condoMiniPlan{position:relative;flex:none;width:150px;height:98px;overflow:hidden;border:2px solid #56687b;border-radius:8px;background:#252b36;box-shadow:0 4px 12px #0007}.condoMiniRoom{position:absolute;display:grid;place-items:center;box-sizing:border-box;border:1px solid #0005;color:#1d2630;font-size:7px;font-weight:700;text-align:center;line-height:1.1}.condoMiniRoom.w{background:#c19564}.condoMiniRoom.t{background:#d8dde2}.condoMiniRoom.c{background:#85759a}.condoHallScene{position:relative;height:144px;margin:12px 0 16px;border:1px solid #ffffff22;border-radius:14px;overflow:hidden;background:linear-gradient(#2a2231 0 60%,#51303b 60% 100%);display:flex;align-items:flex-end;justify-content:flex-end;gap:clamp(10px,4vw,28px);padding:12px 12px 32px 72px}.condoHallScene:before{content:"";position:absolute;inset:0 0 40%;background:repeating-linear-gradient(90deg,#d8cdbb 0 16%,#cdc1ac 16.2% 16.5%);border-bottom:7px solid #5a3d22}.condoHallDoor{position:relative;z-index:1;width:clamp(44px,10vw,74px);height:82px;border:4px solid #4a3017;border-radius:5px 5px 0 0;background:linear-gradient(90deg,#6b4a2b,#8a5f37,#6b4a2b);box-shadow:inset 0 0 0 6px #7a5430,0 6px 12px #0008;color:#f2b84b;font-size:12px;font-weight:900;display:grid;place-items:center}.condoHallDoor:after{content:"";position:absolute;right:7px;top:46px;width:6px;height:6px;border-radius:50%;background:#f2b84b}.condoElevatorMini{position:absolute;z-index:2;left:14px;top:12px;width:42px;height:82px;border:4px solid #aeb8c1;background:linear-gradient(90deg,#77828b,#d4dbe0,#77828b)}.condoElevatorMini:after{content:"ELEVADOR";position:absolute;left:50px;top:22px;width:66px;color:#f2b84b;font-size:9px;font-weight:800}.condoPlanCanvas{display:block;width:min(100%,720px);height:auto;aspect-ratio:1.9;margin:12px auto 18px;border:1px solid #ffffff45;border-radius:12px;background:linear-gradient(145deg,#182534,#24384a);box-shadow:0 10px 24px #0007;touch-action:manipulation}.condoFurnitureGrid .selected{outline:2px solid #2dd4bf;box-shadow:0 0 12px #2dd4bf66}.condoEditBar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.condoEditBar button{border:0;border-radius:9px;padding:9px 12px;background:#2dd4bf;color:#091321;font-weight:800;cursor:pointer}
 @media(max-width:700px){.condoUnits{grid-template-columns:1fr}.condoMiniPlan{width:124px;height:82px}.condoHallDoor{height:68px}.condoHallScene{gap:7px;padding:12px 8px 32px 70px}}
 .condoHallDoor.free{border-color:#5ed890;box-shadow:inset 0 0 0 6px #7a5430,0 0 12px #49b87366}.condoHallDoor.own{border-color:#e27878;box-shadow:inset 0 0 0 6px #7a5430,0 0 12px #d85c5c66}.condoHallDoor.mine{border-color:#f2b84b;box-shadow:inset 0 0 0 6px #7a5430,0 0 16px #f2b84b99}
+
+/* ---------- Banco de Sorokiba ---------- */
+#bankPanel{position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,95vw);max-height:88vh;overflow:auto;padding:clamp(14px,3vw,24px);border:1px solid #c5a05c88;border-radius:16px;background:linear-gradient(155deg,#14232f 0%,#0a121d 100%);box-shadow:0 24px 80px #000d;color:#f5efe3;overscroll-behavior:contain}
+.bankHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:1px solid #c5a05c55}
+.bankKicker{margin:0 0 4px;color:#d6b26a;font-size:12px;font-weight:700}
+.bankHead h2{margin:0;color:#fff0d0;font-size:clamp(22px,4vw,30px)}
+.bankHead p:not(.bankKicker){margin:5px 0 0;color:#bfcedb;font-size:13px}
+#bankPanel button{font:inherit;cursor:pointer}
+#bankClose{border:1px solid #ffffff33;border-radius:9px;padding:8px 12px;background:#ffffff10;color:#f5efe3}
+.bankBalances{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 10px}
+.bankBalances div{padding:10px 12px;border:1px solid #ffffff1c;border-radius:10px;background:#ffffff08}
+.bankBalances span{display:block;color:#a9bccd;font-size:12px}
+.bankBalances strong{display:block;margin-top:3px;color:#f2b84b;font-size:clamp(15px,3.4vw,20px);font-variant-numeric:tabular-nums}
+.bankTabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.bankTabs button{border:1px solid #c5a05c66;border-radius:9px;padding:8px 13px;background:transparent;color:#ead9b2;font-weight:600}
+.bankTabs button[aria-selected=true]{background:#c5a05c;color:#10161f;border-color:#c5a05c}
+.bankMsg{min-height:20px;margin:6px 0 8px;color:#bfeadf;font-size:13px}
+.bankMsg.err{color:#ffb9ad}
+.bankTeller{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.bankTeller canvas{flex:none;width:64px;height:72px;border-radius:10px;background:#ffffff0d}
+.bankTeller p{margin:0;color:#dfe8ef;font-size:14px;line-height:1.45}
+.bankCard{padding:14px;border:1px solid #ffffff1c;border-radius:12px;background:#ffffff08;margin-bottom:10px}
+.bankCard h3{margin:0 0 6px;color:#fff0d0;font-size:16px}
+.bankHint{margin:0 0 10px;color:#aebfce;font-size:12.5px;line-height:1.45}
+.bankWarn{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#5b1f1f;color:#ffd7d0;font-size:13px}
+.bankCard label{display:block;margin:8px 0 5px;color:#d9e4ec;font-size:13px}
+.bankRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bankCard input[type=number],.bankCard input[type=text]{width:100%;max-width:240px;box-sizing:border-box;padding:10px 12px;border:1px solid #c5a05c99;border-radius:9px;background:#0b1320;color:#fff;font-size:16px;font-variant-numeric:tabular-nums}
+.bankCard input[type=range]{width:100%;max-width:420px;accent-color:#c5a05c}
+.bankChips{display:flex;gap:6px;flex-wrap:wrap}
+.bankChips button{border:1px solid #ffffff2e;border-radius:999px;padding:6px 11px;background:#ffffff0c;color:#e8eef3;font-size:12.5px}
+.bankActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.bankActions button{border:0;border-radius:9px;padding:10px 16px;background:linear-gradient(90deg,#f2b84b,#ffd37a);color:#0b1020;font-weight:800}
+.bankActions button.alt{background:#ffffff14;color:#f5efe3;border:1px solid #ffffff33}
+.bankActions button:disabled{opacity:.45;cursor:not-allowed}
+.bankDl{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 10px}
+.bankDl div{padding:8px 10px;border-radius:9px;background:#0b132066}
+.bankDl dt{color:#a9bccd;font-size:12px}
+.bankDl dd{margin:2px 0 0;font-variant-numeric:tabular-nums}
+.bankLedger{list-style:none;margin:0;padding:0}
+.bankLedger li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px dotted #ffffff30}
+.bankLedger small{display:block;margin-top:2px;color:#9fb2c4;font-size:12px}
+.bankLedger .amt{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
+.bankLedger .up{color:#6ee7b7}.bankLedger .down{color:#fca5a5}
+.bankNote{padding:18px;text-align:center;color:#bfcedb}
+#bankPanel.busy button,#bankPanel.busy input{pointer-events:none;opacity:.6}
+#bankPanel button:focus-visible,#bankPanel input:focus-visible{outline:2px solid #f2b84b;outline-offset:2px}
+@media(max-width:520px){.bankBalances{grid-template-columns:1fr}.bankBalances div{display:flex;justify-content:space-between;align-items:baseline}.bankBalances strong{margin:0}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -292,6 +340,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="workPanel" hidden><header class="workHeader"><div><p class="workEyebrow">CENTRO PROFISSIONAL · SOROKIBA</p><h2>Meu trabalho</h2><p class="workSubtitle">Acompanhe seu turno, suas missões e sua evolução.</p></div><button id="workClose" type="button">Fechar</button></header><p id="workMsg" class="workMessage" aria-live="polite">Carregando...</p><div class="workOverview"><article class="workCard"><h3>Resumo profissional</h3><div id="workSummary"></div></article><article class="workCard"><h3>Progressão de carreira</h3><div id="workProgress"></div></article></div><article class="workCard workTrainingCard"><h3>Treinamentos</h3><div id="workTraining"></div></article><article class="workCard workActionCenter"><div class="workSectionHeading"><div><p class="workEyebrow">FERRAMENTAS DO FUNCIONÁRIO</p><h3>Central de ações</h3></div></div><p class="workActionIntro">Gerencie seu turno, converse com a supervisão e acompanhe oportunidades de carreira.</p><div class="workActions"><button id="workStart" class="workAction"><span>Iniciar turno</span><small>Começar expediente</small></button><button id="workNext" class="workAction"><span>Nova missão</span><small>Receber tarefa disponível</small></button><button id="workSupervisor" class="workAction"><span>Falar com supervisor</span><small>Orientações e desempenho</small></button><button id="workPromotionRequest" class="workAction"><span>Solicitar promoção</span><small>Pedir avaliação de carreira</small></button><button id="workPromotionConfirm" class="workAction"><span>Confirmar promoção</span><small>Aceitar promoção aprovada</small></button></div><div id="workSupervisorReply" class="workSupervisorReply" hidden aria-live="polite"></div></article><article class="workCard workMissionCard"><div class="workMissionHeading"><div><p class="workEyebrow">OBJETIVO EM ANDAMENTO</p><h3>Missões do trabalho</h3></div><span id="workMissionBadge" class="workMissionBadge">Sem missão</span></div><div id="workMissionProgress" class="workMissionProgress"></div><div id="workTask"></div><div id="workRewardClaim" class="workRewardClaim" hidden></div></article><article class="workCard"><h3>Histórico recente</h3><div id="workHistory"></div></article></section>
 <section id="icecreamMenu" hidden aria-labelledby="icecreamTitle"><header class="icecreamHeader"><div><p class="icecreamKicker">Parque Central · Sorveteria</p><h2 id="icecreamTitle">Sorvetes da Luna</h2><p>Escolha um sabor, compre e coma quando quiser.</p></div><button id="icecreamClose" type="button" aria-label="Fechar sorveteria">Fechar</button></header><p id="icecreamMsg" aria-live="polite">Falando com a atendente...</p><div id="icecreamChoices"></div><footer>Seu dinheiro: <strong>R$ <span id="icecreamMoney">0</span></strong> · Os sorvetes comprados ficam no seu inventário.</footer></section>
 <section id="condoPanel" hidden aria-labelledby="condoTitle"><header class="condoHeader"><div><p class="condoKicker">SOROKIBA TOWER · CONDOMÍNIO</p><h2 id="condoTitle">Seu próximo endereço</h2><p id="condoIntro">Consulte os andares, negocie uma unidade e organize seu apartamento.</p></div><button id="condoClose" type="button" aria-label="Fechar condomínio">Fechar</button></header><div class="condoOverview"><div><span>SEU SALDO</span><strong id="condoMoney">R$ 0</strong></div><div><span>TORRE</span><strong>15 andares · 60 unidades</strong></div><div><span>LAZER</span><strong>Academia · piscina · salão</strong></div></div><p id="condoMsg" class="condoMessage" aria-live="polite">Carregando unidades...</p><div class="condoToolbar"><label for="condoFloor">Andar</label><select id="condoFloor"></select><button id="condoMine" type="button">Meus apartamentos</button><button id="condoAll" type="button">Ver unidades</button></div><div id="condoBody"></div></section>
+<section id="bankPanel" hidden role="dialog" aria-labelledby="bankTitle"><header class="bankHead"><div><p class="bankKicker">Banco de Sorokiba</p><h2 id="bankTitle">Atendimento</h2><p id="bankIntro"></p></div><button id="bankClose" type="button" aria-label="Fechar banco">Fechar</button></header><div class="bankBalances"><div><span>Carteira</span><strong id="bankMoney">R$ 0</strong></div><div><span>Poupança</span><strong id="bankSavings">…</strong></div><div><span>Dívida</span><strong id="bankDebt">…</strong></div></div><nav class="bankTabs" id="bankTabs" role="tablist" aria-label="Serviços do banco"><button type="button" role="tab" data-bank-tab="account">Poupança</button><button type="button" role="tab" data-bank-tab="transfer">Transferir</button><button type="button" role="tab" data-bank-tab="loan">Empréstimo</button><button type="button" role="tab" data-bank-tab="statement">Extrato</button></nav><p id="bankMsg" class="bankMsg" aria-live="polite"></p><div id="bankBody"></div></section>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
@@ -769,7 +818,7 @@ else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído
 else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
-else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
+else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
@@ -1074,7 +1123,7 @@ function makeInterior(building){
  }else if(family==='bank'){
   add('counter',2.8,1.1,6,.9,25,'#77583f','#c6a16d','#49352a');add('desk',2,4,1.4,.8,17,'#8c6a49','#c7a57b','#59412f');add('atm',9.5,4,.8,.8,19,'#51666c','#90a7a7','#2c424a');
   z('Caixa',5.9,2.4,'Área de atendimento bancário.');z('Mesa de atendimento',2.75,5.15,'Atendimento para dúvidas e serviços bancários.');
-  z('Caixa eletrônico',10.45,5.8,'Saldo atual da sua carteira: R$ '+Number(user?.money||0).toLocaleString('pt-BR')+'. Depósitos e transferências ainda não estão conectados a este interior.');
+  z('Caixa eletrônico',10.45,5.8,'Saldo atual da sua carteira: R$ '+Number(user?.money||0).toLocaleString('pt-BR')+'. Use para depositar, sacar e consultar a poupança.');
  }else if(family==='cityhall'){
   add('counter',3.4,1.05,3.5,.85,22,'#8e704e','#cfb07b','#614a35');add('desk',7.7,3.25,2,.9,18,'#77583f','#b89062','#49352a');
   add('board',9.8,1,1.25,.18,30,'#5b5648','#907e5b','#37372e',false);add('chair',7.95,4.65,.65,.65,10,'#82664b','#ac8b60','#4e3b2e');
@@ -1261,7 +1310,7 @@ function makeInterior(building){
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
     (family==='hospital'&&role==='Recepcionista')?'Olá! Posso orientar você na recepção. As consultas e os exames ainda serão conectados ao sistema clínico.':
     (family==='market'&&role==='Caixa')?'Olá! Sou a pessoa responsável pelo caixa. O catálogo e os pagamentos ainda serão conectados aqui.':
-    (family==='bank'&&role==='Caixa')?'Olá! Sou o atendente do banco. Depósitos e transferências ainda serão integrados a este cenário.':
+    (family==='bank'&&role==='Caixa')?'Olá! Sou o atendente do banco. Posso ajudar com poupança, transferências e extrato.':
     'Olá! Sou '+name+' e trabalho como '+role.toLowerCase()+'. Como posso ajudar?',
    route:route.map(([rx,ry])=>findRoomSpot(room,rx*sx,ry*sy)).filter(Boolean),routeIndex:1,path:[],walkFrame:0});
  }
@@ -1598,13 +1647,15 @@ function act(){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
-   if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
+   if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
   }
   if(near?.t==='interiorSpot'){
    if(near.o.action){tone(620,.09,'sine',.06);near.o.action();return}
    if(interior.room.family==='condo'&&['Quadro de unidades','Elevadores','Maquete do prédio','Recepção principal'].includes(near.o.label)){openCondoPanel(near.o.label==='Elevadores'?'floor':'marta');tone(620,.09,'sine',.06);return}
-   if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
+   if(interior.room.family==='bank'&&['Caixa','Caixa eletrônico','Mesa de atendimento'].includes(near.o.label)){openBankPanel(near.o.label==='Mesa de atendimento'?'loan':'account');tone(620,.09,'sine',.06);return}
+    if(interior.room.family==='employment'&&['Painel de vagas','Mesa de recrutamento','Balcão de recepção','Sala de entrevistas'].includes(near.o.label)){loadCareers(near.o.label);tone(620,.09,'sine',.06);return}
    open=true;tone(620,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+interior.room.title+' · '+near.o.label+'</b><p>'+interiorText(near.o)+'</p>';if(interior.building.n==='Prefeitura'&&near.o.label==='Quadro de avisos')completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(msg=>{$('dlg').innerHTML+='<p>'+msg+'</p>'})
   }
   return;
@@ -1618,8 +1669,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -2702,6 +2753,126 @@ function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value=''}
 $('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
+
+/* ---------- BANCO ---------- */
+const BANK_FEE_BP=200,BANK_FEE_MIN=1;
+let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
+const bankMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
+const bankFee=a=>Math.max(BANK_FEE_MIN,Math.ceil(a*BANK_FEE_BP/10000));
+const bankPct=bp=>(bp/100).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';
+const bankDate=s=>new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+async function bankRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{
+  const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/bank'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.err||'Não foi possível falar com o banco.');
+  return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('O banco demorou para responder. Tente novamente.');throw e}
+ finally{clearTimeout(timer)}
+}
+function bankApply(d){if(d.player){user=d.player;$('hm').textContent=user.money}if(d.bank)bankData=d.bank}
+function bankSay(text,bad){const e=$('bankMsg');e.textContent=text||'';e.classList.toggle('err',!!bad)}
+function bankTeller(who,text){return '<div class="bankTeller"><canvas id="bankFace" data-who="'+who+'" width="64" height="72" aria-hidden="true"></canvas><p>'+esc(text)+'</p></div>'}
+function bankDrawTeller(){const c=$('bankFace');if(!c)return;const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,64,72);g.setTransform(1.8,0,0,1.8,0,0);
+ if(c.dataset.who==='ana')person(g,18,38,0,0,'#435c7b','#c28f6a','#202c3d',{f:true,st:2,pn:'#2a2f45',dr:1});
+ else person(g,18,38,0,0,'#c5a05c','#d2a17d','#27394f',{f:false,st:0,pn:'#2a2f45',dr:0})}
+const BANK_INTROS={account:'Marcos · Caixa — poupança',transfer:'Marcos · Caixa — transferências',loan:'Ana · Gerente — empréstimos',statement:'Suas últimas movimentações'};
+function bankViewAccount(b){const i=b.interest;
+ return bankTeller('marcos','Bom dia! Sou o Marcos. O dinheiro na poupança rende todos os dias; o da carteira não rende nada.')+
+ '<div class="bankCard"><h3>Poupança</h3><p class="bankHint">Rende '+bankPct(i.bpPerDay)+' ao dia sobre até '+bankMoney(i.baseMax)+', creditado por dia completo. A poupança aceita até '+bankMoney(i.savingsMax)+'.</p>'+
+ '<label for="bankAmt">Valor</label><div class="bankRow"><input id="bankAmt" type="number" inputmode="numeric" min="1" step="1" placeholder="0" autocomplete="off"><div class="bankChips"><button type="button" data-bank-chip="50">R$ 50</button><button type="button" data-bank-chip="100">R$ 100</button><button type="button" data-bank-chip="500">R$ 500</button><button type="button" data-bank-chip="wallet">Toda a carteira</button><button type="button" data-bank-chip="savings">Toda a poupança</button></div></div>'+
+ '<div class="bankActions"><button type="button" data-bank="deposit">Depositar</button><button type="button" data-bank="withdraw" class="alt">Sacar</button></div></div>'}
+function bankViewTransfer(b){const t=b.transfer,xp=user?.xp||0,left=Math.max(0,t.dailyLimit-t.usedToday);
+ if(t.locked)return bankTeller('marcos','Para enviar dinheiro a outros moradores você precisa de '+t.minXp+' XP. Você tem '+xp+'. Faça missões e volte aqui.');
+ return bankTeller('marcos','Confira o nome do destinatário com atenção: uma transferência não volta.')+
+ '<div class="bankCard"><h3>Transferir para um morador</h3><p class="bankHint">Tarifa de '+bankPct(t.feeBp)+' (mínimo '+bankMoney(t.feeMin)+'). Hoje você ainda pode enviar '+bankMoney(left)+' de '+bankMoney(t.dailyLimit)+'.</p>'+
+ '<label for="bankTo">Nome de usuário do destinatário</label><input id="bankTo" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="usuario_123">'+
+ '<label for="bankAmt">Valor</label><input id="bankAmt" type="number" inputmode="numeric" min="1" step="1" placeholder="0" autocomplete="off"><p class="bankHint" id="bankFeePreview" style="margin-top:8px"></p>'+
+ '<div class="bankActions"><button type="button" data-bank="transfer">Enviar</button></div></div>'}
+function bankViewStatement(b){
+ const rows=b.ledger.map(r=>'<li><span>'+esc(r.label)+'<small>'+(r.peer?esc(r.peer)+' · ':'')+(r.note?esc(r.note)+' · ':'')+bankDate(r.at)+(r.where!=='carteira'?' · '+esc(r.where):'')+'</small></span><span class="amt '+(r.sign>0?'up':'down')+'">'+(r.sign>0?'+':'−')+bankMoney(r.amount)+'</span></li>').join('');
+ return bankTeller('marcos','Aqui estão as suas últimas '+b.ledger.length+' movimentações.')+'<div class="bankCard">'+(rows?'<ul class="bankLedger">'+rows+'</ul>':'<p class="bankHint">Nenhuma movimentação ainda.</p>')+'</div>'}
+function bankViewLoan(b){const L=b.loan,a=L.active;
+ const intro=bankTeller('ana','Olá! Sou a Ana, gerente. Posso liberar crédito conforme o seu XP e negociar a taxa com você.');
+ if(a)return intro+'<div class="bankCard"><h3>Seu empréstimo</h3><dl class="bankDl"><div><dt>Você pegou</dt><dd>'+bankMoney(a.principal)+'</dd></div><div><dt>Taxa</dt><dd>'+bankPct(a.rateBp)+'</dd></div><div><dt>Total a devolver</dt><dd>'+bankMoney(a.totalDue)+'</dd></div><div><dt>Já pago</dt><dd>'+bankMoney(a.paid)+'</dd></div><div><dt>Falta pagar</dt><dd><b>'+bankMoney(a.owed)+'</b></dd></div><div><dt>Vence em</dt><dd>'+bankDate(a.dueAt)+'</dd></div></dl>'+
+  (a.overdue?'<p class="bankWarn">Empréstimo vencido: o banco desconta o que faltar da sua poupança e da carteira.</p>':'<p class="bankHint">Se vencer, o banco desconta o que faltar da sua poupança e da carteira.</p>')+
+  '<label for="bankAmt">Valor do pagamento</label><input id="bankAmt" type="number" inputmode="numeric" min="1" step="1" placeholder="0" autocomplete="off"><div class="bankActions"><button type="button" data-bank="repay">Pagar</button><button type="button" data-bank="repayAll" class="alt">Quitar tudo ('+bankMoney(a.owed)+')</button></div></div>';
+ if(!L.limit)return intro+'<div class="bankCard"><p class="bankHint" style="margin:0">Empréstimos exigem '+L.minXp+' XP e você tem '+(user?.xp||0)+'. Faça missões e trabalhe para liberar crédito.</p></div>';
+ bankLoanAmt=Math.min(L.limit,Math.max(L.minAmount,bankLoanAmt||Math.min(L.limit,500)));
+ return intro+'<div class="bankCard"><h3>Pedir empréstimo</h3><p class="bankHint">Seu limite agora é de '+bankMoney(L.limit)+' e cresce com o XP. Prazo de '+L.termDays+' dias para devolver.</p>'+
+  '<label for="bankLoanRange">Quanto você precisa: <b id="bankLoanOut"></b></label><input id="bankLoanRange" type="range" min="'+L.minAmount+'" max="'+L.limit+'" step="50" value="'+bankLoanAmt+'">'+
+  '<div class="bankDl" id="bankLoanInfo" style="margin-top:10px"></div>'+
+  '<label for="bankOffer">Negociar a taxa com a Ana (em %)</label><div class="bankRow"><input id="bankOffer" type="number" inputmode="decimal" min="0" step="0.1" placeholder="ex.: 8" autocomplete="off"><button type="button" data-bank="negotiate" class="bankChips" style="border:1px solid #ffffff2e;border-radius:9px;padding:9px 13px;background:#ffffff10;color:#f5efe3">Propor taxa</button></div>'+
+  '<div class="bankActions"><button type="button" data-bank="acceptDeal" class="alt" id="bankAccept" hidden></button><button type="button" data-bank="takeLoan" id="bankTake"></button></div></div>'}
+function bankLoanPreview(){const L=bankData?.loan;if(!L||L.active||!$('bankLoanInfo'))return;
+ const rate=bankDeal?.accepted||L.baseRateBp,total=bankLoanAmt+Math.ceil(bankLoanAmt*rate/10000);
+ $('bankLoanOut').textContent=bankMoney(bankLoanAmt);
+ $('bankLoanInfo').innerHTML='<div><dt>Taxa</dt><dd>'+bankPct(rate)+(bankDeal?.accepted?' (negociada)':' (tabela)')+'</dd></div><div><dt>Total a devolver</dt><dd>'+bankMoney(total)+'</dd></div><div><dt>Prazo</dt><dd>'+L.termDays+' dias</dd></div>';
+ $('bankTake').textContent='Contratar por '+bankPct(rate);
+ const ac=$('bankAccept'),offered=bankDeal&&!bankDeal.accepted&&bankDeal.ask;ac.hidden=!offered;if(offered)ac.textContent='Aceitar '+bankPct(bankDeal.ask)}
+function renderBank(){
+ const b=bankData;$('bankMoney').textContent=bankMoney(user?.money);$('bankSavings').textContent=b?bankMoney(b.savings):'…';
+ const debt=b?.loan?.active?.owed||0;$('bankDebt').textContent=b?(debt?bankMoney(debt):'Sem dívida'):'…';
+ document.querySelectorAll('#bankTabs button').forEach(x=>x.setAttribute('aria-selected',String(x.dataset.bankTab===bankTab)));
+ $('bankIntro').textContent=BANK_INTROS[bankTab]||'';
+ const body=$('bankBody');
+ if(!b){body.innerHTML='<div class="bankNote">Consultando sua conta…</div>';return}
+ body.innerHTML=({account:bankViewAccount,transfer:bankViewTransfer,loan:bankViewLoan,statement:bankViewStatement}[bankTab]||bankViewAccount)(b);
+ bankDrawTeller();if(bankTab==='loan')bankLoanPreview();
+}
+async function bankLoad(){
+ const token0=++bankReq;
+ try{const d=await bankRequest('');if(token0!==bankReq||$('bankPanel').hidden)return;bankApply(d);bankSay('');renderBank()}
+ catch(e){if(token0!==bankReq||$('bankPanel').hidden)return;bankData=null;$('bankBody').innerHTML='<div class="bankNote" role="alert">'+esc(e.message)+'<div class="bankActions" style="justify-content:center"><button type="button" data-bank="retry">Tentar novamente</button></div></div>'}
+}
+function openBankPanel(tab){
+ if(!interior||interior.room.family!=='bank')return;
+ open=true;$('dlg').hidden=true;bankTab=tab||'account';bankDeal=null;bankData=null;bankSay('');$('bankPanel').hidden=false;renderBank();bankLoad()
+}
+function closeBankPanel(){bankReq++;$('bankPanel').hidden=true;open=false}
+async function bankAct(path,body,onOk){
+ if(bankBusy)return;bankBusy=true;$('bankPanel').classList.add('busy');
+ try{const d=await bankRequest(path,body);bankApply(d);if(onOk)onOk(d);renderBank();bankSay(d.message||'Pronto.');tone(880,.1,'sine',.05)}
+ catch(e){bankSay(e.message,true);tone(190,.14,'square',.04)}
+ finally{bankBusy=false;$('bankPanel').classList.remove('busy')}
+}
+const bankNum=()=>Number($('bankAmt')?.value);
+function bankNeedAmount(){const n=bankNum();if(!Number.isInteger(n)||n<1){bankSay('Digite um valor inteiro maior que zero.',true);return 0}return n}
+async function bankNegotiate(accept){
+ const L=bankData?.loan;if(!L||bankBusy)return;let offer;
+ if(!accept){const pct=Number($('bankOffer')?.value);if(!(pct>0)){bankSay('Digite a taxa que você quer pagar, em %.',true);return}offer=Math.round(pct*100)}
+ bankBusy=true;$('bankPanel').classList.add('busy');
+ try{
+  const d=await bankRequest('/loan/negotiate',accept?{amount:bankLoanAmt,accept:true}:{amount:bankLoanAmt,offer});
+  bankDeal={amount:bankLoanAmt,ask:d.ask,accepted:d.result==='deal'?d.rate:null,remaining:d.remaining};
+  const say={deal:'Fechado! A Ana topa '+bankPct(d.rate||0)+'.',counter:'A Ana contrapropõe '+bankPct(d.ask||0)+'. Restam '+d.remaining+' rodada(s).',low:'Essa taxa está baixa demais para o banco. Restam '+d.remaining+' rodada(s).',final:'Última proposta da Ana: '+bankPct(d.ask||0)+'. Aceite ou contrate na taxa de tabela.',start:'A taxa de tabela é '+bankPct(d.ask||0)+'.'}[d.result]||'';
+  bankSay(say,d.result==='low');bankLoanPreview();tone(660,.08,'sine',.05)
+ }catch(e){bankSay(e.message,true);tone(190,.14,'square',.04)}
+ finally{bankBusy=false;$('bankPanel').classList.remove('busy')}
+}
+function bankPush(m){if(typeof m.money==='number'&&user){user.money=m.money;$('hm').textContent=m.money}toast(m.m||'Movimentação no banco.');tone(784,.1,'sine',.05);if(!$('bankPanel').hidden&&!bankBusy)bankLoad()}
+$('bankClose').onclick=closeBankPanel;
+$('bankTabs').onclick=e=>{const t=e.target.closest('[data-bank-tab]');if(!t||bankBusy)return;bankTab=t.dataset.bankTab;bankSay('');renderBank()};
+$('bankBody').oninput=e=>{
+ if(e.target.id==='bankLoanRange'){bankLoanAmt=Number(e.target.value);bankDeal=null;bankLoanPreview();return}
+ if(e.target.id==='bankAmt'&&$('bankFeePreview')){const n=bankNum();$('bankFeePreview').textContent=Number.isInteger(n)&&n>0?'Tarifa: '+bankMoney(bankFee(n))+' · total debitado: '+bankMoney(n+bankFee(n)):''}
+};
+$('bankBody').onclick=e=>{
+ const chip=e.target.closest('[data-bank-chip]');
+ if(chip){const v=chip.dataset.bankChip,i=$('bankAmt');if(!i)return;i.value=v==='wallet'?(user?.money||0):v==='savings'?(bankData?.savings||0):v;i.dispatchEvent(new Event('input',{bubbles:true}));return}
+ const b=e.target.closest('[data-bank]');if(!b)return;const a=b.dataset.bank;
+ if(a==='retry')return bankLoad();
+ if(a==='deposit'){const n=bankNeedAmount();if(n)bankAct('/deposit',{amount:n})}
+ else if(a==='withdraw'){const n=bankNeedAmount();if(n)bankAct('/withdraw',{amount:n})}
+ else if(a==='transfer'){const n=bankNeedAmount(),to=($('bankTo')?.value||'').trim();if(!to)return bankSay('Informe o nome de usuário do destinatário.',true);if(n)bankAct('/transfer',{to,amount:n})}
+ else if(a==='repay'){const n=bankNeedAmount();if(n)bankAct('/loan/repay',{amount:n})}
+ else if(a==='repayAll'){const o=bankData?.loan?.active?.owed;if(o)bankAct('/loan/repay',{amount:o})}
+ else if(a==='negotiate')bankNegotiate(false);
+ else if(a==='acceptDeal')bankNegotiate(true);
+ else if(a==='takeLoan')bankAct('/loan/take',{amount:bankLoanAmt,deal:!!bankDeal?.accepted},()=>{bankDeal=null;bankLoanAmt=0});
+};
 function save(){if(user){user.x=px;user.y=py;sv()}}
 addEventListener('resize',setup);addEventListener('pagehide',save);setup();{const p=P(48,34);cam.x=p[0];cam.y=p[1]}restoreSession();requestAnimationFrame(frame);
 
