@@ -107,6 +107,43 @@ A corretora Marta e os elevadores abrem o painel imobiliário durante a explora�
 
 Rotas autenticadas: `GET /api/sk2/condo`, `GET /api/sk2/condo/unit/:id`, `POST /api/sk2/condo/negotiate`, `POST /api/sk2/condo/buy`, `POST /api/sk2/condo/layout` e `POST /api/sk2/condo/open`. A inicialização cria `sk2_units` sem alterar tabelas de outros sistemas.
 
+## Banco de Sorokiba
+
+O interior do Banco (Marcos no caixa, Ana na gerência e o caixa eletrônico) abre o painel bancário. Segue a lógica do condomínio: tudo é validado e gravado no servidor, o dinheiro só muda dentro de transação com `FOR UPDATE`, e as tabelas são próprias (`sk2_bank_accounts`, `sk2_bank_ledger`, `sk2_bank_loans`), criadas por `bank.init()` sem alterar tabelas de outros sistemas. Código em `sorokiba2-bank.js`; as regras ajustáveis ficam no objeto `BANK` no topo.
+
+- **Poupança**: depositar e sacar. Rende 0,5% ao dia sobre até R$ 50.000, creditado por dia completo (no máximo 30 dias por visita). Teto de R$ 1.000.000.
+- **Transferências** entre jogadores: exigem 100 XP, limite de R$ 5.000 por 24 h e tarifa de 2% (mínimo R$ 1) que sai da economia. O destinatário recebe um aviso em tempo real pelo WebSocket.
+- **Empréstimo** (exige 100 XP): limite cresce com o XP (R$ 300 + 5 por XP, até R$ 5.000), um ativo por jogador, prazo de 7 dias. A Ana negocia a taxa de tabela (12%) em até 5 rodadas, como a Marta negocia o preço. Empréstimo vencido é cobrado da poupança e depois da carteira, no próximo uso do banco ou pela varredura do servidor a cada 10 minutos.
+- **Extrato** com as últimas 20 movimentações.
+
+Endpoints autenticados: `GET /api/sk2/bank`, `POST /api/sk2/bank/deposit`, `/withdraw`, `/transfer`, `/loan/negotiate`, `/loan/take` e `/loan/repay`.
+
+Limitação atual: o servidor ainda não sabe em qual prédio o jogador está (só salas com `net` são informadas), então as rotas do banco não exigem presença física no Banco. Isso entra junto com a validação de posição dos interiores.
+
+## Hospital de Sorokiba
+
+O Hospital segue a estrutura do condomínio: planta própria em tiles (`HZ` no HTML, como o `CONDO_ZIP`), paredes com portas sinalizadas, colisão derivada da planta e câmera que segue o jogador com zoom de 1,3. São nove áreas (recepção e espera, triagem, dois consultórios, laboratório, imagem, pronto-socorro e internação) e oito funcionários. As enfermeiras andam até o paciente e usam o instrumento de cada etapa (termômetro, estetoscópio, braçadeira, seringa, varredura de imagem, soro). Código do servidor em `sorokiba2-hospital.js`; as regras ajustáveis ficam em `HOSPITAL`, `DISEASES` e `EXAMS` no topo.
+
+Todo o estado vive no servidor (`sk2_hospital_patients`, `sk2_hospital_conditions`, `sk2_hospital_visits`, `sk2_hospital_exams`), então o jogador pode sair do jogo no meio do atendimento e voltar horas depois.
+
+- **Doenças por chance**: a cada 30 minutos reais há um sorteio (4%) entre sete doenças (resfriado, intoxicação, gripe, fratura, pneumonia, apendicite e câncer, este bem raro). Os sorteios acumulam enquanto o jogador está fora, no máximo 8. Sem tratamento, a gravidade sobe a cada 6 horas e a saúde cai por hora.
+- **Fluxo do paciente**: Recepção (ficha e senha) → Triagem (sinais vitais e cor de risco; vermelho passa na frente) → Consulta (R$ 40, hipóteses e pedido de exames) → Exames (cada um na sua sala, de 1 a 2 horas reais) → Resultados e diagnóstico → plano de tratamento (padrão ou intensivo) → sessões no Pronto-socorro ou na Internação, com intervalo entre sessões (a quimioterapia tem 3 sessões de 3 h) → Alta. Cada etapa só abre depois da anterior, e o valor é cobrado na hora, em transação.
+- **Integração**: quem está com saúde abaixo de 35% não começa turno de trabalho (`/api/sk2/work/start`); ao entrar no jogo o cliente avisa se o jogador está doente; exames prontos geram aviso em tempo real pelo WebSocket, mesmo fora do hospital.
+- **Teste rápido**: `SK2_HOSPITAL_TIME_SCALE=0.01` comprime exames, esperas e sessões. Em produção deixe sem definir.
+
+Endpoints autenticados: `GET /api/sk2/hospital`, `POST /api/sk2/hospital/checkin`, `/triage`, `/consult`, `/exams/collect`, `/exams/results`, `/treatment/plan`, `/treatment/session`, `/leave` e os serviços `/service/plan`, `/service/vaccine`, `/service/donate` e `/service/snack`.
+
+**Atualização do Hospital**
+
+- **Resumo da última visita**: depois da alta (saudável, curado ou encerrado) o painel mostra o resultado do atendimento por 30 minutos, em qualquer sala. Antes, quem recebia alta na consulta via "abra a ficha na Recepção".
+- **Guia "aprenda aonde ir"**: linha animada no chão até o próximo destino, marcador na sala, barra no topo com a sala atual e o passo seguinte, TV da recepção com a senha e o destino, e botão para ligar/desligar o guia. Durante a espera pela consulta, o guia leva ao assento mais próximo.
+- **Sentar**: 27 assentos (sofás da recepção e do corredor, poltronas, cadeiras dos consultórios, banquinho do laboratório, cadeiras de rodas). `E` perto do assento senta; andar ou `E` levanta. Fica só no cliente, como os bancos da cidade.
+- **Objetos com ação**: bebedouros, álcool em gel, balança, pia, TV e mural de saúde (dicas), aquário. Mais decoração: relógio de parede em tempo real, tapetes, suportes de soro, mesas de centro.
+- **Máquina de lanches** (`POST /api/sk2/hospital/service/snack`): água R$ 3, café R$ 5, sanduíche R$ 9; recuperam um pouco de saúde, com intervalo de 5 minutos entre compras. Não cura doença.
+- **Serviços para quem está saudável**: plano de saúde (50% em consultas, exames e sessões por 7 dias, R$ 250), vacina (a chance de adoecer cai para 1/4 por 12 horas, R$ 80) e doação de sangue (R$ 50 e 20 XP, intervalo de 6 h, exige saúde de 70% ou mais).
+
+Limitação atual: como no Banco, o servidor não sabe em qual sala o jogador está; a ordem das etapas, os prazos e as cobranças são garantidos no servidor, mas o deslocamento entre salas é guiado só pelo cliente.
+
 ## Testes
 
 ```sh
