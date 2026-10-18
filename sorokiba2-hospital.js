@@ -27,6 +27,19 @@ const HOSPITAL = Object.freeze({
   REGEN_PER_HOUR: 10,
   TRIAGE_WAIT_SEC: [90, 45, 20, 0], // espera por cor de risco (vermelho entra na hora)
   STALE_VISIT_HOURS: 6,
+  LAST_VISIT_SHOW_MIN: 30,   // por quanto tempo o painel mostra o resumo do último atendimento
+  MAX_MONEY: 2147483647,
+  // Serviços para quem está saudável (e descontos para quem está doente)
+  PLAN_PRICE: 250, PLAN_DAYS: 7, PLAN_DISCOUNT_PCT: 50, PLAN_RENEW_WINDOW_H: 24,   // plano de saúde: -50% em consulta, exames e sessões
+  VACCINE_PRICE: 80, VACCINE_HOURS: 12, VACCINE_FACTOR: 0.25, VACCINE_RENEW_WINDOW_H: 2, // vacina: 1/4 da chance de adoecer
+  SNACK_COOLDOWN_MIN: 5,   // máquina de lanches: intervalo entre compras
+  DONATE_REWARD: 50, DONATE_XP: 20, DONATE_COOLDOWN_H: 6, DONATE_MIN_HEALTH: 70, DONATE_HEALTH_COST: 10,
+});
+// Máquina de lanches do hospital: pequena recuperação de saúde, com intervalo entre compras.
+const SNACKS = Object.freeze({
+  agua: { name: 'Água mineral', price: 3, heal: 2 },
+  cafe: { name: 'Café', price: 5, heal: 1 },
+  sanduiche: { name: 'Sanduíche natural', price: 9, heal: 4 },
 });
 const RISKS = Object.freeze([
   { id: 'verde', label: 'Verde · pouco urgente' },
@@ -83,8 +96,8 @@ function weightedPick(table, rand = Math.random) {
 }
 const DISEASE_WEIGHTS = Object.fromEntries(Object.entries(DISEASES).map(([id, d]) => [id, d.weight]));
 // `rolls` sorteios: devolve o id da primeira doença sorteada, ou null.
-function rollIllness(rolls, rand = Math.random) {
-  for (let i = 0; i < rolls; i++) if (rand() < HOSPITAL.ILLNESS_CHANCE) return weightedPick(DISEASE_WEIGHTS, rand);
+function rollIllness(rolls, rand = Math.random, chance = HOSPITAL.ILLNESS_CHANCE) {
+  for (let i = 0; i < rolls; i++) if (rand() < chance) return weightedPick(DISEASE_WEIGHTS, rand);
   return null;
 }
 const effectiveSeverity = (base, elapsedMin) =>
@@ -133,6 +146,21 @@ function hypotheses(diseaseId, rand = Math.random) {
   return [diseaseId, ...others.slice(0, 2)].map(id => ({ id, r: rand() })).sort((a, b) => a.r - b.r).map(x => DISEASES[x.id].name);
 }
 const examSite = id => EXAMS[id].site;
+const discountPrice = (price, planOn) => planOn ? Math.max(1, Math.ceil(price * (100 - HOSPITAL.PLAN_DISCOUNT_PCT) / 100)) : price;
+// Doação de sangue: só saudável, com saúde alta e respeitando o intervalo.
+function donateStatus({ health, sick, nextAt, now }) {
+  if (sick) return { ok: false, reason: 'Você está com sintomas: não pode doar sangue agora.' };
+  if (health < HOSPITAL.DONATE_MIN_HEALTH) return { ok: false, reason: `Sua saúde precisa estar em ${HOSPITAL.DONATE_MIN_HEALTH}% ou mais para doar.` };
+  if (nextAt && nextAt > now) return { ok: false, reason: `Você doou há pouco. Volte em ${fmtWait(nextAt - now)}.` };
+  return { ok: true, reason: '' };
+}
+// Máquina de lanches: respeita o intervalo entre compras.
+function snackStatus({ nextAt, now }) {
+  if (nextAt && nextAt > now) return { ok: false, reason: `A máquina está reabastecendo. Volte em ${fmtWait(nextAt - now)}.` };
+  return { ok: true, reason: '' };
+}
+// Renovação de plano/vacina: só quando está perto de vencer (evita pagar duas vezes à toa).
+const canRenew = (untilMs, now, windowMin) => !untilMs || untilMs - now <= msOf(windowMin);
 // O que o paciente pode fazer agora e onde. `now` em ms; datas em ms epoch.
 function stageInfo(v, exams = [], now = Date.now()) {
   if (!v) return { step: 0, label: 'Sem atendimento', actions: [{ id: 'checkin', site: 'reception' }] };
@@ -187,7 +215,13 @@ async function init() {
     ready_at TIMESTAMPTZ, result JSONB, notified BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now());
   CREATE INDEX IF NOT EXISTS sk2_hospital_exams_visit ON sk2_hospital_exams(visit_id);
-  CREATE INDEX IF NOT EXISTS sk2_hospital_exams_ready ON sk2_hospital_exams(ready_at) WHERE status='running' AND notified=false;`);
+  CREATE INDEX IF NOT EXISTS sk2_hospital_exams_ready ON sk2_hospital_exams(ready_at) WHERE status='running' AND notified=false;
+  ALTER TABLE sk2_hospital_patients ADD COLUMN IF NOT EXISTS plan_until TIMESTAMPTZ;
+  ALTER TABLE sk2_hospital_patients ADD COLUMN IF NOT EXISTS immune_until TIMESTAMPTZ;
+  ALTER TABLE sk2_hospital_patients ADD COLUMN IF NOT EXISTS donated_at TIMESTAMPTZ;
+  ALTER TABLE sk2_hospital_patients ADD COLUMN IF NOT EXISTS snack_at TIMESTAMPTZ;
+  ALTER TABLE sk2_hospital_visits ADD COLUMN IF NOT EXISTS outcome TEXT;
+  ALTER TABLE sk2_hospital_visits ADD COLUMN IF NOT EXISTS disease_id TEXT;`);
 }
 
 const fail = (err, status = 409) => ({ err, status });
@@ -199,13 +233,14 @@ const fmtWait = ms => { const s = Math.ceil(ms / 1000); return s >= 3600 ? `${Ma
 async function settle(c, player) {
   const u = player.username;
   await c.query('INSERT INTO sk2_hospital_patients (username, blood) VALUES ($1,$2) ON CONFLICT DO NOTHING', [u, BLOOD[crypto.randomInt(BLOOD.length)]]);
-  const rec = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (now() - health_at)) / 3600 AS dh, EXTRACT(EPOCH FROM (now() - roll_at)) / 60 AS dm
+  const rec = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (now() - health_at)) / 3600 AS dh, EXTRACT(EPOCH FROM (now() - roll_at)) / 60 AS dm,
+    (plan_until IS NOT NULL AND plan_until > now()) AS plan_on, (immune_until IS NOT NULL AND immune_until > now()) AS immune
     FROM sk2_hospital_patients WHERE username=$1 FOR UPDATE`, [u])).rows[0];
   let cond = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (now() - started_at)) / 60 AS em FROM sk2_hospital_conditions
     WHERE username=$1 AND status='active' FOR UPDATE`, [u])).rows[0] || null;
   const rolls = Math.min(HOSPITAL.MAX_ROLLS, Math.floor(Number(rec.dm) / HOSPITAL.ROLL_MIN));
   if (rolls >= 1 && !cond) {
-    const id = rollIllness(rolls);
+    const id = rollIllness(rolls, Math.random, rec.immune ? HOSPITAL.ILLNESS_CHANCE * HOSPITAL.VACCINE_FACTOR : HOSPITAL.ILLNESS_CHANCE);
     if (id) cond = (await c.query(`INSERT INTO sk2_hospital_conditions (id, username, disease_id) VALUES ($1,$2,$3)
       RETURNING *, 0::float AS em`, [crypto.randomUUID(), u, id])).rows[0];
   }
@@ -213,7 +248,7 @@ async function settle(c, player) {
   const sev = d ? effectiveSeverity(d.severity, Number(cond.em)) : null;
   const health = settleHealth(rec.health, Number(rec.dh), sev);
   await c.query(`UPDATE sk2_hospital_patients SET health=$2, health_at=now(), roll_at = CASE WHEN $3::boolean THEN now() ELSE roll_at END WHERE username=$1`, [u, health, rolls >= 1]);
-  return { health, blood: rec.blood, cond, sev };
+  return { health, blood: rec.blood, cond, sev, planOn: !!rec.plan_on, immune: !!rec.immune };
 }
 
 const loadVisit = async (c, username, lock = false) => {
@@ -227,17 +262,26 @@ const visitDto = (v, exams) => ({
 });
 const examDto = e => ({ id: e.exam_id, status: e.status, readyAt: epoch(e.ready_at) });
 
-async function charge(c, player, visit, amount, label) {
+// Cobra uma etapa do atendimento (com o desconto do plano de saúde, se houver).
+async function charge(c, player, visit, listPrice, label, planOn = false) {
+  const amount = discountPrice(listPrice, planOn);
   if (amount <= 0) return player;
   if (player.money < amount) return null;
   const p = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [player.username, amount])).rows[0];
   await c.query(`UPDATE sk2_hospital_visits SET charges = charges || $2::jsonb, total = total + $3, updated_at = now() WHERE id=$1`,
-    [visit.id, JSON.stringify([{ label, amount }]), amount]);
+    [visit.id, JSON.stringify([{ label: planOn ? `${label} (plano −${HOSPITAL.PLAN_DISCOUNT_PCT}%)` : label, amount }]), amount]);
   return p;
+}
+// Cobra um serviço avulso (sem atendimento aberto).
+async function payDirect(c, player, amount) {
+  if (player.money < amount) return null;
+  return (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [player.username, amount])).rows[0];
 }
 
 async function snapshot(c, username) {
-  const rec = (await c.query('SELECT health, blood FROM sk2_hospital_patients WHERE username=$1', [username])).rows[0];
+  const rec = (await c.query(`SELECT health, blood, plan_until, immune_until, donated_at, snack_at,
+    (plan_until IS NOT NULL AND plan_until > now()) AS plan_on, (immune_until IS NOT NULL AND immune_until > now()) AS immune
+    FROM sk2_hospital_patients WHERE username=$1`, [username])).rows[0];
   const cond = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (now() - started_at)) / 60 AS em FROM sk2_hospital_conditions WHERE username=$1 AND status='active'`, [username])).rows[0] || null;
   const d = cond && DISEASES[cond.disease_id], sev = d ? effectiveSeverity(d.severity, Number(cond.em)) : null;
   const loaded = await loadVisit(c, username);
@@ -260,16 +304,28 @@ async function snapshot(c, username) {
       charges: v.charges, total: v.total,
     };
   }
-  const hist = (await c.query(`SELECT id, ticket, status, total, created_at, closed_at, consult FROM sk2_hospital_visits
-    WHERE username=$1 AND status IN ('discharged','abandoned') ORDER BY created_at DESC LIMIT 5`, [username])).rows;
+  const hist = (await c.query(`SELECT id, ticket, status, outcome, disease_id, total, created_at, closed_at, consult FROM sk2_hospital_visits
+    WHERE username=$1 AND status IN ('discharged','abandoned') ORDER BY closed_at DESC NULLS LAST, created_at DESC LIMIT 5`, [username])).rows;
+  const nowMs = Date.now(), outcomeOf = h => h.outcome || (h.status === 'abandoned' ? 'abandoned' : h.consult?.healthy ? 'healthy' : 'discharged');
+  const histDto = hist.map(h => ({ ticket: h.ticket, outcome: outcomeOf(h), diagnosis: h.disease_id && DISEASES[h.disease_id] ? DISEASES[h.disease_id].name : null, total: h.total, at: h.closed_at || h.created_at }));
+  const last = hist[0], lastVisit = last && last.closed_at && nowMs - epoch(last.closed_at) < msOf(HOSPITAL.LAST_VISIT_SHOW_MIN) ? histDto[0] : null;
+  const planUntil = epoch(rec.plan_until), immuneUntil = epoch(rec.immune_until);
+  const nextDonate = rec.donated_at ? epoch(rec.donated_at) + msOf(HOSPITAL.DONATE_COOLDOWN_H * 60) : 0;
+  const nextSnack = rec.snack_at ? epoch(rec.snack_at) + msOf(HOSPITAL.SNACK_COOLDOWN_MIN) : 0;
+  const services = {
+    snack: { items: Object.entries(SNACKS).map(([id, i]) => ({ id, ...i })), cooldownMin: HOSPITAL.SNACK_COOLDOWN_MIN, nextAt: nextSnack || null, ...snackStatus({ nextAt: nextSnack, now: nowMs }) },
+    plan: { active: !!rec.plan_on, until: planUntil, price: HOSPITAL.PLAN_PRICE, days: HOSPITAL.PLAN_DAYS, discountPct: HOSPITAL.PLAN_DISCOUNT_PCT, canBuy: !rec.plan_on || canRenew(planUntil, nowMs, HOSPITAL.PLAN_RENEW_WINDOW_H * 60) },
+    vaccine: { active: !!rec.immune, until: immuneUntil, price: HOSPITAL.VACCINE_PRICE, hours: HOSPITAL.VACCINE_HOURS, factorPct: Math.round(HOSPITAL.VACCINE_FACTOR * 100), canBuy: !rec.immune || canRenew(immuneUntil, nowMs, HOSPITAL.VACCINE_RENEW_WINDOW_H * 60) },
+    donate: { reward: HOSPITAL.DONATE_REWARD, xp: HOSPITAL.DONATE_XP, minHealth: HOSPITAL.DONATE_MIN_HEALTH, cooldownH: HOSPITAL.DONATE_COOLDOWN_H, nextAt: nextDonate || null, ...donateStatus({ health: rec.health, sick: !!d, nextAt: nextDonate, now: nowMs }) },
+  };
   return {
     serverNow: Date.now(),
     patient: {
       health: rec.health, blood: rec.blood, canWork: rec.health >= HOSPITAL.WORK_MIN_HEALTH, workMinHealth: HOSPITAL.WORK_MIN_HEALTH,
       sick: !!d, symptoms: d ? d.symptoms : [], riskNow: d ? RISKS[sev].id : null, sinceMin: cond ? Math.floor(Number(cond.em)) : 0,
     },
-    visit, fees: { consult: HOSPITAL.CONSULT_FEE }, risks: RISKS,
-    history: hist.map(h => ({ ticket: h.ticket, status: h.status, total: h.total, at: h.created_at, healthy: !!h.consult?.healthy })),
+    visit, lastVisit, services, fees: { consult: discountPrice(HOSPITAL.CONSULT_FEE, rec.plan_on), consultList: HOSPITAL.CONSULT_FEE }, risks: RISKS,
+    history: histDto,
   };
 }
 
@@ -286,7 +342,7 @@ const noop = (_c, player) => ({ player });
 const summary = username => run(username, noop);
 
 const checkin = username => run(username, async (c, p, st) => {
-  await c.query(`UPDATE sk2_hospital_visits SET status='abandoned', closed_at=now() WHERE username=$1
+  await c.query(`UPDATE sk2_hospital_visits SET status='abandoned', outcome='abandoned', closed_at=now() WHERE username=$1
     AND status IN ('registered','triaged') AND updated_at < now() - make_interval(hours => $2)`, [username, HOSPITAL.STALE_VISIT_HOURS]);
   if ((await c.query(`SELECT 1 FROM sk2_hospital_visits WHERE username=$1 AND status NOT IN ('discharged','abandoned')`, [username])).rowCount)
     return fail('Você já tem um atendimento aberto. Continue de onde parou.');
@@ -310,19 +366,19 @@ const triage = (username, rand = Math.random) => run(username, async (c, p, st) 
   await c.query(`UPDATE sk2_hospital_visits SET status='triaged', triage=$2, risk=$3, ready_at = now() + ($4::int * interval '1 millisecond'), updated_at=now() WHERE id=$1`,
     [v.row.id, JSON.stringify({ vitals, flags }), risk, Math.round(triageWaitMs(risk))]);
   return { player: p, event: { kind: 'triage', vitals, flags, risk: RISKS[risk].id },
-    message: risk === 3 ? 'Classificação vermelha: você passa na frente!' : `Triagem concluída: ${RISKS[risk].label}.` };
+    message: !diseaseId ? 'Triagem concluída: seus sinais vitais estão normais.' : risk === 3 ? 'Classificação vermelha: você passa na frente!' : `Triagem concluída: ${RISKS[risk].label}.` };
 });
 
 const consult = (username, rand = Math.random) => run(username, async (c, p, st) => {
   const v = await requireVisit(c, username, ['triaged']); if (v.err) return v;
   const now = Date.now(), wait = epoch(v.row.ready_at) - now;
   if (wait > 0) return fail(`Aguarde a sua vez: faltam ${fmtWait(wait)}.`);
-  const paid = await charge(c, p, v.row, HOSPITAL.CONSULT_FEE, 'Consulta médica');
-  if (!paid) return fail(`A consulta custa ${brl(HOSPITAL.CONSULT_FEE)} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, HOSPITAL.CONSULT_FEE, 'Consulta médica', st.planOn);
+  if (!paid) return fail(`A consulta custa ${brl(discountPrice(HOSPITAL.CONSULT_FEE, st.planOn))} e você não tem esse saldo.`);
   const d = st.cond && DISEASES[st.cond.disease_id];
   if (!d) {
-    await c.query(`UPDATE sk2_hospital_visits SET status='discharged', consult=$2, closed_at=now(), updated_at=now() WHERE id=$1`, [v.row.id, JSON.stringify({ healthy: true })]);
-    return { player: paid, event: { kind: 'consult', healthy: true }, message: 'A médica não encontrou nada de errado. Você recebeu alta.' };
+    await c.query(`UPDATE sk2_hospital_visits SET status='discharged', outcome='healthy', consult=$2, closed_at=now(), updated_at=now() WHERE id=$1`, [v.row.id, JSON.stringify({ healthy: true })]);
+    return { player: paid, event: { kind: 'consult', healthy: true }, message: 'A médica não encontrou nada de errado: você está saudável e recebeu alta.' };
   }
   const hyp = hypotheses(st.cond.disease_id, rand);
   await c.query('UPDATE sk2_hospital_visits SET consult=$2, updated_at=now() WHERE id=$1', [v.row.id, JSON.stringify({ hypotheses: hyp })]);
@@ -336,13 +392,13 @@ const consult = (username, rand = Math.random) => run(username, async (c, p, st)
   return { player: paid, event: { kind: 'consult', exams: d.exams.length }, message: `A médica pediu ${d.exams.length} exame(s). Faça a coleta nas salas indicadas.` };
 });
 
-const collectExam = (username, examId, rand = Math.random) => run(username, async (c, p) => {
+const collectExam = (username, examId, rand = Math.random) => run(username, async (c, p, st) => {
   if (!EXAMS[examId]) return fail('Exame inválido.', 400);
   const v = await requireVisit(c, username, ['exams']); if (v.err) return v;
   const exam = v.exams.find(e => e.exam_id === examId && e.status === 'ordered');
   if (!exam) return fail('Esse exame não está pendente de coleta.');
-  const paid = await charge(c, p, v.row, exam.price, EXAMS[examId].name);
-  if (!paid) return fail(`${EXAMS[examId].name} custa ${brl(exam.price)} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, exam.price, EXAMS[examId].name, st.planOn);
+  if (!paid) return fail(`${EXAMS[examId].name} custa ${brl(discountPrice(exam.price, st.planOn))} e você não tem esse saldo.`);
   const dur = Math.round(examDurationMs(examId, rand));
   await c.query(`UPDATE sk2_hospital_exams SET status='running', ready_at = now() + ($2::int * interval '1 millisecond') WHERE id=$1`, [exam.id, dur]);
   return { player: paid, event: { kind: 'exam', exam: examId, site: EXAMS[examId].site },
@@ -377,13 +433,13 @@ const session = username => run(username, async (c, p, st) => {
   const v = await requireVisit(c, username, ['treating']); if (v.err) return v;
   const wait = epoch(v.row.next_session_at) - Date.now();
   if (wait > 0) return fail(`A próxima sessão libera em ${fmtWait(wait)}.`);
-  const paid = await charge(c, p, v.row, v.row.session_price, `Sessão ${v.row.sessions_done + 1}/${v.row.sessions_total}`);
-  if (!paid) return fail(`A sessão custa ${brl(v.row.session_price)} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, v.row.session_price, `Sessão ${v.row.sessions_done + 1}/${v.row.sessions_total}`, st.planOn);
+  if (!paid) return fail(`A sessão custa ${brl(discountPrice(v.row.session_price, st.planOn))} e você não tem esse saldo.`);
   const done = v.row.sessions_done + 1, last = done >= v.row.sessions_total;
   if (last) {
     await c.query(`UPDATE sk2_hospital_conditions SET status='cured', cured_at=now() WHERE id=$1`, [v.row.condition_id]);
     await c.query(`UPDATE sk2_hospital_patients SET health=$2, health_at=now() WHERE username=$1`, [username, HOSPITAL.HEALTH_MAX]);
-    await c.query(`UPDATE sk2_hospital_visits SET status='discharged', sessions_done=$2, closed_at=now(), updated_at=now() WHERE id=$1`, [v.row.id, done]);
+    await c.query(`UPDATE sk2_hospital_visits SET status='discharged', outcome='cured', disease_id=$3, sessions_done=$2, closed_at=now(), updated_at=now() WHERE id=$1`, [v.row.id, done, st.cond.disease_id]);
     return { player: paid, event: { kind: 'session', site: v.row.session_site, cured: true }, message: 'Tratamento concluído. Você está curado e recebeu alta!' };
   }
   const heal = Math.min(HOSPITAL.HEALTH_MAX, st.health + Math.ceil((HOSPITAL.HEALTH_MAX - st.health) / (v.row.sessions_total - v.row.sessions_done)));
@@ -396,8 +452,53 @@ const session = username => run(username, async (c, p, st) => {
 const leave = username => run(username, async (c, p) => {
   const loaded = await loadVisit(c, username, true);
   if (!loaded) return fail('Você não tem atendimento aberto.');
-  await c.query(`UPDATE sk2_hospital_visits SET status='abandoned', closed_at=now(), updated_at=now() WHERE id=$1`, [loaded.row.id]);
+  await c.query(`UPDATE sk2_hospital_visits SET status='abandoned', outcome='abandoned', closed_at=now(), updated_at=now() WHERE id=$1`, [loaded.row.id]);
   return { player: p, event: { kind: 'leave' }, message: 'Atendimento encerrado. Os valores já pagos não são devolvidos.' };
+});
+
+// ---- Serviços para quem está saudável ----
+const buyPlan = username => run(username, async (c, p) => {
+  const row = (await c.query('SELECT plan_until FROM sk2_hospital_patients WHERE username=$1', [username])).rows[0];
+  if (!canRenew(epoch(row.plan_until), Date.now(), HOSPITAL.PLAN_RENEW_WINDOW_H * 60)) return fail('Seu plano ainda tem mais de 24 horas de validade. Renove perto do vencimento.');
+  const paid = await payDirect(c, p, HOSPITAL.PLAN_PRICE);
+  if (!paid) return fail(`O plano custa ${brl(HOSPITAL.PLAN_PRICE)} e você não tem esse saldo.`);
+  await c.query(`UPDATE sk2_hospital_patients SET plan_until = GREATEST(now(), COALESCE(plan_until, now())) + ($2::double precision * interval '1 millisecond') WHERE username=$1`,
+    [username, msOf(HOSPITAL.PLAN_DAYS * 24 * 60)]);
+  return { player: paid, event: { kind: 'plan_buy' }, message: `Plano de saúde ativo por ${HOSPITAL.PLAN_DAYS} dias: ${HOSPITAL.PLAN_DISCOUNT_PCT}% de desconto em consultas, exames e sessões.` };
+});
+
+const vaccinate = username => run(username, async (c, p) => {
+  const row = (await c.query('SELECT immune_until FROM sk2_hospital_patients WHERE username=$1', [username])).rows[0];
+  if (!canRenew(epoch(row.immune_until), Date.now(), HOSPITAL.VACCINE_RENEW_WINDOW_H * 60)) return fail('Você já está imunizado. Volte perto do vencimento da proteção.');
+  const paid = await payDirect(c, p, HOSPITAL.VACCINE_PRICE);
+  if (!paid) return fail(`A vacina custa ${brl(HOSPITAL.VACCINE_PRICE)} e você não tem esse saldo.`);
+  await c.query(`UPDATE sk2_hospital_patients SET immune_until = now() + ($2::double precision * interval '1 millisecond') WHERE username=$1`, [username, msOf(HOSPITAL.VACCINE_HOURS * 60)]);
+  return { player: paid, event: { kind: 'vaccine', site: 'ward' }, message: `Vacinado! Por ${HOSPITAL.VACCINE_HOURS} horas a chance de adoecer cai para ${Math.round(HOSPITAL.VACCINE_FACTOR * 100)}%.` };
+});
+
+const buySnack = (username, itemId) => run(username, async (c, p, st) => {
+  const item = SNACKS[itemId];
+  if (!item) return fail('Item inválido.', 400);
+  const row = (await c.query('SELECT snack_at FROM sk2_hospital_patients WHERE username=$1', [username])).rows[0];
+  const nextAt = row.snack_at ? epoch(row.snack_at) + msOf(HOSPITAL.SNACK_COOLDOWN_MIN) : 0;
+  const s = snackStatus({ nextAt, now: Date.now() });
+  if (!s.ok) return fail(s.reason);
+  const paid = await payDirect(c, p, item.price);
+  if (!paid) return fail(`${item.name} custa ${brl(item.price)} e você não tem esse saldo.`);
+  const health = Math.min(HOSPITAL.HEALTH_MAX, st.health + item.heal);
+  await c.query('UPDATE sk2_hospital_patients SET health=$2, health_at=now(), snack_at=now() WHERE username=$1', [username, health]);
+  return { player: paid, event: { kind: 'snack', item: itemId }, message: health > st.health ? `${item.name}: +${health - st.health} de saúde.` : `${item.name}. Gostoso! Sua saúde já estava no máximo.` };
+});
+
+const donateBlood = username => run(username, async (c, p, st) => {
+  const row = (await c.query('SELECT donated_at FROM sk2_hospital_patients WHERE username=$1', [username])).rows[0];
+  const nextAt = row.donated_at ? epoch(row.donated_at) + msOf(HOSPITAL.DONATE_COOLDOWN_H * 60) : 0;
+  const s = donateStatus({ health: st.health, sick: !!st.cond, nextAt, now: Date.now() });
+  if (!s.ok) return fail(s.reason);
+  if (p.money + HOSPITAL.DONATE_REWARD > HOSPITAL.MAX_MONEY) return fail('Sua carteira não comporta esse valor.');
+  const player = (await c.query('UPDATE sk2_players SET money = money + $2, xp = xp + $3 WHERE username=$1 RETURNING *', [username, HOSPITAL.DONATE_REWARD, HOSPITAL.DONATE_XP])).rows[0];
+  await c.query('UPDATE sk2_hospital_patients SET health=$2, health_at=now(), donated_at=now() WHERE username=$1', [username, Math.max(HOSPITAL.HEALTH_FLOOR, st.health - HOSPITAL.DONATE_HEALTH_COST)]);
+  return { player, event: { kind: 'donate', site: 'lab' }, message: `Obrigado por doar sangue (tipo ${st.blood})! Você recebeu ${brl(HOSPITAL.DONATE_REWARD)} e ${HOSPITAL.DONATE_XP} XP.` };
 });
 
 // Integração: quem está debilitado não começa turno de trabalho (usada por /api/sk2/work/start).
@@ -455,11 +556,19 @@ function registerRoutes({ app, json, authUser, limited, userTries, addInterval, 
   }));
   app.post('/api/sk2/hospital/treatment/session', json, guard(async (_q, res, row) => done(res, await session(row.username))));
   app.post('/api/sk2/hospital/leave', json, guard(async (_q, res, row) => done(res, await leave(row.username))));
+  app.post('/api/sk2/hospital/service/plan', json, guard(async (_q, res, row) => done(res, await buyPlan(row.username))));
+  app.post('/api/sk2/hospital/service/vaccine', json, guard(async (_q, res, row) => done(res, await vaccinate(row.username))));
+  app.post('/api/sk2/hospital/service/snack', json, guard(async (req, res, row) => {
+    const item = typeof req.body?.item === 'string' && Object.prototype.hasOwnProperty.call(SNACKS, req.body.item) ? req.body.item : null;
+    if (!item) return res.status(400).json({ err: 'Item inválido.' });
+    done(res, await buySnack(row.username, item));
+  }));
+  app.post('/api/sk2/hospital/service/donate', json, guard(async (_q, res, row) => done(res, await donateBlood(row.username))));
 }
 
 module.exports = {
   HOSPITAL, RISKS, EXAMS, DISEASES, SCALE, init, registerRoutes, workGate, sweepExams, summary,
-  checkin, triage, consult, collectExam, results, setPlan, session, leave,
+  checkin, triage, consult, collectExam, results, setPlan, session, leave, buyPlan, vaccinate, donateBlood, buySnack, SNACKS, snackStatus,
   // puras (testes)
-  weightedPick, rollIllness, effectiveSeverity, settleHealth, makeVitals, vitalFlags, triageWaitMs, examDurationMs, plansFor, hypotheses, stageInfo, examSite,
+  weightedPick, rollIllness, discountPrice, donateStatus, canRenew, effectiveSeverity, settleHealth, makeVitals, vitalFlags, triageWaitMs, examDurationMs, plansFor, hypotheses, stageInfo, examSite,
 };
