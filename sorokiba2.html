@@ -337,6 +337,21 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #hospitalPanel.busy button{pointer-events:none;opacity:.6}
 #hospitalPanel button:focus-visible{outline:2px solid #6fd3cc;outline-offset:2px}
 @media(max-width:520px){.hospSteps li{flex:1 1 70px;font-size:11px}}
+.hospNextBar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:2px 0 6px;padding:9px 12px;border:1px solid #6fd3cc55;border-radius:10px;background:#6fd3cc12}
+.hospNextBar:empty{display:none}
+.hospNextBar b{display:block;color:#e9fffb;font-size:14px}.hospNextBar span{display:block;margin-top:2px;color:#aac4c7;font-size:12.5px}
+.hospNextBar em{color:#8fe0b4;font-style:normal;font-weight:700;font-size:13px;white-space:nowrap}
+.hospNextBar button{border:0;border-radius:9px;padding:8px 13px;background:#6fd3cc;color:#06181b;font-weight:800;white-space:nowrap}
+.hospDone{border-color:#3fae6366;background:#3fae6312}
+.hospOld{color:#7fa0a4;font-size:.85em}
+.hospActions button:disabled{opacity:.45;cursor:not-allowed}
+.hospChip{position:fixed;top:max(60px,calc(env(safe-area-inset-top) + 56px));left:50%;transform:translateX(-50%);z-index:9;max-width:min(92vw,600px);padding:8px 16px;border:1px solid #3d9b9899;border-radius:999px;background:rgba(8,20,26,.92);backdrop-filter:blur(8px);color:#dff7f3;font:600 13px system-ui;box-shadow:0 6px 18px #0006;text-align:center;pointer-events:none}
+.hospGuideBtn{position:fixed;top:max(108px,calc(env(safe-area-inset-top) + 104px));left:max(12px,env(safe-area-inset-left));z-index:8;border:1px solid #3d9b9899;border-radius:12px;padding:8px 12px;background:rgba(11,16,32,.9);backdrop-filter:blur(8px);color:#bff5ec;font:700 13px system-ui;box-shadow:0 6px 18px #0006;cursor:pointer}
+.hospGuideBtn:hover{background:#18343a}
+@media(max-width:520px){.hospChip{top:78px;font-size:12px;border-radius:14px}.hospGuideBtn{top:124px}}
+
+.hospIcon{display:flex;align-items:center;justify-content:center;font-size:34px}
+.hospActions button:disabled,.hospList button:disabled{opacity:.45;cursor:not-allowed}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -390,7 +405,8 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="icecreamMenu" hidden aria-labelledby="icecreamTitle"><header class="icecreamHeader"><div><p class="icecreamKicker">Parque Central · Sorveteria</p><h2 id="icecreamTitle">Sorvetes da Luna</h2><p>Escolha um sabor, compre e coma quando quiser.</p></div><button id="icecreamClose" type="button" aria-label="Fechar sorveteria">Fechar</button></header><p id="icecreamMsg" aria-live="polite">Falando com a atendente...</p><div id="icecreamChoices"></div><footer>Seu dinheiro: <strong>R$ <span id="icecreamMoney">0</span></strong> · Os sorvetes comprados ficam no seu inventário.</footer></section>
 <section id="condoPanel" hidden aria-labelledby="condoTitle"><header class="condoHeader"><div><p class="condoKicker">SOROKIBA TOWER · CONDOMÍNIO</p><h2 id="condoTitle">Seu próximo endereço</h2><p id="condoIntro">Consulte os andares, negocie uma unidade e organize seu apartamento.</p></div><button id="condoClose" type="button" aria-label="Fechar condomínio">Fechar</button></header><div class="condoOverview"><div><span>SEU SALDO</span><strong id="condoMoney">R$ 0</strong></div><div><span>TORRE</span><strong>15 andares · 60 unidades</strong></div><div><span>LAZER</span><strong>Academia · piscina · salão</strong></div></div><p id="condoMsg" class="condoMessage" aria-live="polite">Carregando unidades...</p><div class="condoToolbar"><label for="condoFloor">Andar</label><select id="condoFloor"></select><button id="condoMine" type="button">Meus apartamentos</button><button id="condoAll" type="button">Ver unidades</button></div><div id="condoBody"></div></section>
 <section id="bankPanel" hidden role="dialog" aria-labelledby="bankTitle"><header class="bankHead"><div><p class="bankKicker">Banco de Sorokiba</p><h2 id="bankTitle">Atendimento</h2><p id="bankIntro"></p></div><button id="bankClose" type="button" aria-label="Fechar banco">Fechar</button></header><div class="bankBalances"><div><span>Carteira</span><strong id="bankMoney">R$ 0</strong></div><div><span>Poupança</span><strong id="bankSavings">…</strong></div><div><span>Dívida</span><strong id="bankDebt">…</strong></div></div><nav class="bankTabs" id="bankTabs" role="tablist" aria-label="Serviços do banco"><button type="button" role="tab" data-bank-tab="account">Poupança</button><button type="button" role="tab" data-bank-tab="transfer">Transferir</button><button type="button" role="tab" data-bank-tab="loan">Empréstimo</button><button type="button" role="tab" data-bank-tab="statement">Extrato</button></nav><p id="bankMsg" class="bankMsg" aria-live="polite"></p><div id="bankBody"></div></section>
-<section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
+<section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><div id="hospNextBar" class="hospNextBar"></div><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
+<div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
 <div id="tb"><button id="snd" title="Som">🔊</button><button id="cb" title="Chat" hidden>💬</button><button id="mp" title="Mapa (M)" hidden>🗺️</button></div><canvas id="mm" width="150" height="100" hidden></canvas>
@@ -1172,6 +1188,7 @@ function makeInterior(building){
    z('Imagem',25.4,14.9,'Imagem: raio-X, ultrassom e tomografia.');
    z('Pronto-socorro',30.6,14.6,'Pronto-socorro: procedimentos e cirurgias.');
    z('Internação',7,17.6,'Internação: medicação, soro e quimioterapia.');
+   hospitalExtraZones().forEach(x=>zones.push(x));
   }else if(family==='bank'){
   add('counter',2.8,1.1,6,.9,25,'#77583f','#c6a16d','#49352a');add('desk',2,4,1.4,.8,17,'#8c6a49','#c7a57b','#59412f');add('atm',9.5,4,.8,.8,19,'#51666c','#90a7a7','#2c424a');
   z('Caixa',5.9,2.4,'Área de atendimento bancário.');z('Mesa de atendimento',2.75,5.15,'Atendimento para dúvidas e serviços bancários.');
@@ -1379,7 +1396,7 @@ function enterBuilding(building){
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -1431,7 +1448,8 @@ function updateInterior(dt){
  updateInteriorPeople(dt);
  let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
  const moveVector=stickVector||tv;if(moveVector){ix=moveVector[0];iy=moveVector[1]}const l=Math.hypot(ix,iy);
- if(l>0){ix/=l;iy/=l;const s=dt*2.75,vx=ix*s,vy=iy*s;if(canWalkInterior(ipx+vx,ipy))ipx+=vx;if(canWalkInterior(ipx,ipy+vy))ipy+=vy;pd=Math.abs(ix)>=Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);pf+=dt*8}else pf=0;
+ if(interior.seat){if(l>.1)hospStand();else{pf=0;near={t:'interiorSpot',o:{label:'Levantar',action:hospStand,seatOut:true}};return}}
+  if(l>0){ix/=l;iy/=l;const s=dt*2.75,vx=ix*s,vy=iy*s;if(canWalkInterior(ipx+vx,ipy))ipx+=vx;if(canWalkInterior(ipx,ipy+vy))ipy+=vy;pd=Math.abs(ix)>=Math.abs(iy)?(ix<0?2:3):(iy<0?1:0);pf+=dt*8}else pf=0;
  near=null;let best=1.35;
  for(const p of interior.room.people){const dist=Math.hypot(ipx-p.x,ipy-p.y),limit=p.staff?1.55:.85;if(dist<limit&&dist<best){best=dist;near={t:'interiorPerson',o:p}}}
  for(const z of interior.room.zones){const dist=Math.hypot(ipx-z.x,ipy-z.y);if(dist<(z.r||.9)&&dist<best){best=dist;near={t:'interiorSpot',o:z}}}
@@ -1591,7 +1609,22 @@ Object.assign(DEC,{
  monitor:{s:[1,1],p:[[.35,.35,.3,.3,0,18,'#6a767b','#8a979c'],[.15,.3,.7,.2,30,46,'#1f2b30','#2c3f47']],
   f:(c,x,y,t)=>{const a=P(x+.2,y+.52,38),w=P(x+.8,y+.52,38);c.strokeStyle='#5cf0a8';c.lineWidth=1;c.beginPath();c.moveTo(a[0],a[1]);for(let i=1;i<=10;i++){const u=i/10,pk=((t*1.4+u)%1)<.12?-6:0;c.lineTo(a[0]+(w[0]-a[0])*u,a[1]+(w[1]-a[1])*u+pk)}c.stroke()}},
  plant:{s:[1,1],p:[[.3,.3,.4,.4,0,12,'#b5651d','#c9772a']],f:(c,x,y)=>{const q=P(x+.5,y+.5,12);[['#2f8f4e',11,20],['#3fae63',8,28],['#4ccb78',5,34]].forEach(([col,r,z])=>{c.fillStyle=col;c.beginPath();c.arc(q[0],q[1]-z+12,r,0,7);c.fill()})}},
+ tvboard:{s:[2,1],p:[[.05,0,1.9,.18,34,64,'#1b252a','#2b3940']],f:(c,x,y,t)=>{const [a,b]=hospTvLines();poly(c,[P(x+.1,y+.19,62),P(x+1.9,y+.19,62),P(x+1.9,y+.19,36),P(x+.1,y+.19,36)],'#071a1f');c.textAlign='center';c.font='bold 7px sans-serif';c.fillStyle='#6ff0c9';const q=P(x+1,y+.2,55),r=P(x+1,y+.2,43);c.fillText(a,q[0],q[1]);c.fillStyle=(t*1.5|0)%2?'#ffe08a':'#e9c76a';c.fillText(b,r[0],r[1])}},
+ vending:{s:[1,1],p:[[.1,.15,.8,.7,0,58,'#c0392b','#d9534f'],[.18,.8,.64,.05,16,52,'#9fd4e8','#bfe9ff']],f:(c,x,y)=>{[['#f2b84b',44],['#6ee7b7',34],['#7aa7ff',24]].forEach(([col,z],i)=>{const q=P(x+.3+i*.2,y+.86,z);c.fillStyle=col;c.fillRect(q[0]-2,q[1]-3,4,5)})}},
+ wheelchair:{s:[1,1],p:[[.25,.3,.5,.4,8,16,'#2b3a42','#3b4c55'],[.2,.25,.12,.5,16,38,'#2b3a42','#3b4c55']],f:(c,x,y)=>{const q=P(x+.5,y+.5,8);c.strokeStyle='#1d262b';c.lineWidth=2;c.beginPath();c.arc(q[0]+9,q[1]+2,6,0,7);c.stroke();c.beginPath();c.arc(q[0]-8,q[1]+5,3,0,7);c.stroke()}},
+ sink:{s:[1,1],p:[[.1,.15,.8,.7,0,24,'#cfd8da','#eaf1f2'],[.3,.3,.4,.4,24,26,'#9fb0b6','#b9c8cd'],[.46,.2,.08,.08,26,40,'#8fa0a6','#aab9bf']]},
  scale:{s:[1,1],p:[[.2,.25,.6,.5,0,5,'#3a4a50','#5d6e75'],[.4,.35,.2,.1,5,6,'#9fb0b6','#cfe0e5']]}
+});
+Object.assign(DEC,{
+ waitseats:{s:[3,1],p:[[.05,.28,2.9,.62,0,11,'#2f6f73','#3f8c90'],[.05,.1,2.9,.2,11,34,'#265a5e','#2f6f73'],[0,.15,.18,.78,11,22,'#265a5e','#2f6f73'],[2.82,.15,.18,.78,11,22,'#265a5e','#2f6f73'],[.2,.3,.78,.55,11,15,'#3f8c90','#58b9b4'],[1.1,.3,.78,.55,11,15,'#3f8c90','#58b9b4'],[2,.3,.78,.55,11,15,'#3f8c90','#58b9b4']]},
+ hsofa:{s:[2,1],p:[[.05,.28,1.9,.62,0,11,'#8a5a3b','#a8744f'],[.05,.1,1.9,.2,11,34,'#6e4630','#8a5a3b'],[0,.15,.18,.78,11,22,'#6e4630','#8a5a3b'],[1.82,.15,.18,.78,11,22,'#6e4630','#8a5a3b'],[.2,.3,.78,.55,11,15,'#a8744f','#c48d63'],[1,.3,.78,.55,11,15,'#a8744f','#c48d63']]},
+ harmchair:{s:[1,1],p:[[.1,.28,.8,.62,0,11,'#8a5a3b','#a8744f'],[.1,.1,.8,.2,11,32,'#6e4630','#8a5a3b'],[.05,.2,.14,.7,11,20,'#6e4630','#8a5a3b'],[.81,.2,.14,.7,11,20,'#6e4630','#8a5a3b'],[.2,.3,.6,.55,11,15,'#a8744f','#c48d63']]},
+ hchair:{s:[1,1],p:[[.2,.3,.6,.6,0,11,'#5b7182','#94abb8'],[.2,.18,.6,.12,11,30,'#4a5d6c','#5b7182']]},
+ htable:{s:[1,1],p:[[.1,.15,.8,.7,0,9,'#b88a56','#d8b27a'],[.28,.3,.32,.26,9,10,'#d9534f','#f2a29d'],[.55,.45,.28,.22,9,10,'#3d9b98','#8de8dd']]},
+ haquarium:{s:[1,2],p:[[.08,.1,.84,1.8,0,16,'#2b3a42','#3b4c55'],[.14,.16,.72,1.68,16,48,'#7fc7de','#a8e0f0']],
+  f:(c,x,y,t)=>{[['#f2b84b',0,.0],['#ff8c5a',1,.5],['#e9eef0',2,.25]].forEach(([col,i,ph])=>{const u=((t*.25+ph)%1),yy=y+.3+u*1.3,xx=x+.5+Math.sin(t*1.7+i*2)*.22,q=P(xx,yy,28+i*5);c.fillStyle=col;c.beginPath();c.ellipse(q[0],q[1],4,2.3,0,0,7);c.fill();c.beginPath();c.moveTo(q[0]-4,q[1]);c.lineTo(q[0]-8,q[1]-2.5);c.lineTo(q[0]-8,q[1]+2.5);c.closePath();c.fill()})}},
+ hsanitizer:{s:[1,1],p:[[.4,.4,.2,.2,0,36,'#9fb0b6','#cfe0e5'],[.3,.3,.4,.3,36,48,'#3d9b98','#58b9b4']]},
+ hivstand:{s:[1,1],p:[[.25,.25,.5,.5,0,3,'#7f8a8e','#a9b4b8'],[.45,.45,.1,.1,3,58,'#9fb0b6','#cfe0e5'],[.3,.35,.4,.3,50,66,'#cfe9f2','#e8f6fb']]}
 });
 const HZ={
  w:34,h:22,
@@ -1600,31 +1633,88 @@ const HZ={
   ['h',7,14,17],['h',7,19,23],['h',7,25,29],['h',7,31,34],['h',10,14,17],['h',10,19,23],['h',10,25,30],['h',10,32,34],['v',21,10,22],['v',28,10,22]],
  doors:[['v',14,3,5,'TRIAGEM'],['v',14,7,10,'CORREDOR'],['h',14,5,9,'INTERNAÇÃO'],['h',7,17,19,'TRIAGEM'],['h',7,23,25,'CONSULTÓRIO 1'],['h',7,29,31,'CONSULTÓRIO 2'],['h',10,17,19,'LABORATÓRIO'],['h',10,23,25,'IMAGEM'],['h',10,30,32,'PRONTO-SOCORRO']],
  signs:[[7,'RECEPÇÃO'],[17.5,'TRIAGEM'],[24,'CONSULTÓRIO 1'],[30.5,'CONSULTÓRIO 2']],
- dec:[['recdesk',5,2],['waitseats',1,10.5],['waitseats',1,12.5],['waitseats',9,10.5],['waitseats',9,12.5],['plant',1,1],['plant',12,1],['plant',12.8,12.8],['cooler',11,5],
-  ['desk',15,1],['cabinet',19.6,.4],['scale',19,4.3],
-  ['desk',22,1.2],['hbed',25.6,3.6],
-  ['desk',28.2,1.2],['monitor',32.4,1.2],['hbed',32.2,3.6],
-  ['cooler',14.6,8.2],['plant',33,7.4],
-  ['labbench',15,12],['cabinet',19.6,10.5],['stool',18.6,15.4],['labbench',15,19],['plant',20,20.6],
+ dec:[['recdesk',5,2],['waitseats',1,10.5],['waitseats',1,12.5],['waitseats',9,10.5],['waitseats',9,12.5],['plant',1,1],['plant',12.8,12.8],['cooler',13,5],['tvboard',10.6,.05],['vending',12.8,1],['wheelchair',2.2,4],['wheelchair',3.4,4],
+  ['haquarium',.25,2],['hsanitizer',1.7,5.3],['hsofa',10.2,3.4],['htable',10.7,5],['harmchair',9,3.6],['plant',8.2,5.6],['htable',5.2,8],
+  ['desk',15,1],['cabinet',19.6,.4],['scale',19,4.3],['hsanitizer',14.5,5.6],['hchair',15.6,3.6],
+  ['desk',22,1.2],['hbed',25.6,3.6],['hchair',22.3,3.2],
+  ['desk',28.2,1.2],['monitor',32.4,1.2],['hbed',32.2,3.6],['hchair',28.5,3.2],
+  ['cooler',14.6,8.2],['plant',33,7.4],['hsofa',20,7.1],['hsofa',26,7.1],['hsanitizer',33,8.6],
+  ['labbench',15,12],['cabinet',19.6,10.5],['sink',20.2,13.4],['stool',18.6,15.4],['labbench',15,19],['plant',20,20.6],
   ['xray',21.8,11.5],['monitor',26.6,11.2],['scanner',23.2,17],
   ['stretcher',28.8,12],['stretcher',32,12],['stretcher',28.8,17.5],['stretcher',32,17.5],['monitor',33,10.6],['cabinet',28.2,20.4],
-  ['hbed',1.2,16.4],['hbed',3,16.4],['hbed',10.4,16.4],['hbed',12.2,16.4],['monitor',5,16.4],['monitor',9,16.4],['desk',5,20.2]]
+  ['hbed',1.2,16.4],['hbed',3,16.4],['hbed',10.4,16.4],['hbed',12.2,16.4],['monitor',5,16.4],['monitor',9,16.4],['hivstand',4.1,16.4],['hivstand',.3,16.4],['hivstand',13.2,16.4],['desk',5,20.2],['harmchair',1.2,19.6],['harmchair',12.2,19.6]]
 };
 HZ.grid=Array.from({length:HZ.h},(_,y)=>Array.from({length:HZ.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of HZ.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'h'}));
+
+/* ---------- HOSPITAL: sentar nos sofás e interagir com objetos ---------- */
+const HZ_SEAT={waitseats:{n:3,label:'Sofá'},hsofa:{n:2,label:'Sofá'},harmchair:{n:1,label:'Poltrona'},hchair:{n:1,label:'Cadeira'},stool:{n:1,label:'Banquinho'},wheelchair:{n:1,label:'Cadeira de rodas'}};
+const HOSP_TIPS=['Lave as mãos por 20 segundos com água e sabão.','Beba água ao longo do dia: o corpo agradece.','Febre persistente e falta de ar pedem avaliação médica.','Vacinas reduzem a chance de adoecer.','Doar sangue pode ajudar até três pessoas.','Dormir bem fortalece o sistema imunológico.','Cansaço persistente e perda de peso merecem investigação.','Exames de rotina descobrem problemas cedo.'];
+let hospTipIdx=0;
+const hospTip=()=>HOSP_TIPS[hospTipIdx++%HOSP_TIPS.length];
+function hospWeightKg(){let h=0;for(const ch of String(user&&user.name||''))h=(h*31+ch.charCodeAt(0))>>>0;return (52+(h%380)/10).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}
+// Interação rápida (sem painel): anima, devolve o controle e mostra o resultado.
+async function hospDo(kind,ms,label,done){
+ if(open||!interior||interior.med)return;
+ await hospitalAnimate(kind,null,ms,label);open=false;
+ if(interior&&interior.room.family==='hospital'&&done)done();
+}
+const HOSP_PROPS=[
+ {label:'Bebedouro',x:13.5,y:6.7,desc:'Bebedouro.',action:()=>hospDo('drink',1800,'Bebendo água…',()=>toast('Água fresca e gelada. Você se sente hidratado.'))},
+ {label:'Bebedouro',x:15.2,y:9.3,desc:'Bebedouro.',action:()=>hospDo('drink',1800,'Bebendo água…',()=>toast('Água fresca e gelada. Você se sente hidratado.'))},
+ {label:'Máquina de lanches',x:13.3,y:2.5,desc:'Máquina de lanches.',action:()=>openHospitalPanel('vending')},
+ {label:'TV da recepção',x:11.6,y:2.4,desc:'TV.',action:()=>toast('📺 '+hospTip())},
+ {label:'Mural de saúde',x:3.9,y:1.9,desc:'Mural.',action:()=>toast('🩺 Dica de saúde: '+hospTip())},
+ {label:'Aquário',x:1.8,y:3.0,desc:'Aquário.',action:()=>toast('Os peixes nadam tranquilos. Você respira fundo e relaxa.')},
+ {label:'Álcool em gel',x:2.4,y:6.2,desc:'Álcool em gel.',action:()=>hospDo('wash',1400,'Higienizando as mãos…',()=>toast('Mãos higienizadas.'))},
+ {label:'Álcool em gel',x:15.3,y:6.5,desc:'Álcool em gel.',action:()=>hospDo('wash',1400,'Higienizando as mãos…',()=>toast('Mãos higienizadas.'))},
+ {label:'Álcool em gel',x:32.3,y:8.5,desc:'Álcool em gel.',action:()=>hospDo('wash',1400,'Higienizando as mãos…',()=>toast('Mãos higienizadas.'))},
+ {label:'Balança',x:19.5,y:5.8,desc:'Balança.',action:()=>hospDo('weigh',2200,'Medindo o peso…',()=>toast('⚖️ Peso: '+hospWeightKg()+' kg'+(hosp?' · saúde '+hosp.patient.health+'%':'')+'.'))},
+ {label:'Pia',x:19.6,y:14.0,desc:'Pia.',action:()=>hospDo('wash',1800,'Lavando as mãos…',()=>toast('Mãos limpas.'))}
+];
+function hospitalExtraZones(){
+ const zs=[];
+ HZ.dec.forEach(([name,x,y])=>{const cfg=HZ_SEAT[name];if(!cfg)return;const sz=DEC[name].s,single=name==='stool'||name==='wheelchair';
+  for(let k=0;k<cfg.n;k++){const sx=x+(k+.5)*sz[0]/cfg.n,sy=y+(single?.5:sz[1]*.58);
+   zs.push({label:cfg.label,x:sx,y:y+sz[1]+.35,r:.7,desc:'',seat:{x:sx,y:sy},action(){hospSitAt(this)}})}});
+ HOSP_PROPS.forEach(p=>zs.push({label:p.label,x:p.x,y:p.y,r:.9,desc:p.desc,action:p.action}));
+ return zs;
+}
+function hospSitAt(z){
+ if(!interior||interior.seat||!z.seat)return;
+ interior.seat={x:z.seat.x,y:z.seat.y,label:z.label};ipx=z.seat.x;ipy=z.seat.y;pd=0;pf=0;tone(520,.08,'sine',.05);
+}
+function hospStand(){
+ const s=interior&&interior.seat;if(!s)return;
+ const spot=findRoomSpot(interior.room,s.x,s.y+1.25)||findRoomSpot(interior.room,s.x,s.y+2);
+ if(spot){ipx=spot.x;ipy=spot.y}interior.seat=null;tone(430,.06,'sine',.04);
+}
+// destino do guia: "sala de espera" leva ao assento mais próximo
+function hospZoneFor(room,site){
+ if(site==='waiting'){let best=null,bd=1e9;for(const z of room.zones)if(z.seat){const d=Math.hypot(ipx-z.x,ipy-z.y);if(d<bd){bd=d;best=z}}return best}
+ return room.zones.find(z=>z.label===HOSP_SITE_ZONE[site]);
+}
+function hospDrawNear(){
+ const n=near;if(!n||n.t!=='interiorSpot'||n.o.seatOut||interior.med)return;
+ const z=n.o,g=P(z.x,z.y,1);c.save();c.strokeStyle='rgba(242,184,75,.9)';c.lineWidth=2;c.beginPath();c.ellipse(g[0],g[1],16,8,0,0,7);c.stroke();
+ const q=P(z.x,z.y,46);c.font='bold 10px sans-serif';c.textAlign='center';const w=c.measureText(z.label).width+14;c.fillStyle='rgba(8,18,24,.88)';c.fillRect(q[0]-w/2,q[1]-12,w,17);c.fillStyle='#ffe3a1';c.fillText(z.label,q[0],q[1]);c.restore();
+}
 function hospitalCollisionItems(){
  const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
- HZ.dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ HZ.dec.forEach(([name,x,y])=>{if(name==='tvboard')return;const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
  return solids;
 }
 const HOSP_FLOOR={h:['#eef3f1','#dde7e4'],n:['#e3eef2','#d3e3e9'],t:['#e8f0ec','#d8e5df'],c:['#f1ede2','#e3dccb'],k:['#d9e0e2','#cbd4d7'],l:['#dfe9ef','#cfdde6'],i:['#d8dfe8','#c8d1de'],e:['#efe0de','#e3cfcc']};
 const HOSP_STAFF={Helena:{f:1},Joana:{f:1,hat:'#f6f8f8'},'Dra. Bia':{f:1,gl:1},'Dr. Henrique':{gl:1},Lívia:{f:1,hat:'#f6f8f8'},Marcelo:{},Caio:{hat:'#f6f8f8'},'Dr. Lucas':{}};
 function renderHospitalZip(t){
+ hospGuideUpdate();
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0e1a22');bg.addColorStop(1,'#071017');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const Za=Z*1.3,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
  c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
  for(let y=0;y<HZ.h;y++)for(let x=0;x<HZ.w;x++){const code=HZ.grid[y][x],f=HOSP_FLOOR[code]||HOSP_FLOOR.h;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ hospDrawGuidePath(t);
  poly(c,[P(14,8.43),P(34,8.43),P(34,8.57),P(14,8.57)],'rgba(61,155,152,.6)');
  poly(c,[P(.6,6.5),P(2.6,6.5),P(2.6,8.5),P(.6,8.5)],'rgba(61,155,152,.35)');
+ poly(c,[P(.5,9.9),P(13.5,9.9),P(13.5,13.9),P(.5,13.9)],'rgba(61,155,152,.14)');poly(c,[P(9.5,2.9),P(13.3,2.9),P(13.3,6.9),P(9.5,6.9)],'rgba(180,120,70,.16)');
  c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(30,70,72,.36)';HZ.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
  const V=[],WALL='#f4f8f7',WALLS='#dfe7e5',TOP=72;
  const wN=i=>{box(c,i,-.14,1,.14,0,TOP,WALL,WALLS);poly(c,[P(i,0,6),P(i+1,0,6),P(i+1,0),P(i,0)],'rgba(0,0,0,.14)');if(i%4===1&&(i<14||i>=15)){poly(c,[P(i+.12,0,60),P(i+.88,0,60),P(i+.88,0,28),P(i+.12,0,28)],'#cdeaf5');c.strokeStyle='#f5efe3';c.lineWidth=1.3;c.stroke();ln(c,P(i+.5,0,60),P(i+.5,0,28))}};
@@ -1633,6 +1723,8 @@ function renderHospitalZip(t){
   else if(j%3===1){poly(c,[P(0,j+.12,60),P(0,j+.88,60),P(0,j+.88,28),P(0,j+.12,28)],'#cdeaf5');c.strokeStyle='#f5efe3';c.lineWidth=1.3;c.stroke();ln(c,P(0,j+.5,60),P(0,j+.5,28))}};
  for(let i=0;i<HZ.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<HZ.h;j++)V.push({k:j+.43,f:()=>wW(j)});
  V.push({k:7.9,f:()=>{poly(c,[P(6.8,0,60),P(7.2,0,60),P(7.2,0,28),P(6.8,0,28)],'#d9534f');poly(c,[P(6.4,0,48),P(7.6,0,48),P(7.6,0,40),P(6.4,0,40)],'#d9534f')}});
+ V.push({k:2.9,f:()=>{const q=P(2.5,0,44),d=new Date(),a=(d.getMinutes()+d.getSeconds()/60)/60*6.283-1.571,b=((d.getHours()%12)+d.getMinutes()/60)/12*6.283-1.571;c.fillStyle='#f4f8f7';c.strokeStyle='#2f7f7c';c.lineWidth=2;c.beginPath();c.arc(q[0],q[1],11,0,7);c.fill();c.stroke();c.strokeStyle='#223';c.lineWidth=1.6;ln(c,[q[0],q[1]],[q[0]+Math.cos(b)*5,q[1]+Math.sin(b)*3]);c.lineWidth=1;ln(c,[q[0],q[1]],[q[0]+Math.cos(a)*8,q[1]+Math.sin(a)*4.5])}});
+ V.push({k:4.4,f:()=>{poly(c,[P(3.1,0,58),P(4.7,0,58),P(4.7,0,30),P(3.1,0,30)],'#f2e6c9');[['#d9534f',3.2,3.7,56,46],['#3fae63',3.8,4.3,56,46],['#e3b93b',3.2,3.7,44,34],['#4a90d9',3.8,4.3,44,34]].forEach(([col,a,b,z1,z2])=>poly(c,[P(a,0,z1),P(b,0,z1),P(b,0,z2),P(a,0,z2)],col))}});
  HZ.signs.forEach(([x,text])=>V.push({k:x+.9,f:()=>{poly(c,[P(x-1.3,0,66),P(x+1.3,0,66),P(x+1.3,0,54),P(x-1.3,0,54)],'#2f7f7c');c.font='bold 8px sans-serif';c.textAlign='center';c.fillStyle='#fff';const q=P(x,0,57);c.fillText(text,q[0],q[1])}}));
  HZ.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++)V.push(axis==='v'?{k:pos+u+.5,f:()=>box(c,pos-.06,u,.12,1,0,TOP,WALL,WALLS)}:{k:u+.5+pos,f:()=>box(c,u,pos-.06,1,.12,0,TOP,WALL,WALLS)})});
  HZ.doors.forEach(([axis,pos,a,b,text])=>{const m=(a+b)/2;V.push({k:axis==='v'?pos+m+.6:m+pos+.6,f:()=>{
@@ -1641,9 +1733,11 @@ function renderHospitalZip(t){
  HZ.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1];V.push({k:x+y+(d[0]+d[1])/2,f:()=>drawDec(c,name,x,y,t)})});
  const med=interior.med;
  interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=HOSP_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.f?2:0,pn:'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl})}}));
- V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',med&&med.sit?{...myO,seated:true}:myO)}});
+ const sat=!!interior.seat;
+ V.push({k:ipx+ipy+(sat?1.3:0),f:()=>{const q=P(ipx,ipy,sat?9:0);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',(med&&med.sit)||sat?{...myO,seated:true}:myO)}});
  V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
- c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ hospDrawBeacon(t);hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44+(sat?9:0));c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
  interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#bfeee6';c.fillText(p.name,q[0],q[1])});
  if(med)hospitalMedOverlay(t,med);
  c.setTransform(1,0,0,1,0,0);
@@ -1689,6 +1783,77 @@ function hospitalAnimate(kind,role,ms,label){
    requestAnimationFrame(step);
   };requestAnimationFrame(step);
  });
+}
+
+/* ---------- HOSPITAL: guia de caminho ("aprenda aonde ir") ---------- */
+const HOSP_SITE_ZONE={reception:'Recepção',triage:'Triagem',consult1:'Consultório 1',consult2:'Consultório 2',lab:'Laboratório',imaging:'Imagem',er:'Pronto-socorro',ward:'Internação',waiting:'Sala de espera'};
+const HOSP_WHERE={reception:'bem em frente à entrada',triage:'primeira sala depois da recepção',consult1:'sala ao norte do corredor, depois da triagem',consult2:'última sala ao norte do corredor',lab:'primeira sala ao sul do corredor',imaging:'segunda sala ao sul do corredor',er:'última sala ao sul do corredor',ward:'porta no fundo da recepção',waiting:'sofás da recepção e do corredor'};
+let hospGuideOn=(()=>{try{return localStorage.getItem('sk2_hguide')!=='0'}catch{return true}})(),hospPath=null,hospPathKey='',hospPathFrom=null,hospPathAt=0,hospGuideZone=null,hospLastPoll=0,hospPolling=false,hospFetchAt=0,hospChipAt=0;
+function hospSiteLabel(s){return s==='waiting'?'Sala de espera':(HOSP_SITES[s]||{}).title||s}
+function hospTargetSite(){
+ if(!hosp)return null;const v=hosp.visit;
+ if(!v)return hosp.lastVisit?null:'reception';
+ const a=v.stage.actions[0];if(a)return a.site;
+ if(v.status==='triaged'&&v.stage.waitMs>0)return 'waiting';
+ return null;
+}
+function hospTvLines(){const v=hosp&&hosp.visit;if(v){const s=hospTargetSite();return ['SENHA '+String(v.ticket).padStart(3,'0'),s?'➜ '+hospSiteLabel(s).toUpperCase():'AGUARDE']}return hosp&&hosp.lastVisit?['ATENDIMENTO','CONCLUÍDO']:['BEM-VINDO','RETIRE SUA SENHA']}
+function hospRoomName(x,y){for(const [rx,ry,rw,rh,label,code]of HZ.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return label||'Corredor';return 'Corredor'}
+function hospExpired(){const v=hosp&&hosp.visit;return !!(v&&v.stage.waitMs>0&&Date.now()>=hospFetchAt+v.stage.waitMs+300)}
+async function hospPoll(){
+ hospPolling=true;hospLastPoll=performance.now();const before=hospTargetSite();
+ try{const d=await hospRequest('');hospApply(d);const after=hospTargetSite();
+  if(after&&after!==before&&interior&&interior.room.family==='hospital'){toast('Próximo passo: '+hospSiteLabel(after)+' ('+HOSP_WHERE[after]+').');tone(784,.1,'sine',.05)}
+  if(!$('hospitalPanel').hidden&&!hospBusy)renderHospital()}
+ catch{}finally{hospPolling=false}
+}
+function hospUiHide(){const a=$('hospChip'),b=$('hospGuideBtn');if(a)a.hidden=true;if(b)b.hidden=true;hospPath=null;hospGuideZone=null;hospLastPoll=0}
+// string-pulling: troca o zigue-zague da grade por linhas retas onde o caminho está livre
+function hospSmooth(room,from,pts){
+ const clear=(a,b)=>{const n=Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)/.25);for(let i=1;i<n;i++){const u=i/n;if(!pointClear(room,a.x+(b.x-a.x)*u,a.y+(b.y-a.y)*u))return false}return true};
+ const out=[],all=[from,...pts];let i=0;
+ while(i<all.length-1){let j=all.length-1;while(j>i+1&&!clear(all[i],all[j]))j--;out.push(all[j]);i=j}
+ return out;
+}
+function hospGuideUpdate(){
+ const now=performance.now(),room=interior.room;
+ if(!hospPolling&&!hospBusy&&(now-hospLastPoll>12000||hospExpired()))hospPoll();
+ const site=hospTargetSite(),z=site&&hospZoneFor(room,site);hospGuideZone=hospGuideOn&&z?z:null;
+ if(hospGuideOn&&z){
+  const moved=!hospPathFrom||site!==hospPathKey||Math.hypot(ipx-hospPathFrom.x,ipy-hospPathFrom.y)>.6||now-hospPathAt>2000;
+  if(moved){const raw=findRoomPath(room,ipx,ipy,z.x,z.y);hospPath=raw?hospSmooth(room,{x:ipx,y:ipy},raw):null;hospPathKey=site;hospPathFrom={x:ipx,y:ipy};hospPathAt=now}
+ }else{hospPath=null;hospPathFrom=null}
+ if(now-hospChipAt>350){hospChipAt=now;
+  const chip=$('hospChip'),btn=$('hospGuideBtn');chip.hidden=false;btn.hidden=false;btn.textContent='Guia: '+(hospGuideOn?'ligado':'desligado');
+  const here=hospRoomName(ipx,ipy),v=hosp&&hosp.visit;let txt='📍 '+here;
+  if(!hosp)txt+=' · consultando prontuário…';
+  else if(site){const near=z&&Math.hypot(ipx-z.x,ipy-z.y)<1.3;txt+=near?' · você chegou em '+hospSiteLabel(site)+': aperte E':' · destino: '+hospSiteLabel(site)+(hospPath?' (≈ '+Math.max(1,Math.round(hospPath.reduce((s,p,i,a)=>s+Math.hypot(p.x-(i?a[i-1].x:ipx),p.y-(i?a[i-1].y:ipy)),0)))+' passos)':'')}
+  else if(v&&v.status==='exams')txt+=' · aguardando o resultado dos exames';
+  else if(v&&v.status==='treating')txt+=' · aguardando a próxima sessão';
+  else if(hosp.lastVisit)txt+=' · atendimento concluído';
+  chip.textContent=txt;
+ }
+}
+function hospDrawGuidePath(t){
+ if(!hospGuideOn||!hospPath||!hospPath.length)return;
+ const pts=[{x:ipx,y:ipy},...hospPath];
+ c.save();c.lineCap='round';c.lineJoin='round';c.strokeStyle='rgba(63,208,199,.26)';c.lineWidth=7;c.beginPath();
+ pts.forEach((p,i)=>{const q=P(p.x,p.y,1);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke();
+ let need=(t*1.1)%.75;c.fillStyle='rgba(150,255,238,.9)';
+ for(let i=1;i<pts.length;i++){
+  const a=pts[i-1],b=pts[i],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);if(!len)continue;const ux=dx/len,uy=dy/len;
+  while(need<=len){const x=a.x+ux*need,y=a.y+uy*need,tip=P(x+ux*.24,y+uy*.24,1),l=P(x-ux*.13-uy*.15,y-uy*.13+ux*.15,1),r=P(x-ux*.13+uy*.15,y-uy*.13-ux*.15,1);
+   c.beginPath();c.moveTo(tip[0],tip[1]);c.lineTo(l[0],l[1]);c.lineTo(r[0],r[1]);c.closePath();c.fill();need+=.75}
+  need-=len;
+ }
+ c.restore();
+}
+function hospDrawBeacon(t){
+ const z=hospGuideZone;if(!z)return;
+ c.save();const p=(t*1.2)%1,g=P(z.x,z.y,1);c.strokeStyle='rgba(111,240,201,'+(.9*(1-p))+')';c.lineWidth=2;c.beginPath();c.ellipse(g[0],g[1],14+p*24,(14+p*24)/2,0,0,7);c.stroke();
+ const site=hospTargetSite(),q=P(z.x,z.y,64+Math.sin(t*4)*4);c.fillStyle='#6ff0c9';c.strokeStyle='#0a2a2c';c.lineWidth=1.5;
+ c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]-7,q[1]-11);c.lineTo(q[0]+7,q[1]-11);c.closePath();c.fill();c.stroke();
+ c.font='bold 9px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';c.strokeText(hospSiteLabel(site),q[0],q[1]-16);c.fillStyle='#e9fffb';c.fillText(hospSiteLabel(site),q[0],q[1]-16);c.restore();
 }
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
@@ -2221,7 +2386,7 @@ function frame(now){const t=now/1000,dt=Math.min(.05,(now-last)/1000);last=now;c
 update(dt,t,gm,h);render(t,h,gm);if(gm&&(!interior||interior.room.net)&&ws&&ws.readyState==1){const nw=performance.now(),sx=interior?ipx:px,sy=interior?ipy:py;if(nw-lastSend>200&&(sx!=lx||sy!=ly||pd!=ld||(pf|0)!=lf||(isSeated?1:0)!==ls)){lastSend=nw;lx=sx;ly=sy;ld=pd;lf=pf|0;ls=isSeated?1:0;ws.send(JSON.stringify({t:'p',x:+sx.toFixed(2),y:+sy.toFixed(2),d:pd,f:(pf|0)&3,s:ls}))}}
 if(gm&&ON&&ws&&ws.readyState===1&&myId===trafficAuthorityId){const nw=performance.now();if(nw-lastTrafficSend>200){lastTrafficSend=nw;const snapshot=cars.map(a=>[Math.round(a.x*100),Math.round(a.y*100),Math.round(a.s*100),a.br?1:0]);ws.send(JSON.stringify({t:'v',c:snapshot}))}}
 sound(t,dt,dk(h),Math.max(0,Math.min(1,(Math.sin(t/60+1)-.55)*3)),gm);if(gm&&!interior){drawMM(t);if(fmO)drawFM(t)}
-if(gm){const tip=$('tip');if(near&&!open){tip.hidden=false;tip.textContent=near.t==='icecream'?'E · Comprar sorvetes com '+near.o.name:near.t=='n'?'E · Falar com '+near.o.n:near.t==='bench'?(isSeated?'E · Levantar do banco':'E · Sentar no banco'):near.t==='d'?'E · Entrar: '+near.o.n:near.t==='interiorSpot'?'E · Interagir: '+near.o.label:'E · Sair para a cidade'}else tip.hidden=true;
+if(gm){const tip=$('tip');if(near&&!open){tip.hidden=false;tip.textContent=near.t==='icecream'?'E · Comprar sorvetes com '+near.o.name:near.t=='n'?'E · Falar com '+near.o.n:near.t==='bench'?(isSeated?'E · Levantar do banco':'E · Sentar no banco'):near.t==='d'?'E · Entrar: '+near.o.n:near.t==='interiorSpot'?(near.o.seatOut?'E · Levantar':near.o.seat?'E · Sentar: '+near.o.label:'E · Interagir: '+near.o.label):'E · Sair para a cidade'}else tip.hidden=true;
 hT-=dt;if(hT<=0){hT=.25;$('on').textContent=ON?'🟢 '+(RP.size+1)+' online':'⚪ offline';$('hl').textContent=1+(user.xp/100|0);$('hm').textContent=user.money;$('xf').style.width=user.xp%100+'%';$('hc').textContent=String(h|0).padStart(2,'0')+':'+String((h%1)*60|0).padStart(2,'0')+(dk(h)>.5?' 🌙':' ☀')}
 sT-=dt;if(sT<=0){sT=3;save()}}
 else if(!$('pv').hidden){pc.setTransform(1,0,0,1,0,0);pc.clearRect(0,0,64,72);pc.setTransform(1.8,0,0,1.8,0,0);person(pc,18,38,(t/1.2|0)%4,t*8|0,LK.col,LK.skin,LK.hr,oOf(LK))}
@@ -2932,13 +3097,17 @@ const HOSP_SITES={
  lab:{title:'Laboratório',who:'Lívia · Enfermeira de coleta',tell:['Livia','#e1eee9','#c99572','#4a2f22',1]},
  imaging:{title:'Imagem',who:'Marcelo · Técnico de imagem',tell:['Marcelo','#7aa0b8','#bb865f','#222a33',0]},
  er:{title:'Pronto-socorro',who:'Dr. Lucas · Cirurgião',tell:['Lucas','#3f8f8c','#d0a17b','#2b2b30',0]},
- ward:{title:'Internação',who:'Caio · Enfermeiro',tell:['Caio','#e1eee9','#ad744b','#365560',0]}
+ ward:{title:'Internação',who:'Caio · Enfermeiro',tell:['Caio','#e1eee9','#ad744b','#365560',0]},
+ vending:{title:'Máquina de lanches',who:'Autoatendimento',icon:'🥤'}
 };
 const HOSP_ROLE_SITE={'Recepcionista':'reception','Enfermeira de triagem':'triage','Médica':'consult1','Médico':'consult2','Enfermeira de coleta':'lab','Técnico de imagem':'imaging','Cirurgião':'er','Enfermeiro':'ward'};
-const HOSP_ZONE_SITE={'Recepção':'reception','Triagem':'triage','Consultório 1':'consult1','Consultório 2':'consult2','Laboratório':'lab','Imagem':'imaging','Pronto-socorro':'er','Internação':'ward'};
+const HOSP_ZONE_SITE={'Recepção':'reception','Triagem':'triage','Consultório 1':'consult1','Consultório 2':'consult2','Laboratório':'lab','Imagem':'imaging','Pronto-socorro':'er','Internação':'ward','Máquina de lanches':'vending'};
 const HOSP_STEPS=['Recepção','Triagem','Consulta','Exames','Diagnóstico','Tratamento','Alta'];
 const HOSP_RISK_COLOR={verde:'#3fae63',amarelo:'#e3b93b',laranja:'#e8873a',vermelho:'#d9534f'};
 let hosp=null,hospSite='reception',hospBusy=false,hospReq=0,hospOffset=0,hospTimer=0,hospReloaded=false;
+const hospDate=ms=>new Date(ms).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const hospPrice=list=>{const p=hosp&&hosp.services&&hosp.services.plan;return p&&p.active?Math.max(1,Math.ceil(list*(100-p.discountPct)/100)):list};
+const hospPriceTag=list=>hospMoney(hospPrice(list))+(hosp&&hosp.services&&hosp.services.plan.active?' <s class="hospOld">'+hospMoney(list)+'</s>':'');
 const hospNow=()=>Date.now()+hospOffset;
 const hospMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const hospWait=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=3600?Math.floor(s/3600)+' h '+String(Math.ceil((s%3600)/60)).padStart(2,'0')+' min':s>=60?Math.ceil(s/60)+' min':s+' s'};
@@ -2954,64 +3123,94 @@ async function hospRequest(path,body){
  }catch(e){if(e.name==='AbortError')throw new Error('O hospital demorou para responder. Tente novamente.');throw e}
  finally{clearTimeout(timer)}
 }
-function hospApply(d){if(d.player){user=d.player;$('hm').textContent=user.money}if(d.hospital){hosp=d.hospital;hospOffset=hosp.serverNow-Date.now();hospReloaded=false}}
+function hospApply(d){if(d.player){user=d.player;$('hm').textContent=user.money}if(d.hospital){hosp=d.hospital;hospOffset=hosp.serverNow-Date.now();hospFetchAt=Date.now();hospReloaded=false}}
 function hospSay(text,bad){const e=$('hospMsg');e.textContent=text||'';e.classList.toggle('err',!!bad)}
 function hospFace(site){const t=(HOSP_SITES[site]||HOSP_SITES.reception).tell;return '<canvas class="hospFace" data-face="'+site+'" width="64" height="72" aria-hidden="true"></canvas>'}
 function hospDrawFaces(){document.querySelectorAll('#hospitalPanel canvas[data-face]').forEach(cv=>{const t=HOSP_SITES[cv.dataset.face].tell,g=cv.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,64,72);g.setTransform(1.8,0,0,1.8,0,0);person(g,18,38,0,0,t[1],t[2],t[3],{f:!!t[4],st:t[4]?2:0,pn:'#2a2f45',dr:0,hat:/Enferm/.test(HOSP_SITES[cv.dataset.face].who)?'#f6f8f8':0})})}
 function hospSiteName(id){return(HOSP_SITES[id]||{}).title||id}
-function hospTell(site,text){return '<div class="hospTell">'+hospFace(site)+'<p>'+esc(text)+'</p></div>'}
+function hospTell(site,text){const S=HOSP_SITES[site];return '<div class="hospTell">'+(S&&S.tell?hospFace(site):'<div class="hospFace hospIcon" aria-hidden="true">'+((S&&S.icon)||'')+'</div>')+'<p>'+esc(text)+'</p></div>'}
 function hospHere(site){const v=hosp?.visit;return v?v.stage.actions.filter(a=>a.site===site):[]}
-function hospNext(){const v=hosp?.visit;if(!v)return 'Abra a ficha na Recepção.';const a=v.stage.actions[0];
+function hospOutcomeText(l){return l.outcome==='healthy'?'Atendimento concluído: a médica não encontrou nada de errado e você recebeu alta.':l.outcome==='cured'?'Atendimento concluído: tratamento de '+esc(l.diagnosis||'sua doença')+' finalizado e você recebeu alta.':'Atendimento encerrado.'}
+function hospNext(){const v=hosp?.visit;
+ if(!v)return hosp?.lastVisit?hospOutcomeText(hosp.lastVisit):'Você ainda não abriu a ficha. Vá à Recepção para ser atendido.';
+ const a=v.stage.actions[0];
  if(a)return 'Seu próximo passo: '+hospSiteName(a.site)+'.';
  if(v.stage.waitMs)return 'Aguardando: '+hospCount(hospNow()+v.stage.waitMs)+'.';return ''}
+function hospLastCard(l){
+ const t=l.outcome==='healthy'?'Alta: você está saudável':l.outcome==='cured'?'Alta: curado de '+esc(l.diagnosis||'sua doença'):'Atendimento encerrado';
+ const d=l.outcome==='healthy'?'A consulta não encontrou nada de errado. Que bom! Aproveite para se vacinar, doar sangue ou assinar o plano de saúde.':l.outcome==='cured'?'Siga as orientações e descanse. Sua saúde já foi restaurada.':'Se ainda precisa de atendimento, abra uma nova ficha na Recepção.';
+ return '<div class="hospCard hospDone"><h3>'+t+'</h3><p class="hospHint" style="margin:0">Senha '+l.ticket+' · total pago '+hospMoney(l.total)+'. '+d+'</p></div>'}
+function hospNoVisit(){const l=hosp.lastVisit;return l?hospLastCard(l):'<div class="hospCard"><p class="hospHint" style="margin:0">Você ainda não abriu a ficha. Vá à Recepção para ser atendido.</p></div>'}
+const HOSP_OUT={healthy:'Alta · saudável',cured:'Alta · curado',abandoned:'Encerrado',discharged:'Alta'};
+function hospHistoryHtml(){const h=hosp.history;if(!h.length)return '';return '<div class="hospCard"><h3>Últimos atendimentos</h3><ul class="hospList">'+h.map(x=>'<li><span>Senha '+x.ticket+(x.diagnosis?' · '+esc(x.diagnosis):'')+'<small>'+hospDate(x.at)+'</small></span><span class="hospRight"><span class="hospTag'+(x.outcome==='abandoned'?'':' ok')+'">'+(HOSP_OUT[x.outcome]||'Alta')+'</span>'+hospMoney(x.total)+'</span></li>').join('')+'</ul></div>'}
+function hospSvc(kind){const sv=hosp.services;
+ if(kind==='plan'){const p=sv.plan;return '<div class="hospCard"><h3>Plano de saúde Sorokiba</h3><p class="hospHint">'+(p.active?'Ativo até '+hospDate(p.until)+'. Você paga '+(100-p.discountPct)+'% em consultas, exames e sessões.':p.discountPct+'% de desconto em consultas, exames e sessões por '+p.days+' dias.')+'</p><div class="hospActions"><button type="button" data-hosp="svc-plan"'+(p.canBuy?'':' disabled')+'>'+(p.active?'Renovar':'Assinar')+' ('+hospMoney(p.price)+')</button></div></div>'}
+ if(kind==='vaccine'){const v=sv.vaccine;return '<div class="hospCard"><h3>Vacinação</h3><p class="hospHint">'+(v.active?'Você está protegido até '+hospDate(v.until)+'.':'Por '+v.hours+' horas a chance de adoecer cai para '+v.factorPct+'% do normal.')+'</p><div class="hospActions"><button type="button" data-hosp="svc-vaccine"'+(v.canBuy?'':' disabled')+'>'+(v.active?'Renovar':'Vacinar')+' ('+hospMoney(v.price)+')</button></div></div>'}
+ const d=sv.donate;return '<div class="hospCard"><h3>Doação de sangue</h3><p class="hospHint">'+(d.ok?'Seu tipo é '+esc(hosp.patient.blood)+'. Doe e receba '+hospMoney(d.reward)+' e '+d.xp+' XP. A saúde cai um pouco e se recupera; novo intervalo de '+d.cooldownH+' h.':esc(d.reason))+'</p><div class="hospActions"><button type="button" data-hosp="svc-donate"'+(d.ok?'':' disabled')+'>Doar sangue</button></div></div>'}
 function hospVitalsHtml(tr,risk){if(!tr)return '';const v=tr.vitals;
  return '<div class="hospCard"><h3>Sinais vitais'+(risk?' <span class="hospRisk" style="background:'+HOSP_RISK_COLOR[risk.id]+'">'+esc(risk.label)+'</span>':'')+'</h3><dl class="hospDl"><div><dt>Temperatura</dt><dd>'+v.temp.toLocaleString('pt-BR')+' °C</dd></div><div><dt>Pressão</dt><dd>'+v.sys+'/'+v.dia+'</dd></div><div><dt>Batimentos</dt><dd>'+v.bpm+' bpm</dd></div><div><dt>Oxigênio</dt><dd>'+v.spo2+'%</dd></div></dl>'+(tr.flags.length?'<p class="hospHint">Alertas: '+tr.flags.map(esc).join(', ')+'.</p>':'<p class="hospHint">Sem alertas nos sinais vitais.</p>')+'</div>'}
 function hospExamsHtml(v,site){const list=v.exams.filter(e=>!site||e.site===site);if(!list.length)return '';
  return '<div class="hospCard"><h3>Exames</h3><ul class="hospList">'+list.map(e=>{
-  const st=e.status==='ordered'?'<span class="hospTag">A coletar · '+hospMoney(e.price)+'</span>':e.status==='running'?'<span class="hospTag wait">Em análise · '+hospCount(e.readyAt)+'</span>':'<span class="hospTag ok">Pronto</span>';
+  const st=e.status==='ordered'?'<span class="hospTag">A coletar · '+hospPriceTag(e.price)+'</span>':e.status==='running'?'<span class="hospTag wait">Em análise · '+hospCount(e.readyAt)+'</span>':'<span class="hospTag ok">Pronto</span>';
   const act=e.status==='ordered'&&site?'<button type="button" data-hosp="collect" data-exam="'+e.id+'">Coletar</button>':'';
   return '<li><span>'+esc(e.name)+(e.result?'<small>'+esc(e.result.finding)+'</small>':'')+(!site?'<small>Local: '+hospSiteName(e.site==='lab'?'lab':'imaging')+'</small>':'')+'</span><span class="hospRight">'+st+act+'</span></li>'}).join('')+'</ul></div>'}
 function hospBillHtml(v){if(!v||!v.charges.length)return '';return '<div class="hospCard"><h3>Conta do atendimento</h3><ul class="hospList">'+v.charges.map(c=>'<li><span>'+esc(c.label)+'</span><span>'+hospMoney(c.amount)+'</span></li>').join('')+'<li class="tot"><span>Total pago</span><span>'+hospMoney(v.total)+'</span></li></ul></div>'}
 function hospView(site){
- const h=hosp,v=h.visit,here=hospHere(site),P_=h.patient,S=HOSP_SITES[site];let html='';
+ const h=hosp,v=h.visit,here=hospHere(site),P_=h.patient;let html='';
  const none=text=>'<div class="hospCard"><p class="hospHint" style="margin:0">'+text+'</p></div>';
+ const noV=()=>v?none(hospNext()):hospNoVisit();
  if(site==='reception'){
-  html+=hospTell('reception',v?'Sua ficha está aberta. Senha '+v.ticket+(v.queueAhead?' · '+v.queueAhead+' pessoa(s) na frente.':'.'):'Bem-vindo ao Hospital de Sorokiba. Vou abrir a sua ficha e você segue para a triagem.');
-  if(!v)html+='<div class="hospCard"><h3>Abrir ficha</h3><dl class="hospDl"><div><dt>Tipo sanguíneo</dt><dd>'+esc(P_.blood)+'</dd></div><div><dt>Saúde</dt><dd>'+P_.health+'%</dd></div><div><dt>Consulta</dt><dd>'+hospMoney(h.fees.consult)+'</dd></div></dl><p class="hospHint">Você paga cada etapa na hora: consulta, exames e tratamento. Exames levam de 1 a 2 horas reais, e você pode sair e voltar depois.</p><div class="hospActions"><button type="button" data-hosp="checkin">Retirar senha e abrir ficha</button></div></div>';
-  else html+=hospBillHtml(v)+'<div class="hospCard"><h3>Atendimento em andamento</h3><p class="hospHint">'+hospNext()+'</p><div class="hospActions"><button type="button" class="alt" data-hosp="leave">Encerrar atendimento</button></div></div>';
+  html+=hospTell('reception',v?'Sua ficha está aberta. Senha '+v.ticket+(v.queueAhead?' · '+v.queueAhead+' pessoa(s) na frente.':'.'):h.lastVisit?'Atendimento concluído. Posso ajudar com mais alguma coisa?':P_.sick?'Bem-vindo. Vou abrir a sua ficha e você segue para a triagem.':'Bem-vindo ao Hospital de Sorokiba. Sem sintomas? Dá para fazer um check-up, vacinar, doar sangue ou assinar o plano.');
+  if(!v){
+   if(h.lastVisit)html+=hospLastCard(h.lastVisit);
+   html+='<div class="hospCard"><h3>Abrir ficha de atendimento</h3><dl class="hospDl"><div><dt>Tipo sanguíneo</dt><dd>'+esc(P_.blood)+'</dd></div><div><dt>Saúde</dt><dd>'+P_.health+'%</dd></div><div><dt>Consulta</dt><dd>'+hospPriceTag(h.fees.consultList)+'</dd></div></dl><p class="hospHint">'+(P_.sick?'Você está com sintomas: vale a pena ser atendido.':'Você não tem sintomas. Se abrir a ficha, a consulta provavelmente terminará em alta.')+' Cada etapa é paga na hora: consulta, exames e tratamento. Exames levam de 1 a 2 horas reais e você pode sair e voltar depois.</p><div class="hospActions"><button type="button" data-hosp="checkin">Retirar senha e abrir ficha</button></div></div>';
+  }else html+=hospBillHtml(v)+'<div class="hospCard"><h3>Atendimento em andamento</h3><p class="hospHint">'+hospNext()+'</p><div class="hospActions"><button type="button" class="alt" data-hosp="leave">Encerrar atendimento</button></div></div>';
+  html+=hospSvc('plan')+hospHistoryHtml();
  }else if(site==='triage'){
   const a=here.find(x=>x.id==='triage');
-  html+=hospTell('triage',a?'Vou medir temperatura, pressão e oxigenação. É rápido.':v&&v.triage?'Triagem feita. A cor do seu risco define quem é chamado primeiro.':'A triagem avalia a urgência de cada paciente.');
+  html+=hospTell('triage',a?'Vou medir temperatura, pressão e oxigenação. É rápido.':v&&v.triage?(P_.sick?'Triagem feita. A cor do seu risco define quem é chamado primeiro.':'Seus sinais estão normais. Siga para a consulta.'):'A triagem avalia a urgência de cada paciente.');
   if(a)html+='<div class="hospCard"><h3>Triagem</h3><p class="hospHint">A enfermeira vai medir os seus sinais vitais.</p><div class="hospActions"><button type="button" data-hosp="triage">Iniciar triagem</button></div></div>';
   else if(v&&v.triage)html+=hospVitalsHtml(v.triage,v.risk)+none(hospNext());
-  else html+=none(hospNext());
+  else html+=noV();
  }else if(site==='consult1'){
   const a=here.find(x=>x.id==='consult');
-  html+=hospTell('consult1',a?'Pode entrar. Vamos conversar sobre o que você está sentindo.':'Atendo por ordem de chegada e de urgência.');
-  if(a)html+='<div class="hospCard"><h3>Consulta</h3><p class="hospHint">Valor da consulta: '+hospMoney(h.fees.consult)+'.</p><div class="hospActions"><button type="button" data-hosp="consult">Entrar na consulta ('+hospMoney(h.fees.consult)+')</button></div></div>';
-  else html+=none(hospNext());
+  html+=hospTell('consult1',a?'Pode entrar. Vamos conversar sobre o que você está sentindo.':v?'Atendo por ordem de chegada e de urgência.':h.lastVisit?'Foi um prazer atender você.':'Atendo por ordem de chegada e de urgência.');
+  if(a)html+='<div class="hospCard"><h3>Consulta</h3><p class="hospHint">Valor da consulta: '+hospPriceTag(h.fees.consultList)+'.'+(P_.sick?'':' Você não relatou sintomas: a consulta deve terminar em alta.')+'</p><div class="hospActions"><button type="button" data-hosp="consult">Entrar na consulta ('+hospMoney(h.fees.consult)+')</button></div></div>';
+  else html+=noV();
   if(v&&v.consult&&v.consult.hypotheses.length)html+='<div class="hospCard"><h3>Hipóteses da médica</h3><p class="hospHint">Ainda não é o diagnóstico: depende dos exames.</p><ul class="hospList">'+v.consult.hypotheses.map(x=>'<li><span>'+esc(x)+'</span></li>').join('')+'</ul></div>';
   if(v&&v.exams.length)html+=hospExamsHtml(v,null);
  }else if(site==='lab'||site==='imaging'){
   html+=hospTell(site,site==='lab'?'Aqui coletamos sangue e amostras. O resultado leva de 1 a 2 horas.':'Fazemos raio-X, ultrassom e tomografia. O laudo leva de 1 a 2 horas.');
   const mine=v?v.exams.filter(e=>e.site===site):[];
-  html+=mine.length?hospExamsHtml(v,site):none(v&&v.status==='exams'?'Nenhum exame seu é feito aqui. '+hospNext():'Você não tem exames pedidos para esta sala.');
+  html+=mine.length?hospExamsHtml(v,site):v&&v.status==='exams'?none('Nenhum exame seu é feito aqui. '+hospNext()):(site==='lab'?'':none(v?'Você não tem exames pedidos para esta sala.':'Exames só com pedido médico. Abra a ficha na Recepção se precisar.'));
+  if(site==='lab')html+=hospSvc('donate');
  }else if(site==='consult2'){
   const r=here.find(x=>x.id==='results'),pl=here.find(x=>x.id==='plan');
   html+=hospTell('consult2',r?'Os seus exames ficaram prontos. Vamos ver o resultado.':pl?'Já tenho o diagnóstico. Escolha como quer tratar.':'Aqui eu leio resultados e defino o tratamento.');
   if(r)html+='<div class="hospCard"><h3>Resultados prontos</h3><div class="hospActions"><button type="button" data-hosp="results">Ler resultados e diagnóstico</button></div></div>';
   if(v&&v.exams.length&&v.exams.every(e=>e.status==='done'))html+=hospExamsHtml(v,null);
   if(v&&v.diagnosis)html+='<div class="hospCard"><h3>Diagnóstico: '+esc(v.diagnosis.name)+'</h3></div>';
-  if(pl&&v.plans)html+='<div class="hospPlans">'+v.plans.map(p=>'<div class="hospCard"><h3>'+esc(p.name)+'</h3><p class="hospHint">'+p.sessions+' sessão(ões) de '+hospMoney(p.sessionPrice)+(p.cooldownMin&&p.sessions>1?' · intervalo de '+hospWait(p.cooldownMin*60e3):'')+' · total '+hospMoney(p.total)+'</p><div class="hospActions"><button type="button" data-hosp="plan" data-plan="'+p.id+'">Escolher</button></div></div>').join('')+'</div>';
-  if(!r&&!pl&&!(v&&v.diagnosis))html+=none(hospNext());
+  if(pl&&v.plans)html+='<div class="hospPlans">'+v.plans.map(p=>'<div class="hospCard"><h3>'+esc(p.name)+'</h3><p class="hospHint">'+p.sessions+' sessão(ões) de '+hospPriceTag(p.sessionPrice)+(p.cooldownMin&&p.sessions>1?' · intervalo de '+hospWait(p.cooldownMin*60e3):'')+' · total '+hospMoney(p.sessions*hospPrice(p.sessionPrice))+'</p><div class="hospActions"><button type="button" data-hosp="plan" data-plan="'+p.id+'">Escolher</button></div></div>').join('')+'</div>';
+  if(!r&&!pl&&!(v&&v.diagnosis))html+=noV();
+ }else if(site==='vending'){
+  const sn=h.services.snack;
+  html+=hospTell('vending',sn.ok?'Escolha um item. A máquina libera um por vez, com um pequeno intervalo.':sn.reason);
+  html+='<div class="hospCard"><h3>Lanches</h3><ul class="hospList">'+sn.items.map(i=>'<li><span>'+esc(i.name)+'<small>+'+i.heal+' de saúde</small></span><span class="hospRight"><span class="hospTag">'+hospMoney(i.price)+'</span><button type="button" data-hosp="snack" data-item="'+i.id+'"'+(sn.ok?'':' disabled')+'>Comprar</button></span></li>').join('')+'</ul>'+(sn.ok?'':'<p class="hospHint" style="margin-top:8px">Libera em '+hospCount(sn.nextAt)+'.</p>')+'<p class="hospHint" style="margin-top:8px">Sua saúde: '+P_.health+'%. Lanche ajuda um pouco, mas não cura doença: para isso, procure atendimento.</p></div>';
  }else if(site==='er'||site==='ward'){
   const a=here.find(x=>x.id==='session'),t=v&&v.treatment;
-  html+=hospTell(site,a?'Pode se deitar. Vamos começar a sessão.':site==='er'?'O pronto-socorro faz procedimentos e cirurgias.':'Aqui ficam as medicações, o soro e a internação.');
-  if(a)html+='<div class="hospCard"><h3>'+esc(t.what)+'</h3><p class="hospHint">Sessão '+(t.sessionsDone+1)+' de '+t.sessionsTotal+'.</p><div class="hospActions"><button type="button" data-hosp="session">Iniciar sessão ('+hospMoney(t.sessionPrice)+')</button></div></div>';
+  html+=hospTell(site,a?'Pode se deitar. Vamos começar a sessão.':site==='er'?'O pronto-socorro faz procedimentos e cirurgias.':'Aqui ficam as medicações, o soro, as vacinas e a internação.');
+  if(a)html+='<div class="hospCard"><h3>'+esc(t.what)+'</h3><p class="hospHint">Sessão '+(t.sessionsDone+1)+' de '+t.sessionsTotal+'.</p><div class="hospActions"><button type="button" data-hosp="session">Iniciar sessão ('+hospMoney(hospPrice(t.sessionPrice))+')</button></div></div>';
   else if(t)html+='<div class="hospCard"><h3>'+esc(t.what)+'</h3><p class="hospHint">Sessões feitas: '+t.sessionsDone+' de '+t.sessionsTotal+'. '+(t.site!==site?'Seu tratamento é no(a) '+hospSiteName(t.site)+'.':'Próxima sessão em '+hospCount(t.nextAt)+'.')+'</p></div>';
-  else html+=none(hospNext());
+  else if(site==='er')html+=noV();
+  if(site==='ward')html+=hospSvc('vaccine');
  }
  return html;
+}
+function hospNextBar(){
+ const el=$('hospNextBar');if(!hosp){el.innerHTML='';return}
+ const s=hospTargetSite();
+ if(!s){const v=hosp.visit;el.innerHTML='<div><b>'+(v?'Aguardando':'Sem pendências')+'</b><span>'+hospNext()+'</span></div>';return}
+ el.innerHTML='<div><b>Próximo passo: '+esc(hospSiteLabel(s))+'</b><span>'+esc(HOSP_WHERE[s])+'</span></div>'+(hospSite===s||(s==='waiting'&&hospSite==='reception')?'<em>É aqui!</em>':'<button type="button" data-hosp="showpath">Mostrar caminho</button>');
 }
 function renderHospital(){
  const h=hosp,S=HOSP_SITES[hospSite]||HOSP_SITES.reception;$('hospWho').textContent=S.who;$('hospTitle').textContent=S.title;
@@ -3021,7 +3220,7 @@ function renderHospital(){
  $('hospSymptoms').innerHTML=P_.sick?'Você sente: <b>'+P_.symptoms.map(esc).join(', ')+'</b>.'+(!P_.canWork?' <span class="hospWarn">Debilitado: não pode trabalhar.</span>':''):'Nenhum sintoma no momento.';
  const step=h.visit?h.visit.stage.step:0;
  $('hospSteps').innerHTML=HOSP_STEPS.map((s,i)=>'<li class="'+(i<step?'done':i===step?'now':'')+'">'+s+'</li>').join('');
- body.innerHTML=hospView(hospSite);hospDrawFaces();
+ body.innerHTML=hospView(hospSite);hospNextBar();hospDrawFaces();
 }
 async function hospLoad(keepMsg){
  const id=++hospReq;
@@ -3042,6 +3241,9 @@ function hospTick(){
 const HOSP_ANIM={
  triage:()=>['triage','Enfermeira de triagem',4600,'Aferindo sinais vitais…'],
  exam:e=>e.site==='imaging'?['imaging','Técnico de imagem',3800,'Realizando o exame…']:['exam','Enfermeira de coleta',3800,'Coletando amostra…'],
+ vaccine:()=>['exam','Enfermeiro',3600,'Aplicando a vacina…'],
+ snack:()=>['snack',null,1800,'Pegando o lanche…'],
+ donate:()=>['exam','Enfermeira de coleta',4200,'Coletando sangue…'],
  session:e=>['treat',e.site==='er'?'Cirurgião':'Enfermeiro',4800,e.site==='er'?'Realizando o procedimento…':'Aplicando o tratamento…']
 };
 async function hospAct(path,body){
@@ -3065,6 +3267,10 @@ $('hospBody').onclick=e=>{
  else if(a==='results')hospAct('/exams/results',{});
  else if(a==='plan')hospAct('/treatment/plan',{plan:b.dataset.plan});
  else if(a==='session')hospAct('/treatment/session',{});
+ else if(a==='svc-plan')hospAct('/service/plan',{});
+ else if(a==='svc-vaccine')hospAct('/service/vaccine',{});
+ else if(a==='svc-donate')hospAct('/service/donate',{});
+ else if(a==='snack')hospAct('/service/snack',{item:b.dataset.item});
  else if(a==='leave'){if(confirm('Encerrar o atendimento? Os valores já pagos não são devolvidos.'))hospAct('/leave',{})}
 };
 async function hospitalPing(){
@@ -3072,6 +3278,9 @@ async function hospitalPing(){
   if(p.sick)toast('Você não está se sentindo bem ('+p.symptoms.join(', ')+'). Procure o Hospital.');
   else if(!p.canWork)toast('Sua saúde está baixa. Procure o Hospital antes de trabalhar.')}catch{}
 }
+
+$('hospNextBar').onclick=e=>{const b=e.target.closest('[data-hosp=showpath]');if(!b)return;const s=hospTargetSite();hospGuideOn=true;try{localStorage.setItem('sk2_hguide','1')}catch{}closeHospitalPanel();if(s)toast('Siga a linha verde até '+hospSiteLabel(s)+'.')};
+$('hospGuideBtn').onclick=()=>{hospGuideOn=!hospGuideOn;try{localStorage.setItem('sk2_hguide',hospGuideOn?'1':'0')}catch{}hospPath=null;hospPathFrom=null;hospChipAt=0};
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
 let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
