@@ -179,3 +179,77 @@ test('bloqueio de trabalho: debilitado não começa turno; saudável, sim', asyn
     assert.equal(await hosp.workGate('fantasma'), null, 'jogador inexistente não é bloqueado aqui');
   } finally { db.withTx = real; }
 });
+
+/* ---------- serviços para quem está saudável (plano, vacina, doação, lanches) ---------- */
+test('plano de saúde: desconto de 50% arredondado para cima, nunca abaixo de R$ 1', () => {
+  assert.equal(hosp.discountPrice(40, false), 40);
+  assert.equal(hosp.discountPrice(40, true), 20);
+  assert.equal(hosp.discountPrice(9, true), 5, 'arredonda para cima');
+  assert.equal(hosp.discountPrice(1, true), 1, 'mínimo de R$ 1');
+  assert.equal(hosp.discountPrice(350, true), 175);
+});
+
+test('vacina reduz a chance de adoecer: com sorte média, só passa quem não está imunizado', () => {
+  const r = () => 0.02;   // 2% de "sorte": abaixo de 4%, acima de 1%
+  assert.notEqual(hosp.rollIllness(1, seq([r(), 0]), HOSPITAL.ILLNESS_CHANCE), null, 'sem vacina adoece');
+  assert.equal(hosp.rollIllness(1, seq([r(), 0]), HOSPITAL.ILLNESS_CHANCE * HOSPITAL.VACCINE_FACTOR), null, 'vacinado não adoece');
+  assert.equal(HOSPITAL.VACCINE_FACTOR, 0.25);
+});
+
+test('doação de sangue: só saudável, com saúde alta e respeitando o intervalo', () => {
+  const now = 1_000_000, ok = { health: 100, sick: false, nextAt: 0, now };
+  assert.equal(hosp.donateStatus(ok).ok, true);
+  assert.equal(hosp.donateStatus({ ...ok, sick: true }).ok, false);
+  assert.match(hosp.donateStatus({ ...ok, sick: true }).reason, /sintomas/);
+  assert.equal(hosp.donateStatus({ ...ok, health: HOSPITAL.DONATE_MIN_HEALTH - 1 }).ok, false);
+  assert.equal(hosp.donateStatus({ ...ok, health: HOSPITAL.DONATE_MIN_HEALTH }).ok, true);
+  const wait = hosp.donateStatus({ ...ok, nextAt: now + 3_600_000 });
+  assert.equal(wait.ok, false);
+  assert.match(wait.reason, /Volte em/);
+  assert.equal(hosp.donateStatus({ ...ok, nextAt: now - 1 }).ok, true, 'intervalo vencido libera');
+});
+
+test('renovar plano/vacina só perto do vencimento', () => {
+  const now = 1_000_000_000, h = 3_600_000;
+  assert.equal(hosp.canRenew(0, now, 24 * 60), true, 'nunca teve');
+  assert.equal(hosp.canRenew(now - h, now, 24 * 60), true, 'já venceu');
+  assert.equal(hosp.canRenew(now + 10 * h, now, 24 * 60), true, 'vence em 10 h (< 24 h)');
+  assert.equal(hosp.canRenew(now + 48 * h, now, 24 * 60), false, 'ainda tem 48 h');
+});
+
+test('máquina de lanches: catálogo válido e intervalo entre compras', () => {
+  for (const [id, i] of Object.entries(hosp.SNACKS)) { assert.ok(i.name && i.price > 0 && i.heal > 0, id); assert.ok(i.price <= 20, `${id}: lanche é barato`); }
+  const now = 1_000_000;
+  assert.equal(hosp.snackStatus({ nextAt: 0, now }).ok, true);
+  assert.equal(hosp.snackStatus({ nextAt: now - 1, now }).ok, true);
+  const w = hosp.snackStatus({ nextAt: now + 120_000, now });
+  assert.equal(w.ok, false);
+  assert.match(w.reason, /reabastecendo/);
+});
+
+test('rotas de serviço validam o item antes de tocar no banco e exigem sessão', async () => {
+  const real = db.withTx; let touched = 0; db.withTx = async () => { touched++; return {}; };
+  try {
+    const r = setup();
+    for (const item of [undefined, null, 5, 'xyz', '__proto__', 'constructor', 'toString', 'AGUA'])
+      assert.equal((await call(r['POST /api/sk2/hospital/service/snack'], { item })).code, 400, String(item));
+    assert.equal(touched, 0);
+    const { routes, app } = makeApp();
+    hosp.registerRoutes({ app, json: null, authUser: async () => null, limited: () => false, userTries: new Map(), addInterval: () => ({}) });
+    for (const p of ['plan', 'vaccine', 'donate', 'snack']) assert.equal((await call(routes['POST /api/sk2/hospital/service/' + p], { item: 'agua' })).code, 401, p);
+  } finally { db.withTx = real; }
+});
+
+test('compra na máquina devolve evento, mensagem e prontuário', async () => {
+  const real = db.withTx;
+  db.withTx = async () => ({ playerRow: { username: 'ana', name: 'Ana', role: 'cidadão', look: {}, money: 997, xp: 10 }, hospital: { patient: { health: 90 } },
+    event: { kind: 'snack', item: 'agua' }, message: 'Água mineral: +2 de saúde.' });
+  try {
+    const ok = await call(setup()['POST /api/sk2/hospital/service/snack'], { item: 'agua' });
+    assert.equal(ok.code, 200);
+    assert.equal(ok.body.event.item, 'agua');
+    assert.equal(ok.body.player.money, 997);
+    db.withTx = async () => ({ err: 'A máquina está reabastecendo. Volte em 4 min.', status: 409 });
+    assert.equal((await call(setup()['POST /api/sk2/hospital/service/snack'], { item: 'cafe' })).code, 409);
+  } finally { db.withTx = real; }
+});
