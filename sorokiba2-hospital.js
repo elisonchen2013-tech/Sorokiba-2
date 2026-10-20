@@ -9,6 +9,7 @@
 //   Consulta sem exames vai direto a diagnosed; consulta de quem está saudável termina em discharged.
 const crypto = require('crypto');
 const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
 
 // SK2_HOSPITAL_TIME_SCALE=0.01 comprime todos os tempos (exames, esperas, sessões) para testar. Em produção: 1.
 const SCALE = (() => { const n = Number(process.env.SK2_HOSPITAL_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
@@ -146,7 +147,12 @@ function hypotheses(diseaseId, rand = Math.random) {
   return [diseaseId, ...others.slice(0, 2)].map(id => ({ id, r: rand() })).sort((a, b) => a.r - b.r).map(x => DISEASES[x.id].name);
 }
 const examSite = id => EXAMS[id].site;
-const discountPrice = (price, planOn) => planOn ? Math.max(1, Math.ceil(price * (100 - HOSPITAL.PLAN_DISCOUNT_PCT) / 100)) : price;
+// Plano de saúde e subsídio da Prefeitura se combinam (aritmética inteira: servidor e tela dão o mesmo preço).
+const discountPrice = (price, planOn, subsidyPct = 0) => {
+  const sub = Math.min(100, Math.max(0, Math.floor(subsidyPct) || 0));
+  if (!planOn && !sub) return price;
+  return Math.max(1, Math.ceil(price * (planOn ? 100 - HOSPITAL.PLAN_DISCOUNT_PCT : 100) * (100 - sub) / 10000));
+};
 // Doação de sangue: só saudável, com saúde alta e respeitando o intervalo.
 function donateStatus({ health, sick, nextAt, now }) {
   if (sick) return { ok: false, reason: 'Você está com sintomas: não pode doar sangue agora.' };
@@ -248,7 +254,8 @@ async function settle(c, player) {
   const sev = d ? effectiveSeverity(d.severity, Number(cond.em)) : null;
   const health = settleHealth(rec.health, Number(rec.dh), sev);
   await c.query(`UPDATE sk2_hospital_patients SET health=$2, health_at=now(), roll_at = CASE WHEN $3::boolean THEN now() ELSE roll_at END WHERE username=$1`, [u, health, rolls >= 1]);
-  return { health, blood: rec.blood, cond, sev, planOn: !!rec.plan_on, immune: !!rec.immune };
+  const subsidy = await city.policy(c, 'health_subsidy_pct');
+  return { health, blood: rec.blood, cond, sev, planOn: !!rec.plan_on, immune: !!rec.immune, subsidy };
 }
 
 const loadVisit = async (c, username, lock = false) => {
@@ -263,22 +270,26 @@ const visitDto = (v, exams) => ({
 const examDto = e => ({ id: e.exam_id, status: e.status, readyAt: epoch(e.ready_at) });
 
 // Cobra uma etapa do atendimento (com o desconto do plano de saúde, se houver).
-async function charge(c, player, visit, listPrice, label, planOn = false) {
-  const amount = discountPrice(listPrice, planOn);
+async function charge(c, player, visit, listPrice, label, planOn = false, subsidy = 0) {
+  const amount = discountPrice(listPrice, planOn, subsidy);
   if (amount <= 0) return player;
   if (player.money < amount) return null;
   const p = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [player.username, amount])).rows[0];
   await c.query(`UPDATE sk2_hospital_visits SET charges = charges || $2::jsonb, total = total + $3, updated_at = now() WHERE id=$1`,
-    [visit.id, JSON.stringify([{ label: planOn ? `${label} (plano −${HOSPITAL.PLAN_DISCOUNT_PCT}%)` : label, amount }]), amount]);
+    [visit.id, JSON.stringify([{ label: `${label}${planOn ? ` (plano −${HOSPITAL.PLAN_DISCOUNT_PCT}%)` : ''}${subsidy ? ` (subsídio −${subsidy}%)` : ''}`, amount }]), amount]);
+  await city.credit(c, 'hospital', amount, label);   // hospital público: a receita vai para o tesouro municipal
   return p;
 }
 // Cobra um serviço avulso (sem atendimento aberto).
-async function payDirect(c, player, amount) {
+async function payDirect(c, player, amount, note = 'Serviço do Hospital') {
   if (player.money < amount) return null;
-  return (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [player.username, amount])).rows[0];
+  const p = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [player.username, amount])).rows[0];
+  await city.credit(c, 'hospital', amount, note);
+  return p;
 }
 
 async function snapshot(c, username) {
+  const subsidy = await city.policy(c, 'health_subsidy_pct');
   const rec = (await c.query(`SELECT health, blood, plan_until, immune_until, donated_at, snack_at,
     (plan_until IS NOT NULL AND plan_until > now()) AS plan_on, (immune_until IS NOT NULL AND immune_until > now()) AS immune
     FROM sk2_hospital_patients WHERE username=$1`, [username])).rows[0];
@@ -324,7 +335,7 @@ async function snapshot(c, username) {
       health: rec.health, blood: rec.blood, canWork: rec.health >= HOSPITAL.WORK_MIN_HEALTH, workMinHealth: HOSPITAL.WORK_MIN_HEALTH,
       sick: !!d, symptoms: d ? d.symptoms : [], riskNow: d ? RISKS[sev].id : null, sinceMin: cond ? Math.floor(Number(cond.em)) : 0,
     },
-    visit, lastVisit, services, fees: { consult: discountPrice(HOSPITAL.CONSULT_FEE, rec.plan_on), consultList: HOSPITAL.CONSULT_FEE }, risks: RISKS,
+    visit, lastVisit, services, fees: { consult: discountPrice(HOSPITAL.CONSULT_FEE, rec.plan_on, subsidy), consultList: HOSPITAL.CONSULT_FEE, subsidyPct: subsidy }, risks: RISKS,
     history: histDto,
   };
 }
@@ -373,8 +384,8 @@ const consult = (username, rand = Math.random) => run(username, async (c, p, st)
   const v = await requireVisit(c, username, ['triaged']); if (v.err) return v;
   const now = Date.now(), wait = epoch(v.row.ready_at) - now;
   if (wait > 0) return fail(`Aguarde a sua vez: faltam ${fmtWait(wait)}.`);
-  const paid = await charge(c, p, v.row, HOSPITAL.CONSULT_FEE, 'Consulta médica', st.planOn);
-  if (!paid) return fail(`A consulta custa ${brl(discountPrice(HOSPITAL.CONSULT_FEE, st.planOn))} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, HOSPITAL.CONSULT_FEE, 'Consulta médica', st.planOn, st.subsidy);
+  if (!paid) return fail(`A consulta custa ${brl(discountPrice(HOSPITAL.CONSULT_FEE, st.planOn, st.subsidy))} e você não tem esse saldo.`);
   const d = st.cond && DISEASES[st.cond.disease_id];
   if (!d) {
     await c.query(`UPDATE sk2_hospital_visits SET status='discharged', outcome='healthy', consult=$2, closed_at=now(), updated_at=now() WHERE id=$1`, [v.row.id, JSON.stringify({ healthy: true })]);
@@ -397,8 +408,8 @@ const collectExam = (username, examId, rand = Math.random) => run(username, asyn
   const v = await requireVisit(c, username, ['exams']); if (v.err) return v;
   const exam = v.exams.find(e => e.exam_id === examId && e.status === 'ordered');
   if (!exam) return fail('Esse exame não está pendente de coleta.');
-  const paid = await charge(c, p, v.row, exam.price, EXAMS[examId].name, st.planOn);
-  if (!paid) return fail(`${EXAMS[examId].name} custa ${brl(discountPrice(exam.price, st.planOn))} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, exam.price, EXAMS[examId].name, st.planOn, st.subsidy);
+  if (!paid) return fail(`${EXAMS[examId].name} custa ${brl(discountPrice(exam.price, st.planOn, st.subsidy))} e você não tem esse saldo.`);
   const dur = Math.round(examDurationMs(examId, rand));
   await c.query(`UPDATE sk2_hospital_exams SET status='running', ready_at = now() + ($2::int * interval '1 millisecond') WHERE id=$1`, [exam.id, dur]);
   return { player: paid, event: { kind: 'exam', exam: examId, site: EXAMS[examId].site },
@@ -433,8 +444,8 @@ const session = username => run(username, async (c, p, st) => {
   const v = await requireVisit(c, username, ['treating']); if (v.err) return v;
   const wait = epoch(v.row.next_session_at) - Date.now();
   if (wait > 0) return fail(`A próxima sessão libera em ${fmtWait(wait)}.`);
-  const paid = await charge(c, p, v.row, v.row.session_price, `Sessão ${v.row.sessions_done + 1}/${v.row.sessions_total}`, st.planOn);
-  if (!paid) return fail(`A sessão custa ${brl(discountPrice(v.row.session_price, st.planOn))} e você não tem esse saldo.`);
+  const paid = await charge(c, p, v.row, v.row.session_price, `Sessão ${v.row.sessions_done + 1}/${v.row.sessions_total}`, st.planOn, st.subsidy);
+  if (!paid) return fail(`A sessão custa ${brl(discountPrice(v.row.session_price, st.planOn, st.subsidy))} e você não tem esse saldo.`);
   const done = v.row.sessions_done + 1, last = done >= v.row.sessions_total;
   if (last) {
     await c.query(`UPDATE sk2_hospital_conditions SET status='cured', cured_at=now() WHERE id=$1`, [v.row.condition_id]);
