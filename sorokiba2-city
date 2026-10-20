@@ -1,0 +1,565 @@
+'use strict';
+// Sorokiba 2 – Prefeitura. Mesma lógica do Banco e do Hospital: tudo é decidido e gravado no servidor,
+// o dinheiro só muda em transação e as telas abrem nas salas do prédio (cada cargo tem a sua mesa).
+//
+// Cargos e funções:
+//   prefeito   – painel completo, nomeia/exonera secretários, propõe leis, publica avisos, controla o mundo.
+//   vice       – publica avisos e propõe leis.
+//   financas   – gerencia o tesouro: aprova ou nega pedidos de auxílio.
+//   saude      – define o subsídio da saúde (desconto no Hospital, até o teto fixado por lei).
+//   seguranca  – simulações de acidente e trânsito.
+//   vereador   – até 3, eleitos pelos moradores; votam as leis.
+// O tesouro recebe a tarifa bancária e as cobranças do Hospital e paga auxílios e salários.
+const crypto = require('crypto');
+const db = require('./sorokiba2-db');
+
+// SK2_CITY_TIME_SCALE=0.001 comprime prazos (leis, eleição, salário) para testar. Em produção: 1.
+const SCALE = (() => { const n = Number(process.env.SK2_CITY_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
+const hoursMs = h => Math.max(1000, Math.round(h * 3600e3 * SCALE));
+
+/* ---------- regras (ajuste aqui) ---------- */
+const CITY = Object.freeze({
+  START_TREASURY: 3000,           // dotação inicial do tesouro
+  SAMPLE_KEEP: 60, SAMPLE_GAP_S: 120,
+  LAW_HOURS: 24, ELECTION_DAYS: 7, SEATS: 3,
+  VOTE_MIN_XP: 50, CANDIDATE_MIN_XP: 100,
+  AID_MIN: 20, AID_COOLDOWN_H: 24, REASON_MIN: 5, REASON_MAX: 120,
+  NOTICE_MAX: 200, NOTICE_COOLDOWN_S: 20, NOTICE_KEEP: 10,
+  PLATFORM_MAX: 80,
+  SALARY_MAX_DAYS: 3,
+});
+const POLICIES = Object.freeze({
+  bank_fee_bp: { def: 200, min: 0, max: 500, law: true, label: 'Tarifa de transferência do Banco (pontos-base)' },
+  health_subsidy_max: { def: 30, min: 0, max: 60, law: true, label: 'Teto do subsídio da saúde (%)' },
+  aid_cap: { def: 300, min: 50, max: 1000, law: true, label: 'Teto do auxílio por pedido (R$)' },
+  health_subsidy_pct: { def: 0, min: 0, max: 60, law: false, label: 'Subsídio da saúde (%)' },
+});
+const OFFICES = Object.freeze({
+  prefeito: { title: 'Prefeito(a)', salary: 150 },
+  vice: { title: 'Vice-prefeito(a)', salary: 90 },
+  financas: { title: 'Secretário(a) de Finanças', salary: 90 },
+  saude: { title: 'Secretário(a) de Saúde', salary: 90 },
+  seguranca: { title: 'Secretário(a) de Segurança e Trânsito', salary: 90 },
+  vereador: { title: 'Vereador(a)', salary: 60 },
+});
+const APPOINTABLE = Object.freeze(['vice', 'financas', 'saude', 'seguranca']);
+const PERMS = Object.freeze({
+  notice: ['prefeito', 'vice'],
+  propose: ['prefeito', 'vice'],
+  appoint: ['prefeito'],
+  aid_decide: ['prefeito', 'financas'],
+  ledger: ['prefeito', 'financas'],
+  subsidy: ['prefeito', 'saude'],
+  drill: ['prefeito', 'seguranca'],
+  vote: ['vereador'],
+  dashboard: ['prefeito', 'vice', 'financas', 'saude', 'seguranca', 'vereador'],
+});
+
+/* ---------- funções puras (testadas em test/city.test.js) ---------- */
+const can = (office, action) => !!office && Array.isArray(PERMS[action]) && PERMS[action].includes(office);
+const toInt = v => { const n = typeof v === 'string' && /^-?\d{1,9}$/.test(v) ? Number(v) : v; return Number.isSafeInteger(n) ? n : null; };
+function validatePolicy(key, value) {
+  const p = POLICIES[key], v = toInt(value);
+  if (!p || v === null) return { err: 'Valor inválido.' };
+  if (v < p.min || v > p.max) return { err: `${p.label}: use de ${p.min} a ${p.max}.` };
+  return { value: v };
+}
+// Resultado de uma votação: `seats` cadeiras na época da proposta; `expired` quando o prazo acabou.
+function lawOutcome({ seats, yes, no, expired }) {
+  if (seats > 0 && yes * 2 > seats) return 'approved';
+  if (seats > 0 && no * 2 >= seats) return 'rejected';
+  if (expired) return yes > no ? 'approved' : 'rejected';
+  return 'pending';
+}
+// Apuração: mais votos primeiro, empate pela candidatura mais antiga; só entra quem teve voto.
+function tally(candidates, ballots, seats) {
+  const votes = new Map();
+  for (const b of ballots) votes.set(b.candidate, (votes.get(b.candidate) || 0) + 1);
+  return candidates.map(c => ({ ...c, votes: votes.get(c.username) || 0 }))
+    .filter(c => c.votes > 0)
+    .sort((a, b) => b.votes - a.votes || a.createdAt - b.createdAt)
+    .slice(0, seats);
+}
+// Salário por dia real completo, com teto de dias acumulados; o resto de tempo é preservado.
+function salaryAccrued({ secs, perDay, daySecs, maxDays }) {
+  const days = Math.max(0, Math.floor(secs / daySecs)), paid = Math.min(days, maxDays);
+  return { days: paid, amount: paid * perDay, remainderSecs: Math.max(0, Math.floor(secs - days * daySecs)) };
+}
+function aidCheck({ amount, cap, reason }) {
+  const a = toInt(amount);
+  if (a === null || a < CITY.AID_MIN) return `O pedido mínimo é de R$ ${CITY.AID_MIN}.`;
+  if (a > cap) return `O teto por pedido é de R$ ${cap}.`;
+  const r = String(reason || '').trim();
+  if (r.length < CITY.REASON_MIN) return 'Explique o motivo do pedido (mínimo de 5 caracteres).';
+  if (r.length > CITY.REASON_MAX) return `O motivo aceita até ${CITY.REASON_MAX} caracteres.`;
+  return null;
+}
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+const brl = n => 'R$ ' + Number(n).toLocaleString('pt-BR');
+const epoch = d => (d ? new Date(d).getTime() : null);
+
+/* ---------- estado em memória (cargos para checagens síncronas, como o WebSocket) ---------- */
+const officeCache = new Map();           // username -> office
+let onlineProvider = () => 0;
+const setOnlineProvider = fn => { onlineProvider = typeof fn === 'function' ? fn : () => 0; };
+const officeOfUser = username => officeCache.get(username) || null;
+const officeOfRow = row => (row && row.role === 'prefeito' ? 'prefeito' : row ? officeOfUser(row.username) : null);
+async function reloadOffices(q = db.query) {
+  const r = await q('SELECT office, username FROM sk2_city_offices');
+  officeCache.clear();
+  for (const o of r.rows) officeCache.set(o.username, o.office);
+}
+
+/* ---------- banco de dados ---------- */
+async function init() {
+  await db.query(`CREATE TABLE IF NOT EXISTS sk2_city_treasury (id INT PRIMARY KEY CHECK (id = 1), balance BIGINT NOT NULL DEFAULT 0);
+  INSERT INTO sk2_city_treasury (id, balance) VALUES (1, 0) ON CONFLICT DO NOTHING;
+  CREATE TABLE IF NOT EXISTS sk2_city_ledger (id BIGSERIAL PRIMARY KEY, kind TEXT NOT NULL, amount INT NOT NULL, balance_after BIGINT NOT NULL, note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_city_policy (key TEXT PRIMARY KEY, value INT NOT NULL, updated_by TEXT, updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_city_offices (
+    office TEXT NOT NULL, slot INT NOT NULL DEFAULT 0,
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    since TIMESTAMPTZ NOT NULL DEFAULT now(), appointed_by TEXT, PRIMARY KEY (office, slot));
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_city_office_user ON sk2_city_offices(username);
+  CREATE TABLE IF NOT EXISTS sk2_city_salary (username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, paid_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_city_notices (id BIGSERIAL PRIMARY KEY, author TEXT NOT NULL, author_name TEXT NOT NULL, office TEXT NOT NULL, text TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_city_laws (
+    id UUID PRIMARY KEY, kind TEXT NOT NULL, value INT NOT NULL, proposer TEXT NOT NULL, proposer_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'voting' CHECK (status IN ('voting','approved','rejected','decreed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), closes_at TIMESTAMPTZ NOT NULL, closed_at TIMESTAMPTZ,
+    yes INT NOT NULL DEFAULT 0, no INT NOT NULL DEFAULT 0, seats INT NOT NULL DEFAULT 0);
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_voting_law ON sk2_city_laws(kind) WHERE status = 'voting';
+  CREATE TABLE IF NOT EXISTS sk2_city_law_votes (
+    law_id UUID NOT NULL REFERENCES sk2_city_laws(id) ON DELETE CASCADE,
+    voter TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    vote TEXT NOT NULL CHECK (vote IN ('yes','no')), at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (law_id, voter));
+  CREATE TABLE IF NOT EXISTS sk2_city_elections (
+    id SERIAL PRIMARY KEY, opens_at TIMESTAMPTZ NOT NULL DEFAULT now(), closes_at TIMESTAMPTZ NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')), result JSONB);
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_open_election ON sk2_city_elections(status) WHERE status = 'open';
+  CREATE TABLE IF NOT EXISTS sk2_city_candidates (
+    election_id INT NOT NULL REFERENCES sk2_city_elections(id) ON DELETE CASCADE,
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    name TEXT NOT NULL, platform TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (election_id, username));
+  CREATE TABLE IF NOT EXISTS sk2_city_ballots (
+    election_id INT NOT NULL REFERENCES sk2_city_elections(id) ON DELETE CASCADE,
+    voter TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    candidate TEXT NOT NULL, at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (election_id, voter));
+  CREATE TABLE IF NOT EXISTS sk2_city_aid (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, name TEXT NOT NULL,
+    amount INT NOT NULL, reason TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','denied')),
+    decided_by TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), decided_at TIMESTAMPTZ);
+  CREATE UNIQUE INDEX IF NOT EXISTS sk2_one_pending_aid ON sk2_city_aid(username) WHERE status = 'pending';
+  CREATE TABLE IF NOT EXISTS sk2_city_stats (
+    id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(), pop INT, online INT, money BIGINT, savings BIGINT,
+    loans BIGINT, treasury BIGINT, sick INT, employed INT, health INT);`);
+  if (!(await db.query('SELECT 1 FROM sk2_city_ledger LIMIT 1')).rowCount) {
+    await db.withTx(async c => {
+      const r = await c.query('UPDATE sk2_city_treasury SET balance = balance + $1 WHERE id = 1 RETURNING balance', [CITY.START_TREASURY]);
+      await c.query('INSERT INTO sk2_city_ledger (kind, amount, balance_after, note) VALUES ($1,$2,$3,$4)', ['dotacao', CITY.START_TREASURY, r.rows[0].balance, 'Dotação inicial']);
+      return {};
+    });
+  }
+  await reloadOffices();
+}
+
+const fail = (err, status = 409) => ({ err, status });
+
+// Usadas por Banco e Hospital, dentro da transação deles (jogadores primeiro, tesouro depois: evita deadlock).
+async function credit(c, kind, amount, note) {
+  if (!(amount > 0)) return null;
+  const r = await c.query('UPDATE sk2_city_treasury SET balance = balance + $1 WHERE id = 1 RETURNING balance', [amount]);
+  await c.query('INSERT INTO sk2_city_ledger (kind, amount, balance_after, note) VALUES ($1,$2,$3,$4)', [kind, amount, r.rows[0].balance, note || null]);
+  return Number(r.rows[0].balance);
+}
+async function debit(c, kind, amount, note) {
+  const cur = (await c.query('SELECT balance FROM sk2_city_treasury WHERE id = 1 FOR UPDATE')).rows[0];
+  if (!cur || Number(cur.balance) < amount) return null;
+  const r = await c.query('UPDATE sk2_city_treasury SET balance = balance - $1 WHERE id = 1 RETURNING balance', [amount]);
+  await c.query('INSERT INTO sk2_city_ledger (kind, amount, balance_after, note) VALUES ($1,$2,$3,$4)', [kind, -amount, r.rows[0].balance, note || null]);
+  return Number(r.rows[0].balance);
+}
+async function policy(c, key) {
+  const r = await c.query('SELECT value FROM sk2_city_policy WHERE key = $1', [key]);
+  return r.rowCount ? r.rows[0].value : POLICIES[key].def;
+}
+async function policies(c) {
+  const r = await c.query('SELECT key, value FROM sk2_city_policy');
+  const out = Object.fromEntries(Object.entries(POLICIES).map(([k, p]) => [k, p.def]));
+  for (const row of r.rows) if (out[row.key] !== undefined) out[row.key] = row.value;
+  return out;
+}
+async function applyPolicy(c, key, value, by) {
+  await c.query(`INSERT INTO sk2_city_policy (key, value, updated_by) VALUES ($1,$2,$3)
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_by = EXCLUDED.updated_by, updated_at = now()`, [key, value, by]);
+  if (key === 'health_subsidy_max') await c.query(`UPDATE sk2_city_policy SET value = LEAST(value, $1) WHERE key = 'health_subsidy_pct'`, [value]);
+}
+
+async function sample(c) {
+  const online = Math.max(0, Number(onlineProvider()) || 0);
+  const r = (await c.query(`SELECT
+    (SELECT COUNT(*) FROM sk2_players)::int AS pop,
+    (SELECT COALESCE(SUM(money), 0) FROM sk2_players)::bigint AS money,
+    (SELECT COALESCE(SUM(savings), 0) FROM sk2_bank_accounts)::bigint AS savings,
+    (SELECT COALESCE(SUM(total_due - paid), 0) FROM sk2_bank_loans WHERE status = 'active')::bigint AS loans,
+    (SELECT COUNT(*) FROM sk2_hospital_conditions WHERE status = 'active')::int AS sick,
+    (SELECT COUNT(*) FROM sk2_players WHERE employment->>'jobId' IS NOT NULL)::int AS employed,
+    (SELECT COALESCE(ROUND(AVG(health)), 100) FROM sk2_hospital_patients)::int AS health,
+    (SELECT balance FROM sk2_city_treasury WHERE id = 1) AS treasury`)).rows[0];
+  await c.query(`INSERT INTO sk2_city_stats (pop, online, money, savings, loans, treasury, sick, employed, health) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [r.pop, online, r.money, r.savings, r.loans, r.treasury, r.sick, r.employed, r.health]);
+}
+async function ensureSample(c) {
+  const r = (await c.query(`SELECT EXTRACT(EPOCH FROM (now() - MAX(at))) AS age FROM sk2_city_stats`)).rows[0];
+  if (r.age === null || Number(r.age) >= CITY.SAMPLE_GAP_S) await sample(c);
+}
+
+/* ---------- transições por tempo (leis e eleição), aplicadas na próxima operação ---------- */
+const seatedCount = async c => Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_city_offices WHERE office = 'vereador'`)).rows[0].n);
+async function settleLaws(c) {
+  const due = (await c.query(`SELECT * FROM sk2_city_laws WHERE status = 'voting' AND closes_at <= now() FOR UPDATE`)).rows;
+  for (const law of due) {
+    const out = lawOutcome({ seats: law.seats, yes: law.yes, no: law.no, expired: true });
+    await c.query(`UPDATE sk2_city_laws SET status = $2, closed_at = now() WHERE id = $1`, [law.id, out]);
+    if (out === 'approved') await applyPolicy(c, law.kind, law.value, 'camara');
+  }
+}
+async function openElection(c) {
+  await c.query(`INSERT INTO sk2_city_elections (closes_at) VALUES (now() + ($1::bigint * interval '1 millisecond'))`, [hoursMs(CITY.ELECTION_DAYS * 24)]);
+}
+async function settleElection(c, notifies) {
+  let el = (await c.query(`SELECT * FROM sk2_city_elections WHERE status = 'open' FOR UPDATE`)).rows[0];
+  if (!el) { await openElection(c); return; }
+  if (new Date(el.closes_at).getTime() > Date.now()) return;
+  const cands = (await c.query('SELECT username, name, platform, created_at FROM sk2_city_candidates WHERE election_id = $1', [el.id])).rows
+    .map(r => ({ username: r.username, name: r.name, createdAt: epoch(r.created_at) }));
+  const ballots = (await c.query('SELECT candidate FROM sk2_city_ballots WHERE election_id = $1', [el.id])).rows;
+  const others = new Set((await c.query(`SELECT username FROM sk2_city_offices WHERE office <> 'vereador'`)).rows.map(r => r.username));
+  const mayor = (await c.query(`SELECT username FROM sk2_players WHERE role = 'prefeito'`)).rows.map(r => r.username);
+  const eligible = cands.filter(x => !others.has(x.username) && !mayor.includes(x.username));
+  const winners = tally(eligible, ballots, CITY.SEATS);
+  await c.query(`DELETE FROM sk2_city_offices WHERE office = 'vereador'`);
+  for (let i = 0; i < winners.length; i++) {
+    await c.query(`INSERT INTO sk2_city_offices (office, slot, username, appointed_by) VALUES ('vereador',$1,$2,'eleicao')`, [i, winners[i].username]);
+    await c.query(`INSERT INTO sk2_city_salary (username) VALUES ($1) ON CONFLICT (username) DO UPDATE SET paid_at = now()`, [winners[i].username]);
+    notifies.push([winners[i].username, `Você foi eleito vereador(a) com ${winners[i].votes} voto(s)!`]);
+  }
+  await c.query(`UPDATE sk2_city_elections SET status = 'closed', result = $2 WHERE id = $1`,
+    [el.id, JSON.stringify({ winners: winners.map(w => ({ username: w.username, name: w.name, votes: w.votes })), at: Date.now() })]);
+  await openElection(c);
+}
+
+/* ---------- prontuário da cidade (o que cada cargo pode ver) ---------- */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function snapshot(c, row, office) {
+  await ensureSample(c);
+  const u = row.username, xp = Number(row.xp) || 0, full = can(office, 'dashboard');
+  const treasury = Number((await c.query('SELECT balance FROM sk2_city_treasury WHERE id = 1')).rows[0].balance);
+  const pol = await policies(c);
+  const all = (await c.query(`SELECT at, pop, online, money, savings, loans, treasury, sick, employed, health
+    FROM (SELECT * FROM sk2_city_stats ORDER BY id DESC LIMIT $1) t ORDER BY id`, [CITY.SAMPLE_KEEP])).rows
+    .map(s => ({ t: epoch(s.at), pop: s.pop, online: s.online, money: Number(s.money), savings: Number(s.savings), loans: Number(s.loans), treasury: Number(s.treasury), sick: s.sick, employed: s.employed, health: s.health }));
+  const last = all[all.length - 1] || { pop: 0, online: 0, money: 0, employed: 0 };
+  const series = full ? all : all.map(s => ({ t: s.t, pop: s.pop, online: s.online, money: s.money, treasury: s.treasury }));
+  const kpis = { pop: last.pop, online: last.online, money: last.money, treasury, employed: last.employed, employedPct: last.pop ? Math.round(100 * last.employed / last.pop) : 0 };
+  if (full) Object.assign(kpis, { savings: last.savings, loans: last.loans, sick: last.sick, health: last.health });
+  const holders = (await c.query(`SELECT o.office, o.slot, o.username, p.name FROM sk2_city_offices o JOIN sk2_players p ON p.username = o.username ORDER BY o.office, o.slot`)).rows;
+  const mayor = (await c.query(`SELECT username, name FROM sk2_players WHERE role = 'prefeito' ORDER BY created_at LIMIT 1`)).rows[0];
+  const slot = (o, i = 0) => { const h = holders.find(x => x.office === o && x.slot === i); return { office: o, slot: i, title: OFFICES[o].title, username: h?.username || null, name: h?.name || null }; };
+  const offices = [{ office: 'prefeito', slot: 0, title: OFFICES.prefeito.title, username: mayor?.username || null, name: mayor?.name || null },
+    slot('vice'), slot('financas'), slot('saude'), slot('seguranca'), ...Array.from({ length: CITY.SEATS }, (_, i) => slot('vereador', i))];
+  let salary = null;
+  if (office) {
+    await c.query('INSERT INTO sk2_city_salary (username) VALUES ($1) ON CONFLICT DO NOTHING', [u]);
+    const s = (await c.query('SELECT EXTRACT(EPOCH FROM (now() - paid_at)) AS secs FROM sk2_city_salary WHERE username = $1', [u])).rows[0];
+    const a = salaryAccrued({ secs: Number(s.secs), perDay: OFFICES[office].salary, daySecs: hoursMs(24) / 1000, maxDays: CITY.SALARY_MAX_DAYS });
+    salary = { perDay: OFFICES[office].salary, days: a.days, amount: a.amount, canClaim: a.days >= 1, maxDays: CITY.SALARY_MAX_DAYS };
+  }
+  const laws = (await c.query(`SELECT l.*, (SELECT vote FROM sk2_city_law_votes v WHERE v.law_id = l.id AND v.voter = $1) AS my
+    FROM sk2_city_laws l WHERE l.status = 'voting' OR l.closed_at > now() - interval '3 days' ORDER BY l.created_at DESC LIMIT 12`, [u])).rows
+    .map(l => ({ id: l.id, kind: l.kind, label: POLICIES[l.kind]?.label || l.kind, value: l.value, proposer: l.proposer_name, status: l.status, yes: l.yes, no: l.no, seats: l.seats, closesAt: epoch(l.closes_at), my: l.my || null }));
+  const el = (await c.query(`SELECT id, closes_at FROM sk2_city_elections WHERE status = 'open'`)).rows[0];
+  let election = null;
+  if (el) {
+    const cands = (await c.query(`SELECT c.username, c.name, c.platform,
+      (SELECT COUNT(*) FROM sk2_city_ballots b WHERE b.election_id = c.election_id AND b.candidate = c.username)::int AS votes
+      FROM sk2_city_candidates c WHERE c.election_id = $1 ORDER BY votes DESC, c.created_at`, [el.id])).rows;
+    const mine = (await c.query('SELECT candidate FROM sk2_city_ballots WHERE election_id = $1 AND voter = $2', [el.id, u])).rows[0];
+    election = { closesAt: epoch(el.closes_at), seats: CITY.SEATS, candidates: cands, myVote: mine ? mine.candidate : null,
+      imCandidate: cands.some(x => x.username === u), canVote: xp >= CITY.VOTE_MIN_XP, canRun: xp >= CITY.CANDIDATE_MIN_XP, minXpVote: CITY.VOTE_MIN_XP, minXpRun: CITY.CANDIDATE_MIN_XP };
+  }
+  const lastEl = (await c.query(`SELECT result FROM sk2_city_elections WHERE status = 'closed' ORDER BY id DESC LIMIT 1`)).rows[0];
+  const myAid = (await c.query(`SELECT id, amount, reason, status, created_at, decided_at FROM sk2_city_aid WHERE username = $1 ORDER BY created_at DESC LIMIT 3`, [u])).rows
+    .map(a => ({ id: a.id, amount: a.amount, reason: a.reason, status: a.status, at: epoch(a.created_at), decidedAt: epoch(a.decided_at) }));
+  const pending = can(office, 'aid_decide')
+    ? (await c.query(`SELECT id, username, name, amount, reason, created_at FROM sk2_city_aid WHERE status = 'pending' ORDER BY created_at LIMIT 20`)).rows
+      .map(a => ({ id: a.id, username: a.username, name: a.name, amount: a.amount, reason: a.reason, at: epoch(a.created_at) })) : null;
+  const notices = (await c.query(`SELECT id, author_name, office, text, created_at FROM sk2_city_notices ORDER BY id DESC LIMIT $1`, [CITY.NOTICE_KEEP])).rows
+    .map(n => ({ id: String(n.id), by: n.author_name, office: OFFICES[n.office]?.title || n.office, text: n.text, at: epoch(n.created_at) }));
+  const ledger = can(office, 'ledger')
+    ? (await c.query(`SELECT kind, amount, balance_after, note, created_at FROM sk2_city_ledger ORDER BY id DESC LIMIT 25`)).rows
+      .map(l => ({ kind: l.kind, amount: l.amount, balance: Number(l.balance_after), note: l.note, at: epoch(l.created_at) })) : null;
+  let jobs = null, health = null;
+  if (full) {
+    jobs = (await c.query(`SELECT employment->>'jobId' AS job, COUNT(*)::int AS n FROM sk2_players WHERE employment->>'jobId' IS NOT NULL GROUP BY 1 ORDER BY n DESC`)).rows;
+    health = { visits24h: (await c.query(`SELECT COUNT(*)::int AS n FROM sk2_hospital_visits WHERE created_at > now() - interval '24 hours'`)).rows[0].n };
+  }
+  return {
+    serverNow: Date.now(),
+    me: { username: u, office, title: office ? OFFICES[office].title : null, salary, can: Object.fromEntries(Object.keys(PERMS).map(k => [k, can(office, k)])) },
+    offices, policy: pol, policyInfo: Object.fromEntries(Object.entries(POLICIES).map(([k, v]) => [k, { min: v.min, max: v.max, label: v.label, law: v.law }])),
+    kpis, series, jobs, health, laws, election, lastElection: lastEl?.result || null,
+    aid: { cap: pol.aid_cap, min: CITY.AID_MIN, mine: myAid, pending }, notices, ledger,
+    constants: { lawHours: CITY.LAW_HOURS, seats: CITY.SEATS },
+  };
+}
+
+/* ---------- operações ---------- */
+// Trava o jogador, aplica o que o tempo já decidiu (leis e eleição), roda a regra e devolve o prontuário.
+const run = (username, fn) => db.withTx(async c => {
+  const locked = (await c.query('SELECT * FROM sk2_players WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  if (!locked) return fail('Jogador não encontrado', 404);
+  const ctx = { notifies: [], officesChanged: false };
+  await settleLaws(c);
+  const before = (await c.query(`SELECT COUNT(*) AS n FROM sk2_city_elections WHERE status = 'closed'`)).rows[0].n;
+  await settleElection(c, ctx.notifies);
+  if (Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_city_elections WHERE status = 'closed'`)).rows[0].n) !== Number(before)) ctx.officesChanged = true;
+  const o = (await c.query('SELECT office FROM sk2_city_offices WHERE username = $1', [username])).rows[0];
+  const office = locked.role === 'prefeito' ? 'prefeito' : (o ? o.office : null);
+  const out = await fn(c, locked, office, ctx);
+  if (out.err) return out;
+  const player = out.player || locked;
+  return { ...out, playerRow: player, city: await snapshot(c, player, office),
+    notifies: [...ctx.notifies, ...(out.notifies || [])], officesChanged: ctx.officesChanged || !!out.officesChanged };
+});
+const noop = (_c, player) => ({ player });
+const summary = username => run(username, noop);
+const need = (office, action, msg) => (can(office, action) ? null : fail(msg || 'Seu cargo não permite esta ação.', 403));
+
+const publishNotice = (username, text) => run(username, async (c, p, office) => {
+  const denied = need(office, 'notice', 'Somente o Prefeito e o Vice podem publicar avisos.'); if (denied) return denied;
+  const t = clean(text, CITY.NOTICE_MAX);
+  if (t.length < 5) return fail('Escreva o aviso (mínimo de 5 caracteres).', 400);
+  if ((await c.query(`SELECT 1 FROM sk2_city_notices WHERE author = $1 AND created_at > now() - ($2::int * interval '1 second')`, [username, CITY.NOTICE_COOLDOWN_S])).rowCount)
+    return fail(`Aguarde ${CITY.NOTICE_COOLDOWN_S} segundos entre avisos.`);
+  await c.query('INSERT INTO sk2_city_notices (author, author_name, office, text) VALUES ($1,$2,$3,$4)', [username, p.name, office, t]);
+  return { player: p, broadcast: { message: t, by: p.name }, message: 'Aviso publicado no quadro e transmitido aos jogadores.' };
+});
+
+const appoint = (username, officeKey, targetRaw) => run(username, async (c, p, office) => {
+  const denied = need(office, 'appoint', 'Somente o Prefeito nomeia secretários.'); if (denied) return denied;
+  if (!APPOINTABLE.includes(officeKey)) return fail('Cargo inválido.', 400);
+  const target = String(targetRaw || '').trim().toLowerCase();
+  if (!db.validName(target)) return fail('Informe o nome de usuário.', 400);
+  const t = (await c.query('SELECT username, name, role FROM sk2_players WHERE username = $1 FOR UPDATE', [target])).rows[0];
+  if (!t) return fail('Jogador não encontrado.', 404);
+  if (t.role === 'prefeito') return fail('O Prefeito não pode ocupar outro cargo.');
+  const has = (await c.query('SELECT office FROM sk2_city_offices WHERE username = $1', [target])).rows[0];
+  if (has && has.office !== officeKey) return fail(`${t.name} já ocupa o cargo de ${OFFICES[has.office].title}.`);
+  await c.query('DELETE FROM sk2_city_offices WHERE office = $1', [officeKey]);
+  await c.query(`INSERT INTO sk2_city_offices (office, slot, username, appointed_by) VALUES ($1,0,$2,$3)`, [officeKey, target, username]);
+  await c.query(`INSERT INTO sk2_city_salary (username) VALUES ($1) ON CONFLICT (username) DO UPDATE SET paid_at = now()`, [target]);
+  return { player: p, officesChanged: true, notifies: [[target, `Você foi nomeado(a) ${OFFICES[officeKey].title}. Sua mesa fica no 2º andar da Prefeitura.`]],
+    message: `${t.name} nomeado(a) ${OFFICES[officeKey].title}.` };
+});
+
+const dismiss = (username, officeKey) => run(username, async (c, p, office) => {
+  const denied = need(office, 'appoint', 'Somente o Prefeito exonera secretários.'); if (denied) return denied;
+  if (!APPOINTABLE.includes(officeKey)) return fail('Cargo inválido.', 400);
+  const r = await c.query('DELETE FROM sk2_city_offices WHERE office = $1 RETURNING username', [officeKey]);
+  if (!r.rowCount) return fail('Este cargo já está vago.');
+  return { player: p, officesChanged: true, notifies: [[r.rows[0].username, `Você foi exonerado(a) do cargo de ${OFFICES[officeKey].title}.`]], message: 'Cargo declarado vago.' };
+});
+
+const proposeLaw = (username, kind, value) => run(username, async (c, p, office) => {
+  const denied = need(office, 'propose', 'Somente o Prefeito e o Vice propõem leis.'); if (denied) return denied;
+  if (!POLICIES[kind] || !POLICIES[kind].law) return fail('Esta política não é alterada por lei.', 400);
+  const v = validatePolicy(kind, value); if (v.err) return fail(v.err, 400);
+  if ((await policy(c, kind)) === v.value) return fail('Este valor já está em vigor.');
+  if ((await c.query(`SELECT 1 FROM sk2_city_laws WHERE kind = $1 AND status = 'voting'`, [kind])).rowCount) return fail('Já existe uma votação em andamento para esta política.');
+  const seats = await seatedCount(c), id = crypto.randomUUID();
+  if (seats === 0) {
+    await c.query(`INSERT INTO sk2_city_laws (id, kind, value, proposer, proposer_name, status, closes_at, closed_at, seats) VALUES ($1,$2,$3,$4,$5,'decreed', now(), now(), 0)`, [id, kind, v.value, username, p.name]);
+    await applyPolicy(c, kind, v.value, username);
+    return { player: p, message: `Sem Câmara instalada: decreto publicado. ${POLICIES[kind].label} = ${v.value}.` };
+  }
+  await c.query(`INSERT INTO sk2_city_laws (id, kind, value, proposer, proposer_name, closes_at, seats) VALUES ($1,$2,$3,$4,$5, now() + ($6::bigint * interval '1 millisecond'), $7)`,
+    [id, kind, v.value, username, p.name, hoursMs(CITY.LAW_HOURS), seats]);
+  const vs = (await c.query(`SELECT username FROM sk2_city_offices WHERE office = 'vereador'`)).rows;
+  return { player: p, notifies: vs.map(r => [r.username, `Nova lei em votação: ${POLICIES[kind].label} = ${v.value}. Vote no Plenário.`]), message: 'Projeto enviado à Câmara para votação.' };
+});
+
+const voteLaw = (username, lawId, vote) => run(username, async (c, p, office) => {
+  const denied = need(office, 'vote', 'Somente vereadores votam leis.'); if (denied) return denied;
+  if (!UUID.test(String(lawId)) || (vote !== 'yes' && vote !== 'no')) return fail('Voto inválido.', 400);
+  const law = (await c.query(`SELECT * FROM sk2_city_laws WHERE id = $1 AND status = 'voting' FOR UPDATE`, [lawId])).rows[0];
+  if (!law) return fail('Esta votação já foi encerrada.');
+  if ((await c.query('SELECT 1 FROM sk2_city_law_votes WHERE law_id = $1 AND voter = $2', [lawId, username])).rowCount) return fail('Você já votou nesta lei.');
+  await c.query('INSERT INTO sk2_city_law_votes (law_id, voter, vote) VALUES ($1,$2,$3)', [lawId, username, vote]);
+  const yes = law.yes + (vote === 'yes' ? 1 : 0), no = law.no + (vote === 'no' ? 1 : 0);
+  const out = lawOutcome({ seats: law.seats, yes, no, expired: false });
+  if (out === 'pending') {
+    await c.query('UPDATE sk2_city_laws SET yes = $2, no = $3 WHERE id = $1', [lawId, yes, no]);
+    return { player: p, message: 'Voto registrado. A votação continua aberta.' };
+  }
+  await c.query('UPDATE sk2_city_laws SET yes = $2, no = $3, status = $4, closed_at = now() WHERE id = $1', [lawId, yes, no, out]);
+  if (out === 'approved') await applyPolicy(c, law.kind, law.value, 'camara');
+  return { player: p, message: out === 'approved' ? 'Lei aprovada e em vigor!' : 'Lei rejeitada pela Câmara.' };
+});
+
+const setSubsidy = (username, pct) => run(username, async (c, p, office) => {
+  const denied = need(office, 'subsidy', 'Somente o Secretário de Saúde define o subsídio.'); if (denied) return denied;
+  const v = validatePolicy('health_subsidy_pct', pct); if (v.err) return fail(v.err, 400);
+  const max = await policy(c, 'health_subsidy_max');
+  if (v.value > max) return fail(`A lei em vigor limita o subsídio a ${max}%.`);
+  await applyPolicy(c, 'health_subsidy_pct', v.value, username);
+  return { player: p, message: `Subsídio da saúde em ${v.value}%. Vale para consultas, exames e sessões no Hospital.` };
+});
+
+const requestAid = (username, amount, reason) => run(username, async (c, p) => {
+  const cap = await policy(c, 'aid_cap'), bad = aidCheck({ amount, cap, reason });
+  if (bad) return fail(bad, 400);
+  if ((await c.query(`SELECT 1 FROM sk2_city_aid WHERE username = $1 AND status = 'pending'`, [username])).rowCount) return fail('Você já tem um pedido aguardando análise.');
+  if ((await c.query(`SELECT 1 FROM sk2_city_aid WHERE username = $1 AND status = 'approved' AND decided_at > now() - ($2::bigint * interval '1 millisecond')`, [username, hoursMs(CITY.AID_COOLDOWN_H)])).rowCount)
+    return fail(`Você recebeu um auxílio nas últimas ${CITY.AID_COOLDOWN_H} horas.`);
+  await c.query('INSERT INTO sk2_city_aid (id, username, name, amount, reason) VALUES ($1,$2,$3,$4,$5)', [crypto.randomUUID(), username, p.name, toInt(amount), clean(reason, CITY.REASON_MAX)]);
+  return { player: p, message: 'Pedido protocolado. O Secretário de Finanças vai analisar.' };
+});
+
+const decideAid = (username, id, approve) => run(username, async (c, p, office) => {
+  const denied = need(office, 'aid_decide', 'Somente Finanças e o Prefeito decidem auxílios.'); if (denied) return denied;
+  if (!UUID.test(String(id))) return fail('Pedido inválido.', 400);
+  const aid = (await c.query(`SELECT * FROM sk2_city_aid WHERE id = $1 AND status = 'pending' FOR UPDATE`, [id])).rows[0];
+  if (!aid) return fail('Este pedido já foi decidido.');
+  if (aid.username === username) return fail('Você não pode decidir o próprio pedido.');
+  if (!approve) {
+    await c.query(`UPDATE sk2_city_aid SET status = 'denied', decided_by = $2, decided_at = now() WHERE id = $1`, [id, username]);
+    return { player: p, notifies: [[aid.username, `Seu pedido de auxílio de ${brl(aid.amount)} foi negado.`]], message: 'Pedido negado.' };
+  }
+  const who = (await c.query('SELECT money FROM sk2_players WHERE username = $1 FOR UPDATE', [aid.username])).rows[0];
+  if (!who) return fail('Cidadão não encontrado.', 404);
+  if (who.money + aid.amount > 2147483647) return fail('A carteira do cidadão não comporta esse valor.');
+  if ((await debit(c, 'auxilio', aid.amount, `Auxílio a ${aid.name}`)) === null) return fail('O tesouro não tem saldo suficiente para este auxílio.');
+  await c.query('UPDATE sk2_players SET money = money + $2 WHERE username = $1', [aid.username, aid.amount]);
+  await c.query(`UPDATE sk2_city_aid SET status = 'approved', decided_by = $2, decided_at = now() WHERE id = $1`, [id, username]);
+  return { player: p, notifies: [[aid.username, `Seu auxílio de ${brl(aid.amount)} foi aprovado e já está na sua carteira.`]], message: `Auxílio de ${brl(aid.amount)} pago a ${aid.name}.` };
+});
+
+const claimSalary = username => run(username, async (c, p, office) => {
+  if (!office) return fail('Você não ocupa nenhum cargo.', 403);
+  await c.query('INSERT INTO sk2_city_salary (username) VALUES ($1) ON CONFLICT DO NOTHING', [username]);
+  const s = (await c.query('SELECT EXTRACT(EPOCH FROM (now() - paid_at)) AS secs FROM sk2_city_salary WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  const a = salaryAccrued({ secs: Number(s.secs), perDay: OFFICES[office].salary, daySecs: hoursMs(24) / 1000, maxDays: CITY.SALARY_MAX_DAYS });
+  if (a.days < 1) return fail('Ainda não há dia completo de trabalho a receber.');
+  if (p.money + a.amount > 2147483647) return fail('Sua carteira não comporta esse valor.');
+  if ((await debit(c, 'salario', a.amount, `Salário de ${p.name} (${OFFICES[office].title})`)) === null) return fail('O tesouro não tem saldo para pagar o salário agora.');
+  const player = (await c.query('UPDATE sk2_players SET money = money + $2 WHERE username = $1 RETURNING *', [username, a.amount])).rows[0];
+  await c.query(`UPDATE sk2_city_salary SET paid_at = now() - ($2::bigint * interval '1 second') WHERE username = $1`, [username, a.remainderSecs]);
+  return { player, message: `Salário de ${a.days} dia(s) recebido: ${brl(a.amount)}.` };
+});
+
+const runForCouncil = (username, platform) => run(username, async (c, p, office) => {
+  if (Number(p.xp) < CITY.CANDIDATE_MIN_XP) return fail(`Candidatura exige ${CITY.CANDIDATE_MIN_XP} XP.`, 403);
+  if (office && office !== 'vereador') return fail('Quem já ocupa outro cargo não pode se candidatar.');
+  const text = clean(platform, CITY.PLATFORM_MAX);
+  if (text.length < 5) return fail('Escreva a sua proposta (mínimo de 5 caracteres).', 400);
+  const el = (await c.query(`SELECT id FROM sk2_city_elections WHERE status = 'open'`)).rows[0];
+  if (!el) return fail('Não há eleição aberta.');
+  await c.query(`INSERT INTO sk2_city_candidates (election_id, username, name, platform) VALUES ($1,$2,$3,$4)
+    ON CONFLICT (election_id, username) DO UPDATE SET platform = EXCLUDED.platform`, [el.id, username, p.name, text]);
+  return { player: p, message: 'Candidatura registrada para a Câmara.' };
+});
+
+const castVote = (username, candidateRaw) => run(username, async (c, p) => {
+  if (Number(p.xp) < CITY.VOTE_MIN_XP) return fail(`Votar exige ${CITY.VOTE_MIN_XP} XP.`, 403);
+  const cand = String(candidateRaw || '').trim().toLowerCase();
+  if (!db.validName(cand)) return fail('Candidato inválido.', 400);
+  if (cand === username) return fail('Você não pode votar em si mesmo.');
+  const el = (await c.query(`SELECT id FROM sk2_city_elections WHERE status = 'open'`)).rows[0];
+  if (!el) return fail('Não há eleição aberta.');
+  if (!(await c.query('SELECT 1 FROM sk2_city_candidates WHERE election_id = $1 AND username = $2', [el.id, cand])).rowCount) return fail('Esse morador não é candidato.');
+  const r = await c.query('INSERT INTO sk2_city_ballots (election_id, voter, candidate) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING', [el.id, username, cand]);
+  if (!r.rowCount) return fail('Você já votou nesta eleição.');
+  return { player: p, message: 'Voto registrado. Obrigado por participar!' };
+});
+
+async function sweep() { await db.withTx(async c => { await sample(c); return {}; }); }
+
+/* ---------- rotas ---------- */
+function registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify = () => {}, broadcast = () => {} }) {
+  addInterval(() => { sweep().catch(e => console.error('[sk2] prefeitura (estatísticas):', e.message)); }, 10 * 60e3);
+  const guard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `city:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações na Prefeitura. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] prefeitura:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a operação na Prefeitura.' });
+    }
+  };
+  const done = async (res, r) => {
+    if (r.err) return res.status(r.status || 409).json({ err: r.err });
+    if (r.officesChanged) await reloadOffices();
+    for (const [u, m] of r.notifies || []) notify(u, { t: 'city', m });
+    if (r.broadcast) broadcast({ t: 'mayorAnnouncement', message: r.broadcast.message, by: r.broadcast.by, at: Date.now() });
+    res.json({ ok: 1, player: db.pub(r.playerRow), city: r.city, message: r.message || '' });
+  };
+  const bad = (res, m) => res.status(400).json({ err: m });
+  app.get('/api/sk2/city', guard(async (_q, res, row) => { res.set('Cache-Control', 'no-store'); await done(res, await summary(row.username)); }));
+  app.post('/api/sk2/city/notice', json, guard(async (req, res, row) => {
+    if (typeof req.body?.text !== 'string') return bad(res, 'Escreva o aviso.');
+    await done(res, await publishNotice(row.username, req.body.text));
+  }));
+  app.post('/api/sk2/city/office/appoint', json, guard(async (req, res, row) => {
+    const o = req.body?.office, u = req.body?.username;
+    if (typeof o !== 'string' || !APPOINTABLE.includes(o) || typeof u !== 'string') return bad(res, 'Cargo ou usuário inválido.');
+    await done(res, await appoint(row.username, o, u));
+  }));
+  app.post('/api/sk2/city/office/dismiss', json, guard(async (req, res, row) => {
+    const o = req.body?.office;
+    if (typeof o !== 'string' || !APPOINTABLE.includes(o)) return bad(res, 'Cargo inválido.');
+    await done(res, await dismiss(row.username, o));
+  }));
+  app.post('/api/sk2/city/law/propose', json, guard(async (req, res, row) => {
+    const k = req.body?.kind;
+    if (typeof k !== 'string' || !Object.prototype.hasOwnProperty.call(POLICIES, k) || !POLICIES[k].law) return bad(res, 'Política inválida.');
+    const v = validatePolicy(k, req.body?.value); if (v.err) return bad(res, v.err);
+    await done(res, await proposeLaw(row.username, k, v.value));
+  }));
+  app.post('/api/sk2/city/law/vote', json, guard(async (req, res, row) => {
+    if (!UUID.test(String(req.body?.id)) || (req.body?.vote !== 'yes' && req.body?.vote !== 'no')) return bad(res, 'Voto inválido.');
+    await done(res, await voteLaw(row.username, req.body.id, req.body.vote));
+  }));
+  app.post('/api/sk2/city/policy/subsidy', json, guard(async (req, res, row) => {
+    const v = validatePolicy('health_subsidy_pct', req.body?.pct); if (v.err) return bad(res, v.err);
+    await done(res, await setSubsidy(row.username, v.value));
+  }));
+  app.post('/api/sk2/city/aid/request', json, guard(async (req, res, row) => {
+    const cap = POLICIES.aid_cap.max, a = toInt(req.body?.amount);
+    if (a === null || a < CITY.AID_MIN || a > cap || typeof req.body?.reason !== 'string') return bad(res, 'Informe o valor e o motivo do pedido.');
+    await done(res, await requestAid(row.username, a, req.body.reason));
+  }));
+  app.post('/api/sk2/city/aid/decide', json, guard(async (req, res, row) => {
+    if (!UUID.test(String(req.body?.id)) || typeof req.body?.approve !== 'boolean') return bad(res, 'Pedido inválido.');
+    await done(res, await decideAid(row.username, req.body.id, req.body.approve));
+  }));
+  app.post('/api/sk2/city/salary/claim', json, guard(async (_q, res, row) => done(res, await claimSalary(row.username))));
+  app.post('/api/sk2/city/election/candidate', json, guard(async (req, res, row) => {
+    if (typeof req.body?.platform !== 'string') return bad(res, 'Escreva a sua proposta.');
+    await done(res, await runForCouncil(row.username, req.body.platform));
+  }));
+  app.post('/api/sk2/city/election/vote', json, guard(async (req, res, row) => {
+    if (typeof req.body?.candidate !== 'string') return bad(res, 'Candidato inválido.');
+    await done(res, await castVote(row.username, req.body.candidate));
+  }));
+}
+
+module.exports = {
+  CITY, POLICIES, OFFICES, PERMS, APPOINTABLE, init, registerRoutes, setOnlineProvider, reloadOffices, officeOfUser, officeOfRow,
+  credit, debit, policy, policies, summary, publishNotice, appoint, dismiss, proposeLaw, voteLaw, setSubsidy, requestAid, decideAid, claimSalary, runForCouncil, castVote,
+  // puras (testes)
+  can, toInt, validatePolicy, lawOutcome, tally, salaryAccrued, aidCheck, clean,
+};
