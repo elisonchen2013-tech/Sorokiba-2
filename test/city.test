@@ -1,0 +1,204 @@
+'use strict';
+// Testes de COMPORTAMENTO da Prefeitura (executam o código, não procuram texto no fonte).
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const city = require('../sorokiba2-city');
+const db = require('../sorokiba2-db');
+const { CITY, POLICIES, OFFICES, PERMS } = city;
+
+test('cada cargo só faz o que a sua função permite', () => {
+  const matrix = {
+    prefeito: ['notice', 'propose', 'appoint', 'aid_decide', 'ledger', 'subsidy', 'drill', 'dashboard'],
+    vice: ['notice', 'propose', 'dashboard'],
+    financas: ['aid_decide', 'ledger', 'dashboard'],
+    saude: ['subsidy', 'dashboard'],
+    seguranca: ['drill', 'dashboard'],
+    vereador: ['vote', 'dashboard'],
+  };
+  for (const [office, allowed] of Object.entries(matrix))
+    for (const action of Object.keys(PERMS)) assert.equal(city.can(office, action), allowed.includes(action), `${office} → ${action}`);
+  for (const action of Object.keys(PERMS)) { assert.equal(city.can(null, action), false, `cidadão → ${action}`); assert.equal(city.can('', action), false); }
+  assert.equal(city.can('prefeito', 'inexistente'), false);
+  assert.equal(city.can('vereador', 'appoint'), false, 'ninguém além do prefeito nomeia');
+  assert.deepEqual(Object.keys(OFFICES).sort(), ['financas', 'prefeito', 'saude', 'seguranca', 'vereador', 'vice']);
+});
+
+test('somente leis mudam tarifa, teto do subsídio e teto do auxílio; o subsídio é do secretário', () => {
+  assert.deepEqual(Object.entries(POLICIES).filter(([, p]) => p.law).map(([k]) => k).sort(), ['aid_cap', 'bank_fee_bp', 'health_subsidy_max']);
+  assert.equal(POLICIES.health_subsidy_pct.law, false);
+  for (const [k, p] of Object.entries(POLICIES)) { assert.ok(p.min <= p.def && p.def <= p.max, `${k}: padrão dentro dos limites`); assert.ok(p.label); }
+});
+
+test('validar política: inteiro dentro dos limites', () => {
+  assert.deepEqual(city.validatePolicy('bank_fee_bp', 250), { value: 250 });
+  assert.deepEqual(city.validatePolicy('bank_fee_bp', '0'), { value: 0 });
+  assert.deepEqual(city.validatePolicy('bank_fee_bp', 500), { value: 500 });
+  for (const bad of [501, -1, 1.5, 'abc', null, undefined, NaN, {}, [], '1e3']) assert.ok(city.validatePolicy('bank_fee_bp', bad).err, String(bad));
+  assert.ok(city.validatePolicy('inexistente', 1).err);
+  assert.ok(city.validatePolicy('aid_cap', 49).err);
+  assert.ok(city.validatePolicy('aid_cap', 1001).err);
+});
+
+test('votação da lei: maioria das cadeiras decide na hora; prazo decide pelos votos dados', () => {
+  assert.equal(city.lawOutcome({ seats: 3, yes: 2, no: 0, expired: false }), 'approved', '2 de 3 já é maioria');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 1, no: 0, expired: false }), 'pending');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 0, no: 2, expired: false }), 'rejected', '2 contra impedem a maioria');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 1, no: 1, expired: false }), 'pending');
+  assert.equal(city.lawOutcome({ seats: 2, yes: 1, no: 1, expired: false }), 'rejected', 'empate com 2 cadeiras: não passa');
+  assert.equal(city.lawOutcome({ seats: 1, yes: 1, no: 0, expired: false }), 'approved');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 1, no: 0, expired: true }), 'approved', 'prazo: mais sim que não');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 0, no: 0, expired: true }), 'rejected', 'prazo sem votos: rejeitada');
+  assert.equal(city.lawOutcome({ seats: 3, yes: 1, no: 1, expired: true }), 'rejected', 'empate no prazo: rejeitada');
+});
+
+test('apuração: top 3 por votos, empate pela candidatura mais antiga, quem não teve voto não entra', () => {
+  const cands = [
+    { username: 'ana', name: 'Ana', createdAt: 100 }, { username: 'bia', name: 'Bia', createdAt: 200 },
+    { username: 'caio', name: 'Caio', createdAt: 300 }, { username: 'davi', name: 'Davi', createdAt: 400 }, { username: 'eva', name: 'Eva', createdAt: 500 },
+  ];
+  const ballots = [...'xxxxx'].map(() => ({ candidate: 'caio' })).concat([{ candidate: 'ana' }, { candidate: 'ana' }, { candidate: 'davi' }, { candidate: 'bia' }, { candidate: 'bia' }]);
+  const w = city.tally(cands, ballots, 3);
+  assert.deepEqual(w.map(x => x.username), ['caio', 'ana', 'bia'], 'caio 5, ana 2, bia 2 (ana candidatou-se antes)');
+  assert.deepEqual(w.map(x => x.votes), [5, 2, 2]);
+  assert.deepEqual(city.tally(cands, [], 3), [], 'sem voto, ninguém é eleito');
+  assert.equal(city.tally(cands, [{ candidate: 'eva' }], 3).length, 1, 'só entra quem recebeu voto');
+  assert.deepEqual(city.tally(cands, [{ candidate: 'fantasma' }], 3), [], 'voto em quem não é candidato é ignorado');
+});
+
+test('salário: por dia completo, com teto de dias e sobra de tempo preservada', () => {
+  const day = 86400, base = { perDay: 90, daySecs: day, maxDays: 3 };
+  assert.deepEqual(city.salaryAccrued({ ...base, secs: 0 }), { days: 0, amount: 0, remainderSecs: 0 });
+  assert.deepEqual(city.salaryAccrued({ ...base, secs: day - 1 }), { days: 0, amount: 0, remainderSecs: day - 1 });
+  assert.deepEqual(city.salaryAccrued({ ...base, secs: day * 2 + 100 }), { days: 2, amount: 180, remainderSecs: 100 });
+  const long = city.salaryAccrued({ ...base, secs: day * 30 + 50 });
+  assert.equal(long.days, 3, 'atrasado vale no máximo 3 dias');
+  assert.equal(long.amount, 270);
+  assert.equal(long.remainderSecs, 50, 'o excedente além do teto é perdido, não acumulado');
+  assert.equal(city.salaryAccrued({ ...base, secs: -5 }).days, 0);
+});
+
+test('pedido de auxílio: valor mínimo, teto vindo da lei e motivo obrigatório', () => {
+  assert.equal(city.aidCheck({ amount: 100, cap: 300, reason: 'Preciso pagar o hospital' }), null);
+  assert.match(city.aidCheck({ amount: 10, cap: 300, reason: 'Preciso pagar o hospital' }), /mínimo/);
+  assert.match(city.aidCheck({ amount: 301, cap: 300, reason: 'Preciso pagar o hospital' }), /teto/);
+  assert.equal(city.aidCheck({ amount: 300, cap: 300, reason: 'Preciso pagar o hospital' }), null, 'o teto vale');
+  assert.match(city.aidCheck({ amount: 100, cap: 300, reason: 'oi' }), /motivo/);
+  assert.match(city.aidCheck({ amount: 100, cap: 300, reason: '   ' }), /motivo/);
+  assert.match(city.aidCheck({ amount: 100, cap: 300, reason: 'x'.repeat(121) }), /até/);
+  for (const a of [1.5, 'abc', null, NaN]) assert.ok(city.aidCheck({ amount: a, cap: 300, reason: 'Preciso pagar o hospital' }), String(a));
+  assert.equal(city.aidCheck({ amount: '100', cap: 300, reason: 'Preciso pagar o hospital' }), null, 'número em texto é aceito');
+});
+
+test('texto de aviso: remove controles, junta espaços e corta no limite', () => {
+  assert.equal(city.clean('  Olá\n\n  mundo\t!  ', 50), 'Olá mundo !');
+  assert.equal(city.clean('a\u0000b\u007fc', 50), 'a b c');
+  assert.equal(city.clean('x'.repeat(500), CITY.NOTICE_MAX).length, CITY.NOTICE_MAX);
+  assert.equal(city.clean(null, 10), '');
+});
+
+test('o tesouro só credita valores positivos e recusa débito sem saldo', async () => {
+  const calls = [];
+  const c = { query: async (sql, params) => {
+    calls.push(sql.replace(/\s+/g, ' ').trim().slice(0, 40));
+    if (/SELECT balance/.test(sql)) return { rows: [{ balance: '100' }], rowCount: 1 };
+    return { rows: [{ balance: '150' }], rowCount: 1 };
+  } };
+  assert.equal(await city.credit(c, 'tarifa', 0, 'x'), null);
+  assert.equal(await city.credit(c, 'tarifa', -5, 'x'), null);
+  assert.equal(calls.length, 0, 'valor inválido não toca no banco');
+  assert.equal(await city.credit(c, 'tarifa', 50, 'x'), 150);
+  assert.equal(await city.debit(c, 'auxilio', 101, 'x'), null, 'saldo 100 < 101');
+  assert.equal(await city.debit(c, 'auxilio', 100, 'x'), 150);
+});
+
+/* ---------- rotas (com o banco de dados trocado por um falso) ---------- */
+function makeApp() { const routes = {}; const reg = m => (p, ...h) => { routes[m + ' ' + p] = h[h.length - 1]; }; return { routes, app: { get: reg('GET'), post: reg('POST') } }; }
+function call(handler, body) {
+  return new Promise(resolve => {
+    const res = { code: 200, set() { return this; }, status(c) { this.code = c; return this; }, json(b) { this.headersSent = true; resolve({ code: this.code, body: b }); return this; } };
+    handler({ body }, res);
+  });
+}
+function setup({ user = { username: 'ana' }, over = false } = {}) {
+  const { routes, app } = makeApp(), store = new Map(), notified = [], broadcasts = [];
+  city.registerRoutes({ app, json: null, authUser: async () => user, limited: (s, k, max) => { const n = (store.get(k) || 0) + 1; store.set(k, n); return over || n > max; },
+    userTries: store, addInterval: () => ({}), notify: (u, m) => notified.push([u, m]), broadcast: m => broadcasts.push(m) });
+  return { routes, notified, broadcasts };
+}
+const R = '/api/sk2/city';
+const UUID = '123e4567-e89b-42d3-a456-426614174000';
+
+test('rotas validam o corpo antes de tocar no banco de dados', async () => {
+  const real = db.withTx; let touched = 0; db.withTx = async () => { touched++; return {}; };
+  try {
+    const { routes } = setup();
+    const bad = async (path, bodies) => { for (const b of bodies) assert.equal((await call(routes['POST ' + R + path], b)).code, 400, `${path} ${JSON.stringify(b)}`); };
+    await bad('/notice', [{}, { text: 5 }, { text: null }]);
+    await bad('/office/appoint', [{ office: 'prefeito', username: 'bob' }, { office: 'vereador', username: 'bob' }, { office: 'vice' }, { office: '__proto__', username: 'bob' }, { office: 5, username: 'bob' }]);
+    await bad('/office/dismiss', [{ office: 'prefeito' }, { office: 'xyz' }, {}]);
+    await bad('/law/propose', [{ kind: 'health_subsidy_pct', value: 10 }, { kind: 'xyz', value: 1 }, { kind: '__proto__', value: 1 }, { kind: 'bank_fee_bp', value: 900 }, { kind: 'bank_fee_bp', value: 'x' }, { kind: 'toString', value: 1 }]);
+    await bad('/law/vote', [{ id: 'nao-e-uuid', vote: 'yes' }, { id: UUID, vote: 'talvez' }, { vote: 'yes' }, { id: UUID }]);
+    await bad('/policy/subsidy', [{ pct: 61 }, { pct: -1 }, { pct: 'x' }, {}]);
+    await bad('/aid/request', [{ amount: 5, reason: 'preciso' }, { amount: 100 }, { amount: 99999, reason: 'preciso' }, { amount: 'x', reason: 'preciso' }, { amount: 1.5, reason: 'preciso' }]);
+    await bad('/aid/decide', [{ id: 'x', approve: true }, { id: UUID }, { id: UUID, approve: 'sim' }]);
+    await bad('/election/candidate', [{}, { platform: 5 }]);
+    await bad('/election/vote', [{}, { candidate: 5 }]);
+    assert.equal(touched, 0);
+  } finally { db.withTx = real; }
+});
+
+test('sem sessão ou acima do limite as rotas respondem 401 e 429', async () => {
+  const { routes, app } = makeApp();
+  city.registerRoutes({ app, json: null, authUser: async () => null, limited: () => false, userTries: new Map(), addInterval: () => ({}) });
+  assert.equal((await call(routes['GET ' + R])).code, 401);
+  assert.equal((await call(routes['POST ' + R + '/salary/claim'], {})).code, 401);
+  assert.equal((await call(setup({ over: true }).routes['POST ' + R + '/notice'], { text: 'Aviso importante' })).code, 429);
+});
+
+test('sucesso devolve o prontuário, avisa os envolvidos e transmite o aviso oficial', async () => {
+  const real = db.withTx, realQuery = db.query; let reloaded = 0; db.query = async () => { reloaded++; return { rows: [], rowCount: 0 }; };
+  db.withTx = async () => ({ playerRow: { username: 'ana', name: 'Ana', role: 'prefeito', look: {}, money: 900, xp: 10 }, city: { me: { office: 'prefeito' } },
+    notifies: [['bob', 'Você foi nomeado(a) Secretário(a) de Finanças.']], officesChanged: true, broadcast: { message: 'Feriado amanhã', by: 'Ana' }, message: 'Feito' });
+  try {
+    const { routes, notified, broadcasts } = setup();
+    const r = await call(routes['POST ' + R + '/notice'], { text: 'Feriado amanhã' });
+    assert.equal(r.code, 200);
+    assert.equal(r.body.city.me.office, 'prefeito');
+    assert.equal(r.body.player.money, 900);
+    assert.deepEqual(notified, [['bob', { t: 'city', m: 'Você foi nomeado(a) Secretário(a) de Finanças.' }]]);
+    assert.equal(broadcasts.length, 1);
+    assert.equal(broadcasts[0].t, 'mayorAnnouncement');
+    assert.equal(broadcasts[0].message, 'Feriado amanhã');
+    assert.ok(reloaded >= 1, 'mudança de cargos recarrega o cache usado pelo WebSocket');
+  } finally { db.withTx = real; db.query = realQuery; }
+});
+
+test('erro de regra devolve o status da regra e não notifica nem transmite', async () => {
+  const real = db.withTx;
+  db.withTx = async () => ({ err: 'Somente Finanças e o Prefeito decidem auxílios.', status: 403 });
+  try {
+    const { routes, notified, broadcasts } = setup();
+    const r = await call(routes['POST ' + R + '/aid/decide'], { id: UUID, approve: true });
+    assert.equal(r.code, 403);
+    assert.match(r.body.err, /Finanças/);
+    assert.equal(notified.length + broadcasts.length, 0);
+  } finally { db.withTx = real; }
+});
+
+test('cache de cargos: o WebSocket consulta o cargo do usuário sem ir ao banco', async () => {
+  const realQuery = db.query;
+  db.query = async () => ({ rows: [{ office: 'seguranca', username: 'rui' }, { office: 'vereador', username: 'lia' }], rowCount: 2 });
+  try {
+    await city.reloadOffices();
+    assert.equal(city.officeOfUser('rui'), 'seguranca');
+    assert.equal(city.can(city.officeOfUser('rui'), 'drill'), true, 'secretário de segurança pode simular acidente');
+    assert.equal(city.can(city.officeOfUser('lia'), 'drill'), false, 'vereador não pode');
+    assert.equal(city.officeOfUser('ninguem'), null);
+    assert.equal(city.officeOfRow({ role: 'prefeito', username: 'x' }), 'prefeito');
+    assert.equal(city.officeOfRow({ role: 'cidadão', username: 'rui' }), 'seguranca');
+    assert.equal(city.officeOfRow(null), null);
+    db.query = async () => ({ rows: [], rowCount: 0 });
+    await city.reloadOffices();
+    assert.equal(city.officeOfUser('rui'), null, 'exonerado deixa de ter o cargo');
+  } finally { db.query = realQuery; }
+});
