@@ -397,7 +397,9 @@ test('mayor control panel exposes protected city controls and global announcemen
   assert.match(client, /id="mayorSendAnnouncement"/);
   assert.match(client, /mayorAnnouncement/);
   assert.match(server, /if \(m\.t === 'mayorAction'\)/);
-  assert.match(server, /me\.lk\?\.role !== 'prefeito'/);
+  // O comando é do Prefeito ou do cargo com permissão (Segurança simula acidentes, Vice publica avisos): ver city.can e PERMS.
+  assert.match(server, /me\.lk\?\.role === 'prefeito' \? 'prefeito' : city\.officeOfUser\(me\.u\)/);
+  assert.match(server, /city\.can\(office, action === 'announcement' \? 'notice' : 'drill'\)/);
   assert.match(server, /traffic_toggle/);
   assert.match(server, /mayorAnnouncement/);
 });
