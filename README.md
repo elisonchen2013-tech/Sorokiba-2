@@ -112,7 +112,7 @@ Rotas autenticadas: `GET /api/sk2/condo`, `GET /api/sk2/condo/unit/:id`, `POST /
 O interior do Banco (Marcos no caixa, Ana na gerência e o caixa eletrônico) abre o painel bancário. Segue a lógica do condomínio: tudo é validado e gravado no servidor, o dinheiro só muda dentro de transação com `FOR UPDATE`, e as tabelas são próprias (`sk2_bank_accounts`, `sk2_bank_ledger`, `sk2_bank_loans`), criadas por `bank.init()` sem alterar tabelas de outros sistemas. Código em `sorokiba2-bank.js`; as regras ajustáveis ficam no objeto `BANK` no topo.
 
 - **Poupança**: depositar e sacar. Rende 0,5% ao dia sobre até R$ 50.000, creditado por dia completo (no máximo 30 dias por visita). Teto de R$ 1.000.000.
-- **Transferências** entre jogadores: exigem 100 XP, limite de R$ 5.000 por 24 h e tarifa de 2% (mínimo R$ 1) que sai da economia. O destinatário recebe um aviso em tempo real pelo WebSocket.
+- **Transferências** entre jogadores: exigem 100 XP, limite de R$ 5.000 por 24 h e tarifa (2% por padrão, mínimo R$ 1) que vai para o tesouro da Prefeitura e pode ser alterada por lei. O destinatário recebe um aviso em tempo real pelo WebSocket.
 - **Empréstimo** (exige 100 XP): limite cresce com o XP (R$ 300 + 5 por XP, até R$ 5.000), um ativo por jogador, prazo de 7 dias. A Ana negocia a taxa de tabela (12%) em até 5 rodadas, como a Marta negocia o preço. Empréstimo vencido é cobrado da poupança e depois da carteira, no próximo uso do banco ou pela varredura do servidor a cada 10 minutos.
 - **Extrato** com as últimas 20 movimentações.
 
@@ -143,6 +143,29 @@ Endpoints autenticados: `GET /api/sk2/hospital`, `POST /api/sk2/hospital/checkin
 - **Serviços para quem está saudável**: plano de saúde (50% em consultas, exames e sessões por 7 dias, R$ 250), vacina (a chance de adoecer cai para 1/4 por 12 horas, R$ 80) e doação de sangue (R$ 50 e 20 XP, intervalo de 6 h, exige saúde de 70% ou mais).
 
 Limitação atual: como no Banco, o servidor não sabe em qual sala o jogador está; a ordem das etapas, os prazos e as cobranças são garantidos no servidor, mas o deslocamento entre salas é guiado só pelo cliente.
+
+## Prefeitura de Sorokiba
+
+A Prefeitura tem dois andares, cada um com planta própria de 40×24 tiles (mesma técnica do condomínio e do hospital: paredes com portas sinalizadas, colisão derivada da planta, câmera que segue o jogador com zoom). **Térreo**: saguão com selo da cidade no piso, recepção, escadaria e elevador, Protocolo, Sala de Avisos, Sala Eleitoral e Segurança e Trânsito. **2º andar**: átrio, Gabinete do Prefeito, Vice-prefeitura, Secretaria de Finanças, Secretaria de Saúde e Plenário da Câmara. Cada mesa mostra uma placa com o cargo e o nome de quem o ocupa. Código do servidor em `sorokiba2-city.js`; as regras ajustáveis ficam em `CITY`, `POLICIES` e `OFFICES` no topo.
+
+**Cargos e funções** (permissões em `PERMS`, sempre checadas no servidor):
+
+- **Prefeito**: painel completo da cidade, nomeia e exonera vice e secretários, propõe leis, publica avisos oficiais e abre a Central da Prefeitura (trânsito, acidentes, comunicado global, saldo, redefinição de senha).
+- **Vice-prefeito**: publica avisos e propõe leis.
+- **Secretário de Finanças**: aprova ou nega pedidos de auxílio, pagos pelo tesouro. Não decide o próprio pedido.
+- **Secretário de Saúde**: define o subsídio do Hospital, dentro do teto fixado por lei.
+- **Secretário de Segurança e Trânsito**: simula acidentes e congestionamento (antes só o Prefeito).
+- **Vereadores (3)**: eleitos pelos moradores, votam as leis no Plenário.
+
+**Economia e leis.** O tesouro recebe a tarifa de transferência do Banco e a receita do Hospital, e paga auxílios e salários dos cargos (por dia completo, acumulando no máximo 3 dias). Três políticas mudam só por lei: tarifa do Banco (0 a 5%), teto do subsídio da saúde e teto do auxílio. A lei vai a votação por 24 h e precisa de maioria das cadeiras; sem vereadores, vira decreto na hora. O Banco passa a ler a tarifa da política e o Hospital passa a aplicar o subsídio, que se acumula com o plano de saúde (o preço mostrado na tela e o cobrado são calculados pela mesma fórmula inteira).
+
+**Eleição.** Sempre há uma eleição aberta (7 dias). Candidatura exige 100 XP e voto exige 50 XP, um voto por morador e nenhum em si mesmo. Na apuração assumem os 3 mais votados (empate pela candidatura mais antiga); quem já tem outro cargo é pulado.
+
+**Dados e gráficos.** O servidor guarda uma amostra da cidade (moradores, online, dinheiro em circulação, poupanças, dívidas, tesouro, doentes, empregados, saúde média) a cada 10 minutos e também ao abrir a Prefeitura. A tela do saguão mostra os números públicos; os cargos veem o painel completo, com seis gráficos desenhados em canvas.
+
+Endpoints autenticados: `GET /api/sk2/city` e `POST /api/sk2/city/...` com `notice`, `office/appoint`, `office/dismiss`, `law/propose`, `law/vote`, `policy/subsidy`, `aid/request`, `aid/decide`, `salary/claim`, `election/candidate` e `election/vote`. `SK2_CITY_TIME_SCALE=0.001` comprime os prazos para teste.
+
+Limitações atuais: se o Prefeito sair, não há sucessão automática; o servidor não sabe em qual sala o jogador está (como no Banco e no Hospital); a doação de sangue do Hospital ainda é paga com dinheiro novo, não pelo tesouro.
 
 ## Testes
 
