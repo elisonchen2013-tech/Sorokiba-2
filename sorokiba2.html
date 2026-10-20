@@ -352,6 +352,54 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 
 .hospIcon{display:flex;align-items:center;justify-content:center;font-size:34px}
 .hospActions button:disabled,.hospList button:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- Prefeitura de Sorokiba ---------- */
+#cityPanel{position:fixed;z-index:42;left:50%;top:50%;transform:translate(-50%,-50%);width:min(900px,96vw);max-height:92vh;overflow:auto;padding:clamp(14px,3vw,24px);border:1px solid #b08a3caa;border-radius:16px;background:linear-gradient(155deg,#16203a 0%,#0a1020 100%);box-shadow:0 24px 80px #000d;color:#f1ecdf;overscroll-behavior:contain}
+.cityHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:1px solid #b08a3c66}
+.cityKicker{margin:0 0 4px;color:#e0b95a;font-size:12px;font-weight:700}
+.cityHead h2{margin:0;color:#fff3cf;font-size:clamp(22px,4vw,30px)}
+.cityHead p:not(.cityKicker){margin:5px 0 0;color:#b9c4d6;font-size:13px}
+#cityPanel button{font:inherit;cursor:pointer}
+#cityClose{border:1px solid #ffffff33;border-radius:9px;padding:8px 12px;background:#ffffff10;color:#f1ecdf}
+.cityTabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.cityTabs[hidden]{display:none}
+.cityTabs button{border:1px solid #b08a3c77;border-radius:9px;padding:8px 13px;background:transparent;color:#ead9b2;font-weight:600}
+.cityTabs button[aria-selected=true]{background:#d9b25a;color:#14182a;border-color:#d9b25a}
+.cityMsg{min-height:20px;margin:8px 0;color:#bfeadf;font-size:13px}
+.cityMsg.err{color:#ffb9ad}
+.cityKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.cityKpi{padding:10px 12px;border:1px solid #ffffff1c;border-radius:10px;background:#ffffff08}
+.cityKpi span{display:block;color:#a9b8cc;font-size:12px}
+.cityKpi strong{display:block;margin-top:3px;color:#f2c14b;font-size:clamp(16px,3.2vw,21px);font-variant-numeric:tabular-nums}
+.cityKpi small{display:block;margin-top:2px;color:#8fa1b8;font-size:11px}
+.cityGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.cityCard{padding:14px;border:1px solid #ffffff1c;border-radius:12px;background:#ffffff08;margin-bottom:10px}
+.cityCard h3{margin:0 0 8px;color:#fff3cf;font-size:16px}
+.cityChart{display:block;width:100%;height:170px}
+.cityHint{margin:0 0 10px;color:#aab8cb;font-size:12.5px;line-height:1.45}
+.cityCard label{display:block;margin:8px 0 5px;color:#d9e1ec;font-size:13px}
+.cityCard input[type=text],.cityCard input[type=number],.cityCard select,.cityCard textarea{width:100%;max-width:420px;box-sizing:border-box;padding:10px 12px;border:1px solid #b08a3c99;border-radius:9px;background:#0a1020;color:#fff;font:inherit;font-size:16px}
+.cityCard textarea{max-width:none;resize:vertical}
+.cityCard input.citySmall{width:128px;padding:7px 9px;font-size:14px}
+.cityActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.cityActions button,.cityList button{border:0;border-radius:9px;padding:10px 16px;background:linear-gradient(90deg,#d9b25a,#f2d27a);color:#14182a;font-weight:800}
+.cityActions button.alt,.cityList button.alt{background:#ffffff14;color:#f1ecdf;border:1px solid #ffffff33}
+.cityList button{padding:7px 12px;font-size:13px}
+.cityActions button:disabled,.cityList button:disabled{opacity:.45;cursor:not-allowed}
+.cityList{list-style:none;margin:0;padding:0}
+.cityList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted #ffffff30}
+.cityList small{display:block;margin-top:2px;color:#93a5bd;font-size:12px}
+.cityList b.up{color:#6ee7b7}.cityList b.down{color:#fca5a5}
+.cityRight{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.cityTag{padding:3px 9px;border-radius:99px;background:#ffffff14;font-size:12px;white-space:nowrap}
+.cityTag.ok{background:#3fae6330;color:#8fe0b4}.cityTag.bad{background:#d9534f30;color:#ffb3ae}
+.cityVacant{color:#8a96a8}
+.citySalary{border-color:#b08a3c88}
+.cityCount{font-variant-numeric:tabular-nums}
+.cityNote{padding:18px;text-align:center;color:#bccbdd}
+#cityPanel.busy button{pointer-events:none;opacity:.6}
+#cityPanel button:focus-visible,#cityPanel input:focus-visible,#cityPanel textarea:focus-visible,#cityPanel select:focus-visible{outline:2px solid #f2c14b;outline-offset:2px}
+@media(max-width:560px){.cityGrid{grid-template-columns:1fr}.cityList li{flex-wrap:wrap}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -406,6 +454,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="condoPanel" hidden aria-labelledby="condoTitle"><header class="condoHeader"><div><p class="condoKicker">SOROKIBA TOWER · CONDOMÍNIO</p><h2 id="condoTitle">Seu próximo endereço</h2><p id="condoIntro">Consulte os andares, negocie uma unidade e organize seu apartamento.</p></div><button id="condoClose" type="button" aria-label="Fechar condomínio">Fechar</button></header><div class="condoOverview"><div><span>SEU SALDO</span><strong id="condoMoney">R$ 0</strong></div><div><span>TORRE</span><strong>15 andares · 60 unidades</strong></div><div><span>LAZER</span><strong>Academia · piscina · salão</strong></div></div><p id="condoMsg" class="condoMessage" aria-live="polite">Carregando unidades...</p><div class="condoToolbar"><label for="condoFloor">Andar</label><select id="condoFloor"></select><button id="condoMine" type="button">Meus apartamentos</button><button id="condoAll" type="button">Ver unidades</button></div><div id="condoBody"></div></section>
 <section id="bankPanel" hidden role="dialog" aria-labelledby="bankTitle"><header class="bankHead"><div><p class="bankKicker">Banco de Sorokiba</p><h2 id="bankTitle">Atendimento</h2><p id="bankIntro"></p></div><button id="bankClose" type="button" aria-label="Fechar banco">Fechar</button></header><div class="bankBalances"><div><span>Carteira</span><strong id="bankMoney">R$ 0</strong></div><div><span>Poupança</span><strong id="bankSavings">…</strong></div><div><span>Dívida</span><strong id="bankDebt">…</strong></div></div><nav class="bankTabs" id="bankTabs" role="tablist" aria-label="Serviços do banco"><button type="button" role="tab" data-bank-tab="account">Poupança</button><button type="button" role="tab" data-bank-tab="transfer">Transferir</button><button type="button" role="tab" data-bank-tab="loan">Empréstimo</button><button type="button" role="tab" data-bank-tab="statement">Extrato</button></nav><p id="bankMsg" class="bankMsg" aria-live="polite"></p><div id="bankBody"></div></section>
 <section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><div id="hospNextBar" class="hospNextBar"></div><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
+<section id="cityPanel" hidden role="dialog" aria-labelledby="cityTitle"><header class="cityHead"><div><p class="cityKicker">Prefeitura de Sorokiba</p><h2 id="cityTitle">Prefeitura</h2><p id="cityWho"></p></div><button id="cityClose" type="button" aria-label="Fechar Prefeitura">Fechar</button></header><nav id="cityTabs" class="cityTabs" role="tablist" aria-label="Seções" hidden></nav><p id="cityMsg" class="cityMsg" aria-live="polite"></p><div id="cityBody"></div></section>
 <div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
@@ -884,7 +933,7 @@ else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído
 else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
-else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='hospital'){toast(m.m);tone(784,.1,'sine',.05);if(!$('hospitalPanel').hidden&&!hospBusy)hospLoad(true)}else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
+else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='city'){toast(m.m);tone(784,.1,'sine',.05);cityLoad(true)}else if(m.t==='hospital'){toast(m.m);tone(784,.1,'sine',.05);if(!$('hospitalPanel').hidden&&!hospBusy)hospLoad(true)}else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
@@ -1136,7 +1185,7 @@ function findRoomPath(room,sx,sy,tx,ty){
  }
  if(prev[end]===-2)return null;const path=[];for(let id=end;id!==start;id=prev[id])path.push(pos(id));path.reverse();return path;
 }
-function makeInterior(building){
+function makeInterior(building,floor=1){
  const title=building.n.replace(/^✚\s*/,'').trim(),n=title.toLowerCase();
  let family='office';
  if(n.includes('centro de empregos')||n.includes('carreiras'))family='employment';
@@ -1194,12 +1243,8 @@ function makeInterior(building){
   z('Caixa',5.9,2.4,'Área de atendimento bancário.');z('Mesa de atendimento',2.75,5.15,'Atendimento para dúvidas e serviços bancários.');
   z('Caixa eletrônico',10.45,5.8,'Saldo atual da sua carteira: R$ '+Number(user?.money||0).toLocaleString('pt-BR')+'. Use para depositar, sacar e consultar a poupança.');
  }else if(family==='cityhall'){
-  add('counter',3.4,1.05,3.5,.85,22,'#8e704e','#cfb07b','#614a35');add('desk',7.7,3.25,2,.9,18,'#77583f','#b89062','#49352a');
-  add('board',9.8,1,1.25,.18,30,'#5b5648','#907e5b','#37372e',false);add('chair',7.95,4.65,.65,.65,10,'#82664b','#ac8b60','#4e3b2e');
-  z('Recepção',5.2,2.3,'A recepção orienta os moradores sobre serviços municipais.');
-  z('Gabinete',9.3,5.05,user?.role==='prefeito'?'Este é o gabinete da Prefeitura. As ferramentas administrativas serão integradas separadamente.':'O gabinete é uma área administrativa da Prefeitura.');
-  z('Quadro de avisos',10.35,2,'Quadro reservado para avisos e informações da cidade.');
- }else if(family==='restaurant'){
+   cityHallZones(floor).forEach(o=>zones.push(o));
+  }else if(family==='restaurant'){
   add('counter',4.6,1.05,3,.85,22,'#74452e','#d59b55','#472c20');add('table',2.2,3.3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   add('table',6,4.1,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');add('table',9,3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   z('Balcão',6,2.35,'Balcão de atendimento do restaurante.');z('Mesas',3.5,5,'Área para sentar e fazer uma refeição.');z('Salão',9.6,5.15,'Área de refeições com mesas para os clientes.');
@@ -1320,7 +1365,7 @@ function makeInterior(building){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[18,13,'civic-wing'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1349,15 +1394,16 @@ function makeInterior(building){
   room.items=condoGroundCollisionItems();
   room.dividers=CONDO_ZIP.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));
  }
- if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
-  const flat=family==='condo'||family==='hospital',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
+ if(family==='cityhall'){room.floor=floor;room.items=cityHallCollision(floor);room.dividers=CHP[floor].walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit=floor===1?{x:.9,y:12}:{x:-50,y:-50}}
+  if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
+  const flat=family==='condo'||family==='hospital'||family==='cityhall',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
   market:[['Marina','Caixa',6.6,2.05,'staff','#3c8056','#dfb28b','#203b2c'],['Rafael','Cliente',4.4,6.2,'visitor','#466d98','#e1b991','#2e2a27'],['Lia','Cliente',8.2,6.25,'visitor','#be6f72','#d69b72','#422a21']],
    hospital:[['Helena','Recepcionista',7.5,1.5,'staff','#3d9b98','#f0c3a0','#3a4b57'],['Joana','Enfermeira de triagem',17.5,3.2,'staff','#e1eee9','#d7a781','#2a3138'],['Dra. Bia','Médica',23.8,3.4,'staff','#f4f3ed','#e1b991','#375b78'],['Dr. Henrique','Médico',30.2,3.4,'staff','#f4f3ed','#b9835d','#2f2a26'],['Lívia','Enfermeira de coleta',17.2,14.6,'staff','#e1eee9','#c99572','#4a2f22'],['Marcelo','Técnico de imagem',25.8,13.6,'staff','#7aa0b8','#bb865f','#222a33'],['Dr. Lucas','Cirurgião',30.8,15.2,'staff','#3f8f8c','#d0a17b','#2b2b30'],['Caio','Enfermeiro',7,18.6,'staff','#e1eee9','#ad744b','#365560'],['Paciente','Paciente',4.5,6.5,'visitor','#c7d8dd','#b37b58','#4a5261'],['Acompanhante','Visitante',11,11,'visitor','#8aa0c4','#d4a078','#382d25']],
   bank:[['Marcos','Caixa',5.8,2.05,'staff','#c5a05c','#d2a17d','#27394f'],['Ana','Gerente',2.5,5.5,'staff','#435c7b','#c28f6a','#202c3d'],['Cliente','Cliente',9,5.8,'visitor','#4a9c8a','#d7aa82','#30271f']],
-  cityhall:[['Sofia','Recepcionista',5.2,2.05,'staff','#b08a5a','#d2a17d','#3f3940'],['Roberto','Servidor municipal',9,5.05,'staff','#46678c','#b77a55','#28283b'],['Moradora','Cidadã',3,6,'visitor','#bc7654','#c99a78','#3d3228']],
+   cityhall:cityHallCrowd(floor),
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
   cinema:[['Nina','Bilheteira',6,2,'staff','#5f496f','#d7ad8d','#292a42'],['Espectador','Cliente',1.5,6.3,'visitor','#5c7fb2','#d4a078','#382d25'],['Espectadora','Cliente',10.2,6.4,'visitor','#b8708c','#e2b69a','#2b252a']],
   library:[['Clara','Bibliotecária',6.2,2,'staff','#7b6549','#d7a780','#32251c'],['Leitor','Visitante',4.3,6.2,'visitor','#6882a1','#c8946b','#32261e'],['Estudante','Visitante',7.8,6.2,'visitor','#72956e','#e0b58f','#2c2520']],
@@ -1388,15 +1434,16 @@ function makeInterior(building){
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
+ if(interior.room.family==='cityhall')cityStartPoll();
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -1696,7 +1743,7 @@ function hospZoneFor(room,site){
 function hospDrawNear(){
  const n=near;if(!n||n.t!=='interiorSpot'||n.o.seatOut||interior.med)return;
  const z=n.o,g=P(z.x,z.y,1);c.save();c.strokeStyle='rgba(242,184,75,.9)';c.lineWidth=2;c.beginPath();c.ellipse(g[0],g[1],16,8,0,0,7);c.stroke();
- const q=P(z.x,z.y,46);c.font='bold 10px sans-serif';c.textAlign='center';const w=c.measureText(z.label).width+14;c.fillStyle='rgba(8,18,24,.88)';c.fillRect(q[0]-w/2,q[1]-12,w,17);c.fillStyle='#ffe3a1';c.fillText(z.label,q[0],q[1]);c.restore();
+ const q=P(z.x,z.y,64);c.font='bold 10px sans-serif';c.textAlign='center';const w=c.measureText(z.label).width+14;c.fillStyle='rgba(8,18,24,.88)';c.fillRect(q[0]-w/2,q[1]-12,w,17);c.fillStyle='#ffe3a1';c.fillText(z.label,q[0],q[1]);c.restore();
 }
 function hospitalCollisionItems(){
  const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
@@ -1855,10 +1902,171 @@ function hospDrawBeacon(t){
  c.beginPath();c.moveTo(q[0],q[1]);c.lineTo(q[0]-7,q[1]-11);c.lineTo(q[0]+7,q[1]-11);c.closePath();c.fill();c.stroke();
  c.font='bold 9px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';c.strokeText(hospSiteLabel(site),q[0],q[1]-16);c.fillStyle='#e9fffb';c.fillText(hospSiteLabel(site),q[0],q[1]-16);c.restore();
 }
+/* ---------- PREFEITURA: dois andares, mesma técnica do condomínio e do hospital ---------- */
+Object.assign(DEC,{
+ cdesk:{s:[6,1],p:[[.05,.1,5.9,.8,0,26,'#d9d2c4','#efe9dc'],[0,.05,6,.9,26,29,'#b08a3c','#d9b25a'],[.5,.4,.5,.1,29,42,'#111','#222'],[5,.4,.5,.1,29,42,'#111','#222']]},
+ cmayor:{s:[4,1],p:[[.1,.1,3.8,.8,0,26,'#5a3a24','#7a5236'],[0,.05,4,.9,26,29,'#3f2a1a','#5a3c26'],[1.6,.78,.8,.12,29,36,'#b08a3c','#f2d27a'],[.4,.35,.5,.12,29,42,'#111','#222']]},
+ cstairs:{s:[5,3],p:[0,1,2,3,4].map(i=>[.1,2.4-i*.5,4.8,.5,0,8*(i+1),'#cfc6b4','#ece5d5']).concat([[0,.4,.14,2.5,0,26,'#b08a3c','#d9b25a'],[4.86,.4,.14,2.5,0,26,'#b08a3c','#d9b25a']])},
+ clift:{s:[2,1],p:[[.05,.1,1.9,.5,0,70,'#9fb0b6','#cfe0e5'],[.93,.58,.14,.05,4,64,'#4b5a60','#4b5a60'],[.7,.6,.6,.05,72,78,'#1d6b3b','#2ecc71']]},
+ cflag:{s:[1,1],p:[[.35,.35,.3,.3,0,5,'#6a6f73','#8a8f93'],[.46,.46,.08,.08,5,78,'#8a8f93','#b8bec2']],
+  f:(c,x,y,t)=>{const o=P(x+.5,y+.5,78),cols=['#2fb5a8','#f2c14b','#f4f0e6'];for(let s=0;s<3;s++){c.fillStyle=cols[s];c.beginPath();c.moveTo(o[0],o[1]+s*4);for(let i=0;i<=10;i++)c.lineTo(o[0]+i*3.2,o[1]+s*4+Math.sin(t*3+i*.7)*1.6);for(let i=10;i>=0;i--)c.lineTo(o[0]+i*3.2,o[1]+s*4+4+Math.sin(t*3+i*.7)*1.6);c.closePath();c.fill()}}},
+ ccolumn:{s:[1,1],p:[[.1,.1,.8,.8,0,6,'#d8d0bf','#efe9dc'],[.22,.22,.56,.56,6,84,'#e8e2d4','#f7f3ea'],[.1,.1,.8,.8,84,92,'#d8d0bf','#efe9dc']]},
+ cshelf:{s:[3,1],p:[[.05,.1,2.9,.8,0,76,'#5a3a24','#7a5236'],[.2,.18,.2,.7,14,38,'#b03a48','#d9604d'],[.45,.18,.2,.7,14,34,'#2f5f9f','#4a82cc'],[.7,.18,.2,.7,14,38,'#3f8f5c','#5fb37c'],[1.2,.18,.2,.7,44,66,'#b08a3c','#d9b25a'],[1.45,.18,.2,.7,44,62,'#7a4a8a','#9f6cb0'],[2.1,.18,.3,.7,14,36,'#3d9b98','#58b9b4'],[2.2,.18,.2,.7,44,64,'#b03a48','#d9604d']]},
+ ctable:{s:[4,2],p:[[.1,.2,3.8,1.6,0,20,'#6e4630','#8a5a3b'],[.4,.5,.6,.5,20,21,'#f4f0e6','#ffffff'],[2.2,.8,.7,.5,20,21,'#f4f0e6','#ffffff']]},
+ ctribune:{s:[3,1],p:[[.1,.1,2.8,.8,0,32,'#6e4630','#8a5a3b'],[1.1,.88,.8,.05,10,26,'#b08a3c','#f2d27a']]},
+ ccouncil:{s:[1,1],p:[[.1,.15,.8,.5,0,22,'#6e4630','#8a5a3b'],[.3,.6,.4,.3,0,12,'#3a2a22','#5a463a']]},
+ curn:{s:[1,1],p:[[.2,.2,.6,.6,0,24,'#2f5f9f','#4a82cc'],[.35,.45,.3,.1,24,26,'#111','#111']]},
+ cbooth:{s:[1,1],p:[[.05,.1,.9,.8,0,54,'#6b7d96','#8aa0bd'],[.15,.8,.7,.1,0,40,'#9aa9bd','#c0cadb']]},
+ cmonitors:{s:[4,1],p:[[.05,.2,3.9,.7,0,24,'#2b3a42','#3b4c55'],[.3,.3,.9,.1,28,56,'#111','#1b2a31'],[1.55,.3,.9,.1,28,56,'#111','#1b2a31'],[2.8,.3,.9,.1,28,56,'#111','#1b2a31']],
+  f:(c,x,y,t)=>{[.75,2,3.25].forEach((dx,i)=>{const q=P(x+dx,y+.33,42),a=.55+.35*Math.sin(t*2+i*2);c.strokeStyle='rgba(95,240,170,'+a+')';c.lineWidth=1;c.beginPath();c.moveTo(q[0]-9,q[1]+1);for(let k=0;k<=6;k++)c.lineTo(q[0]-9+k*3,q[1]+1+Math.sin(t*4+k+i)*3);c.stroke()})}},
+ csafe:{s:[1,1],p:[[.15,.15,.7,.7,0,44,'#4b5a60','#6a7a82'],[.4,.8,.2,.05,18,32,'#d9b25a','#f2d27a']]}
+});
+const CHP={
+ 1:{w:40,h:24,
+  rooms:[[0,0,18,24,'','g'],[18,0,11,8,'Protocolo','p'],[29,0,11,8,'Sala de Avisos','n'],[18,8,22,3,'','k'],[18,11,11,13,'Sala Eleitoral','e'],[29,11,11,13,'Segurança e Trânsito','s']],
+  walls:[['v',18,0,8],['v',18,11,24],['h',8,18,22],['h',8,24,33],['h',8,35,40],['h',11,18,22],['h',11,24,33],['h',11,35,40],['v',29,0,8],['v',29,11,24]],
+  doors:[['h',8,22,24,'PROTOCOLO'],['h',8,33,35,'AVISOS'],['h',11,22,24,'SALA ELEITORAL'],['h',11,33,35,'SEGURANÇA'],['v',18,8,11,'CORREDOR']],
+  signs:[[23.5,'PROTOCOLO'],[34.5,'AVISOS']],
+  entrance:[11,13],
+  dec:[['cdesk',4,4],['clift',.6,.2],['cstairs',11.5,.3],['cflag',3.2,1.4],['cflag',9.6,1.4],['ccolumn',3,6.6],['ccolumn',3,16.4],['ccolumn',13.4,6.6],['ccolumn',13.4,16.4],
+   ['hsofa',1.2,4.6],['hsofa',1.2,18.2],['harmchair',5.4,17.2],['htable',5.4,18.4],['plant',1,20.8],['plant',15.8,20.8],['plant',15.8,6.4],['cooler',15.6,12.2],['hsanitizer',1.6,10],
+   ['cdesk',20,2.5],['cabinet',27.5,.4],['hchair',19.2,5.6],['hchair',19.2,6.6],['plant',27.8,6.4],
+   ['hsofa',30.4,5.2],['hsofa',36.8,5.2],['plant',38.4,.8],
+   ['cbooth',19.2,15],['cbooth',19.2,17.2],['cbooth',19.2,19.4],['curn',23.4,16],['hchair',25.8,13.4],['plant',27.4,21.6],
+   ['cmonitors',31.5,12.2],['htable',35,17.5],['hsofa',36.5,20.8],['plant',38.4,12.4],['cabinet',30.2,21.6],
+   ['plant',39,8.4],['cooler',19,8.3]]},
+ 2:{w:40,h:24,
+  rooms:[[0,0,16,13,'Átrio','a'],[0,13,16,11,'Plenário da Câmara','v'],[16,10,24,3,'','k'],[16,0,24,10,'Gabinete do Prefeito','m'],[16,13,8,11,'Vice-prefeitura','o'],[24,13,8,11,'Finanças','o'],[32,13,8,11,'Secretaria de Saúde','o']],
+  walls:[['v',16,0,10],['v',16,13,24],['h',10,16,26],['h',10,30,40],['h',13,16,19],['h',13,21,27],['h',13,29,35],['h',13,37,40],['h',13,0,6],['h',13,10,16],['v',24,13,24],['v',32,13,24]],
+  doors:[['h',10,26,30,'GABINETE DO PREFEITO'],['h',13,19,21,'VICE-PREFEITURA'],['h',13,27,29,'FINANÇAS'],['h',13,35,37,'SAÚDE'],['h',13,6,10,'PLENÁRIO'],['v',16,10,13,'CORREDOR']],
+  signs:[[8,'ÁTRIO'],[28,'GABINETE DO PREFEITO']],
+  entrance:null,
+  dec:[['cstairs',11.5,.3],['clift',.6,.2],['cflag',3.2,1.4],['cflag',9.6,1.4],['hsofa',1.4,6.6],['hsofa',1.4,10],['harmchair',5.2,7.2],['htable',5.2,8.4],['plant',1,3.4],['plant',14.8,6.4],['plant',14.8,11],['cooler',14.5,9.6],
+   ['cmayor',24,2.4],['hchair',25.5,1.4],['cshelf',17.5,.3],['cshelf',36.5,.3],['cflag',22,1.2],['cflag',30,1.2],['ctable',19,5.2],['hchair',18.6,4.2],['hchair',21.2,4.2],['hchair',18.6,7.2],['hchair',21.2,7.2],['hsofa',35.4,5.8],['htable',35.8,7.2],['plant',38.6,1],['plant',17,8.6],
+   ['desk',17.8,21],['hchair',17.2,18.2],['hchair',21.8,18.2],['cabinet',22.6,14],['plant',16.8,14.2],['cflag',22.6,16.4],
+   ['desk',25.8,21],['hchair',25.2,18.2],['hchair',29.6,18.2],['csafe',30.8,14.2],['cabinet',30.8,16],['cabinet',30.8,17.4],
+   ['desk',33.8,21],['hchair',33.2,18.2],['hchair',37.6,18.2],['hbed',38.5,15.5],['monitor',38.4,14.2],['hsanitizer',32.6,14.2],['cabinet',38.6,19.4],
+   ['ctribune',6.5,22.2],['ccouncil',3,16.4],['ccouncil',7.5,17],['ccouncil',12,16.4],['waitseats',1,20.2],['waitseats',11.8,20.2],['cflag',1,14.4],['cflag',14.2,14.4],['plant',14.8,22.6]]}
+};
+for(const f of [1,2]){const p=CHP[f];p.grid=Array.from({length:p.h},(_,y)=>Array.from({length:p.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of p.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return f===1?'g':'a'}))}
+const CITY_FLOOR={g:['#ece7dc','#d9d2c3'],p:['#e6dfce','#d5ccb7'],n:['#e9e0ca','#d7cdb4'],k:['#dcd5c6','#cbc2af'],e:['#dfe6ee','#cdd7e3'],s:['#d6dde3','#c4cdd5'],a:['#e6dccb','#d2c6ae'],v:['#bdd4c0','#a9c4ad'],m:['#c9a577','#b8935f'],o:['#d8c5a3','#c8b28d']};
+const CITY_STAFF={Sofia:{f:1},Roberto:{gl:1},Guarda:{hat:'#1f3a5f'},Mesária:{f:1},Assessora:{f:1,gl:1},Paulo:{gl:1}};
+const CITY_SEATS_PLATES=[['prefeito',0,28,3.3],['vice',0,19.8,20.6],['financas',0,27.8,20.6],['saude',0,35.8,20.6],['vereador',0,3.5,16.5],['vereador',1,8,17.1],['vereador',2,12.5,16.5]];
+const CITY_ROLE_SITE={'Servidor municipal':'protocol','Mesária':'election'};
+// Texto que segue a inclinação da parede (eixo 'x' = parede norte e vergas; 'y' = parede oeste).
+function wtxt(axis,text,px,py,z,font,color){const q=P(px,py,z);c.save();c.translate(q[0],q[1]);c.transform(1,axis==='x'?.5:-.5,0,1,0,0);c.font=font;c.fillStyle=color;c.textAlign='center';c.fillText(text,0,0);c.restore()}
+function cityHallCollision(floor){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ CHP[floor].dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ return solids;
+}
+function cityHallZones(floor){
+ const zs=[],go=(label,x,y,fn,desc='')=>zs.push({label,x,y,r:.95,desc,action:fn});
+ if(floor===1){
+  zs.push({label:'Recepção',x:6,y:5.9,desc:'A recepção orienta os moradores sobre os serviços da Prefeitura. A escadaria e o elevador levam ao 2º andar, onde ficam os gabinetes.'});
+  go('Painel da cidade',8.9,5.9,()=>openCityPanel('public'));
+  go('Escadaria',14.2,4.3,()=>cityChangeFloor(2));go('Elevador',1.8,2.4,()=>cityChangeFloor(2));
+  go('Protocolo',23,4.7,()=>openCityPanel('protocol'));
+  go('Quadro de avisos',35,4.2,()=>{openCityPanel('notices');completeMission('cityhall_notice','spot:Prefeitura:Quadro de avisos').then(m=>{if(m)citySay(m)})});
+  go('Urna eletrônica',23.4,17.8,()=>openCityPanel('election'));
+  go('Central de Segurança',34,14.9,()=>openCityPanel('security'));
+ }else{
+  go('Escadaria',14.2,4.4,()=>cityChangeFloor(1));go('Elevador',1.8,2.4,()=>cityChangeFloor(1));
+  go('Mesa do Prefeito',26,5.2,()=>openCityPanel('mayor'));go('Painel da cidade',31.4,3.8,()=>openCityPanel('mayor','dash'));
+  go('Mesa do Vice-prefeito',19.8,19.7,()=>openCityPanel('vice'));go('Mesa das Finanças',27.8,19.7,()=>openCityPanel('finance'));go('Mesa da Saúde',35.8,19.7,()=>openCityPanel('health'));
+  go('Plenário',8,20,()=>openCityPanel('plenary'));
+ }
+ CHP[floor].dec.forEach(([name,x,y])=>{
+  const cfg=HZ_SEAT[name];if(cfg){const sz=DEC[name].s;for(let k=0;k<cfg.n;k++){const sx=x+(k+.5)*sz[0]/cfg.n,sy=y+sz[1]*.58;zs.push({label:cfg.label,x:sx,y:y+sz[1]+.35,r:.7,desc:'',seat:{x:sx,y:sy},action(){hospSitAt(this)}})}}
+  if(name==='cooler')zs.push({label:'Bebedouro',x:x+.5,y:y+1.35,r:.9,desc:'Bebedouro.',action:()=>cityDo('drink',1800,'Bebendo água…',()=>toast('Água fresca e gelada.'))});
+  if(name==='hsanitizer')zs.push({label:'Álcool em gel',x:x+.6,y:y+1.3,r:.9,desc:'Álcool em gel.',action:()=>cityDo('wash',1400,'Higienizando as mãos…',()=>toast('Mãos higienizadas.'))});
+ });
+ return zs;
+}
+function cityHallCrowd(floor){
+ return floor===1
+  ?[['Sofia','Recepcionista',7,3,'staff','#b08a5a','#d2a17d','#3f3940'],['Roberto','Servidor municipal',23,1.5,'staff','#46678c','#b77a55','#28283b'],['Guarda','Guarda municipal',2.6,12,'staff','#1f3a5f','#c28f6a','#2a2a2f'],['Mesária','Mesária',23.4,13.6,'staff','#8a4a6a','#d2a17d','#2b2230'],['Moradora','Cidadã',7,19,'visitor','#bc7654','#c99a78','#3d3228'],['Morador','Cidadão',12,16.4,'visitor','#4a6f8a','#b88a68','#2b2b33']]
+  :[['Assessora','Chefe de gabinete',6.5,4.6,'staff','#6a4a7a','#d2a17d','#2f2530'],['Paulo','Cerimonial',11,9.2,'visitor','#46678c','#b77a55','#28283b']];
+}
+async function cityDo(kind,ms,label,done){
+ if(open||!interior||interior.med)return;
+ const m={kind,label,ms,t0:performance.now(),nurse:null,sit:false};interior.med=m;open=true;
+ await new Promise(r=>setTimeout(r,ms));
+ if(interior&&interior.med===m)interior.med=null;open=false;if(interior&&done)done();
+}
+function cityChangeFloor(n){
+ if(!interior||interior.room.family!=='cityhall'||interior.room.floor===n)return;
+ closeCityPanel();interior.seat=null;interior.med=null;
+ interior.room=makeInterior(interior.building,n);interior.zipCamera=null;
+ const spot=findRoomSpot(interior.room,14.2,5.6);if(spot){ipx=spot.x;ipy=spot.y}
+ near=null;open=false;pd=0;$('leaveRoom').hidden=n!==1;tone(520,.1,'sine',.06);setTimeout(()=>tone(700,.1,'sine',.05),90);
+ toast(n===2?'2º andar: gabinetes, secretarias e Plenário.':'Térreo: saguão e atendimento ao cidadão.');
+}
+function renderCityHallZip(t){
+ const floor=interior.room.floor||1,pl=CHP[floor],TOP=92;
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#101826');bg.addColorStop(1,'#080d16');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.22,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ for(let y=0;y<pl.h;y++)for(let x=0;x<pl.w;x++){const f=CITY_FLOOR[pl.grid[y][x]]||CITY_FLOOR.g;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ if(floor===1){ // tapete vermelho com friso dourado, do portão ao corredor, e o selo da cidade no centro do saguão
+  poly(c,[P(0,11.1),P(18,11.1),P(18,12.9),P(0,12.9)],'rgba(150,35,45,.62)');poly(c,[P(18,8.6),P(40,8.6),P(40,10.4),P(18,10.4)],'rgba(150,35,45,.62)');
+  poly(c,[P(0,11.05),P(18,11.05),P(18,11.15),P(0,11.15)],'rgba(242,193,75,.85)');poly(c,[P(0,12.85),P(18,12.85),P(18,12.95),P(0,12.95)],'rgba(242,193,75,.85)');
+  const s=P(9,12);[[3.1,'#b08a3c'],[2.8,'#efe9dc'],[2.2,'#2f8f8a'],[1.5,'#efe9dc'],[.8,'#b08a3c']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45.25*r,22.6*r,0,0,7);c.fill()});
+  c.fillStyle='#14202b';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('SOROKIBA',s[0],s[1]+3);
+ }else{
+  poly(c,[P(16,10.5),P(40,10.5),P(40,12.5),P(16,12.5)],'rgba(150,35,45,.55)');poly(c,[P(26,2),P(30,2),P(30,10),P(26,10)],'rgba(150,35,45,.4)');
+  poly(c,[P(2,14),P(14,14),P(14,23),P(2,23)],'rgba(40,110,70,.22)');
+ }
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(60,50,35,.32)';pl.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
+ const V=[],WALL='#f0e8d6',WALLS='#d8ccb2',BASE='rgba(80,60,35,.18)';
+ const arch=(poly1)=>poly1;
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,WALL,WALLS);poly(c,[P(i,0,8),P(i+1,0,8),P(i+1,0),P(i,0)],BASE);
+  if(i%4===1&&!(floor===1&&i>=4&&i<10)){poly(c,[P(i+.14,0,82),P(i+.86,0,82),P(i+.86,0,30),P(i+.14,0,30)],'#cfe6f0');c.strokeStyle='#b08a3c';c.lineWidth=1.6;c.stroke();ln(c,P(i+.5,0,82),P(i+.5,0,30));ln(c,P(i+.14,0,56),P(i+.86,0,56))}};
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,WALL,WALLS);poly(c,[P(0,j,8),P(0,j+1,8),P(0,j+1),P(0,j)],BASE);
+  const ent=pl.entrance&&j>=pl.entrance[0]&&j<pl.entrance[1];
+  if(ent){poly(c,[P(0,j+.04,76),P(0,j+.96,76),P(0,j+.96,0),P(0,j+.04,0)],'rgba(190,230,250,.55)');c.strokeStyle='#b08a3c';c.lineWidth=2;c.stroke();ln(c,P(0,j+.5,76),P(0,j+.5,0))}
+  else if(j%3===1){poly(c,[P(0,j+.14,82),P(0,j+.86,82),P(0,j+.86,30),P(0,j+.14,30)],'#cfe6f0');c.strokeStyle='#b08a3c';c.lineWidth=1.6;c.stroke();ln(c,P(0,j+.5,82),P(0,j+.5,30));ln(c,P(0,j+.14,56),P(0,j+.86,56))}};
+ for(let i=0;i<pl.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<pl.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ if(pl.entrance)V.push({k:pl.entrance[0]+1.6,f:()=>{const a=pl.entrance[0],b=pl.entrance[1];poly(c,[P(0,a,90),P(0,b,90),P(0,b,76),P(0,a,76)],'#8a6a2a');wtxt('y','ENTRADA',0,(a+b)/2,80,'bold 8px sans-serif','#fff3cf')}});
+ pl.signs.forEach(([x,text])=>V.push({k:x+.9,f:()=>{poly(c,[P(x-1.7,0,88),P(x+1.7,0,88),P(x+1.7,0,74),P(x-1.7,0,74)],'#7a5a2a');wtxt('x',text,x,0,77,'bold 8px sans-serif','#fff3cf')}}));
+ pl.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++)V.push(axis==='v'?{k:pos+u+.5,f:()=>box(c,pos-.06,u,.12,1,0,TOP,WALL,WALLS)}:{k:u+.5+pos,f:()=>box(c,u,pos-.06,1,.12,0,TOP,WALL,WALLS)})});
+ pl.doors.forEach(([axis,pos,a,b,text])=>{const m=(a+b)/2;V.push({k:axis==='v'?pos+m+.6:m+pos+.6,f:()=>{
+  if(axis==='v'){box(c,pos-.06,a,.12,b-a,70,TOP,'#7a5a2a','#b08a3c');wtxt('y',text,pos+.07,m,78,'bold 7px sans-serif','#fff3cf')}
+  else{box(c,a,pos-.06,b-a,.12,70,TOP,'#7a5a2a','#b08a3c');wtxt('x',text,m,pos+.07,78,'bold 7px sans-serif','#fff3cf')}}})});
+ // tela com os números da cidade (dados ao vivo)
+ const screen=(x1,x2,z1,z2,k)=>V.push({k,f:()=>{
+  poly(c,[P(x1,0,z2),P(x2,0,z2),P(x2,0,z1),P(x1,0,z1)],'#0c1622');c.strokeStyle='#b08a3c';c.lineWidth=2;c.stroke();
+  const s=typeof cityState==='object'&&cityState,k2=s&&s.kpis,xc=(x1+x2)/2,zm=(z1+z2)/2;
+  wtxt('x','CIDADE EM NÚMEROS',xc,0,z2-7,'bold 7px sans-serif','#f2c14b');
+  if(k2){wtxt('x',k2.pop+' moradores · '+k2.online+' online',xc,0,zm+3,'6px sans-serif','#bfeee6');wtxt('x','Tesouro R$ '+Number(k2.treasury).toLocaleString('pt-BR'),xc,0,zm-5,'6px sans-serif','#bfeee6');
+   const ser=s.series||[];if(ser.length>1){const mx=Math.max(...ser.map(v=>v.money))||1,mn=Math.min(...ser.map(v=>v.money));c.strokeStyle='#5cf0a8';c.lineWidth=1;c.beginPath();ser.forEach((v,i)=>{const q=P(x1+.25+i*((x2-x1-.5)/(ser.length-1)),0,z1+4+((v.money-mn)/Math.max(1,mx-mn))*7);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});c.stroke()}}
+  else wtxt('x','carregando…',xc,0,zm,'6px sans-serif','#bfeee6');}});
+ if(floor===1)screen(5.4,9.6,30,64,7.7);else screen(27.4,32.6,34,70,30);
+ if(floor===1)V.push({k:35.4,f:()=>{ // quadro de avisos com o aviso mais recente
+  poly(c,[P(32.6,0,66),P(37.4,0,66),P(37.4,0,30),P(32.6,0,30)],'#b68a56');c.strokeStyle='#6e4630';c.lineWidth=2.5;c.stroke();
+  [['#f4f0e6',33,34.3,62,50],['#f6e3a1',34.6,35.9,62,52],['#cfe6f0',36,37,60,48]].forEach(([col,a,b,z1,z2])=>poly(c,[P(a,0,z1),P(b,0,z1),P(b,0,z2),P(a,0,z2)],col));
+  const n=typeof cityState==='object'&&cityState&&cityState.notices&&cityState.notices[0];
+  wtxt('x',n?n.text.slice(0,28):'Sem avisos oficiais',35,0,42,'bold 5.5px sans-serif','#3a2a1a');wtxt('x',n?n.text.slice(28,56):'',35,0,36,'5.5px sans-serif','#3a2a1a')}});
+ pl.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1];V.push({k:x+y+(d[0]+d[1])/2,f:()=>drawDec(c,name,x,y,t)})});
+ if(floor===2)CITY_SEATS_PLATES.forEach(([office,slot,x,y])=>V.push({k:x+y+.4,f:()=>{
+  const o=typeof cityState==='object'&&cityState&&cityState.offices.find(z=>z.office===office&&z.slot===slot),q=P(x,y,36),title=(o?o.title:'Cargo').replace(/\(a\)/g,'').replace('Secretário de ','Sec. ').replace('Secretário(a) de ','Sec. ').slice(0,26),who=o&&o.name?o.name:'vago';
+  c.font='bold 7px sans-serif';const w=Math.max(c.measureText(title).width,c.measureText(who).width)+10;c.fillStyle='rgba(42,30,16,.9)';c.fillRect(q[0]-w/2,q[1]-12,w,19);c.strokeStyle='#b08a3c';c.lineWidth=1;c.strokeRect(q[0]-w/2,q[1]-12,w,19);
+  c.textAlign='center';c.fillStyle='#f2d27a';c.fillText(title,q[0],q[1]-4);c.fillStyle=o&&o.name?'#fff3cf':'#9a8d70';c.fillText(who,q[0],q[1]+5)}}));
+ const med=interior.med,sat=!!interior.seat;
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=CITY_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.f?2:0,pn:'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl})}}));
+ V.push({k:ipx+ipy+(sat?1.3:0),f:()=>{const q=P(ipx,ipy,sat?9:0);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',(med&&med.sit)||sat?{...myO,seated:true}:myO)}});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44+(sat?9:0));c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#f2d27a';c.fillText(p.name,q[0],q[1])});
+ if(med)hospitalMedOverlay(t,med);
+ c.setTransform(1,0,0,1,0,0);
+}
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
   if(interior.room.shape==='hospital-zip'){renderHospitalZip(t);return}
+  if(interior.room.shape==='cityhall-zip'){renderCityHallZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -1979,7 +2187,8 @@ function act(){
   if(near?.t==='interiorExit'){leaveInterior();return}
   if(near?.t==='interiorPerson'){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
-   if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+   if(interior.room.family==='cityhall'&&CITY_ROLE_SITE[near.o.role]){openCityPanel(CITY_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
    open=true;tone(640,.09,'sine',.06);$('dlg').hidden=false;$('dlg').innerHTML='<b>'+near.o.name+' · '+near.o.role+'</b><p>'+personText(near.o)+'</p>';return
@@ -2003,8 +2212,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -2778,10 +2987,10 @@ function cwRender(t,h){
  S.items.forEach(([type,x,y,rot])=>{if(D>.15&&(type===16||type===4||type===17)){const[iw,ih]=condoFurnitureSize(type,rot),q=P(x+iw/2,y+ih/2,type===16?48:28);[[60,.1],[38,.12],[20,.14]].forEach(([rd,a])=>{c.fillStyle=(type===16?'rgba(255,214,120,':'rgba(120,180,255,')+a*D+')';c.beginPath();c.arc(q[0],q[1],rd,0,7);c.fill()})}});
  c.setTransform(1,0,0,1,0,0)}
 
-function setMayorStatus(message){const el=$('mayorStatus');if(el)el.textContent=String(message||'');}
+function setMayorStatus(message){const el=$('mayorStatus');if(el)el.textContent=String(message||'');const sec=$('citySecStatus');if(sec)sec.textContent=String(message||'')}
 function updateMayorTrafficButton(){const b=$('mayorTrafficToggle');if(b)b.textContent=mayorTrafficSlowdown?'Desativar congestionamento':'Ativar congestionamento';}
 function sendMayorAction(action,extra={}){
- if(user?.role!=='prefeito')return missionFeedback('Somente o Prefeito pode controlar a cidade.');
+ if(user?.role!=='prefeito'&&!cityCan('drill'))return missionFeedback('Seu cargo não permite este comando da Prefeitura.');
  if(!ws||ws.readyState!==1)return missionFeedback('Conecte-se ao multiplayer para controlar a cidade.');
  ws.send(JSON.stringify({t:'mayorAction',action,...extra}));setMayorStatus('Enviando comando ao servidor...');
 }
@@ -3085,7 +3294,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
 /* ---------- HOSPITAL: painel do paciente ---------- */
@@ -3106,8 +3315,8 @@ const HOSP_STEPS=['Recepção','Triagem','Consulta','Exames','Diagnóstico','Tra
 const HOSP_RISK_COLOR={verde:'#3fae63',amarelo:'#e3b93b',laranja:'#e8873a',vermelho:'#d9534f'};
 let hosp=null,hospSite='reception',hospBusy=false,hospReq=0,hospOffset=0,hospTimer=0,hospReloaded=false;
 const hospDate=ms=>new Date(ms).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-const hospPrice=list=>{const p=hosp&&hosp.services&&hosp.services.plan;return p&&p.active?Math.max(1,Math.ceil(list*(100-p.discountPct)/100)):list};
-const hospPriceTag=list=>hospMoney(hospPrice(list))+(hosp&&hosp.services&&hosp.services.plan.active?' <s class="hospOld">'+hospMoney(list)+'</s>':'');
+const hospPrice=list=>{const p=hosp&&hosp.services&&hosp.services.plan,sub=(hosp&&hosp.fees&&hosp.fees.subsidyPct)||0,on=!!(p&&p.active);if(!on&&!sub)return list;return Math.max(1,Math.ceil(list*(on?100-p.discountPct:100)*(100-sub)/10000))};
+const hospPriceTag=list=>hospMoney(hospPrice(list))+(hospPrice(list)!==list?' <s class="hospOld">'+hospMoney(list)+'</s>':'');
 const hospNow=()=>Date.now()+hospOffset;
 const hospMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const hospWait=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=3600?Math.floor(s/3600)+' h '+String(Math.ceil((s%3600)/60)).padStart(2,'0')+' min':s>=60?Math.ceil(s/60)+' min':s+' s'};
@@ -3281,11 +3490,215 @@ async function hospitalPing(){
 
 $('hospNextBar').onclick=e=>{const b=e.target.closest('[data-hosp=showpath]');if(!b)return;const s=hospTargetSite();hospGuideOn=true;try{localStorage.setItem('sk2_hguide','1')}catch{}closeHospitalPanel();if(s)toast('Siga a linha verde até '+hospSiteLabel(s)+'.')};
 $('hospGuideBtn').onclick=()=>{hospGuideOn=!hospGuideOn;try{localStorage.setItem('sk2_hguide',hospGuideOn?'1':'0')}catch{}hospPath=null;hospPathFrom=null;hospChipAt=0};
+/* ---------- PREFEITURA: painéis (cada mesa abre as funções do seu cargo) ---------- */
+let cityState=null,citySite='public',cityTab='pub',cityBusy=false,cityReq=0,cityOffset=0,cityTimer=0,cityPoll=0,cityReloaded=false;
+const CITY_INFO={
+ prefeito:['Prefeito(a)','Comanda a cidade: nomeia secretários, propõe leis, publica avisos e acompanha a economia no painel completo.'],
+ vice:['Vice-prefeito(a)','Publica avisos oficiais e propõe leis. É nomeado(a) pelo Prefeito.'],
+ financas:['Secretário(a) de Finanças','Cuida do tesouro: aprova ou nega os pedidos de auxílio dos moradores. É nomeado(a) pelo Prefeito.'],
+ saude:['Secretário(a) de Saúde','Define o subsídio que reduz o preço de consultas, exames e sessões no Hospital. É nomeado(a) pelo Prefeito.'],
+ seguranca:['Secretário(a) de Segurança e Trânsito','Simula acidentes e congestionamentos para treinar a resposta de emergência. É nomeado(a) pelo Prefeito.'],
+ vereador:['Vereador(a)','Vota as leis no Plenário. Os 3 vereadores são eleitos pelos moradores na Sala Eleitoral.']
+};
+const CITY_SITES={
+ public:{title:'Painel da cidade',who:'Transparência · dados abertos',office:null,tabs:[]},
+ protocol:{title:'Protocolo',who:'Roberto · Atendimento ao cidadão',office:null,tabs:[['aid','Pedir auxílio'],['pub','A cidade']]},
+ notices:{title:'Quadro de avisos',who:'Avisos oficiais da Prefeitura',office:null,tabs:[]},
+ election:{title:'Sala Eleitoral',who:'Eleição da Câmara Municipal',office:null,tabs:[]},
+ security:{title:'Segurança e Trânsito',who:'Central de monitoramento',office:'seguranca',tabs:[['sec','Operações'],['dash','Painel']]},
+ mayor:{title:'Gabinete do Prefeito',who:'Gabinete',office:'prefeito',tabs:[['dash','Painel'],['fin','Finanças'],['laws','Leis'],['staff','Cargos'],['notice','Avisos'],['world','Mundo']]},
+ vice:{title:'Vice-prefeitura',who:'Gabinete do Vice-prefeito',office:'vice',tabs:[['notice','Avisos'],['laws','Leis'],['dash','Painel']]},
+ finance:{title:'Secretaria de Finanças',who:'Tesouro municipal',office:'financas',tabs:[['fin','Tesouro'],['aid','Auxílios'],['dash','Painel']]},
+ health:{title:'Secretaria de Saúde',who:'Saúde pública',office:'saude',tabs:[['health','Saúde pública'],['dash','Painel']]},
+ plenary:{title:'Plenário da Câmara',who:'Câmara Municipal',office:'vereador',tabs:[['laws','Votações'],['dash','Painel']]}
+};
+const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola'};
+const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial'};
+const cityNow=()=>Date.now()+cityOffset;
+const cityMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
+const cityCompact=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':a>=1e3?(v/1e3).toFixed(1).replace('.',',')+' mil':String(Math.round(v))};
+const cityWait=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return s>=86400?Math.floor(s/86400)+' d '+Math.floor((s%86400)/3600)+' h':s>=3600?Math.floor(s/3600)+' h '+String(Math.ceil((s%3600)/60)).padStart(2,'0')+' min':s>=60?Math.ceil(s/60)+' min':s+' s'};
+const cityCount=until=>'<b class="cityCount" data-until="'+until+'">'+cityWait(until-cityNow())+'</b>';
+const cityTime=ms=>new Date(ms).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+async function cityRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{
+  const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/city'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.err||'Não foi possível falar com a Prefeitura.');
+  return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('A Prefeitura demorou para responder. Tente novamente.');throw e}
+ finally{clearTimeout(timer)}
+}
+function cityApply(d){
+ if(d.player){user=d.player;$('hm').textContent=user.money}
+ if(d.city){cityState=d.city;cityOffset=cityState.serverNow-Date.now();cityReloaded=false;if(user&&user.role!=='prefeito'&&cityState.me.office)$('hr').textContent=cityState.me.title}
+}
+function citySay(text,bad){const e=$('cityMsg');if(!e)return;e.textContent=text||'';e.classList.toggle('err',!!bad)}
+const cityCan=a=>!!(cityState&&cityState.me.can[a]);
+const cityOfficeOf=site=>CITY_SITES[site].office;
+const cityIsHolder=site=>{const o=cityOfficeOf(site);return !o||(cityState&&cityState.me.office===o)};
+const cityHolder=o=>cityState&&cityState.offices.find(x=>x.office===o);
+/* ---------- gráficos (canvas, sem bibliotecas) ---------- */
+function cityPrep(cv){const dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||320,h=cv.clientHeight||150;cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return {g,w,h}}
+function cityLine(cv,rows,defs){
+ const {g,w,h}=cityPrep(cv);g.font='11px sans-serif';
+ if(!rows||rows.length<2){g.fillStyle='#9fb2c4';g.textAlign='center';g.fillText('Coletando dados… volte em alguns minutos.',w/2,h/2);return}
+ const pad={l:46,r:10,t:10,b:22},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;
+ let lo=Infinity,hi=-Infinity;defs.forEach(d=>rows.forEach(r=>{const v=r[d.key];lo=Math.min(lo,v);hi=Math.max(hi,v)}));
+ if(lo===hi){lo=Math.max(0,lo-1);hi=hi+1}if(lo>0&&lo/hi>.6){const m=(hi-lo)*.3;lo=Math.max(0,lo-m);hi+=m}
+ g.strokeStyle='rgba(255,255,255,.09)';g.fillStyle='#9fb2c4';g.textAlign='right';
+ for(let i=0;i<=3;i++){const y=pad.t+ph*i/3,v=hi-(hi-lo)*i/3;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(cityCompact(v),pad.l-6,y+4)}
+ const x=i=>pad.l+pw*i/(rows.length-1),y=v=>pad.t+ph*(1-(v-lo)/(hi-lo));
+ g.textAlign='center';g.fillText(new Date(rows[0].t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),pad.l+10,h-6);g.fillText(new Date(rows[rows.length-1].t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),w-pad.r-14,h-6);
+ defs.forEach(d=>{g.strokeStyle=d.color;g.lineWidth=2;g.beginPath();rows.forEach((r,i)=>{const px=x(i),py=y(r[d.key]);i?g.lineTo(px,py):g.moveTo(px,py)});g.stroke();const L=rows[rows.length-1],px=x(rows.length-1),py=y(L[d.key]);g.fillStyle=d.color;g.beginPath();g.arc(px,py,3,0,7);g.fill()});
+}
+function cityBars(cv,items){
+ const {g,w,h}=cityPrep(cv);g.font='11px sans-serif';
+ if(!items.length){g.fillStyle='#9fb2c4';g.textAlign='center';g.fillText('Ninguém empregado ainda.',w/2,h/2);return}
+ const mx=Math.max(...items.map(i=>i.value)),row=Math.min(24,(h-8)/items.length),lw=104;
+ items.forEach((it,i)=>{const y=6+i*row,bw=(w-lw-44)*it.value/mx;g.fillStyle='#cfdbe6';g.textAlign='right';g.fillText(it.label,lw-8,y+row*.62);g.fillStyle='#2fb5a8';g.fillRect(lw,y+2,Math.max(2,bw),row-6);g.fillStyle='#f2c14b';g.textAlign='left';g.fillText(String(it.value),lw+Math.max(2,bw)+6,y+row*.62)});
+}
+function cityDonut(cv,items){
+ const {g,w,h}=cityPrep(cv);g.font='11px sans-serif';const tot=items.reduce((s,i)=>s+i.value,0);
+ if(!tot){g.fillStyle='#9fb2c4';g.textAlign='center';g.fillText('Sem dados.',w/2,h/2);return}
+ const r=Math.min(h/2-6,w/3),cx=r+10,cy=h/2;let a=-Math.PI/2;
+ items.forEach(it=>{const s=it.value/tot*Math.PI*2;g.beginPath();g.moveTo(cx,cy);g.arc(cx,cy,r,a,a+s);g.closePath();g.fillStyle=it.color;g.fill();a+=s});
+ g.globalCompositeOperation='destination-out';g.beginPath();g.arc(cx,cy,r*.58,0,7);g.fill();g.globalCompositeOperation='source-over';
+ g.textAlign='left';items.forEach((it,i)=>{const y=cy-(items.length-1)*10+i*20;g.fillStyle=it.color;g.fillRect(cx+r+16,y-8,10,10);g.fillStyle='#e6eef5';g.fillText(it.label+' · '+Math.round(it.value/tot*100)+'%',cx+r+32,y+1)});
+}
+function cityDrawCharts(){
+ const s=cityState;if(!s)return;
+ document.querySelectorAll('#cityPanel canvas[data-chart]').forEach(cv=>{
+  const k=cv.dataset.chart;
+  if(k==='pop')cityLine(cv,s.series,[{key:'pop',color:'#f2c14b'},{key:'online',color:'#2fb5a8'}]);
+  else if(k==='money')cityLine(cv,s.series,[{key:'money',color:'#5cd08a'},{key:'treasury',color:'#f2c14b'}]);
+  else if(k==='bank')cityLine(cv,s.series,[{key:'savings',color:'#4a90d9'},{key:'loans',color:'#e8873a'}]);
+  else if(k==='health')cityLine(cv,s.series,[{key:'sick',color:'#d9534f'},{key:'health',color:'#5cd08a'}]);
+  else if(k==='jobs')cityBars(cv,(s.jobs||[]).map(j=>({label:CITY_JOBS[j.job]||String(j.job).replace(/_/g,' '),value:j.n})));
+  else if(k==='donut'){const q=s.kpis;cityDonut(cv,[{label:'Carteiras',value:q.money,color:'#5cd08a'},{label:'Poupanças',value:q.savings||0,color:'#4a90d9'},{label:'Tesouro',value:q.treasury,color:'#f2c14b'}])}
+ });
+}
+/* ---------- telas ---------- */
+const cityKpi=(label,value,hint)=>'<div class="cityKpi"><span>'+label+'</span><strong>'+value+'</strong>'+(hint?'<small>'+hint+'</small>':'')+'</div>';
+const cityCanvas=(k,title)=>'<div class="cityCard"><h3>'+title+'</h3><canvas class="cityChart" data-chart="'+k+'" role="img" aria-label="'+esc(title)+'"></canvas></div>';
+function cityPolicyList(){const p=cityState.policy;return '<div class="cityCard"><h3>Políticas em vigor</h3><ul class="cityList"><li><span>Tarifa de transferência do Banco</span><b>'+(p.bank_fee_bp/100).toLocaleString('pt-BR')+'%</b></li><li><span>Subsídio da saúde (Hospital)</span><b>'+p.health_subsidy_pct+'%</b></li><li><span>Teto do subsídio da saúde (lei)</span><b>'+p.health_subsidy_max+'%</b></li><li><span>Teto do auxílio por pedido (lei)</span><b>'+cityMoney(p.aid_cap)+'</b></li></ul></div>'}
+function cityWhoIsWho(){return '<div class="cityCard"><h3>Quem governa</h3><ul class="cityList">'+cityState.offices.map(o=>'<li><span>'+esc(o.title)+'</span><b>'+(o.name?esc(o.name):'<i class="cityVacant">vago</i>')+'</b></li>').join('')+'</ul></div>'}
+function vPub(){const k=cityState.kpis;
+ return '<div class="cityKpis">'+cityKpi('Moradores',k.pop)+cityKpi('Online agora',k.online)+cityKpi('Empregados',k.employedPct+'%',k.employed+' de '+k.pop)+cityKpi('Dinheiro em circulação',cityMoney(k.money))+cityKpi('Tesouro municipal',cityMoney(k.treasury))+'</div>'
+  +'<div class="cityGrid">'+cityCanvas('pop','Moradores e jogadores online')+cityCanvas('money','Dinheiro em circulação e tesouro')+'</div><div class="cityGrid">'+cityPolicyList()+cityWhoIsWho()+'</div>'}
+function vDash(){const k=cityState.kpis;if(k.savings===undefined)return vPub();
+ return '<div class="cityKpis">'+cityKpi('Moradores',k.pop,k.online+' online')+cityKpi('Dinheiro em circulação',cityMoney(k.money))+cityKpi('Poupanças',cityMoney(k.savings))+cityKpi('Dívidas em aberto',cityMoney(k.loans))+cityKpi('Tesouro',cityMoney(k.treasury))+cityKpi('Empregados',k.employedPct+'%',k.employed+' de '+k.pop)+cityKpi('Doentes agora',k.sick)+cityKpi('Saúde média',k.health+'%',(cityState.health?cityState.health.visits24h:0)+' atendimentos em 24 h')+'</div>'
+  +'<div class="cityGrid">'+cityCanvas('money','Dinheiro em circulação e tesouro')+cityCanvas('donut','Onde está o dinheiro')+'</div><div class="cityGrid">'+cityCanvas('bank','Poupanças e dívidas')+cityCanvas('pop','Moradores e jogadores online')+'</div><div class="cityGrid">'+cityCanvas('health','Doentes e saúde média')+cityCanvas('jobs','Empregos por área')+'</div>'}
+function vFin(){const s=cityState,led=s.ledger;
+ return '<div class="cityKpis">'+cityKpi('Tesouro municipal',cityMoney(s.kpis.treasury))+'</div>'+cityPolicyList()
+  +'<div class="cityCard"><h3>Extrato do tesouro</h3>'+(led&&led.length?'<ul class="cityList">'+led.map(l=>'<li><span>'+esc(CITY_LEDGER[l.kind]||l.kind)+(l.note?'<small>'+esc(l.note)+' · '+cityTime(l.at)+'</small>':'<small>'+cityTime(l.at)+'</small>')+'</span><b class="'+(l.amount>0?'up':'down')+'">'+(l.amount>0?'+':'−')+cityMoney(Math.abs(l.amount))+'</b></li>').join('')+'</ul>':'<p class="cityHint">Sem movimentações ainda.</p>')+'<p class="cityHint">Entra: tarifa bancária e receita do Hospital. Sai: auxílios aprovados e salários dos cargos.</p></div>'}
+function vLaws(){const s=cityState,vot=s.laws.filter(l=>l.status==='voting'),old=s.laws.filter(l=>l.status!=='voting');
+ const lab={approved:'Aprovada',rejected:'Rejeitada',decreed:'Decreto'};
+ const fmt=(l)=>l.kind==='bank_fee_bp'?(l.value/100).toLocaleString('pt-BR')+'%':l.kind==='aid_cap'?cityMoney(l.value):l.value+'%';
+ let html='<div class="cityCard"><h3>Em votação</h3>'+(vot.length?'<ul class="cityList">'+vot.map(l=>'<li><span>'+esc(l.label)+' → <b>'+fmt(l)+'</b><small>Proposta de '+esc(l.proposer)+' · sim '+l.yes+' · não '+l.no+' · '+l.seats+' vereador(es) · encerra em '+cityCount(l.closesAt)+'</small></span><span class="cityRight">'+(cityCan('vote')?(l.my?'<span class="cityTag">Você votou: '+(l.my==='yes'?'sim':'não')+'</span>':'<button type="button" data-city="vote" data-id="'+l.id+'" data-vote="yes">Sim</button><button type="button" class="alt" data-city="vote" data-id="'+l.id+'" data-vote="no">Não</button>'):'')+'</span></li>').join('')+'</ul>':'<p class="cityHint">Nenhuma lei em votação. Vereadores: '+s.offices.filter(o=>o.office==='vereador'&&o.name).length+' de '+s.constants.seats+'.</p>')+'</div>';
+ html+='<div class="cityCard"><h3>Resultados recentes</h3>'+(old.length?'<ul class="cityList">'+old.map(l=>'<li><span>'+esc(l.label)+' → '+fmt(l)+'<small>'+esc(l.proposer)+'</small></span><span class="cityTag '+(l.status==='rejected'?'bad':'ok')+'">'+lab[l.status]+'</span></li>').join('')+'</ul>':'<p class="cityHint">Sem leis nos últimos 3 dias.</p>')+'</div>';
+ if(cityCan('propose')){const opts=Object.entries(s.policyInfo).filter(([,v])=>v.law).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('');
+  html+='<div class="cityCard"><h3>Propor lei</h3><p class="cityHint">Com Câmara instalada, a lei vai a votação por '+s.constants.lawHours+' h e precisa de maioria. Sem vereadores, vira decreto na hora.</p><label for="cityLawKind">Política</label><select id="cityLawKind">'+opts+'</select><label for="cityLawValue">Novo valor</label><input id="cityLawValue" type="number" inputmode="numeric" step="1" placeholder="ex.: 100"><p class="cityHint">Tarifa em pontos-base (100 = 1%). Subsídio em %. Auxílio em R$.</p><div class="cityActions"><button type="button" data-city="propose">Enviar projeto</button></div></div>'}
+ return html}
+function vStaff(){const s=cityState;
+ return '<div class="cityCard"><h3>Cargos da cidade</h3><p class="cityHint">Você nomeia vice e secretários. Vereadores são eleitos pelos moradores.</p><ul class="cityList">'+s.offices.map(o=>{const ap=['vice','financas','saude','seguranca'].includes(o.office);
+  return '<li><span>'+esc(o.title)+'<small>'+(o.name?esc(o.name)+' (@'+esc(o.username)+')':'cargo vago')+'</small></span><span class="cityRight">'+(ap?'<input type="text" class="citySmall" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="usuário" data-appt="'+o.office+'"><button type="button" data-city="appoint" data-office="'+o.office+'">Nomear</button>'+(o.name?'<button type="button" class="alt" data-city="dismiss" data-office="'+o.office+'">Exonerar</button>':''):'')+'</span></li>'}).join('')+'</ul></div>'}
+function vNotice(){const s=cityState;
+ return (cityCan('notice')?'<div class="cityCard"><h3>Publicar aviso oficial</h3><p class="cityHint">Vai para o quadro de avisos e aparece para todos os jogadores conectados, com som.</p><textarea id="cityNoticeText" rows="3" maxlength="200" placeholder="Escreva o aviso (até 200 caracteres)"></textarea><div class="cityActions"><button type="button" data-city="notice">Publicar</button></div></div>':'')+vNoticeList()}
+function vNoticeList(){const n=cityState.notices;return '<div class="cityCard"><h3>Avisos recentes</h3>'+(n.length?'<ul class="cityList">'+n.map(x=>'<li><span>'+esc(x.text)+'<small>'+esc(x.by)+' · '+esc(x.office)+' · '+cityTime(x.at)+'</small></span></li>').join('')+'</ul>':'<p class="cityHint">Nenhum aviso oficial ainda.</p>')+'</div>'}
+function vWorld(){return '<div class="cityCard"><h3>Controle do mundo</h3><p class="cityHint">Trânsito, acidentes, comunicado global, saldo e recuperação de contas ficam na Central da Prefeitura.</p><div class="cityActions"><button type="button" data-city="world">Abrir a Central da Prefeitura</button></div></div>'}
+function vAid(){const s=cityState,a=s.aid;let html='';
+ if(cityCan('aid_decide')){html+='<div class="cityCard"><h3>Pedidos aguardando decisão</h3>'+(a.pending&&a.pending.length?'<ul class="cityList">'+a.pending.map(p=>'<li><span>'+esc(p.name)+' pede <b>'+cityMoney(p.amount)+'</b><small>'+esc(p.reason)+' · '+cityTime(p.at)+'</small></span><span class="cityRight"><button type="button" data-city="aid" data-id="'+p.id+'" data-approve="1">Aprovar</button><button type="button" class="alt" data-city="aid" data-id="'+p.id+'" data-approve="0">Negar</button></span></li>').join('')+'</ul>':'<p class="cityHint">Nenhum pedido pendente. Tesouro: '+cityMoney(s.kpis.treasury)+'.</p>')+'</div>'}
+ const mine=a.mine,pend=mine.find(x=>x.status==='pending');
+ html+='<div class="cityCard"><h3>Pedir auxílio à Prefeitura</h3><p class="cityHint">Valor de '+cityMoney(a.min)+' a '+cityMoney(a.cap)+'. Um pedido por vez e um auxílio por dia. O Secretário de Finanças analisa; o dinheiro sai do tesouro ('+cityMoney(s.kpis.treasury)+').</p>'
+  +(pend?'<p class="cityHint"><b>Pedido em análise:</b> '+cityMoney(pend.amount)+' — '+esc(pend.reason)+'</p>':'<label for="cityAidAmount">Valor (R$)</label><input id="cityAidAmount" type="number" inputmode="numeric" min="'+a.min+'" max="'+a.cap+'" step="1" placeholder="0"><label for="cityAidReason">Motivo</label><input id="cityAidReason" type="text" maxlength="120" placeholder="Explique por que precisa"><div class="cityActions"><button type="button" data-city="aidreq">Enviar pedido</button></div>')+'</div>'
+  +(mine.length?'<div class="cityCard"><h3>Seus pedidos</h3><ul class="cityList">'+mine.map(x=>'<li><span>'+cityMoney(x.amount)+'<small>'+esc(x.reason)+' · '+cityTime(x.at)+'</small></span><span class="cityTag '+(x.status==='approved'?'ok':x.status==='denied'?'bad':'')+'">'+({pending:'Em análise',approved:'Aprovado',denied:'Negado'}[x.status])+'</span></li>').join('')+'</ul></div>':'');
+ return html}
+function vHealth(){const s=cityState,k=s.kpis,p=s.policy;if(k.sick===undefined)return vPub();
+ return '<div class="cityKpis">'+cityKpi('Doentes agora',k.sick)+cityKpi('Saúde média',k.health+'%')+cityKpi('Atendimentos em 24 h',s.health?s.health.visits24h:0)+cityKpi('Subsídio atual',p.health_subsidy_pct+'%','teto: '+p.health_subsidy_max+'%')+'</div>'
+  +'<div class="cityGrid">'+cityCanvas('health','Doentes e saúde média')+'<div class="cityCard"><h3>Subsídio da saúde</h3><p class="cityHint">Desconto para todos no Hospital (consultas, exames e sessões). A receita do Hospital vai para o tesouro, então subsidiar reduz o que o tesouro arrecada. O teto vem de lei da Câmara.</p><label for="citySubsidy">Subsídio (%) — de 0 a '+p.health_subsidy_max+'</label><input id="citySubsidy" type="number" inputmode="numeric" min="0" max="'+p.health_subsidy_max+'" step="1" value="'+p.health_subsidy_pct+'"><div class="cityActions"><button type="button" data-city="subsidy">Definir subsídio</button></div></div></div>'}
+function vSec(){return '<div class="cityCard"><h3>Operações de segurança e trânsito</h3><p class="cityHint">As ocorrências aparecem no mapa para todos os jogadores, com fogo, evacuação e a chegada de polícia, ambulância e bombeiros.</p><div class="cityActions"><button type="button" data-city="sec" data-act="accident_start">Simular acidente</button><button type="button" class="alt" data-city="sec" data-act="accident_end">Encerrar ocorrências</button><button type="button" class="alt" data-city="sec" data-act="traffic_toggle">Alternar congestionamento</button></div><p id="citySecStatus" class="cityHint" style="margin-top:10px" aria-live="polite"></p></div>'}
+function vElection(){const e=cityState.election,s=cityState;if(!e)return '<div class="cityCard"><p class="cityHint">Não há eleição aberta agora.</p></div>';
+ const ver=s.offices.filter(o=>o.office==='vereador');
+ let html='<div class="cityCard"><h3>Eleição da Câmara Municipal</h3><p class="cityHint">'+e.seats+' cadeiras. Quem tem '+e.minXpRun+' XP pode se candidatar; quem tem '+e.minXpVote+' XP vota uma vez. A apuração ocorre em '+cityCount(e.closesAt)+'. Os mais votados assumem como vereadores.</p></div>';
+ html+='<div class="cityCard"><h3>Candidatos</h3>'+(e.candidates.length?'<ul class="cityList">'+e.candidates.map(c=>'<li><span>'+esc(c.name)+'<small>'+esc(c.platform)+'</small></span><span class="cityRight"><span class="cityTag">'+c.votes+' voto(s)</span>'+(e.myVote===c.username?'<span class="cityTag ok">Seu voto</span>':(!e.myVote&&e.canVote&&c.username!==s.me.username?'<button type="button" data-city="castvote" data-cand="'+c.username+'">Votar</button>':''))+'</span></li>').join('')+'</ul>':'<p class="cityHint">Ainda não há candidatos.</p>')+(e.canVote?'':'<p class="cityHint">Você precisa de '+e.minXpVote+' XP para votar.</p>')+'</div>';
+ html+='<div class="cityCard"><h3>'+(e.imCandidate?'Atualizar a sua candidatura':'Candidatar-se a vereador')+'</h3>'+(e.canRun?'<label for="cityPlatform">Sua proposta (até 80 caracteres)</label><input id="cityPlatform" type="text" maxlength="80" placeholder="O que você quer para a cidade?"><div class="cityActions"><button type="button" data-city="run">'+(e.imCandidate?'Atualizar':'Candidatar-me')+'</button></div>':'<p class="cityHint">Candidatura exige '+e.minXpRun+' XP.</p>')+'</div>';
+ html+='<div class="cityCard"><h3>Vereadores atuais</h3><ul class="cityList">'+ver.map(o=>'<li><span>'+esc(o.title)+'</span><b>'+(o.name?esc(o.name):'<i class="cityVacant">vago</i>')+'</b></li>').join('')+'</ul></div>';
+ return html}
+function vInfo(site){const o=cityOfficeOf(site),inf=CITY_INFO[o],h=cityHolder(o);
+ return '<div class="cityCard"><h3>'+esc(inf[0])+'</h3><p class="cityHint">'+esc(inf[1])+'</p><p>'+(h&&h.name?'Ocupado por <b>'+esc(h.name)+'</b>.':'<b>Cargo vago.</b> '+(o==='vereador'?'Vote ou candidate-se na Sala Eleitoral, no térreo.':o==='prefeito'?'':'O Prefeito pode nomear alguém.'))+'</p><p class="cityHint">Os controles deste cargo só aparecem para quem o ocupa.</p></div>'}
+function vSalary(){const m=cityState.me;if(!m.office||!m.salary)return '';const s=m.salary;
+ return '<div class="cityCard citySalary"><h3>Holerite · '+esc(m.title)+'</h3><p class="cityHint">Salário de '+cityMoney(s.perDay)+' por dia completo de cargo, pago pelo tesouro. Acumula até '+s.maxDays+' dias.</p><p>A receber: <b>'+s.days+' dia(s) = '+cityMoney(s.amount)+'</b></p><div class="cityActions"><button type="button" data-city="salary"'+(s.canClaim?'':' disabled')+'>Receber salário</button></div></div>'}
+function cityViewFor(){
+ const S=CITY_SITES[citySite],tab=cityTab;
+ if(citySite==='public')return vPub();
+ if(citySite==='notices')return vNoticeList();
+ if(citySite==='election')return vElection();
+ if(citySite==='protocol')return tab==='pub'?vPub():vAid();
+ if(!cityIsHolder(citySite))return vInfo(citySite)+vPub();
+ const map={dash:vDash,fin:vFin,laws:vLaws,staff:vStaff,notice:vNotice,world:vWorld,aid:vAid,health:vHealth,sec:vSec,pub:vPub};
+ return (map[tab]||vDash)()+vSalary();
+}
+function renderCity(){
+ const S=CITY_SITES[citySite];$('cityTitle').textContent=S.title;$('cityWho').textContent=S.who;
+ const body=$('cityBody'),tabs=$('cityTabs');
+ if(!cityState){body.innerHTML='<div class="cityNote">Abrindo a Prefeitura…</div>';tabs.innerHTML='';return}
+ const show=S.tabs.length&&(cityIsHolder(citySite)||citySite==='protocol');
+ tabs.hidden=!show;tabs.innerHTML=show?S.tabs.map(([id,name])=>'<button type="button" role="tab" data-city-tab="'+id+'" aria-selected="'+(id===cityTab)+'">'+name+'</button>').join(''):'';
+ body.innerHTML=cityViewFor();cityDrawCharts();
+}
+async function cityLoad(silent){
+ const id=++cityReq;
+ try{const d=await cityRequest('');if(id!==cityReq)return;cityApply(d);if(!$('cityPanel').hidden){if(!silent)citySay('');renderCity()}}
+ catch(e){if(id!==cityReq||$('cityPanel').hidden)return;if(!cityState)$('cityBody').innerHTML='<div class="cityNote" role="alert">'+esc(e.message)+'<div class="cityActions" style="justify-content:center"><button type="button" data-city="retry">Tentar novamente</button></div></div>'}
+}
+function openCityPanel(site,tab){
+ if(!interior||interior.room.family!=='cityhall')return;
+ citySite=site;const S=CITY_SITES[site];cityTab=tab||(S.tabs[0]?S.tabs[0][0]:'pub');if(site==='protocol'&&!tab)cityTab='aid';
+ open=true;$('dlg').hidden=true;citySay('');$('cityPanel').hidden=false;renderCity();cityLoad();
+ clearInterval(cityTimer);cityTimer=setInterval(cityTick,1000);
+}
+function closeCityPanel(){cityReq++;clearInterval(cityTimer);cityTimer=0;if($('cityPanel').hidden)return;$('cityPanel').hidden=true;open=false}
+function cityStartPoll(){clearInterval(cityPoll);cityLoad(true);cityPoll=setInterval(()=>{if(interior&&interior.room.family==='cityhall'&&$('cityPanel').hidden)cityLoad(true)},30000)}
+function cityStopPoll(){clearInterval(cityPoll);cityPoll=0}
+function cityTick(){
+ if($('cityPanel').hidden||!cityState)return;let expired=false;
+ document.querySelectorAll('#cityPanel .cityCount').forEach(e=>{const left=Number(e.dataset.until)-cityNow();e.textContent=cityWait(left);if(left<=0)expired=true});
+ if(expired&&!cityReloaded&&!cityBusy){cityReloaded=true;cityLoad(true)}
+}
+async function cityAct(path,body){
+ if(cityBusy)return;cityBusy=true;$('cityPanel').classList.add('busy');
+ try{const d=await cityRequest(path,body);cityApply(d);renderCity();citySay(d.message||'Pronto.');tone(880,.1,'sine',.05)}
+ catch(e){citySay(e.message,true);tone(190,.14,'square',.04)}
+ finally{cityBusy=false;$('cityPanel').classList.remove('busy')}
+}
+$('cityClose').onclick=closeCityPanel;
+$('cityTabs').onclick=e=>{const b=e.target.closest('[data-city-tab]');if(!b||cityBusy)return;cityTab=b.dataset.cityTab;citySay('');renderCity()};
+$('cityBody').onclick=e=>{
+ const b=e.target.closest('[data-city]');if(!b)return;const a=b.dataset.city,val=id=>($(id)?.value||'').trim();
+ if(a==='retry')cityLoad();
+ else if(a==='notice')cityAct('/notice',{text:val('cityNoticeText')});
+ else if(a==='appoint'){const inp=document.querySelector('#cityBody [data-appt="'+b.dataset.office+'"]');cityAct('/office/appoint',{office:b.dataset.office,username:(inp&&inp.value||'').trim()})}
+ else if(a==='dismiss'){if(confirm('Exonerar este cargo?'))cityAct('/office/dismiss',{office:b.dataset.office})}
+ else if(a==='propose')cityAct('/law/propose',{kind:$('cityLawKind').value,value:Number(val('cityLawValue'))});
+ else if(a==='vote')cityAct('/law/vote',{id:b.dataset.id,vote:b.dataset.vote});
+ else if(a==='subsidy')cityAct('/policy/subsidy',{pct:Number(val('citySubsidy'))});
+ else if(a==='aidreq')cityAct('/aid/request',{amount:Number(val('cityAidAmount')),reason:val('cityAidReason')});
+ else if(a==='aid')cityAct('/aid/decide',{id:b.dataset.id,approve:b.dataset.approve==='1'});
+ else if(a==='salary')cityAct('/salary/claim',{});
+ else if(a==='run')cityAct('/election/candidate',{platform:val('cityPlatform')});
+ else if(a==='castvote')cityAct('/election/vote',{candidate:b.dataset.cand});
+ else if(a==='sec')sendMayorAction(b.dataset.act,b.dataset.act==='traffic_toggle'?{active:!mayorTrafficSlowdown}:{});
+ else if(a==='world'){closeCityPanel();$('mayorControlsBtn').click()}
+};
+window.addEventListener('resize',()=>{if(!$('cityPanel').hidden)cityDrawCharts()});
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
 let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
 const bankMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
-const bankFee=a=>Math.max(BANK_FEE_MIN,Math.ceil(a*BANK_FEE_BP/10000));
+const bankFee=a=>{const bp=(bankData&&bankData.transfer&&bankData.transfer.feeBp);const b=typeof bp==='number'?bp:BANK_FEE_BP;return b<=0?0:Math.max(BANK_FEE_MIN,Math.ceil(a*b/10000))};
 const bankPct=bp=>(bp/100).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%';
 const bankDate=s=>new Date(s).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 async function bankRequest(path,body){
