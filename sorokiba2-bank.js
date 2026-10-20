@@ -4,6 +4,7 @@
 // Tabelas próprias (sk2_bank_*): não altera nenhuma tabela de outro sistema.
 const crypto = require('crypto');
 const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
 
 /* ---------- regras (ajuste aqui) ---------- */
 const BANK = Object.freeze({
@@ -43,7 +44,8 @@ const toInt = v => {
   return Number.isSafeInteger(n) ? n : null;
 };
 const amountOf = (v, max) => { const n = toInt(v); return n !== null && n >= 1 && n <= max ? n : null; };
-const transferFee = amount => Math.max(BANK.TRANSFER_FEE_MIN, Math.ceil(amount * BANK.TRANSFER_FEE_BP / 10000));
+// A tarifa é política da cidade (lei da Câmara); 0 = sem tarifa.
+const transferFee = (amount, bp = BANK.TRANSFER_FEE_BP) => (bp <= 0 ? 0 : Math.max(BANK.TRANSFER_FEE_MIN, Math.ceil(amount * bp / 10000)));
 function interestFor(savings, days) {
   const d = Math.min(Math.max(0, Math.floor(days) || 0), BANK.INTEREST_MAX_DAYS);
   const base = Math.min(Math.max(0, savings), BANK.INTEREST_BASE_MAX);
@@ -136,6 +138,7 @@ async function prep(c, player) {
 
 async function snapshot(c, player, acc) {
   const u = player.username, xp = Number(player.xp) || 0;
+  const feeBp = await city.policy(c, 'bank_fee_bp');
   const loan = (await c.query(`SELECT principal, rate_bp, total_due, paid, due_at, (due_at < now()) AS overdue
     FROM sk2_bank_loans WHERE username=$1 AND status='active'`, [u])).rows[0] || null;
   const used = (await c.query(`SELECT COALESCE(SUM(amount),0)::int AS n FROM sk2_bank_ledger
@@ -147,7 +150,7 @@ async function snapshot(c, player, acc) {
     bank: {
       savings: acc.savings,
       interest: { bpPerDay: BANK.INTEREST_BP_PER_DAY, baseMax: BANK.INTEREST_BASE_MAX, savingsMax: BANK.SAVINGS_MAX },
-      transfer: { minXp: BANK.TRANSFER_MIN_XP, locked: xp < BANK.TRANSFER_MIN_XP, dailyLimit: BANK.TRANSFER_DAILY_LIMIT, usedToday: used, feeBp: BANK.TRANSFER_FEE_BP, feeMin: BANK.TRANSFER_FEE_MIN },
+      transfer: { minXp: BANK.TRANSFER_MIN_XP, locked: xp < BANK.TRANSFER_MIN_XP, dailyLimit: BANK.TRANSFER_DAILY_LIMIT, usedToday: used, feeBp, feeMin: BANK.TRANSFER_FEE_MIN },
       loan: {
         active: loan && { principal: loan.principal, rateBp: loan.rate_bp, totalDue: loan.total_due, paid: loan.paid, owed: loan.total_due - loan.paid, dueAt: loan.due_at, overdue: !!loan.overdue },
         limit: loanLimit(xp), minAmount: BANK.LOAN_MIN, minXp: BANK.LOAN_MIN_XP,
@@ -204,13 +207,17 @@ const transfer = (from, toRaw, amount) => db.withTx(async c => {
   const used = (await c.query(`SELECT COALESCE(SUM(amount),0)::int AS n FROM sk2_bank_ledger
     WHERE username=$1 AND kind='transfer_out' AND created_at > now() - interval '24 hours'`, [from])).rows[0].n;
   if (used + amount > BANK.TRANSFER_DAILY_LIMIT) return fail(`Limite diário de ${brl(BANK.TRANSFER_DAILY_LIMIT)} (restam ${brl(Math.max(0, BANK.TRANSFER_DAILY_LIMIT - used))}).`);
-  const fee = transferFee(amount);
+  const feeBp = await city.policy(c, 'bank_fee_bp');
+  const fee = transferFee(amount, feeBp);
   if (base.player.money < amount + fee) return fail(`Saldo insuficiente: o valor mais a tarifa somam ${brl(amount + fee)}.`);
   if (receiver.money + amount > BANK.MAX_MONEY) return fail('A carteira do destinatário não comporta esse valor.');
   const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username=$1 RETURNING *', [from, amount + fee])).rows[0];
   const got = (await c.query('UPDATE sk2_players SET money = money + $2 WHERE username=$1 RETURNING money', [to, amount])).rows[0];
   await ledger(c, { username: from, kind: 'transfer_out', amount, savings: base.acc.savings, money: player.money + fee, peer: receiver.name });
-  await ledger(c, { username: from, kind: 'transfer_fee', amount: fee, savings: base.acc.savings, money: player.money, peer: receiver.name });
+  if (fee > 0) {
+    await ledger(c, { username: from, kind: 'transfer_fee', amount: fee, savings: base.acc.savings, money: player.money, peer: receiver.name });
+    await city.credit(c, 'tarifa', fee, `Tarifa de transferência de ${sender.name}`);
+  }
   await ledger(c, { username: to, kind: 'transfer_in', amount, savings: await savingsOf(c, to), money: got.money, peer: sender.name });
   return { ...(await snapshot(c, player, base.acc)), amount, fee, toUser: to, toName: receiver.name, toMoney: got.money, fromName: sender.name };
 });
