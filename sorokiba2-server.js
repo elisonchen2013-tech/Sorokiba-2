@@ -8,6 +8,7 @@ const { WebSocketServer } = require('ws');
 const db = require('./sorokiba2-db');
 const bank = require('./sorokiba2-bank');
 const hospital = require('./sorokiba2-hospital');
+const city = require('./sorokiba2-city');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -134,7 +135,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => console.log('[sk2] banco de dados, Banco e Hospital de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital e Prefeitura de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -379,6 +380,9 @@ async function attachSorokiba2(app, server, opt = {}) {
   bank.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m) });
   // Hospital: doenças por chance, triagem, exames de horas reais e tratamento em sessões (estado no servidor).
   hospital.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m) });
+  // Prefeitura: tesouro, cargos políticos, leis, eleição, auxílios e estatísticas da cidade.
+  let cityBroadcast = () => {};
+  city.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
@@ -712,8 +716,10 @@ async function attachSorokiba2(app, server, opt = {}) {
   const pub = o => ({ id: o.id, n: o.n, x: o.x, y: o.y, d: o.d, f: o.f, lk: o.lk, seated: !!o.seated, room: o.room || 'city' });
   const send = (o, m) => { if (o.ws.readyState === 1) o.ws.send(JSON.stringify(m)); };
   const toAll = (m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && o.ws.readyState === 1) o.ws.send(s); };
+  cityBroadcast = msg => toAll(msg);
   const toRoom = (room, m, except) => { const s = JSON.stringify(m); for (const o of P.values()) if (o !== except && (o.room || 'city') === room && o.ws.readyState === 1) o.ws.send(s); };
   bankNotify = (username, msg) => { for (const o of P.values()) if (o.u === username) send(o, msg); };
+  city.setOnlineProvider(() => P.size);
   const flush = list => db.savePositions(list.filter(o => (o.room || 'city') === 'city').map(o => ({ u: o.u, x: o.worldX ?? o.x, y: o.worldY ?? o.y }))).catch(e => console.error('[sk2] salvar:', e.message));
   let trafficState = null, trafficAuthority = 0, activeAccidents = [], incidentSequence = 0, lastIncidentAt = 0, mayorTrafficSlowdown = false;
   const liveAccidents = () => { const now = Date.now(); activeAccidents = activeAccidents.filter(a => a.expiresAt > now); return activeAccidents; };
@@ -761,8 +767,9 @@ async function attachSorokiba2(app, server, opt = {}) {
         toRoom(room, { t: 'j', p: pub(me) }, me);
       } else if (m.t === 'mayorAction') {
         const now = Date.now();
-        if (me.lk?.role !== 'prefeito') { send(me, { t: 'mayorActionResult', ok: false, message: 'Somente o Prefeito pode controlar a cidade.' }); return; }
+        const office = me.lk?.role === 'prefeito' ? 'prefeito' : city.officeOfUser(me.u);
         const action = String(m.action || '');
+        if (!city.can(office, action === 'announcement' ? 'notice' : 'drill')) { send(me, { t: 'mayorActionResult', ok: false, message: 'Seu cargo não permite este comando da Prefeitura.' }); return; }
         if (action === 'accident_start') {
           if (now - lastIncidentAt < 10000) { send(me, { t: 'mayorActionResult', ok: false, message: 'Aguarde alguns segundos antes de iniciar outra ocorrência.' }); return; }
           if (liveAccidents().length >= 5) { send(me, { t: 'mayorActionResult', ok: false, message: 'Já existem muitas ocorrências ativas. Encerre algumas primeiro.' }); return; }
@@ -786,7 +793,7 @@ async function attachSorokiba2(app, server, opt = {}) {
         } else { send(me, { t: 'mayorActionResult', ok: false, message: 'Comando da Prefeitura desconhecido.' }); }
       } else if (m.t === 'testAccident') {
         const now = Date.now();
-        if (me.lk?.role !== 'prefeito') { send(me, { t: 'accidentTestResult', ok: false, message: 'Somente o Prefeito pode testar acidentes.' }); return; }
+        if (!city.can(me.lk?.role === 'prefeito' ? 'prefeito' : city.officeOfUser(me.u), 'drill')) { send(me, { t: 'accidentTestResult', ok: false, message: 'Somente o Prefeito e o Secretário de Segurança podem testar acidentes.' }); return; }
         if (now - lastIncidentAt < 10000) { send(me, { t: 'accidentTestResult', ok: false, message: 'Aguarde alguns segundos antes de testar outro acidente.' }); return; }
         const incident = { id: 'test-' + (++incidentSequence), x: 46.35, y: 34.5, carA: 0, carB: 24, carAX: 46.15, carAY: 34.5, carBX: 46.5, carBY: 34.5, axis: 0, victimId: 0, startedAt: now, expiresAt: now + 65000, test: true };
         activeAccidents.push(incident); if (activeAccidents.length > 10) activeAccidents.shift(); lastIncidentAt = now;
