@@ -3,49 +3,143 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sorokiba — Conheça o universo</title>
-  <meta name="description" content="Conheça Sorokiba, um universo de jogo virtual com personagens, lugares e experiências interativas. Novidades serão anunciadas em 11 de novembro de 2026.">
+  <title>Sorokiba — Sobre o jogo</title>
+  <meta name="description" content="Conheça Sorokiba, um jogo de navegador em mundo aberto 2.5D com exploração, multiplayer, profissões, economia, edifícios e atividades em uma cidade virtual.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://sorokiba-2.onrender.com/sobre-sorokiba.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Sorokiba — Sobre o jogo">
+  <meta property="og:description" content="Descubra Sorokiba, um jogo de navegador com uma cidade virtual para explorar, atividades, profissões e experiências com outros jogadores.">
+  <meta property="og:url" content="https://sorokiba-2.onrender.com/sobre-sorokiba.html">
   <style>
-    :root { color-scheme: dark; --bg:#10131c; --panel:#1a2030; --text:#f4f6fb; --muted:#b8c1d6; --accent:#8be0c2; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(ellipse at top,#26314a 0,#10131c 55%); color:var(--text); line-height:1.7; }
-    main { width:min(900px,calc(100% - 32px)); margin:0 auto; padding:56px 0 72px; }
-    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.12em; font-size:.8rem; font-weight:700; }
-    h1 { font-size:clamp(2.5rem,8vw,4.5rem); line-height:1.05; margin:.4rem 0 1rem; }
-    h2 { margin-top:2rem; }
-    p, li { color:var(--muted); }
-    .panel { background:var(--panel); border:1px solid #35405a; border-radius:20px; padding:24px; margin-top:24px; }
-    .date { color:var(--accent); font-size:1.5rem; font-weight:750; }
-    a { color:var(--accent); }
-    footer { margin-top:36px; font-size:.9rem; color:var(--muted); }
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #131c31;
+      --panel-2: #18243c;
+      --text: #f5f7ff;
+      --muted: #bdc8df;
+      --accent: #83e4c2;
+      --border: #2b3b59;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(ellipse at 50% -15%, #2a4165 0, var(--bg) 55%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+    }
+    a { color: var(--accent); }
+    .wrap { width: min(1000px, calc(100% - 36px)); margin: 0 auto; }
+    header { padding: 22px 0; border-bottom: 1px solid rgba(189,200,223,.14); }
+    .brand { color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .04em; }
+    .hero { padding: clamp(48px, 9vw, 100px) 0 52px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .16em; font-size: .78rem; font-weight: 800; }
+    h1 { max-width: 800px; margin: 10px 0 20px; font-size: clamp(2.7rem, 8vw, 5.5rem); line-height: 1.02; letter-spacing: -.045em; }
+    h2 { font-size: clamp(1.45rem, 4vw, 2rem); line-height: 1.2; margin: 0 0 12px; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; }
+    p, li { color: var(--muted); }
+    .intro { max-width: 760px; font-size: clamp(1.05rem, 2.5vw, 1.25rem); }
+    .tagline { display: inline-block; margin-top: 12px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--accent); font-size: .9rem; }
+    section { margin: 28px 0; }
+    .section-card { padding: clamp(22px, 4vw, 34px); background: linear-gradient(145deg, rgba(24,36,60,.96), rgba(17,26,45,.96)); border: 1px solid var(--border); border-radius: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+    .feature { padding: 20px; background: rgba(8,14,28,.42); border: 1px solid var(--border); border-radius: 16px; }
+    .feature p { margin: 0; font-size: .96rem; }
+    .icon { display: inline-grid; place-items: center; width: 38px; height: 38px; margin-bottom: 12px; border-radius: 12px; background: rgba(131,228,194,.12); color: var(--accent); font-size: 1.2rem; }
+    .announcement { border-color: rgba(131,228,194,.45); }
+    .date { color: var(--accent); font-size: clamp(1.45rem, 4vw, 2rem); font-weight: 800; margin: 10px 0; }
+    .button { display: inline-block; margin-top: 8px; padding: 11px 16px; border-radius: 10px; background: var(--accent); color: #071a19; text-decoration: none; font-weight: 800; }
+    footer { margin-top: 54px; padding: 26px 0 38px; border-top: 1px solid rgba(189,200,223,.14); color: var(--muted); font-size: .9rem; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } .hero { padding-top: 52px; } }
   </style>
 </head>
 <body>
-  <main>
-    <p class="eyebrow">Universo Sorokiba</p>
-    <h1>Conheça Sorokiba</h1>
-    <p>Sorokiba é um universo de jogo virtual criado para reunir personagens, lugares e experiências interativas. A proposta é construir um mundo próprio, com ambientes para explorar e atividades que tornam a experiência de cada jogador parte desse universo.</p>
+  <header>
+    <div class="wrap"><a class="brand" href="/">SOROKIBA</a></div>
+  </header>
 
-    <section aria-labelledby="universo">
-      <h2 id="universo">Um universo em desenvolvimento</h2>
-      <p>O Sorokiba é um projeto em evolução. Seu universo pode crescer com novos lugares, personagens, atividades e histórias ao longo do tempo. As informações desta página se limitam ao que pode ser compartilhado publicamente.</p>
+  <main class="wrap">
+    <div class="hero">
+      <p class="eyebrow">Sobre o jogo</p>
+      <h1>Entre no mundo de Sorokiba.</h1>
+      <p class="intro"><strong>Sorokiba é um jogo de navegador de mundo aberto em 2.5D.</strong> Nele, os jogadores podem explorar uma cidade virtual, conhecer diferentes ambientes, participar de atividades e construir sua própria experiência dentro do jogo.</p>
+      <span class="tagline">Exploração · Vida virtual · Multiplayer</span>
+    </div>
+
+    <section class="section-card" aria-labelledby="conceito">
+      <h2 id="conceito">O que é Sorokiba?</h2>
+      <p>Sorokiba é um jogo que combina exploração e simulação de vida em uma cidade virtual. Em vez de seguir apenas um caminho, o jogador pode circular pelos ambientes disponíveis, descobrir lugares, interagir com o mundo e experimentar diferentes atividades. A cidade é o cenário principal dessa experiência.</p>
+      <p>Como jogo em desenvolvimento, Sorokiba pode receber melhorias, ajustes e novos conteúdos ao longo do tempo. Os recursos disponíveis podem variar conforme a versão publicada.</p>
     </section>
 
-    <section class="panel" aria-labelledby="novidades">
-      <p class="eyebrow">Aviso</p>
-      <h2 id="novidades">Novidades em breve</h2>
-      <p>O criador do Sorokiba anunciará novidades sobre o projeto no dia:</p>
+    <section aria-labelledby="experiencia">
+      <p class="eyebrow">A experiência</p>
+      <h2 id="experiencia">O que você pode encontrar no jogo</h2>
+      <div class="grid">
+        <article class="feature">
+          <span class="icon" aria-hidden="true">⌖</span>
+          <h3>Exploração da cidade</h3>
+          <p>Explore áreas urbanas e descubra diferentes locais que fazem parte do mundo de Sorokiba.</p>
+        </article>
+        <article class="feature">
+          <span class="icon" aria-hidden="true">◎</span>
+          <h3>Experiência multiplayer</h3>
+          <p>Compartilhe o mundo virtual com outros jogadores e aproveite a experiência social do jogo.</p>
+        </article>
+        <article class="feature">
+          <span class="icon" aria-hidden="true">✦</span>
+          <h3>Profissões e atividades</h3>
+          <p>Conheça atividades profissionais e tarefas que dão diferentes objetivos à vida dentro do jogo.</p>
+        </article>
+        <article class="feature">
+          <span class="icon" aria-hidden="true">◇</span>
+          <h3>Economia do jogo</h3>
+          <p>O universo inclui sistemas de dinheiro virtual e progressão ligados às atividades disponíveis.</p>
+        </article>
+        <article class="feature">
+          <span class="icon" aria-hidden="true">⌂</span>
+          <h3>Edifícios e interiores</h3>
+          <p>Visite espaços da cidade, entre em edifícios disponíveis e explore ambientes internos, incluindo moradias.</p>
+        </article>
+        <article class="feature">
+          <span class="icon" aria-hidden="true">✧</span>
+          <h3>Locais para descobrir</h3>
+          <p>Entre os ambientes do jogo estão locais como parque, biblioteca, escola, hospital, restaurante e oficina.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-card" aria-labelledby="proposta">
+      <h2 id="proposta">Um mundo para explorar no seu ritmo</h2>
+      <p>A proposta de Sorokiba é oferecer uma cidade virtual interativa na qual exploração, atividades e convivência fazem parte da jornada. Cada jogador pode conhecer os espaços disponíveis e descobrir diferentes formas de aproveitar o mundo do jogo.</p>
+      <p>Esta página apresenta o conceito geral de Sorokiba e não descreve recursos que ainda não tenham sido anunciados publicamente.</p>
+    </section>
+
+    <section class="section-card announcement" aria-labelledby="novidades">
+      <p class="eyebrow">Comunicado</p>
+      <h2 id="novidades">Novidades de Sorokiba</h2>
+      <p>O criador de Sorokiba divulgará um anúncio sobre o projeto em:</p>
       <p class="date"><time datetime="2026-11-11">11 de novembro de 2026</time></p>
-      <p>Mais informações serão divulgadas no próprio anúncio. Até essa data, os detalhes das próximas novidades não serão antecipados nesta página.</p>
+      <p>Mais detalhes serão compartilhados no anúncio. Até lá, esta página apresenta apenas informações gerais sobre o jogo.</p>
     </section>
 
-    <section aria-labelledby="sobre">
-      <h2 id="sobre">Sobre esta página</h2>
-      <p>Esta é a página pública de informações sobre Sorokiba. Ela poderá ser atualizada quando novas informações forem divulgadas oficialmente.</p>
+    <section aria-labelledby="resumo">
+      <h2 id="resumo">Sorokiba em resumo</h2>
+      <ul>
+        <li><strong>Tipo:</strong> jogo de navegador de mundo aberto em 2.5D.</li>
+        <li><strong>Estilo:</strong> exploração e simulação de vida em uma cidade virtual.</li>
+        <li><strong>Experiência:</strong> ambientes exploráveis, atividades, economia virtual e multiplayer.</li>
+      </ul>
+      <a class="button" href="/">Visitar Sorokiba</a>
     </section>
-    <footer>Universo Sorokiba · Informações em português</footer>
+
+    <footer>
+      <p><strong>Sorokiba</strong> — página informativa sobre o jogo.</p>
+      <p>As informações podem ser atualizadas conforme o projeto evolui.</p>
+    </footer>
   </main>
 </body>
 </html>
