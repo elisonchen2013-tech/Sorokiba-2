@@ -172,6 +172,7 @@ async function attachSorokiba2(app, server, opt = {}) {
   };
 
   app.get(['/', '/sorokiba2', '/sorokiba2.html'], (req, res) => res.sendFile(htmlFile));
+  app.get('/sobre-sorokiba.html', (_req, res) => res.sendFile(path.join(__dirname, 'sobre-sorokiba.html')));
   app.get('/health', async (req, res) => {
     try {
       await initPromise;
