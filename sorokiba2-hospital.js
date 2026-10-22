@@ -578,7 +578,7 @@ function registerRoutes({ app, json, authUser, limited, userTries, addInterval, 
 }
 
 module.exports = {
-  HOSPITAL, RISKS, EXAMS, DISEASES, SCALE, init, registerRoutes, workGate, sweepExams, summary,
+  HOSPITAL, RISKS, EXAMS, DISEASES, SCALE, init, registerRoutes, workGate, sweepExams, summary, settle,
   checkin, triage, consult, collectExam, results, setPlan, session, leave, buyPlan, vaccinate, donateBlood, buySnack, SNACKS, snackStatus,
   // puras (testes)
   weightedPick, rollIllness, discountPrice, donateStatus, canRenew, effectiveSeverity, settleHealth, makeVitals, vitalFlags, triageWaitMs, examDurationMs, plansFor, hypotheses, stageInfo, examSite,
