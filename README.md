@@ -195,6 +195,34 @@ Endpoints autenticados: `GET /api/sk2/police` e `POST /api/sk2/police/...` com `
 
 Limitações atuais: como no Banco, no Hospital e na Prefeitura, o servidor não sabe em qual sala o jogador está (a ordem das etapas do caso é validada, mas não o lugar físico); não há prisão nem pena além de multa; as rotas e o SQL da Delegacia têm testes de regras e de ligação, mas as consultas ao PostgreSQL ainda não foram exercitadas contra um banco real.
 
+## Mercado de Sorokiba
+
+O Mercado e o Supermercado usam o mesmo interior (40×24 tiles, piso único) e a mesma loja: `sorokiba2-market.js`. Padaria, Loja, Farmácia, Shopping e Lavanderia continuam com o interior genérico.
+
+**O que tem no prédio:** porta automática que desliza quando você chega perto, hortifruti com névoa, padaria com forno aceso e fornadas que saem de tempos em tempos, parede de geladeiras (laticínios, bebidas e congelados) com portas que abrem, gôndolas com mercadorias coloridas e placas de corredor, freezers, ilhas de promoção com selo giratório, quadro de ofertas em LED, três caixas com esteira e leitor a laser (um deles fechado), autoatendimento, balcão de atendimento, estoque, carrinhos e cestas na entrada e clientes empurrando carrinhos pelos corredores. Gôndolas e paredes na frente do jogador ficam translúcidas para ele não sumir atrás delas.
+
+**Sons** (tudo gerado no navegador, respeitam o botão de som):
+
+- Entrada e saída: campainha de duas notas e porta deslizando; a porta também faz som ao abrir e fechar quando você passa por ela.
+- Carrinho ou cesta: chacoalhar ao pegar e batida ao devolver; com carrinho, o passo no piso ganha um chocalho.
+- Compras: "pop" ao pôr no carrinho, som invertido ao tirar, buzina curta quando enche ou falta saldo, bipes do leitor a cada item no caixa, "ka-ching" na compra paga e barulho de sacola.
+- Ambiente: zumbido dos refrigeradores (mais alto perto da parede fria), chiado ao abrir geladeira, névoa do hortifruti, sininho do forno com aviso "fornada quentinha" e alto-falante com três notas e um anúncio das ofertas do dia.
+- Comer na despensa: mordidas crocantes.
+
+**Regras (tudo no servidor):**
+
+- Catálogo fixo de 25 produtos em 7 corredores (`PRODUCTS`); o servidor recalcula todos os preços, o cliente só pede os itens.
+- Ofertas do dia: 4 produtos com 15 a 30% de desconto, iguais para todos e trocadas todo dia; até 3 unidades com desconto por morador por dia.
+- Cartão Sorokiba: 1 ponto a cada R$ 10 pagos; 100 pontos valem R$ 10 de desconto numa compra de R$ 20 ou mais.
+- Carrinho: até 12 produtos diferentes, 10 unidades de cada e 30 no total. Sem nada nas mãos você leva 4, com cesta 10 e com carrinho 30 (esse limite por transporte é só da tela; o servidor impõe os 30).
+- O dinheiro das compras vai para o tesouro (`mercado` no extrato da Prefeitura).
+- Despensa: até 20 de cada produto. Comer devolve de 1 a 6 de saúde pelo mesmo relógio do Hospital (`hospital.settle`), com 20 s entre mordidas, e não passa de 100.
+- Carreira nova: **Operador de caixa** (`market_cashier`, Centro de Empregos, 50 XP, 3 vagas, três cargos: Operador de caixa, Operador sênior e Supervisor de loja; turno com leitura de preços, troco e embalagem).
+
+Endpoints autenticados: `GET /api/sk2/market`, `POST /api/sk2/market/checkout` (`{items:[{id,qty}], redeem}`) e `POST /api/sk2/market/eat` (`{id}`). Tabelas: `sk2_market_pantry`, `sk2_market_card`, `sk2_market_deals` e `sk2_market_orders`, criadas em `market.init()`. `SK2_MARKET_TIME_SCALE=0.001` acelera a virada do dia das ofertas para teste.
+
+Limitações atuais: como nos outros prédios, o servidor não sabe em que corredor ou caixa o jogador está; as consultas ao PostgreSQL do Mercado têm testes com banco simulado em memória, mas ainda não foram exercitadas contra um banco real; o estoque da loja é ilimitado.
+
 ## Testes
 
 ```sh
