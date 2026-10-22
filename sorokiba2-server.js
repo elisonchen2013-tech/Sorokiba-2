@@ -10,6 +10,7 @@ const bank = require('./sorokiba2-bank');
 const hospital = require('./sorokiba2-hospital');
 const city = require('./sorokiba2-city');
 const police = require('./sorokiba2-police');
+const market = require('./sorokiba2-market');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -35,6 +36,7 @@ const CAREERS = Object.freeze([
   { id: 'courier', title: 'Entregador urbano', profession: 'Entregador', building: 'Rodoviária', skills: ['organizacao'], minExperience: 0, minXp: 0, vacancies: 2 },
   { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 2 },
   { id: 'police_officer', title: 'Agente de segurança urbana', profession: 'Policial', building: 'Delegacia', skills: ['atendimento', 'comunicacao'], minExperience: 1, minXp: 200, vacancies: 3 },
+  { id: 'market_cashier', title: 'Operador de caixa', profession: 'Operador de caixa', building: 'Supermercado', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 3 },
   { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, minXp: 400, vacancies: 1 },
 ]);
 const CAREER_SKILLS = Object.freeze({
@@ -68,6 +70,11 @@ const INTERVIEW_QUESTIONS = Object.freeze({
     { id: 'conflict', prompt: 'Dois moradores discutem na rua. A melhor atitude é:', options: ['Chegar com calma, ouvir os dois e orientar', 'Gritar para todos saírem', 'Fingir que não viu'], correct: 0 },
     { id: 'records', prompt: 'Como registrar uma ocorrência?', options: ['Anotar fatos com precisão, sem inventar', 'Exagerar para parecer importante', 'Registrar só o que favorece um lado'], correct: 0 },
     { id: 'fairness', prompt: 'Você conhece a pessoa que cometeu uma infração leve. Você:', options: ['Aplica a mesma regra de qualquer morador', 'Perdoa porque é amigo(a)', 'Multa mais alto por implicância'], correct: 0 },
+  ],
+  market_cashier: [
+    { id: 'greeting', prompt: 'Um cliente chega ao caixa com pressa. Você:', options: ['Cumprimenta, passa os itens com atenção e agradece', 'Passa tudo em silêncio e sem olhar', 'Pede que ele volte mais tarde'], correct: 0 },
+    { id: 'expiry', prompt: 'Você nota um iogurte vencido na gôndola. O certo é:', options: ['Avisar o repositor para tirar da venda', 'Deixar onde está', 'Esconder atrás de outros produtos'], correct: 0 },
+    { id: 'change', prompt: 'A compra deu R$ 37 e o cliente pagou com R$ 50. Qual é o troco?', options: ['R$ 13', 'R$ 23', 'R$ 17'], correct: 0 },
   ],
   teacher_assistant: [
     { id: 'classroom', prompt: 'Uma turma está dispersa. Você:', options: ['Define uma instrução clara e uma atividade', 'Grita sem explicar', 'Cancela a aula'], correct: 0 },
@@ -122,6 +129,11 @@ const WORK_TASKS = Object.freeze({
     { id: 'approach', prompt: 'Um morador pede orientação. Como agir?', options: ['Ouvir, explicar com respeito e encaminhar', 'Ignorar o pedido', 'Dar ordens sem explicar'], correct: 0 },
     { id: 'report', prompt: 'Finalize o turno registrando a ronda no sistema.', options: ['Registrar o que aconteceu com precisão', 'Omitir ocorrências', 'Inventar uma ocorrência'], correct: 0 },
   ] },
+  market_cashier: { type: 'cashier_shift', supervisor: 'Marina', money: 38, xp: 22, stages: [
+    { id: 'scan', prompt: 'Cliente na fila: como registrar a compra?', options: ['Passar cada item no leitor e conferir o preço na tela', 'Digitar qualquer valor', 'Passar só metade dos itens'], correct: 0 },
+    { id: 'change', prompt: 'A compra deu R$ 37 e o cliente pagou R$ 50. Qual o troco?', options: ['R$ 13', 'R$ 23', 'R$ 17'], correct: 0 },
+    { id: 'pack', prompt: 'Na hora de embalar, o que vai por cima na sacola?', options: ['Os itens leves e frágeis, como pão e ovos', 'Os itens mais pesados', 'Tanto faz'], correct: 0 },
+  ] },
   teacher_assistant: { type: 'classroom_support', supervisor: 'Lúcia', money: 38, xp: 22, stages: [
     { id: 'prepare', prompt: 'Prepare os materiais da atividade escolar.', options: ['Conferir a lista e separar os materiais pedidos', 'Levar materiais aleatórios', 'Começar sem verificar'], correct: 0 },
     { id: 'assist', prompt: 'Um aluno pede orientação na atividade simulada.', options: ['Explicar a próxima etapa com respeito', 'Ignorar o pedido', 'Fazer a atividade sem explicar'], correct: 0 },
@@ -137,6 +149,7 @@ const CAREER_LADDERS = Object.freeze({
   fastfood_counter: [{ title: 'Atendente', salary: 820, xp: 0, tasks: 0, performance: 0 }, { title: 'Atendente sênior', salary: 1080, xp: 60, tasks: 3, performance: 70 }, { title: 'Líder de turno', salary: 1450, xp: 150, tasks: 8, performance: 80 }],
   mechanic: [{ title: 'Auxiliar de oficina', salary: 950, xp: 0, tasks: 0, performance: 0 }, { title: 'Mecânico', salary: 1300, xp: 70, tasks: 4, performance: 72 }, { title: 'Mecânico sênior', salary: 1750, xp: 170, tasks: 10, performance: 85 }],
   police_officer: [{ title: 'Agente de patrulha', salary: 1000, xp: 0, tasks: 0, performance: 0 }, { title: 'Agente sênior', salary: 1350, xp: 70, tasks: 4, performance: 75 }, { title: 'Inspetor', salary: 1800, xp: 170, tasks: 10, performance: 85 }],
+  market_cashier: [{ title: 'Operador de caixa', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Operador sênior', salary: 1200, xp: 60, tasks: 4, performance: 75 }, { title: 'Supervisor de loja', salary: 1600, xp: 150, tasks: 10, performance: 85 }],
   teacher_assistant: [{ title: 'Auxiliar escolar', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Assistente escolar', salary: 1200, xp: 70, tasks: 4, performance: 75 }, { title: 'Coordenador pedagógico', salary: 1650, xp: 170, tasks: 10, performance: 88 }],
 });
 const TRAINING = Object.freeze({
@@ -148,7 +161,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura e Delegacia de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => market.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura, Delegacia e Mercado de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -399,6 +412,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   city.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
   // Delegacia: ocorrências, multas com contestação, certidão e alertas; carreira de Policial usa as mesmas entrevistas e turnos.
   police.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
+  // Mercado: catálogo, ofertas do dia, Cartão Sorokiba, compra com carrinho e despensa.
+  market.registerRoutes({ app, json, authUser, limited, userTries });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
