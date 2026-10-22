@@ -400,6 +400,72 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #cityPanel.busy button{pointer-events:none;opacity:.6}
 #cityPanel button:focus-visible,#cityPanel input:focus-visible,#cityPanel textarea:focus-visible,#cityPanel select:focus-visible{outline:2px solid #f2c14b;outline-offset:2px}
 @media(max-width:560px){.cityGrid{grid-template-columns:1fr}.cityList li{flex-wrap:wrap}}
+/* ---------- Delegacia ---------- */
+#policePanel{position:fixed;z-index:42;left:50%;top:50%;transform:translate(-50%,-50%);width:min(940px,96vw);max-height:92vh;overflow:auto;padding:clamp(14px,3vw,24px);padding-top:clamp(18px,3.2vw,28px);border:1px solid #2dd4bf88;border-radius:16px;background:linear-gradient(155deg,#0f1c33 0%,#070d1a 100%);box-shadow:0 24px 80px #000d,inset 0 0 0 1px #f2b84b22;color:#eef2f7;overscroll-behavior:contain}
+#policePanel::before{content:"";display:block;height:5px;margin:calc(-1 * clamp(18px,3.2vw,28px)) calc(-1 * clamp(14px,3vw,24px)) clamp(12px,2vw,18px);border-radius:16px 16px 0 0;background:repeating-linear-gradient(90deg,#d94b57 0 28px,#2f6bff 28px 56px);animation:polBar 1.4s linear infinite}
+@keyframes polBar{to{background-position:56px 0}}
+.polHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:1px solid #2dd4bf55}
+.polKicker{margin:0 0 4px;color:#2dd4bf;font-size:12px;font-weight:700;letter-spacing:.04em}
+.polHead h2{margin:0;color:#ffe9b0;font-size:clamp(22px,4vw,30px)}
+.polHead p:not(.polKicker){margin:5px 0 0;color:#b9c4d6;font-size:13px}
+#policePanel button{font:inherit;cursor:pointer}
+#policeClose{border:1px solid #ffffff33;border-radius:9px;padding:8px 12px;background:#ffffff10;color:#eef2f7}
+.polTabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.polTabs[hidden]{display:none}
+.polTabs button{border:1px solid #2dd4bf77;border-radius:9px;padding:8px 13px;background:transparent;color:#bff3ea;font-weight:600}
+.polTabs button[aria-selected=true]{background:#f2b84b;color:#14182a;border-color:#f2b84b}
+.polMsg{min-height:20px;margin:8px 0;color:#bfeadf;font-size:13px}
+.polMsg.err{color:#ffb9ad}
+.polKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0}
+.polKpi{padding:10px 12px;border:1px solid #ffffff1c;border-radius:10px;background:#ffffff08}
+.polKpi span{display:block;color:#a9b8cc;font-size:12px}
+.polKpi strong{display:block;margin-top:3px;color:#f2b84b;font-size:clamp(16px,3.2vw,21px);font-variant-numeric:tabular-nums}
+.polKpi small{display:block;margin-top:2px;color:#8fa1b8;font-size:11px}
+.polCard{padding:14px;border:1px solid #ffffff1c;border-radius:12px;background:#ffffff08;margin-bottom:10px}
+.polCard h3{margin:0 0 8px;color:#ffe9b0;font-size:16px}
+.polHint{margin:0 0 10px;color:#aab8cb;font-size:12.5px;line-height:1.45}
+.polGo{color:#7ff0e1}
+.polSmall{color:#8fa1b8;font-weight:400}
+.polQuote{margin:6px 0 0;padding-left:10px;border-left:3px solid #2dd4bf88;color:#d6e2ee;font-size:13px}
+.polBad{color:#ffb3ae}
+.polCard label{display:block;margin:8px 0 5px;color:#d9e1ec;font-size:13px}
+.polCard label.polCheck{display:flex;align-items:center;gap:8px}
+.polCard input[type=text],.polCard select,.polCard textarea{width:100%;max-width:460px;box-sizing:border-box;padding:10px 12px;border:1px solid #2dd4bf99;border-radius:9px;background:#0a1020;color:#fff;font:inherit;font-size:16px}
+.polCard textarea{max-width:none;resize:vertical}
+.polActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.polActions button,.polList button{border:0;border-radius:9px;padding:10px 16px;background:linear-gradient(90deg,#f2b84b,#ffd887);color:#14182a;font-weight:800}
+.polActions button.alt,.polList button.alt{background:#ffffff14;color:#eef2f7;border:1px solid #ffffff33}
+.polList button{padding:7px 12px;font-size:13px}
+.polActions button:disabled,.polList button:disabled{opacity:.45;cursor:not-allowed}
+.polList{list-style:none;margin:0;padding:0}
+.polList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted #ffffff30}
+.polList li.polSub{display:block;border-bottom:0;padding:0 0 10px}
+.polList small{display:block;margin-top:2px;color:#93a5bd;font-size:12px}
+.polList small.polQuote{margin-top:6px}
+.polRight{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.polTag{padding:3px 9px;border-radius:99px;background:#ffffff14;font-size:12px;white-space:nowrap}
+.polTag.ok{background:#3fae6330;color:#8fe0b4}.polTag.bad{background:#d9534f30;color:#ffb3ae}.polTag.warn{background:#f2b84b26;color:#ffd887}
+.polBullets{margin:0;padding-left:18px;color:#cfd9e6;font-size:13px;line-height:1.55}
+.polNote{padding:18px;text-align:center;color:#bccbdd}
+.polChart{display:block;width:100%;height:190px}
+.polCount{font-variant-numeric:tabular-nums}
+.polSteps{display:flex;gap:6px;list-style:none;margin:10px 0;padding:0}
+.polSteps li{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:#7f8fa5;font-size:12px;text-align:center}
+.polSteps i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid #4a5a72;font-style:normal;font-weight:800;font-size:12px}
+.polSteps li.done{color:#8fe0b4}.polSteps li.done i{background:#2dd4bf;border-color:#2dd4bf;color:#08202a}
+.polSteps li.now{color:#ffd887}.polSteps li.now i{border-color:#f2b84b;color:#f2b84b;animation:polPulse 1.4s ease-in-out infinite}
+@keyframes polPulse{50%{box-shadow:0 0 0 6px #f2b84b22}}
+.polDoc{margin:10px 0;padding:16px;border:2px dashed #f2b84b99;border-radius:12px;background:linear-gradient(135deg,#1a2744,#101a30);text-align:center;display:grid;gap:6px;position:relative;overflow:hidden}
+.polDoc h4{margin:0;color:#ffe9b0;font-size:18px}
+.polDoc small{color:#93a5bd}
+.polDoc.small{padding:10px}
+.polStamp{justify-self:center;padding:6px 16px;border:3px solid;border-radius:8px;font-weight:900;letter-spacing:.08em;transform:rotate(-4deg);animation:polStamp .5s cubic-bezier(.2,1.6,.4,1) both}
+.polStamp.ok{color:#5cf0a8;border-color:#5cf0a8}.polStamp.bad{color:#ff8a95;border-color:#ff8a95}
+@keyframes polStamp{from{transform:scale(2.2) rotate(-12deg);opacity:0}to{transform:scale(1) rotate(-4deg);opacity:1}}
+#policePanel.busy button{pointer-events:none;opacity:.6}
+#policePanel button:focus-visible,#policePanel input:focus-visible,#policePanel textarea:focus-visible,#policePanel select:focus-visible{outline:2px solid #f2c14b;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#policePanel::before,.polSteps li.now i,.polStamp{animation:none}}
+@media(max-width:560px){.polList li{flex-wrap:wrap}.polSteps{gap:2px}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -455,6 +521,7 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="bankPanel" hidden role="dialog" aria-labelledby="bankTitle"><header class="bankHead"><div><p class="bankKicker">Banco de Sorokiba</p><h2 id="bankTitle">Atendimento</h2><p id="bankIntro"></p></div><button id="bankClose" type="button" aria-label="Fechar banco">Fechar</button></header><div class="bankBalances"><div><span>Carteira</span><strong id="bankMoney">R$ 0</strong></div><div><span>Poupança</span><strong id="bankSavings">…</strong></div><div><span>Dívida</span><strong id="bankDebt">…</strong></div></div><nav class="bankTabs" id="bankTabs" role="tablist" aria-label="Serviços do banco"><button type="button" role="tab" data-bank-tab="account">Poupança</button><button type="button" role="tab" data-bank-tab="transfer">Transferir</button><button type="button" role="tab" data-bank-tab="loan">Empréstimo</button><button type="button" role="tab" data-bank-tab="statement">Extrato</button></nav><p id="bankMsg" class="bankMsg" aria-live="polite"></p><div id="bankBody"></div></section>
 <section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><div id="hospNextBar" class="hospNextBar"></div><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
 <section id="cityPanel" hidden role="dialog" aria-labelledby="cityTitle"><header class="cityHead"><div><p class="cityKicker">Prefeitura de Sorokiba</p><h2 id="cityTitle">Prefeitura</h2><p id="cityWho"></p></div><button id="cityClose" type="button" aria-label="Fechar Prefeitura">Fechar</button></header><nav id="cityTabs" class="cityTabs" role="tablist" aria-label="Seções" hidden></nav><p id="cityMsg" class="cityMsg" aria-live="polite"></p><div id="cityBody"></div></section>
+<section id="policePanel" hidden role="dialog" aria-labelledby="policeTitle"><header class="polHead"><div><p class="polKicker">Delegacia de Sorokiba</p><h2 id="policeTitle">Delegacia</h2><p id="policeWho"></p></div><button id="policeClose" type="button" aria-label="Fechar Delegacia">Fechar</button></header><nav id="policeTabs" class="polTabs" role="tablist" aria-label="Seções" hidden></nav><p id="policeMsg" class="polMsg" aria-live="polite"></p><div id="policeBody"></div></section>
 <div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
@@ -486,7 +553,7 @@ const bd=(n,c,aw,d,...p)=>({n,c,aw,d,p,x:p[0][0],y:p[0][1],w:p[0][2],h:p[0][3],d
 const B=[bd('Banco','#4C8C6F',0,0,[3,6,6,7,110]),
 bd('✚ Hospital','#DDE6EE',0,['cross',2],[10,9,9,4,120],[10,3,3,6,150],[13,5,3,4,170],[16,3,3,6,150]),
 bd('Prefeitura','#B08A5A',0,['dome',1],[29,7,8,6,120],[31,7,4,3,175]),
-bd('Delegacia','#3F5E8C',0,0,[38,7,4,6,100]),
+bd('Delegacia','#3F5E8C',0,['siren',0],[38,7,4,6,100]),
 bd('Loja','#C8643C','#e74c3c',0,[4,23,6,6,90]),
 bd('Empresa','#7B6CB0',0,0,[12,24,6,7,110],[13,25,4,4,150],[14,26,2,2,190]),
 bd('Correio','#B84A4A',0,0,[30,23,6,7,100]),
@@ -524,6 +591,7 @@ for(let ty=0;ty<MH;ty++)for(let tx=0;tx<MW;tx++){const z=hm[ty][tx];if(!z)contin
 B.forEach(b=>{if(!b.d)return;const[k,pi]=b.d,[x,y,w,h]=b.p[pi],a=IT[(y+h-1)*MW+x+w-1],cx=x+w/2,cy=y+h/2,z=hm[y+h-1][x+w-1];a.dc.push((c,t)=>DECO[k](c,t,x,y,w,h,z,cx,cy))});
 const DECO={
 employment:(c,t,x,y,w,h,z,cx,cy)=>{const q=P(cx,cy,z+25);c.fillStyle='#183346';c.fillRect(q[0]-23,q[1]-12,46,24);c.strokeStyle='#F2B84B';c.lineWidth=2;c.strokeRect(q[0]-23,q[1]-12,46,24);c.fillStyle='#2DD4BF';c.fillRect(q[0]-8,q[1]-3,16,9);c.fillStyle='#F2B84B';c.fillRect(q[0]-4,q[1]-7,8,4)},
+siren:(c,t,x,y,w,h,z,cx,cy)=>{box(c,cx-.4,cy-.4,.8,.8,z,z+7,'#26354f','#33476a');const q=P(cx,cy,z+15),ph=Math.sin(t*7)>0;[['#ff3b46',ph,-9],['#2f6bff',!ph,9]].forEach(([col,on,ox])=>{c.fillStyle=on?col:'#232b3a';c.fillRect(q[0]+ox-5,q[1]-7,10,12);if(on){const g=c.createRadialGradient(q[0]+ox,q[1]-1,1,q[0]+ox,q[1]-1,38);g.addColorStop(0,col+'aa');g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(q[0]+ox,q[1]-1,38,0,7);c.fill()}})},
 cross:(c,t,x,y,w,h,z,cx,cy)=>{poly(c,[P(cx-1,cy-1,z+1),P(cx+1,cy-1,z+1),P(cx+1,cy+1,z+1),P(cx-1,cy+1,z+1)],'#f5efe3');poly(c,[P(cx-.8,cy-.2,z+2),P(cx+.8,cy-.2,z+2),P(cx+.8,cy+.2,z+2),P(cx-.8,cy+.2,z+2)],'#d94b4b');poly(c,[P(cx-.2,cy-.8,z+2),P(cx+.2,cy-.8,z+2),P(cx+.2,cy+.8,z+2),P(cx-.2,cy+.8,z+2)],'#d94b4b')},
 dome:(c,t,x,y,w,h,z,cx,cy)=>{const q=P(cx,cy,z);c.fillStyle='#2f8f83';c.beginPath();c.ellipse(q[0],q[1],26,13,0,0,Math.PI);c.fill();c.fillStyle='#37a99b';c.beginPath();c.ellipse(q[0],q[1],26,32,0,Math.PI,0);c.fill();c.fillStyle='rgba(255,255,255,.22)';c.beginPath();c.ellipse(q[0]-8,q[1]-18,5,10,-.5,0,7);c.fill();
 c.strokeStyle='#ddd';c.lineWidth=1.5;c.beginPath();c.moveTo(q[0],q[1]-32);c.lineTo(q[0],q[1]-56);c.stroke();c.fillStyle='#F2B84B';c.beginPath();c.moveTo(q[0],q[1]-56);c.lineTo(q[0]+15,q[1]-52+Math.sin(t*4)*2);c.lineTo(q[0],q[1]-47);c.fill()},
@@ -933,7 +1001,7 @@ else if(m.t==='mayorActionResult'){setMayorStatus(m.message||'Comando concluído
 else if(m.t==='incidentClear'){const ids=new Set((m.ids||[]).map(String));accidents=accidents.filter(inc=>!ids.has(String(inc.id)));setMayorStatus('Ocorrências encerradas pela Prefeitura.');}
 else if(m.t==='cityEvent'){if(m.event==='traffic'){mayorTrafficSlowdown=!!m.active;updateMayorTrafficButton();}setMayorStatus(m.message||'Estado da cidade atualizado.');missionFeedback(m.message||'A Prefeitura atualizou a cidade.');}
 else if(m.t==='mayorAnnouncement'){missionFeedback('Comunicado da Prefeitura: '+String(m.message||''));tone(740,.12,'sine',.08);setTimeout(()=>tone(920,.15,'sine',.06),120);}
-else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='city'){toast(m.m);tone(784,.1,'sine',.05);cityLoad(true)}else if(m.t==='hospital'){toast(m.m);tone(784,.1,'sine',.05);if(!$('hospitalPanel').hidden&&!hospBusy)hospLoad(true)}else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
+else if(m.t=='c')chat(m);else if(m.t==='rr'){RP.clear();(m.p||[]).forEach(addR)}else if(m.t==='rj')addR(m.p);else if(m.t==='rl')RP.delete(m.id);else if(m.t==='inv')cwShowInvite(m);else if(m.t==='ok'||m.t==='no')toast(m.m);else if(m.t==='bank')bankPush(m);else if(m.t==='city'){toast(m.m);tone(784,.1,'sine',.05);cityLoad(true)}else if(m.t==='police'){toast(m.m);tone(784,.1,'sine',.05);if(interior&&interior.room.family==='police')policeLoad(true)}else if(m.t==='hospital'){toast(m.m);tone(784,.1,'sine',.05);if(!$('hospitalPanel').hidden&&!hospBusy)hospLoad(true)}else if(m.t==='lay'){const sc=cwScene();if(sc&&sc.kind==='apt'&&sc.id===m.u&&!sc.own&&Array.isArray(m.layout)){sc.items=m.layout.map(i=>i.slice());cwRefreshColl()}}};
 w.onclose=()=>{if(ws!==w)return;ON=0;RP.clear();$('cb').hidden=true;if(mode=='game'&&user)setTimeout(()=>{if(mode=='game'&&user&&ws===w)conn()},3000)}}
 function addR(p){const q={id:p.id,n:p.n,x:p.x,y:p.y,tx:p.x,ty:p.y,d:0,f:0,seated:!!p.seated,lk:p.lk,o:oOf(p.lk),bub:null};q.o.seated=q.seated;RP.set(p.id,q)}
 function chat(m){const d=document.createElement('div'),b=document.createElement('b');b.textContent=m.n+': ';b.style.color=m.id==myId?'#F2B84B':'#9ff0e4';d.append(b,m.m);const cl=$('cl');cl.appendChild(d);while(cl.children.length>6)cl.removeChild(cl.firstChild);setTimeout(()=>d.remove(),20000);
@@ -1193,6 +1261,7 @@ function makeInterior(building,floor=1){
  else if(['mercado','supermercado','loja','padaria','farmácia','shopping','lavanderia'].some(s=>n.includes(s)))family='market';
  else if(n.includes('banco'))family='bank';
  else if(n.includes('prefeitura'))family='cityhall';
+ else if(n.includes('delegacia'))family='police';
  else if(n.includes('restaurante'))family='restaurant';
  else if(n.includes('cinema'))family='cinema';
  else if(n.includes('biblioteca'))family='library';
@@ -1207,6 +1276,7 @@ function makeInterior(building,floor=1){
   hospital:['#e5efed','#aabebb','#c7d6d3','#d9e4e0','#3d9b98','Recepção e atendimento médico'],
   bank:['#e0d7c4','#afa58f','#b9b29f','#ccc4b0','#c5a05c','Atendimento bancário'],
   cityhall:['#e8dac2','#b7a487','#c5b59a','#d7c6aa','#b08a5a','Serviços municipais'],
+  police:['#cfdde3','#8aa0ac','#35506a','#2d455d','#d9a239','Segurança e justiça'],
   restaurant:['#f0d8b8','#be9d7b','#b99470','#c9a783','#d2691e','Salão e balcão'],
   cinema:['#484a61','#292d43','#40435c','#494c66','#c06c84','Bilheteria e sala de exibição'],
   library:['#e6dcc7','#b9a98c','#b9aa8d','#cbbc9f','#8b7355','Leitura e consulta'],
@@ -1244,6 +1314,8 @@ function makeInterior(building,floor=1){
   z('Caixa eletrônico',10.45,5.8,'Saldo atual da sua carteira: R$ '+Number(user?.money||0).toLocaleString('pt-BR')+'. Use para depositar, sacar e consultar a poupança.');
  }else if(family==='cityhall'){
    cityHallZones(floor).forEach(o=>zones.push(o));
+ }else if(family==='police'){
+  policeZones().forEach(o=>zones.push(o));
   }else if(family==='restaurant'){
   add('counter',4.6,1.05,3,.85,22,'#74452e','#d59b55','#472c20');add('table',2.2,3.3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   add('table',6,4.1,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');add('table',9,3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
@@ -1365,7 +1437,7 @@ function makeInterior(building,floor=1){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1395,8 +1467,9 @@ function makeInterior(building,floor=1){
   room.dividers=CONDO_ZIP.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));
  }
  if(family==='cityhall'){room.floor=floor;room.items=cityHallCollision(floor);room.dividers=CHP[floor].walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit=floor===1?{x:.9,y:12}:{x:-50,y:-50}}
+  if(family==='police'){room.items=policeCollision();room.dividers=PDZ.walls.concat(PDZ.cellWalls).map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
   if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
-  const flat=family==='condo'||family==='hospital'||family==='cityhall',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
+  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
@@ -1404,6 +1477,7 @@ function makeInterior(building,floor=1){
    hospital:[['Helena','Recepcionista',7.5,1.5,'staff','#3d9b98','#f0c3a0','#3a4b57'],['Joana','Enfermeira de triagem',17.5,3.2,'staff','#e1eee9','#d7a781','#2a3138'],['Dra. Bia','Médica',23.8,3.4,'staff','#f4f3ed','#e1b991','#375b78'],['Dr. Henrique','Médico',30.2,3.4,'staff','#f4f3ed','#b9835d','#2f2a26'],['Lívia','Enfermeira de coleta',17.2,14.6,'staff','#e1eee9','#c99572','#4a2f22'],['Marcelo','Técnico de imagem',25.8,13.6,'staff','#7aa0b8','#bb865f','#222a33'],['Dr. Lucas','Cirurgião',30.8,15.2,'staff','#3f8f8c','#d0a17b','#2b2b30'],['Caio','Enfermeiro',7,18.6,'staff','#e1eee9','#ad744b','#365560'],['Paciente','Paciente',4.5,6.5,'visitor','#c7d8dd','#b37b58','#4a5261'],['Acompanhante','Visitante',11,11,'visitor','#8aa0c4','#d4a078','#382d25']],
   bank:[['Marcos','Caixa',5.8,2.05,'staff','#c5a05c','#d2a17d','#27394f'],['Ana','Gerente',2.5,5.5,'staff','#435c7b','#c28f6a','#202c3d'],['Cliente','Cliente',9,5.8,'visitor','#4a9c8a','#d7aa82','#30271f']],
    cityhall:cityHallCrowd(floor),
+   police:policeCrowd(),
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
   cinema:[['Nina','Bilheteira',6,2,'staff','#5f496f','#d7ad8d','#292a42'],['Espectador','Cliente',1.5,6.3,'visitor','#5c7fb2','#d4a078','#382d25'],['Espectadora','Cliente',10.2,6.4,'visitor','#b8708c','#e2b69a','#2b252a']],
   library:[['Clara','Bibliotecária',6.2,2,'staff','#7b6549','#d7a780','#32251c'],['Leitor','Visitante',4.3,6.2,'visitor','#6882a1','#c8946b','#32261e'],['Estudante','Visitante',7.8,6.2,'visitor','#72956e','#e0b58f','#2c2520']],
@@ -1420,7 +1494,7 @@ function makeInterior(building,floor=1){
   const sp=family==='hospital'?3.2:1,route=kind==='visitor'?[[x,y],[x+.65*sp,y-.35*sp],[x+.3*sp,y+.35*sp],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
+   dialogue:family==='police'?policeLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
@@ -1434,16 +1508,17 @@ function makeInterior(building,floor=1){
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'?{x:1.25,y:13}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
  tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
  if(interior.room.family==='cityhall')cityStartPoll();
+ if(interior.room.family==='police')policeStartPoll();
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -2062,11 +2137,257 @@ function renderCityHallZip(t){
  if(med)hospitalMedOverlay(t,med);
  c.setTransform(1,0,0,1,0,0);
 }
+/* ---------- DELEGACIA DE SOROKIBA: planta, móveis, salas e animações ---------- */
+// Piso único com saguão, corredor central e oito setores. A colisão sai da planta, como no Hospital e na Prefeitura.
+const PDZ={
+ w:46,h:26,
+ rooms:[[0,0,16,26,'Saguão e Atendimento','g'],[16,11,30,4,'Corredor','k'],[16,0,10,11,'Multas e Trânsito','m'],[26,0,10,11,'Central de Despacho','d'],[36,0,10,11,'Gabinete da Delegada','c'],[16,15,8,11,'Identificação','i'],[24,15,8,11,'Interrogatório','q'],[32,15,7,11,'Evidências','e'],[39,15,7,11,'Carceragem','j']],
+ walls:[['v',16,0,11],['v',16,15,26],['v',26,0,11],['v',36,0,11],['h',11,16,20],['h',11,22,30],['h',11,32,40],['h',11,42,46],
+  ['h',15,16,19],['h',15,21,27],['h',15,29,35],['h',15,37,40],['h',15,42,46],['v',24,15,26],['v',32,15,26],['v',39,15,26]],
+ cellWalls:[['v',43,17,26],['h',17,43,46],['h',20,43,46],['h',23,43,46]],
+ doors:[['v',16,11,15,'CORREDOR'],['h',11,20,22,'MULTAS'],['h',11,30,32,'DESPACHO'],['h',11,40,42,'GABINETE'],['h',15,19,21,'IDENTIFICAÇÃO'],['h',15,27,29,'INTERROGATÓRIO'],['h',15,35,37,'EVIDÊNCIAS'],['h',15,40,42,'CARCERAGEM']],
+ entrance:[11,15],
+ dec:[['pdesk',4,4],['cflag',1.2,1.4],['cflag',10.3,1.4],['bench2',1,6.4],
+  ['waitseats',1,17.6],['waitseats',1,21],['waitseats',10.6,17.6],['waitseats',10.6,21],['htable',6.8,19.4],['plant',1,24.6],['plant',14.6,24.6],['plant',14.6,7.6],['cooler',14.5,9.3],
+  ['ccolumn',3,9.2],['ccolumn',3,16.6],['ccolumn',12.6,9.2],['ccolumn',12.6,16.6],
+  ['cdesk',18,3],['cabinet',24.7,.4],['hchair',19.2,6.8],['hchair',21.2,6.8],['hchair',23.2,6.8],['plant',16.7,9.6],['cooler',24.4,9.4],
+  ['pconsole',27.2,6],['pconsole',31.6,6],['plant',35.2,9.6],['csafe',26.4,.5],
+  ['pchief',40,3.2],['hchair',40.4,5.4],['hchair',42.6,5.4],['cshelf',37,.3],['cshelf',43,.3],['cflag',36.8,1.9],['cflag',45,1.9],['hsofa',43.8,8.6],['htable',44.2,9.8],['plant',36.6,9.6],
+  ['bench2',23,11.3],['bench2',33,11.3],['plant',16.9,14.2],['plant',45,14],['cooler',45.1,12.3],
+  ['pscanner',17.2,16.9],['pcamera',21.4,22.4],['desk',17.4,23.2],['cabinet',23,24.6],['plant',22.8,16.4],
+  ['ptable',26.6,19.4],['hchair',25.6,20.2],['hchair',29.8,20.2],['cabinet',30.6,24.4],['plant',24.6,24.8],
+  ['plocker',32.3,23.9],['plocker',34.6,23.9],['petable',33.4,19.2],['cabinet',37.5,23.9],['plant',37.6,16.4],
+  ['guarddesk',39.2,23],['hchair',39.5,24.4]]
+};
+PDZ.grid=Array.from({length:PDZ.h},(_,y)=>Array.from({length:PDZ.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of PDZ.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'g'}));
+const POLICE_FLOOR={g:['#35506a','#2d455d'],k:['#3c5167','#344a60'],m:['#3a6068','#325660'],d:['#26324c','#202b43'],c:['#7d5a3b','#6f4f33'],i:['#36565f','#2f4c55'],q:['#2b303e','#252a37'],e:['#3b4954','#33404a'],j:['#4b5059','#43484f']};
+const POLICE_STAFF={Ramos:{hat:'#10203a',pn:'#18233a'},Iara:{f:1,hat:'#10203a',pn:'#18233a'},Vitor:{hat:'#10203a',gl:1,pn:'#18233a'},Mara:{f:1,gl:1,pn:'#101c33'},Nina:{f:1,gl:1,pn:'#2a3a4a'},Caio:{pn:'#3a2d22'},Otto:{gl:1,pn:'#2a3a4a'},Lima:{hat:'#10203a',pn:'#18233a'},Bruno:{pn:'#9a5a1e'}};
+const POLICE_ROLE_SITE={'Sargento':'desk','Cabo de trânsito':'fines','Operador de despacho':'dispatch','Delegada':'chief','Perita papiloscopista':'cert','Detetive':'interrogation','Perito criminal':'evidence'};
+const POLICE_LINES={
+ 'Sargento':'Delegacia de Sorokiba, seja bem-vindo! Aqui você registra Boletim de Ocorrência, acompanha o seu caso e valida certidões.',
+ 'Cabo de trânsito':'Sou a Iara, do Setor de Multas. Você consulta, paga ou contesta multas comigo. Toda multa pode ser contestada uma vez.',
+ 'Operador de despacho':'Central de Despacho. Daqui os policiais assumem as ocorrências que chegam. Os números da cidade passam por este painel.',
+ 'Delegada':'Sou a Mara, delegada. Decido as contestações de multas e publico os alertas de segurança. Quer ser policial? Passe no Centro de Empregos.',
+ 'Perita papiloscopista':'Na Identificação eu emito a certidão de antecedentes. Ela mostra se você tem multas pendentes: nada consta é um bom sinal!',
+ 'Detetive':'A Sala de Interrogatório é onde colho depoimentos dos casos que assumo. Aqui todo mundo é tratado com respeito.',
+ 'Perito criminal':'Na Sala de Evidências analiso as provas de cada caso. A perícia pede alguns instantes: ciência não tem pressa.',
+ 'Carcereiro':'Pode olhar à vontade, mas sem mexer nas grades. A carceragem de Sorokiba quase nunca tem hóspedes de verdade.',
+ 'Detento (encenação)':'Relaxa, é encenação! Eu faço o papel do detento nos treinamentos dos policiais da cidade.'
+};
+const policeLine=(name,role)=>POLICE_LINES[role]||('Olá! Sou '+name+' e estou na Delegacia hoje.');
+function policeCrowd(){return[
+ ['Ramos','Sargento',7,2.7,'staff','#1f3a5f','#c28f6a','#23232b'],
+ ['Iara','Cabo de trânsito',21,2.2,'staff','#1f3a5f','#d2a17d','#2a1f1c'],
+ ['Vitor','Operador de despacho',31.5,4.9,'staff','#1f3a5f','#b77a55','#1f1f26'],
+ ['Mara','Delegada',42,2.1,'staff','#16294a','#d2a17d','#2b2230'],
+ ['Nina','Perita papiloscopista',21.5,18.4,'staff','#e9eef0','#d7a781','#3a2a22'],
+ ['Caio','Detetive',30.6,18.4,'staff','#6b4a2f','#bb865f','#2a2420'],
+ ['Otto','Perito criminal',36.6,18.8,'staff','#e9eef0','#c99572','#222a33'],
+ ['Lima','Carcereiro',40.6,21,'staff','#1f3a5f','#b47b53','#272a2b'],
+ ['Bruno','Detento (encenação)',44.6,21.5,'visitor','#d9822b','#bd865f','#2a2420'],
+ ['Moradora','Cidadã',4,19.6,'visitor','#bc7654','#c99a78','#3d3228'],
+ ['Morador','Cidadão',12.2,10,'visitor','#4a6f8a','#b88a68','#2b2b33']]}
+Object.assign(DEC,{
+ pdesk:{s:[6,1],p:[[.05,.1,5.9,.8,0,26,'#1c2f47','#2a4565'],[0,.05,6,.9,26,29,'#d9a239','#ffd887'],[.3,.5,.45,.1,29,46,'#0d141f','#1a2434'],[2.7,.5,.45,.1,29,46,'#0d141f','#1a2434'],[5,.5,.45,.1,29,46,'#0d141f','#1a2434']],
+  f:(c,x,y,t)=>{for(let k=0;k<6;k++){const on=((t*2+k)|0)%3;const q=[P(x+.45+k*.95,y+.92,15),P(x+.7+k*.95,y+.92,15),P(x+.7+k*.95,y+.92,11),P(x+.45+k*.95,y+.92,11)];poly(c,q,on?'#2DD4BF':'#F2B84B')}
+   poly(c,[P(x+2.7,y+.92,23),P(x+3.3,y+.92,23),P(x+3.3,y+.92,17),P(x+3,y+.92,13),P(x+2.7,y+.92,17)],'#F2B84B')}},
+ pconsole:{s:[4,1],p:[[.05,.1,3.9,.8,0,24,'#16233a','#223454'],[.3,.5,1.1,.08,29,46,'#0b1220','#10192b'],[1.5,.5,1.1,.08,29,46,'#0b1220','#10192b'],[2.7,.5,1.1,.08,29,46,'#0b1220','#10192b']],
+  f:(c,x,y,t)=>{for(let k=0;k<3;k++){const x0=x+.3+k*1.2,yy=y+.6;poly(c,[P(x0+.06,yy,44),P(x0+1.04,yy,44),P(x0+1.04,yy,31),P(x0+.06,yy,31)],'#06161a');c.strokeStyle=k===1?'#F2B84B':'#2DD4BF';c.lineWidth=1.2;c.beginPath();for(let i=0;i<=8;i++){const q=P(x0+.1+i*.108,yy,37.5+Math.sin(t*3+i*.8+k*1.7)*4);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])}c.stroke()}
+   const l=P(x+3.6,y+.92,10);c.fillStyle=((t*3)|0)%2?'#ff4d5e':'#5a1f27';c.fillRect(l[0]-1.5,l[1]-1.5,3,3)}},
+ pchief:{s:[4,1],p:[[.1,.1,3.8,.8,0,26,'#4a3220','#6a4a30'],[0,.05,4,.9,26,29,'#1c2f47','#2a4565'],[1.6,.78,.8,.12,29,36,'#d9a239','#ffd887'],[.4,.35,.5,.12,29,42,'#111','#222'],[3,.4,.5,.12,29,40,'#0d141f','#1a2434']]},
+ pscanner:{s:[1,1],p:[[.2,.2,.6,.6,0,30,'#2a3b50','#3a5370'],[.15,.15,.7,.5,30,40,'#1c2a3b','#22344a']],
+  f:(c,x,y,t)=>{const u=(t*.8)%1;c.strokeStyle='#5cf0a8';c.lineWidth=1.6;ln(c,P(x+.25,y+.25+u*.45,40.5),P(x+.75,y+.25+u*.45,40.5));c.strokeStyle='rgba(92,240,168,.35)';ln(c,P(x+.25,y+.25+u*.45,41.5),P(x+.75,y+.25+u*.45,41.5))}},
+ pcamera:{s:[1,1],p:[[.3,.3,.08,.08,0,36,'#222','#333'],[.62,.3,.08,.08,0,36,'#222','#333'],[.46,.58,.08,.08,0,36,'#222','#333'],[.2,.25,.6,.5,36,52,'#1b2432','#2b3a50'],[.35,.2,.3,.1,40,48,'#0b0f16','#1b2432']],
+  f:(c,x,y,t)=>{if((t%5)<.14){const q=P(x+.5,y+.2,44);const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],26);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1],26,0,7);c.fill()}}},
+ ptable:{s:[3,2],p:[[.1,.1,2.8,1.8,0,22,'#6b7785','#8f9aa8'],[.05,.05,2.9,1.9,22,25,'#aab6c4','#ccd6e2'],[1.2,.3,.5,.4,25,31,'#222','#333']],
+  f:(c,x,y,t)=>{const q=P(x+1.45,y+.5,31.5);c.fillStyle=((t*2)|0)%2?'#ff4d5e':'#6a2a30';c.beginPath();c.arc(q[0],q[1],1.6,0,7);c.fill()}},
+ petable:{s:[3,2],p:[[.1,.1,2.8,1.8,0,22,'#c9d3d8','#e8eef1'],[.05,.05,2.9,1.9,22,25,'#f4f8fa','#ffffff'],[.4,.5,.5,.5,25,28,'#d9534f','#ef7a76'],[1.2,.4,.4,.4,25,27,'#d9a239','#ffd887'],[2,.9,.5,.4,25,28,'#2DD4BF','#7ff0e1']],
+  f:(c,x,y,t)=>{const q=P(x+1.5,y+1,30),a=.22+.12*Math.sin(t*3);const g=c.createRadialGradient(q[0],q[1],2,q[0],q[1],46);g.addColorStop(0,'rgba(170,110,255,'+a+')');g.addColorStop(1,'rgba(170,110,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(q[0],q[1],46,24,0,0,7);c.fill()}},
+ plocker:{s:[2,1],p:[[.05,.1,1.9,.8,0,64,'#4b5666','#6a7686']],
+  f:(c,x,y,t)=>{c.strokeStyle='#2c3542';c.lineWidth=1;for(let k=0;k<3;k++){const a=x+.05+k*.633;ln(c,P(a,y+.91,3),P(a,y+.91,62));const l=P(a+.3,y+.91,52);c.fillStyle=((t*1.5+k)|0)%3===0?'#F2B84B':'#2DD4BF';c.fillRect(l[0]-1.5,l[1]-1.5,3,3)}}}
+});
+function policeCollision(){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ PDZ.dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ return solids;
+}
+function policeZones(){
+ const zs=[],go=(label,x,y,fn,desc='')=>zs.push({label,x,y,r:.95,desc,action:fn});
+ go('Balcão de Atendimento',7,6.3,()=>openPolicePanel('desk'));
+ go('Mural de Alertas',13.3,2.7,()=>openPolicePanel('alerts'));
+ go('Balcão de Multas',21,5.3,()=>openPolicePanel('fines'));
+ go('Central de Despacho',31.5,8.5,()=>openPolicePanel('dispatch'));
+ go('Mesa da Delegada',42,5.6,()=>openPolicePanel('chief'));
+ go('Terminal de Identificação',17.9,18.9,()=>openPolicePanel('cert'));
+ go('Mesa de Interrogatório',28,22.3,()=>openPolicePanel('interrogation'));
+ go('Mesa de Evidências',34.9,21.9,()=>openPolicePanel('evidence'));
+ zs.push({label:'Posto da Carceragem',x:40.9,y:21.4,r:1.1,desc:'Posto do carcereiro. As celas ficam atrás das grades, ao fundo do corredor.'});
+ [['Cela 1',18.5],['Cela 2',21.5],['Cela 3',24.5]].forEach(([l,y])=>zs.push({label:l,x:42.2,y,r:.95,desc:l+': cama de ferro, vaso sanitário e uma lâmpada que insiste em piscar. As celas são usadas em treinamentos.'}));
+ PDZ.dec.forEach(([name,x,y])=>{
+  const cfg=HZ_SEAT[name];if(cfg){const sz=DEC[name].s;for(let k=0;k<cfg.n;k++){const sx=x+(k+.5)*sz[0]/cfg.n,sy=y+sz[1]*.58;zs.push({label:cfg.label,x:sx,y:y+sz[1]+.35,r:.7,desc:'',seat:{x:sx,y:sy},action(){hospSitAt(this)}})}}
+  if(name==='cooler')zs.push({label:'Bebedouro',x:x+.5,y:y+1.35,r:.9,desc:'Bebedouro.',action:()=>cityDo('drink',1800,'Bebendo água…',()=>toast('Água fresca e gelada.'))});
+ });
+ return zs;
+}
+// Anima a ação do jogador (digital, depoimento, perícia) e só depois chama o servidor.
+function policeScan(kind,ms,label,done){cityDo(kind,ms,label,done)}
+function policeMedOverlay(t,m){
+ const k=Math.min(1,(performance.now()-m.t0)/m.ms),pt=P(ipx,ipy),pulse=.5+.5*Math.sin(t*9),cx=pt[0],cy=pt[1]-86;
+ c.save();c.lineCap='round';
+ c.fillStyle='rgba(6,12,24,.9)';c.strokeStyle='#2DD4BF';c.lineWidth=1.4;c.beginPath();c.roundRect(cx-34,cy-26,68,52,8);c.fill();c.stroke();
+ if(m.kind==='pscan'){ // arcos de uma digital e linha de leitura
+  c.strokeStyle='#F2B84B';c.lineWidth=1.3;for(let i=1;i<=5;i++){c.beginPath();c.arc(cx,cy+8,i*4.2,Math.PI*1.08,Math.PI*1.92);c.stroke()}
+  c.strokeStyle='#5cf0a8';c.lineWidth=2;const sy=cy-20+k*38;c.beginPath();c.moveTo(cx-26,sy);c.lineTo(cx+26,sy);c.stroke();
+ }else if(m.kind==='statement'){ // microfone e ondas de som
+  c.fillStyle='#e9eef0';c.beginPath();c.roundRect(cx-4,cy-16,8,15,4);c.fill();c.strokeStyle='#e9eef0';c.lineWidth=1.6;c.beginPath();c.arc(cx,cy-3,8,0,Math.PI);c.stroke();c.beginPath();c.moveTo(cx,cy+5);c.lineTo(cx,cy+13);c.stroke();
+  c.strokeStyle='#ff4d5e';c.lineWidth=1.4;for(let i=0;i<3;i++){const r=10+((t*18+i*7)%22);c.globalAlpha=Math.max(0,1-r/32);c.beginPath();c.arc(cx,cy-9,r,-.9,.9);c.stroke();c.beginPath();c.arc(cx,cy-9,r,Math.PI-.9,Math.PI+.9);c.stroke()}c.globalAlpha=1;
+ }else if(m.kind==='evidence'){ // lupa varrendo a prova
+  const lx=cx-12+Math.sin(t*3)*16,ly=cy-2+Math.cos(t*2.4)*6;c.strokeStyle='#cfe9f2';c.lineWidth=2.2;c.beginPath();c.arc(lx,ly,9,0,7);c.stroke();c.beginPath();c.moveTo(lx+6.5,ly+6.5);c.lineTo(lx+14,ly+14);c.stroke();
+  c.fillStyle='rgba(170,110,255,'+(.25+pulse*.25)+')';c.beginPath();c.arc(lx,ly,8,0,7);c.fill();
+ }
+ c.restore();
+ c.font='bold 8px sans-serif';const bw=Math.max(78,Math.ceil(c.measureText(m.label).width)+14),bx=cx-bw/2,by=cy+34;c.fillStyle='rgba(6,12,24,.88)';c.fillRect(bx-2,by-13,bw+4,22);c.fillStyle='#bfeee6';c.textAlign='center';c.fillText(m.label,cx,by-5);c.fillStyle='#1c3340';c.fillRect(bx,by,bw,4);c.fillStyle='#2DD4BF';c.fillRect(bx,by,bw*k,4);
+}
+// Texto numa parede, com alinhamento escolhido (a função wtxt sempre centraliza).
+function wtxtA(axis,text,px,py,z,font,color,align){const q=P(px,py,z);c.save();c.translate(q[0],q[1]);c.transform(1,axis==='x'?.5:-.5,0,1,0,0);c.font=font;c.fillStyle=color;c.textAlign=align||'center';c.fillText(text,0,0);c.restore()}
+function pwrap(text,n,max){const out=[];let cur='';String(text||'').split(' ').forEach(w=>{if((cur+' '+w).trim().length>n){if(cur)out.push(cur);cur=w}else cur=(cur+' '+w).trim()});if(cur)out.push(cur);return out.slice(0,max||99)}
+function pScreen(pos,x1,x2,z1,z2,fill,edge){const pts=[P(x1,pos,z2),P(x2,pos,z2),P(x2,pos,z1),P(x1,pos,z1)];poly(c,pts,fill);c.strokeStyle=edge||'#F2B84B';c.lineWidth=2;c.stroke();return pts}
+function pClip(pts){c.save();c.beginPath();pts.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.clip()}
+const pcs=()=>(typeof policeState==='object'&&policeState)||null;
+function policeStat(k){const s=pcs();return s&&s.stats?s.stats[k]:null}
+function policeDrawClock(x,pos,z,t){
+ const q=P(x,pos,z),d=new Date(),s=d.getSeconds()+d.getMilliseconds()/1000,m=d.getMinutes()+s/60,h=(d.getHours()%12)+m/60;
+ c.save();c.translate(q[0],q[1]);c.transform(1,.5,0,1,0,0);c.fillStyle='#f4f0e6';c.strokeStyle='#1c2f47';c.lineWidth=2.2;c.beginPath();c.arc(0,0,9,0,7);c.fill();c.stroke();
+ c.strokeStyle='#1c2f47';c.lineWidth=1.6;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(h/6*Math.PI)*5,-Math.cos(h/6*Math.PI)*5);c.stroke();c.lineWidth=1.2;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(m/30*Math.PI)*7.4,-Math.cos(m/30*Math.PI)*7.4);c.stroke();
+ c.strokeStyle='#d94b57';c.lineWidth=.9;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(s/30*Math.PI)*7.8,-Math.cos(s/30*Math.PI)*7.8);c.stroke();c.restore();
+}
+function policeCctv(t){ // parede de monitores da Central de Despacho (6 telas; uma delas é um radar com os jogadores reais)
+ const open=policeStat('open')||0;
+ for(let r=0;r<2;r++)for(let i=0;i<3;i++){
+  const k=r*3+i,x1=27.25+i*2.58,x2=x1+2.4,z1=26+r*29,z2=z1+25;
+  const pts=pScreen(0,x1,x2,z1,z2,'#06141a','#3a5270');pClip(pts);
+  const wz=(a,z)=>P(a,0,z);
+  if(k<4){ // câmeras: piso, silhuetas passando e faixa de varredura
+   poly(c,[wz(x1,z1),wz(x2,z1),wz(x2,z1+7),wz(x1,z1+7)],'#0d2b30');
+   for(let n=0;n<2;n++){const px=x1+1.2+Math.sin(t*(.5+n*.3)+k*2+n*3)*.8,q=wz(px,z1+9+n*2);c.fillStyle=n?'#F2B84B':'#7ff0e1';c.fillRect(q[0]-1.5,q[1]-6,3,6);c.beginPath();c.arc(q[0],q[1]-8,2,0,7);c.fill()}
+   const sy=z1+((t*9+k*6)%25);c.strokeStyle='rgba(120,255,235,.28)';c.lineWidth=2;ln(c,wz(x1,sy),wz(x2,sy));
+   c.strokeStyle='rgba(120,255,235,.08)';c.lineWidth=1;for(let n=0;n<6;n++)ln(c,wz(x1,z1+n*4.2),wz(x2,z1+n*4.2));
+   wtxtA('x','CAM 0'+(k+1),x1+.15,0,z2-4,'bold 4.6px sans-serif','#9ff7ea','left');
+   if(((t*1.4+k)|0)%2){const q=wz(x2-.2,z2-3.2);c.fillStyle='#ff4d5e';c.beginPath();c.arc(q[0],q[1],1.5,0,7);c.fill()}
+  }else if(k===4){ // radar: jogadores online (reais) como pontos
+   c.strokeStyle='rgba(95,240,168,.28)';c.lineWidth=1;for(let n=1;n<=3;n++){const a=(x2-x1)/2*n/3,b=(z2-z1)/2*n/3,cc=P((x1+x2)/2,0,(z1+z2)/2);c.beginPath();c.ellipse(cc[0],cc[1],a*32,b*.9,0,0,7);c.stroke()}
+   const cxm=(x1+x2)/2,czm=(z1+z2)/2,ang=t*1.6,rr=Math.min(x2-x1,(z2-z1)/10)/2;ln(c,wz(cxm,czm),wz(cxm+Math.cos(ang)*rr*1.1,czm+Math.sin(ang)*(z2-z1)/2.1));
+   const dot=(wx,wy,col,r)=>{const u=Math.max(0,Math.min(1,wx/MW)),v=Math.max(0,Math.min(1,wy/MH)),q=wz(x1+.15+u*(x2-x1-.3),z2-2-v*(z2-z1-4));c.fillStyle=col;c.beginPath();c.arc(q[0],q[1],r,0,7);c.fill()};
+   try{RP.forEach(p=>dot(p.x,p.y,'#F2B84B',1.8))}catch(e){}
+   if(interior)dot(interior.returnX,interior.returnY,'#2DD4BF',2.2+Math.sin(t*6));
+   wtxtA('x','RADAR',x1+.15,0,z2-4,'bold 4.6px sans-serif','#9ff7ea','left');
+  }else{ // status das ocorrências
+   const bad=open>0,flash=bad&&((t*2)|0)%2;
+   poly(c,[wz(x1,z1),wz(x2,z1),wz(x2,z2),wz(x1,z2)],flash?'#3a1018':'#06141a');
+   wtxt('x',bad?open+' ABERTA'+(open>1?'S':''):'TUDO CALMO',(x1+x2)/2,0,z1+13,'bold 6px sans-serif',bad?'#ff8a95':'#7ff0a8');
+   wtxt('x','OCORRÊNCIAS',(x1+x2)/2,0,z1+6,'4.6px sans-serif','#9fb8c8');
+  }
+  c.restore();
+ }
+}
+function policeCells(V,t){
+ [17,20,23].forEach((y0,n)=>{
+  V.push({k:43+y0+.4,f:()=>{ // beliche, vaso e lâmpada piscando
+   box(c,44.9,y0+.3,1,2.2,0,12,'#59606a','#8a929c');box(c,45,y0+.35,.9,.6,12,16,'#d9d2c0','#f4efe3');box(c,43.3,y0+2.1,.55,.55,0,9,'#cfd6dc','#eef2f5');
+   const q=P(44.5,y0+1.5,86),fl=n===1&&((t*3)|0)%7===0?.35:1;c.fillStyle='rgba(255,236,170,'+(.85*fl)+')';c.fillRect(q[0]-5,q[1]-2,10,4);
+   const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],38);g.addColorStop(0,'rgba(255,236,170,'+(.22*fl)+')');g.addColorStop(1,'rgba(255,236,170,0)');c.fillStyle=g;c.beginPath();c.ellipse(q[0],q[1]+34,38,20,0,0,7);c.fill()}});
+  V.push({k:43+y0+3.3,f:()=>{ // grades e trava com luz
+   for(let u=y0+.25;u<y0+3;u+=.5)box(c,42.97,u,.06,.07,0,68,'#3a4452','#9aa6b6');
+   box(c,42.95,y0,.1,3,66,70,'#2c3542','#7d8898');box(c,42.95,y0,.1,3,0,3,'#2c3542','#7d8898');
+   const l=P(43.05,y0+1.5,34);c.fillStyle=((t*1.2+n)|0)%2?'#5cf0a8':'#1c5a3e';c.fillRect(l[0]-2,l[1]-2,4,4)}});
+ });
+}
+function renderPoliceZip(t){
+ const pl=PDZ,TOP=92;
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#070b16');bg.addColorStop(1,'#04070f');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.22,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ for(let y=0;y<pl.h;y++)for(let x=0;x<pl.w;x++){const f=POLICE_FLOOR[pl.grid[y][x]]||POLICE_FLOOR.g;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ // faixa do corredor, tapete azul do saguão e o selo da cidade
+ poly(c,[P(16,12.9),P(46,12.9),P(46,13.1),P(16,13.1)],'rgba(242,184,75,.55)');
+ for(let x=17;x<46;x+=2)poly(c,[P(x,12.86),P(x+1,12.86),P(x+1,13.14),P(x,13.14)],'rgba(16,28,48,.85)');
+ poly(c,[P(0,11.2),P(16,11.2),P(16,14.8),P(0,14.8)],'rgba(18,56,92,.55)');poly(c,[P(0,11.2),P(16,11.2),P(16,11.32),P(0,11.32)],'rgba(242,184,75,.8)');poly(c,[P(0,14.68),P(16,14.68),P(16,14.8),P(0,14.8)],'rgba(242,184,75,.8)');
+ {const s=P(8,13);[[3.0,'#d9a239'],[2.7,'#16294a'],[2.1,'#2DD4BF'],[1.5,'#16294a'],[.8,'#d9a239']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45.25*r,22.6*r,0,0,7);c.fill()});c.fillStyle='#f4f0e6';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('SOROKIBA',s[0],s[1]+3)}
+ // luzes giratórias da entrada no piso (vermelho e azul se alternam)
+ {const ph=Math.sin(t*5),a=.1+.08*Math.abs(ph),col=ph>0?'255,59,70':'47,107,255',q=P(2.2,13);const g=c.createRadialGradient(q[0],q[1],2,q[0],q[1],110);g.addColorStop(0,'rgba('+col+','+(a*2.4)+')');g.addColorStop(1,'rgba('+col+',0)');c.fillStyle=g;c.beginPath();c.ellipse(q[0],q[1],140,70,0,0,7);c.fill()}
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(235,245,250,.2)';pl.rooms.forEach(([x,y,w,h,label])=>{if(label&&label!=='Corredor'){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
+ const V=[],WALL='#bccfd8',WALLS='#8aa0ac',BASE='rgba(10,20,34,.45)';
+ const band=(axis,pos,u)=>{ // faixa âmbar e verde-água nas paredes
+  const F=(a,z)=>axis==='x'?P(u+a,pos,z):P(pos,u+a,z);
+  poly(c,[F(0,46),F(1,46),F(1,41),F(0,41)],'#d9a239');poly(c,[F(0,49),F(1,49),F(1,46),F(0,46)],'#2DD4BF');poly(c,[F(0,8),F(1,8),F(1,0),F(0,0)],BASE)};
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,WALL,WALLS);band('x',0,i)};
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,WALL,WALLS);
+  const ent=j>=pl.entrance[0]&&j<pl.entrance[1];
+  if(ent){poly(c,[P(0,j+.04,76),P(0,j+.96,76),P(0,j+.96,0),P(0,j+.04,0)],'rgba(150,215,245,.5)');c.strokeStyle='#d9a239';c.lineWidth=2;c.stroke();ln(c,P(0,j+.5,76),P(0,j+.5,0))}
+  else{band('y',0,j);if(j%3===1){poly(c,[P(0,j+.14,84),P(0,j+.86,84),P(0,j+.86,52),P(0,j+.14,52)],'#7fb8d0');c.strokeStyle='#16294a';c.lineWidth=1.4;c.stroke();ln(c,P(0,j+.5,84),P(0,j+.5,52))}}};
+ for(let i=0;i<pl.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<pl.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ // viseira da entrada com sirene giratória
+ V.push({k:pl.entrance[0]+1.6,f:()=>{const a=pl.entrance[0],b=pl.entrance[1],m=(a+b)/2;poly(c,[P(0,a,92),P(0,b,92),P(0,b,76),P(0,a,76)],'#16294a');c.strokeStyle='#d9a239';c.lineWidth=1.6;c.stroke();wtxt('y','ENTRADA',0,m,80,'bold 8px sans-serif','#ffe9b0');
+  const ph=Math.sin(t*5)>0;[[a+.8,'#ff3b46',ph],[b-.8,'#2f6bff',!ph]].forEach(([yy,col,on])=>{const q=P(0,yy,98);c.fillStyle=on?col:'#232b3a';c.fillRect(q[0]-5,q[1]-6,10,10);if(on){const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],42);g.addColorStop(0,col+'cc');g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1],42,0,7);c.fill()}})}});
+ // letreiro neon no saguão
+ V.push({k:8,f:()=>{poly(c,[P(3.4,0,90),P(10.6,0,90),P(10.6,0,60),P(3.4,0,60)],'#0b1426');c.strokeStyle='#d9a239';c.lineWidth=2;c.stroke();
+  c.save();c.shadowColor='#F2B84B';c.shadowBlur=7+4*Math.sin(t*3);wtxt('x','DELEGACIA',7,0,77,'bold 12px sans-serif','#ffd887');c.restore();
+  c.save();c.shadowColor='#2DD4BF';c.shadowBlur=5+3*Math.sin(t*3+1);wtxt('x','DE SOROKIBA',7,0,66,'bold 6.5px sans-serif','#7ff0e1');c.restore();
+  const sh=P(4.1,0,77);c.fillStyle='#d9a239';c.beginPath();c.moveTo(sh[0]-7,sh[1]-8);c.lineTo(sh[0]+7,sh[1]-5);c.lineTo(sh[0]+7,sh[1]+3);c.lineTo(sh[0],sh[1]+10);c.lineTo(sh[0]-7,sh[1]+6);c.closePath();c.fill();c.fillStyle='#16294a';c.fillRect(sh[0]-2,sh[1]-3,4,8)}});
+ // mural de alertas (TV): último alerta com rolagem + faixa de números
+ V.push({k:13.4,f:()=>{const pts=pScreen(0,11.2,15.4,26,68,'#071018','#d9a239');pClip(pts);const s=pcs(),a=s&&s.alerts&&s.alerts[0];
+  poly(c,[P(11.2,0,68),P(15.4,0,68),P(15.4,0,61),P(11.2,0,61)],((t*1.6)|0)%2?'#7a1f2b':'#2a3d6a');wtxt('x','ALERTAS DE SEGURANÇA',13.3,0,63,'bold 4.6px sans-serif','#fff3cf');
+  const lines=a?pwrap(a.text,26,12):['Sem alertas no momento.','A cidade está tranquila.'],off=lines.length>3?((t/3)|0)%(lines.length-2):0;
+  lines.slice(off,off+3).forEach((l,i)=>wtxt('x',l,13.3,0,55-i*6.5,'5.4px sans-serif','#e6f4f8'));
+  if(a)wtxt('x','— '+a.by,13.3,0,36,'italic 4.6px sans-serif','#7ff0e1');
+  const info=s&&s.stats?'ABERTAS '+s.stats.open+'  ·  EM ANDAMENTO '+s.stats.investigating+'  ·  RESOLVIDAS (7D) '+s.stats.solved7+'  ·  MULTAS PENDENTES '+s.stats.pendingFines+'      ':'CARREGANDO…      ';
+  const w=info.length*2.55,sh=((t*14)%w);poly(c,[P(11.2,0,32),P(15.4,0,32),P(15.4,0,26),P(11.2,0,26)],'#10213a');
+  for(let n=0;n<2;n++)wtxtA('x',info,11.3+n*(w/32)-sh/32,0,28,'bold 4.4px sans-serif','#F2B84B','left');c.restore()}});
+ // Multas: tabela de infrações (dados do servidor) e relógio
+ V.push({k:21,f:()=>{pScreen(0,17.4,24.8,22,70,'#0b1426','#d9a239');const inf=(pcs()&&pcs().constants&&pcs().constants.infractions)||{faixa:{label:'Atravessar fora da faixa',amount:40},lixo:{label:'Descarte irregular de lixo',amount:50},sossego:{label:'Perturbação do sossego',amount:60},transito:{label:'Imprudência no trânsito',amount:90},dano:{label:'Dano ao patrimônio público',amount:120}};
+  wtxt('x','TABELA DE INFRAÇÕES',21.1,0,62,'bold 6px sans-serif','#ffd887');Object.values(inf).forEach((v,i)=>{wtxtA('x',v.label,17.7,0,52-i*7.4,'5px sans-serif','#e6f4f8','left');wtxtA('x','R$ '+v.amount,24.5,0,52-i*7.4,'bold 5px sans-serif','#7ff0e1','right')})}});
+ // Despacho: parede de câmeras
+ V.push({k:31,f:()=>policeCctv(t)});
+ // Gabinete: quadro de resultados
+ V.push({k:41.5,f:()=>{pScreen(0,40.3,42.9,38,72,'#0b1426','#d9a239');wtxt('x','GABINETE',41.6,0,64,'bold 6px sans-serif','#ffd887');wtxt('x','Casos resolvidos (7 d)',41.6,0,54,'4.6px sans-serif','#cfe3ea');wtxt('x',String(policeStat('solved7')??'—'),41.6,0,44,'bold 11px sans-serif','#7ff0a8')}});
+ // Corredor: painel de patrulha em ciclo e relógio
+ V.push({k:37,f:()=>{pScreen(11.07,35.2,39.4,44,78,'#071018','#2DD4BF');const sl=[['OCORRÊNCIAS ABERTAS',policeStat('open')],['RESOLVIDAS (7 DIAS)',policeStat('solved7')],['MULTAS PENDENTES',policeStat('pendingFines')],['ARRECADADO (7 D)',policeStat('collected7')===null?null:'R$ '+policeStat('collected7')]],cur=sl[((t/3.5)|0)%4];
+  wtxt('x','PAINEL DE PATRULHA',37.3,11.07,72,'bold 4.8px sans-serif','#F2B84B');wtxt('x',cur[0],37.3,11.07,64,'4.6px sans-serif','#cfe3ea');wtxt('x',String(cur[1]??'—'),37.3,11.07,52,'bold 13px sans-serif','#7ff0e1')}});
+ V.push({k:27,f:()=>policeDrawClock(26.6,11.07,66,t)});
+ // Identificação: tabela de altura da foto de cadastro
+ V.push({k:23,f:()=>{poly(c,[P(22.1,15.07,80),P(23.8,15.07,80),P(23.8,15.07,6),P(22.1,15.07,6)],'#e8edf0');c.strokeStyle='#16294a';c.lineWidth=1;c.stroke();
+  for(let n=0;n<10;n++){const z=10+n*7;ln(c,P(22.1,15.07,z),P(n%5?22.5:22.8,15.07,z));if(n%5===0)wtxtA('x',(1.2+n*.1).toFixed(1),23.1,15.07,z-2,'4px sans-serif','#16294a','left')}wtxt('x','ALTURA',22.95,15.07,84,'bold 4px sans-serif','#ffe9b0')}});
+ // Interrogatório: espelho unidirecional e lâmpada GRAVANDO
+ V.push({k:30.6,f:()=>{const pts=pScreen(15.07,29.4,31.8,22,72,'#16222f','#8aa0ac');pClip(pts);const sw=((t*.35)%1)*3.4-.5;poly(c,[P(29.4+sw,15.07,72),P(29.9+sw,15.07,72),P(29.5+sw,15.07,22),P(29+sw,15.07,22)],'rgba(200,230,255,.16)');c.restore();wtxt('x','ESPELHO UNIDIRECIONAL',30.6,15.07,16,'bold 3.6px sans-serif','#cfe3ea')}});
+ V.push({k:28.2,f:()=>{const rec=interior.med&&interior.med.kind==='statement',on=rec?((t*3)|0)%2:0;poly(c,[P(27.2,15.14,92),P(28.8,15.14,92),P(28.8,15.14,84),P(27.2,15.14,84)],rec?(on?'#ff3b46':'#5a1b21'):'#1c5a3e');wtxt('x',rec?'GRAVANDO':'LIVRE',28,15.14,86,'bold 5px sans-serif','#fff')}});
+ // paredes internas (com faixa) e portas com placa
+ // paredes na frente do jogador ficam quase transparentes, para ele não sumir atrás delas
+ pl.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++){
+  const fd=()=>axis==='v'?(ipx<pos&&pos-ipx<3.8&&Math.abs(ipy-(u+.5))<2.8):(ipy<pos&&pos-ipy<3.8&&Math.abs(ipx-(u+.5))<2.8);
+  V.push(axis==='v'?{k:pos+u+.5,f:()=>{if(fd())c.globalAlpha=.27;box(c,pos-.06,u,.12,1,0,TOP,WALL,WALLS);band('y',pos+.06,u);c.globalAlpha=1}}:{k:u+.5+pos,f:()=>{if(fd())c.globalAlpha=.27;box(c,u,pos-.06,1,.12,0,TOP,WALL,WALLS);band('x',pos+.06,u);c.globalAlpha=1}})}});
+ pl.cellWalls.forEach(([axis,pos,from,to])=>{if(axis==='h')for(let u=from;u<to;u++)V.push({k:u+.5+pos,f:()=>box(c,u,pos-.06,1,.12,0,70,'#8c96a0','#aab4be')})});
+ pl.doors.forEach(([axis,pos,a,b,text])=>{const m=(a+b)/2;V.push({k:axis==='v'?pos+m+.6:m+pos+.6,f:()=>{
+  if(axis==='v'){box(c,pos-.06,a,.12,b-a,70,TOP,'#16294a','#d9a239');wtxt('y',text,pos+.07,m,78,'bold 7px sans-serif','#ffe9b0')}
+  else{box(c,a,pos-.06,b-a,.12,70,TOP,'#16294a','#d9a239');wtxt('x',text,m,pos+.07,78,'bold 7px sans-serif','#ffe9b0')}}})});
+ policeCells(V,t);
+ pl.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1];V.push({k:x+y+(d[0]+d[1])/2,f:()=>drawDec(c,name,x,y,t)})});
+ const med=interior.med,sat=!!interior.seat;
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=POLICE_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.f?2:0,pn:o.pn||'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl})}}));
+ V.push({k:ipx+ipy+(sat?1.3:0),f:()=>{const q=P(ipx,ipy,sat?9:0);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',(med&&med.sit)||sat?{...myO,seated:true}:myO)}});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44+(sat?9:0));c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#7ff0e1';c.fillText(p.name,q[0],q[1])});
+ if(med&&['pscan','statement','evidence'].includes(med.kind))policeMedOverlay(t,med);
+ c.setTransform(1,0,0,1,0,0);
+}
+
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
   if(interior.room.shape==='hospital-zip'){renderHospitalZip(t);return}
   if(interior.room.shape==='cityhall-zip'){renderCityHallZip(t);return}
+   if(interior.room.shape==='police-zip'){renderPoliceZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -2188,6 +2509,7 @@ function act(){
   if(near?.t==='interiorPerson'){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
    if(interior.room.family==='cityhall'&&CITY_ROLE_SITE[near.o.role]){openCityPanel(CITY_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='police'&&POLICE_ROLE_SITE[near.o.role]){openPolicePanel(POLICE_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
@@ -2212,8 +2534,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -3294,7 +3616,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
 /* ---------- HOSPITAL: painel do paciente ---------- */
@@ -3512,8 +3834,8 @@ const CITY_SITES={
  health:{title:'Secretaria de Saúde',who:'Saúde pública',office:'saude',tabs:[['health','Saúde pública'],['dash','Painel']]},
  plenary:{title:'Plenário da Câmara',who:'Câmara Municipal',office:'vereador',tabs:[['laws','Votações'],['dash','Painel']]}
 };
-const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola'};
-const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial'};
+const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia'};
+const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança'};
 const cityNow=()=>Date.now()+cityOffset;
 const cityMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const cityCompact=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':a>=1e3?(v/1e3).toFixed(1).replace('.',',')+' mil':String(Math.round(v))};
@@ -3694,6 +4016,246 @@ $('cityBody').onclick=e=>{
  else if(a==='world'){closeCityPanel();$('mayorControlsBtn').click()}
 };
 window.addEventListener('resize',()=>{if(!$('cityPanel').hidden)cityDrawCharts()});
+/* ---------- DELEGACIA: painel (Boletim de Ocorrência, multas, despacho, certidão e gabinete) ---------- */
+let policeState=null,policeSite='desk',policeTab='report',policeBusy=false,policeReq=0,policeOffset=0,policeTimer=0,policePoll=0,policeReloaded=false,policeContest=null,policeVerify=null,policeDraft={};
+const POLICE_SITES={
+ desk:{title:'Balcão de Atendimento',who:'Sargento Ramos · Boletim de Ocorrência',tabs:[['report','Registrar B.O.'],['mine','Meus registros'],['verify','Validar certidão']]},
+ alerts:{title:'Mural de Alertas',who:'Avisos de segurança da cidade',tabs:[]},
+ fines:{title:'Multas e Trânsito',who:'Cabo Iara · Setor de Multas',tabs:[['mine','Minhas multas'],['issue','Aplicar multa'],['table','Tabela de infrações']]},
+ dispatch:{title:'Central de Despacho',who:'Soldado Vitor · Fila de ocorrências',tabs:[['queue','Fila'],['case','Meu caso'],['stats','Números']]},
+ interrogation:{title:'Sala de Interrogatório',who:'Detetive Caio · Depoimentos',tabs:[]},
+ evidence:{title:'Sala de Evidências',who:'Perito Otto · Análise de provas',tabs:[]},
+ cert:{title:'Identificação',who:'Perita Nina · Certidão de antecedentes',tabs:[]},
+ chief:{title:'Gabinete da Delegada',who:'Delegada Mara',tabs:[['contest','Contestações'],['alerts','Alertas'],['team','Equipe'],['dash','Painel']]}
+};
+const POLICE_STAGES=[['open','Na fila'],['statement','Depoimento'],['evidence','Provas'],['close','Parecer']];
+const policeNow=()=>Date.now()+policeOffset;
+const polCount=until=>'<b class="polCount" data-until="'+until+'">'+cityWait(until-policeNow())+'</b>';
+const polAgo=ms=>{const m=Math.max(0,Math.round((policeNow()-ms)/60000));return m<1?'agora há pouco':m<60?'há '+m+' min':m<1440?'há '+Math.round(m/60)+' h':'há '+Math.round(m/1440)+' d'};
+const POL_STATUS={aberto:['Aberta',''],investigando:['Em investigação','warn'],resolvido:['Resolvida','ok'],arquivado:['Arquivada',''],pendente:['Pendente','warn'],contestada:['Em análise','warn'],paga:['Paga','ok'],cancelada:['Cancelada',''],advertencia:['Advertência','']};
+const polTag=s=>{const t=POL_STATUS[s]||[s,''];return '<span class="polTag '+t[1]+'">'+t[0]+'</span>'};
+const polKpi=(l,v,h)=>'<div class="polKpi"><span>'+l+'</span><strong>'+v+'</strong>'+(h?'<small>'+h+'</small>':'')+'</div>';
+const polCan=a=>!!(policeState&&policeState.me.can[a]);
+async function policeRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{
+  const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/police'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.err||'Não foi possível falar com a Delegacia.');
+  return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('A Delegacia demorou para responder. Tente novamente.');throw e}
+ finally{clearTimeout(timer)}
+}
+function policeApply(d){
+ if(d.player){user=d.player;$('hm').textContent=user.money}
+ if(d.police){policeState=d.police;policeOffset=policeState.serverNow-Date.now();policeReloaded=false}
+}
+function policeSay(text,bad){const e=$('policeMsg');if(!e)return;e.textContent=text||'';e.classList.toggle('err',!!bad)}
+function policeTabsFor(){
+ const S=POLICE_SITES[policeSite];let tabs=S.tabs.slice();
+ if(policeSite==='fines'&&!polCan('fine'))tabs=tabs.filter(t=>t[0]!=='issue');
+ if(policeSite==='chief'&&!polCan('decide'))tabs=[];
+ if(policeSite==='dispatch'&&!polCan('take'))tabs=tabs.filter(t=>t[0]==='stats');
+ return tabs;
+}
+/* ---------- telas ---------- */
+function vDesk(){
+ const s=policeState,k=s.constants;
+ if(policeTab==='mine'){
+  const list=s.myReports;
+  return '<div class="polCard"><h3>Meus Boletins de Ocorrência</h3>'+(list.length?'<ul class="polList">'+list.map(r=>'<li><span><b>'+esc(r.kindLabel)+'</b> '+polTag(r.status)+'<small>'+esc(r.text)+'</small><small>'+polAgo(r.at)+(r.target?' · envolvido: '+esc(r.target):'')+(r.officer?' · policial: '+esc(r.officer):'')+'</small>'+(r.resolution?'<small class="polQuote">Parecer: '+esc(r.resolution)+'</small>':'')+'</span></li>').join('')+'</ul>':'<p class="polHint">Você ainda não registrou nenhuma ocorrência.</p>')+'</div>';
+ }
+ if(policeTab==='verify'){
+  const v=policeVerify;
+  return '<div class="polCard"><h3>Validar certidão de antecedentes</h3><p class="polHint">Digite o código impresso na certidão (exemplo: SK-1A2B3C4D) para conferir se ela é autêntica.</p><label for="polCode">Código da certidão</label><input id="polCode" type="text" maxlength="11" placeholder="SK-XXXXXXXX" autocomplete="off"><div class="polActions"><button type="button" data-pol="verify">Validar</button></div>'
+   +(v?(v.err?'<p class="polBad" role="alert">'+esc(v.err)+'</p>':'<div class="polDoc small"><b>'+esc(v.cert.code)+'</b><span>'+esc(v.cert.name)+'</span><span class="polStamp '+(v.cert.status==='NADA CONSTA'?'ok':'bad')+'">'+esc(v.cert.status)+'</span><small>Emitida em '+cityTime(v.cert.at)+'</small></div>'):'')+'</div>';
+ }
+ return '<div class="polCard"><h3>Registrar Boletim de Ocorrência</h3><p class="polHint">Conte o que aconteceu. Um policial assume o caso, colhe depoimentos, analisa as provas e dá um parecer. Você pode ter até '+k.openMax+' ocorrências em andamento.</p>'
+  +'<label for="polKind">Tipo</label><select id="polKind">'+Object.entries(k.reportKinds).map(([id,l])=>'<option value="'+id+'">'+esc(l)+'</option>').join('')+'</select>'
+  +'<label for="polText">O que aconteceu? <small id="polCount" class="polSmall"></small></label><textarea id="polText" rows="4" maxlength="'+k.reportMax+'"></textarea>'
+  +'<label for="polTarget">Envolvido (opcional)</label><input id="polTarget" type="text" maxlength="14" placeholder="nome do jogador" autocomplete="off">'
+  +'<div class="polActions"><button type="button" data-pol="report">Registrar B.O.</button></div></div>';
+}
+function vAlerts(){
+ const s=policeState;
+ return '<div class="polKpis">'+polKpi('Ocorrências abertas',s.stats.open)+polKpi('Em investigação',s.stats.investigating)+polKpi('Resolvidas (7 dias)',s.stats.solved7)+polKpi('Multas pendentes',s.stats.pendingFines)+'</div>'
+  +'<div class="polCard"><h3>Alertas de segurança</h3>'+(s.alerts.length?'<ul class="polList">'+s.alerts.map(a=>'<li><span>'+esc(a.text)+'<small>'+esc(a.by)+' · '+cityTime(a.at)+'</small></span></li>').join('')+'</ul>':'<p class="polHint">Nenhum alerta publicado. A cidade está tranquila.</p>')+'</div>';
+}
+function polFineRow(f,mine){
+ const dueTxt=f.status==='pendente'?(f.overdue?'<span class="polBad">atrasada (+'+cityMoney(f.surcharge)+')</span>':'vence em '+polCount(f.dueAt)):'';
+ let right='';
+ if(mine&&f.status==='pendente')right='<b>'+cityMoney(f.due)+'</b><button type="button" data-pol="pay" data-id="'+f.id+'">Pagar</button>'+(f.canContest?'<button type="button" class="alt" data-pol="contestopen" data-id="'+f.id+'">Contestar</button>':'');
+ else if(f.status==='paga')right='<b>'+cityMoney(f.paidAmount||f.amount)+'</b>';
+ else if(f.amount>0)right='<b>'+cityMoney(f.amount)+'</b>';
+ const form=mine&&policeContest===f.id?'<li class="polSub"><div><label for="polContestText">Por que esta multa deve ser cancelada? <small class="polSmall">'+policeState.constants.noteMin+'+ caracteres</small></label><textarea id="polContestText" rows="3" maxlength="160"></textarea><div class="polActions"><button type="button" data-pol="contest" data-id="'+f.id+'">Enviar contestação</button><button type="button" class="alt" data-pol="contestclose">Cancelar</button></div></div></li>':'';
+ return '<li><span><b>'+esc(f.label)+'</b> '+polTag(f.status)+'<small>'+esc(f.note)+'</small><small>'+(mine?'por '+esc(f.officer):'para '+esc(f.target))+' · '+polAgo(f.at)+(dueTxt?' · '+dueTxt:'')+(f.contestResult==='mantida'?' · contestação negada':'')+'</small>'+(f.contestText&&f.status==='contestada'?'<small class="polQuote">Sua contestação: '+esc(f.contestText)+'</small>':'')+'</span><span class="polRight">'+right+'</span></li>'+form;
+}
+function vFines(){
+ const s=policeState,k=s.constants;
+ if(policeTab==='table'){
+  return '<div class="polCard"><h3>Tabela de infrações</h3><ul class="polList">'+Object.values(k.infractions).map(i=>'<li><span>'+esc(i.label)+'</span><b>'+cityMoney(i.amount)+'</b></li>').join('')+'</ul></div>'
+   +'<div class="polCard"><h3>Como funciona</h3><ul class="polBullets"><li>Os valores são fixos. Nenhum policial escolhe quanto cobrar.</li><li>O prazo para pagar é de '+k.dueHours+' h. Depois dele, a multa recebe um acréscimo único de '+k.surchargePct+'%.</li><li>Toda multa pode ser contestada uma vez. Quem decide é a Delegada.</li><li>Moradores com menos de '+k.targetMinXp+' XP recebem só advertência, sem valor.</li><li>O dinheiro das multas vai para o tesouro da cidade. Policiais não ganham comissão.</li></ul></div>';
+ }
+ if(policeTab==='issue'&&polCan('fine')){
+  const cap=s.me.fineCap;
+  return '<div class="polCard"><h3>Aplicar multa ou advertência</h3><p class="polHint">'+(cap!==null?'Agente iniciante: multas de até '+cityMoney(cap)+'. Para infrações maiores, use advertência ou suba de cargo.':'Você pode aplicar qualquer infração do catálogo.')+' Máximo de 8 autuações por 24 h.</p>'
+   +'<label for="polFineTarget">Quem será autuado (nome do jogador)</label><input id="polFineTarget" type="text" maxlength="14" autocomplete="off">'
+   +'<label for="polFineKind">Infração</label><select id="polFineKind">'+Object.entries(k.infractions).map(([id,i])=>'<option value="'+id+'">'+esc(i.label)+' · '+cityMoney(i.amount)+'</option>').join('')+'</select>'
+   +'<label for="polFineNote">Motivo <small class="polSmall">'+k.noteMin+' a '+k.noteMax+' caracteres</small></label><input id="polFineNote" type="text" maxlength="'+k.noteMax+'" autocomplete="off">'
+   +'<label class="polCheck"><input id="polFineWarn" type="checkbox"> Apenas advertência (sem valor)</label>'
+   +'<div class="polActions"><button type="button" data-pol="fineissue">Aplicar</button></div></div>'
+   +'<div class="polCard"><h3>Minhas últimas autuações</h3>'+(s.issued&&s.issued.length?'<ul class="polList">'+s.issued.map(f=>polFineRow(f,false)).join('')+'</ul>':'<p class="polHint">Você ainda não aplicou nenhuma multa.</p>')+'</div>';
+ }
+ const list=s.myFines,pending=list.filter(f=>f.status==='pendente').reduce((a,f)=>a+f.due,0);
+ return '<div class="polKpis">'+polKpi('Multas pendentes',list.filter(f=>f.status==='pendente').length,pending?'Total a pagar '+cityMoney(pending):'Nada a pagar')+polKpi('Seu saldo',cityMoney(user.money))+'</div>'
+  +'<div class="polCard"><h3>Minhas multas</h3>'+(list.length?'<ul class="polList">'+list.map(f=>polFineRow(f,true)).join('')+'</ul>':'<p class="polHint">Você não tem multas. Continue assim!</p>')+'</div>';
+}
+function polSteps(stage){
+ const idx=Math.max(0,POLICE_STAGES.findIndex(x=>x[0]===(stage==='wait'?'evidence':stage)));
+ return '<ol class="polSteps">'+POLICE_STAGES.map((st,i)=>'<li class="'+(i<idx?'done':i===idx?'now':'')+'"><i>'+(i<idx?'✓':i+1)+'</i><span>'+st[1]+'</span></li>').join('')+'</ol>';
+}
+function polCaseCard(r,withActions){
+ if(!r)return '';
+ const hint={statement:'Vá até a Sala de Interrogatório e colha o depoimento.',wait:'A perícia está preparando o material: '+(r.waitUntil?polCount(r.waitUntil):''),evidence:'Vá até a Sala de Evidências e analise as provas.',close:'Tudo pronto: escreva o parecer e encerre o caso.'}[r.stage]||'';
+ return '<div class="polCard"><h3>'+esc(r.kindLabel)+' '+polTag(r.status)+'</h3><p class="polQuote">'+esc(r.text)+'</p><p class="polHint">Denunciante: '+esc(r.reporter)+(r.target?' · Envolvido: '+esc(r.target):'')+' · '+polAgo(r.at)+'</p>'+polSteps(r.stage)+(hint?'<p class="polHint polGo">'+hint+'</p>':'')
+  +(withActions?'<label for="polOutcome">Resultado</label><select id="polOutcome"><option value="resolvido">Resolvido</option><option value="arquivado">Arquivado</option></select><label for="polResolution">Parecer <small class="polSmall">5 a 160 caracteres</small></label><textarea id="polResolution" rows="3" maxlength="160"></textarea><div class="polActions"><button type="button" data-pol="close" data-id="'+r.id+'">Encerrar caso</button><button type="button" class="alt" data-pol="release" data-id="'+r.id+'">Devolver à fila</button></div>':'')+'</div>';
+}
+function vDispatch(){
+ const s=policeState,st=s.stats;
+ const kp='<div class="polKpis">'+polKpi('Abertas',st.open)+polKpi('Em investigação',st.investigating)+polKpi('Resolvidas (7 d)',st.solved7)+polKpi('Arquivadas (7 d)',st.archived7)+'</div>';
+ if(!polCan('take'))return kp+'<div class="polCard"><h3>Só para policiais</h3><p class="polHint">A fila de ocorrências é operada pelos policiais da cidade. Quer ajudar? Faça a candidatura a Policial no Centro de Empregos (exige XP e entrevista). Para registrar uma ocorrência, fale com o Sargento Ramos no balcão.</p></div>';
+ if(policeTab==='stats')return kp+'<div class="polCard"><h3>Resumo</h3><ul class="polList"><li><span>Multas aplicadas nas últimas 24 h</span><b>'+st.fines24+'</b></li><li><span>Multas pendentes</span><b>'+st.pendingFines+'</b></li><li><span>Arrecadado em multas (7 dias)</span><b>'+cityMoney(st.collected7)+'</b></li><li><span>Recompensa por caso resolvido</span><b>'+cityMoney(s.constants.reward.money)+' + '+s.constants.reward.xp+' XP</b></li></ul></div>';
+ if(policeTab==='case'){
+  return s.myCase?polCaseCard(s.myCase,true):'<div class="polCard"><h3>Nenhum caso em andamento</h3><p class="polHint">Assuma uma ocorrência na aba Fila. Depois, passe pela Sala de Interrogatório (depoimento) e pela Sala de Evidências (provas) antes de encerrar.</p></div>';
+ }
+ const q=s.queue||[];
+ return kp+'<div class="polCard"><h3>Fila de ocorrências</h3>'+(s.myCase?'<p class="polHint">Você tem um caso em andamento. Termine-o antes de assumir outro.</p>':'')+(q.length?'<ul class="polList">'+q.map(r=>'<li><span><b>'+esc(r.kindLabel)+'</b><small>'+esc(r.text)+'</small><small>'+esc(r.reporter)+(r.target?' → '+esc(r.target):'')+' · '+polAgo(r.at)+'</small></span><span class="polRight">'+(r.mine?'<span class="polTag">Seu registro</span>':'<button type="button" data-pol="take" data-id="'+r.id+'"'+(s.myCase?' disabled':'')+'>Assumir</button>')+'</span></li>').join('')+'</ul>':'<p class="polHint">Fila vazia. Tudo calmo por aqui.</p>')+'</div>';
+}
+function vInterrog(){
+ const s=policeState,r=s.myCase;
+ if(!polCan('step'))return '<div class="polCard"><h3>Sala de Interrogatório</h3><p class="polHint">Aqui os policiais colhem o depoimento dos casos que assumem. Todo mundo é tratado com respeito, e a lâmpada vermelha acende durante a gravação.</p></div>';
+ if(!r)return '<div class="polCard"><h3>Nenhum caso em andamento</h3><p class="polHint">Assuma uma ocorrência na Central de Despacho para colher o depoimento aqui.</p></div>';
+ if(r.stage==='statement')return polCaseCard(r,false)+'<div class="polActions"><button type="button" data-pol="statement" data-id="'+r.id+'">Colher depoimento</button></div>';
+ return polCaseCard(r,false)+'<p class="polHint">O depoimento deste caso já foi registrado.</p>';
+}
+function vEvidence(){
+ const s=policeState,r=s.myCase;
+ if(!polCan('step'))return '<div class="polCard"><h3>Sala de Evidências</h3><p class="polHint">A perícia analisa as provas dos casos em andamento. Cada análise leva um instante: ciência não tem pressa.</p></div>';
+ if(!r)return '<div class="polCard"><h3>Nenhum caso em andamento</h3><p class="polHint">Assuma uma ocorrência na Central de Despacho para analisar as provas aqui.</p></div>';
+ if(r.stage==='evidence')return polCaseCard(r,false)+'<div class="polActions"><button type="button" data-pol="evidence" data-id="'+r.id+'">Analisar provas</button></div>';
+ return polCaseCard(r,false);
+}
+function vCert(){
+ const s=policeState,k=s.constants,wait=s.me.certWaitUntil&&s.me.certWaitUntil>policeNow();
+ const last=s.myCerts[0],pend=s.myFines.filter(f=>f.status==='pendente'||f.status==='contestada').length;
+ const doc=c=>'<div class="polDoc"><small>CIDADE DE SOROKIBA · DELEGACIA</small><h4>Certidão de antecedentes</h4><span>'+esc(user.name)+'</span><span class="polStamp '+(c.status==='NADA CONSTA'?'ok':'bad')+'">'+esc(c.status)+'</span><small>Código '+esc(c.code)+' · emitida em '+cityTime(c.at)+' · multas pagas: '+c.paid+' · pendências: '+c.pending+'</small></div>';
+ return '<div class="polCard"><h3>Certidão de antecedentes</h3><p class="polHint">A Perita Nina lê a sua digital e confere as multas pendentes ou vencidas. Se não houver nenhuma, a certidão diz NADA CONSTA. Custa '+cityMoney(k.certPrice)+', pagos ao tesouro da cidade. Você tem hoje '+pend+' multa(s) em aberto.</p><div class="polActions"><button type="button" data-pol="cert"'+(wait?' disabled':'')+'>Emitir certidão · '+cityMoney(k.certPrice)+'</button></div>'+(wait?'<p class="polHint">Próxima emissão disponível em '+polCount(s.me.certWaitUntil)+'.</p>':'')+'</div>'
+  +(last?doc(last):'')+(s.myCerts.length>1?'<div class="polCard"><h3>Anteriores</h3><ul class="polList">'+s.myCerts.slice(1).map(c=>'<li><span><b>'+esc(c.code)+'</b><small>'+cityTime(c.at)+'</small></span><span class="polTag '+(c.status==='NADA CONSTA'?'ok':'bad')+'">'+esc(c.status)+'</span></li>').join('')+'</ul></div>':'');
+}
+function vChief(){
+ const s=policeState,st=s.stats,m=s.me;
+ if(!polCan('decide')){
+  return '<div class="polKpis">'+polKpi('Ocorrências abertas',st.open)+polKpi('Resolvidas (7 dias)',st.solved7)+polKpi('Multas pendentes',st.pendingFines)+'</div>'
+   +'<div class="polCard"><h3>Delegada Mara</h3><p class="polHint">A delegada decide as contestações de multas e publica os alertas de segurança. O cargo é do Secretário de Segurança e Trânsito, nomeado pelo Prefeito.</p></div>'
+   +'<div class="polCard"><h3>'+(polCan('take')?'Suas regras como '+esc(m.title):'Quer ser policial?')+'</h3>'+(polCan('take')?'<ul class="polBullets"><li>Você assume ocorrências, colhe depoimentos e analisa provas antes de encerrar.</li><li>Cada caso resolvido paga '+cityMoney(s.constants.reward.money)+' e '+s.constants.reward.xp+' XP (com limite diário).</li><li>'+(m.fineCap!==null?'Multas de até '+cityMoney(m.fineCap)+' até você ser promovido.':'Você pode aplicar todas as infrações do catálogo.')+'</li><li>Você nunca ganha comissão sobre multas.</li></ul>':'<p class="polHint">Candidate-se a Policial no Centro de Empregos. A entrevista é sobre postura, registro fiel dos fatos e justiça igual para todos. No início você aplica multas de até '+cityMoney(s.constants.rookieCap)+'.</p>')+'</div>';
+ }
+ if(policeTab==='alerts'){
+  return '<div class="polCard"><h3>Publicar alerta de segurança</h3><p class="polHint">Aparece no mural da Delegacia. Você pode também transmitir a todos os jogadores online.</p><label for="polAlertText">Mensagem <small class="polSmall">10 a '+s.constants.alertMax+' caracteres</small></label><textarea id="polAlertText" rows="3" maxlength="'+s.constants.alertMax+'"></textarea><label class="polCheck"><input id="polAlertShout" type="checkbox"> Transmitir a todos os jogadores</label><div class="polActions"><button type="button" data-pol="alert">Publicar</button></div></div>'
+   +'<div class="polCard"><h3>Alertas recentes</h3>'+(s.alerts.length?'<ul class="polList">'+s.alerts.map(a=>'<li><span>'+esc(a.text)+'<small>'+esc(a.by)+' · '+cityTime(a.at)+'</small></span></li>').join('')+'</ul>':'<p class="polHint">Nenhum alerta ainda.</p>')+'</div>';
+ }
+ if(policeTab==='team'){
+  const team=s.team||[],act=s.active||[];
+  return '<div class="polCard"><h3>Equipe (últimos 7 dias)</h3>'+(team.length?'<ul class="polList">'+team.map(t=>'<li><span><b>'+esc(t.name)+'</b><small>'+esc(t.title)+'</small></span><span class="polRight"><span class="polTag ok">'+t.solved+' casos</span><span class="polTag">'+t.fines+' multas</span>'+(t.cancelled?'<span class="polTag bad">'+t.cancelled+' canceladas</span>':'')+'</span></li>').join('')+'</ul>':'<p class="polHint">Ainda não há policiais contratados. Eles se candidatam pelo Centro de Empregos.</p>')+'</div>'
+   +'<div class="polCard"><h3>Casos em andamento</h3>'+(act.length?'<ul class="polList">'+act.map(r=>'<li><span><b>'+esc(r.kindLabel)+'</b> · '+esc(r.officer||'—')+'<small>'+esc(r.text)+'</small></span><span class="polRight"><button type="button" class="alt" data-pol="release" data-id="'+r.id+'">Devolver à fila</button></span></li>').join('')+'</ul>':'<p class="polHint">Nenhum caso em andamento.</p>')+'</div>';
+ }
+ if(policeTab==='dash'){
+  return '<div class="polKpis">'+polKpi('Abertas',st.open)+polKpi('Em investigação',st.investigating)+polKpi('Resolvidas (7 d)',st.solved7)+polKpi('Arquivadas (7 d)',st.archived7)+polKpi('Multas em 24 h',st.fines24)+polKpi('Multas pendentes',st.pendingFines)+polKpi('Arrecadado (7 d)',cityMoney(st.collected7))+'</div>'
+   +'<div class="polCard"><h3>Ocorrências e multas por dia</h3><canvas class="polChart" data-pchart="days" role="img" aria-label="Ocorrências e multas por dia"></canvas></div>';
+ }
+ const c=s.contests||[];
+ return '<div class="polCard"><h3>Contestações de multas</h3>'+(c.length?'<ul class="polList">'+c.map(f=>'<li><span><b>'+esc(f.label)+'</b> · '+esc(f.target)+' · '+cityMoney(f.amount)+'<small>Motivo da multa: '+esc(f.note)+' (por '+esc(f.officer)+')</small><small class="polQuote">Contestação: '+esc(f.contestText||'')+'</small></span><span class="polRight"><button type="button" class="alt" data-pol="decide" data-id="'+f.id+'" data-keep="1">Manter</button><button type="button" data-pol="decide" data-id="'+f.id+'" data-keep="0">Cancelar multa</button></span></li>').join('')+'</ul>':'<p class="polHint">Nenhuma contestação aguardando decisão.</p>')+'</div>';
+}
+function policeDrawCharts(){
+ const s=policeState;if(!s||!s.series)return;
+ document.querySelectorAll('#policePanel canvas[data-pchart]').forEach(cv=>{
+  const {g,w,h}=cityPrep(cv),rows=s.series;g.font='11px sans-serif';
+  const mx=Math.max(1,...rows.map(r=>Math.max(r.reports,r.fines))),pad={l:30,r:8,t:12,b:22},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,bw=Math.max(4,pw/rows.length/3);
+  g.strokeStyle='rgba(255,255,255,.09)';g.fillStyle='#9fb2c4';g.textAlign='right';
+  for(let i=0;i<=3;i++){const y=pad.t+ph*i/3;g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText(String(Math.round(mx*(1-i/3))),pad.l-5,y+4)}
+  rows.forEach((r,i)=>{const x=pad.l+pw*(i+.5)/rows.length;g.fillStyle='#2DD4BF';g.fillRect(x-bw-1,pad.t+ph*(1-r.reports/mx),bw,ph*r.reports/mx);g.fillStyle='#F2B84B';g.fillRect(x+1,pad.t+ph*(1-r.fines/mx),bw,ph*r.fines/mx);g.fillStyle='#9fb2c4';g.textAlign='center';g.fillText(r.day,x,h-6)});
+  g.textAlign='left';g.fillStyle='#2DD4BF';g.fillRect(pad.l+4,2,8,8);g.fillStyle='#e6eef5';g.fillText('Ocorrências',pad.l+16,10);g.fillStyle='#F2B84B';g.fillRect(pad.l+100,2,8,8);g.fillStyle='#e6eef5';g.fillText('Multas',pad.l+112,10);
+ });
+}
+function policeRestoreDraft(){Object.keys(policeDraft).forEach(id=>{const el=$(id);if(!el||!/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))return;if(el.type==='checkbox')el.checked=!!policeDraft[id];else el.value=policeDraft[id]});policeCounter()}
+function policeCounter(){const t=$('polText'),n=$('polCount');if(!t||!n||!policeState)return;const len=t.value.trim().length,min=policeState.constants.reportMin;n.textContent=len+'/'+policeState.constants.reportMax+(len<min?' · mínimo '+min:'')}
+function renderPolice(){
+ const S=POLICE_SITES[policeSite];$('policeTitle').textContent=S.title;$('policeWho').textContent=S.who+(policeState&&policeState.me.title?' · Você: '+policeState.me.title:'');
+ const tabs=policeTabsFor();if(tabs.length&&!tabs.some(t=>t[0]===policeTab))policeTab=tabs[0][0];
+ const nav=$('policeTabs');nav.hidden=tabs.length<2;nav.innerHTML=tabs.map(t=>'<button type="button" role="tab" data-ptab="'+t[0]+'" aria-selected="'+(t[0]===policeTab)+'">'+t[1]+'</button>').join('');
+ const body=$('policeBody');
+ if(!policeState){body.innerHTML='<div class="polNote">Carregando…</div>';return}
+ body.innerHTML=({desk:vDesk,alerts:vAlerts,fines:vFines,dispatch:vDispatch,interrogation:vInterrog,evidence:vEvidence,cert:vCert,chief:vChief}[policeSite])();
+ policeRestoreDraft();policeDrawCharts();
+}
+async function policeLoad(silent){
+ const id=++policeReq;
+ try{const d=await policeRequest('');if(id!==policeReq)return;policeApply(d);if(!$('policePanel').hidden){if(!silent)policeSay('');renderPolice()}}
+ catch(e){if(id!==policeReq||$('policePanel').hidden)return;if(!policeState)$('policeBody').innerHTML='<div class="polNote" role="alert">'+esc(e.message)+'<div class="polActions" style="justify-content:center"><button type="button" data-pol="retry">Tentar novamente</button></div></div>'}
+}
+function openPolicePanel(site,tab){
+ if(!interior||interior.room.family!=='police')return;
+ policeSite=site;const S=POLICE_SITES[site];policeTab=tab||(S.tabs[0]?S.tabs[0][0]:'');
+ if(site==='dispatch'&&policeState&&policeState.me.can.take&&policeState.myCase&&!tab)policeTab='case';
+ open=true;$('dlg').hidden=true;policeSay('');$('policePanel').hidden=false;renderPolice();policeLoad();
+ clearInterval(policeTimer);policeTimer=setInterval(policeTick,1000);
+}
+function closePolicePanel(){policeReq++;clearInterval(policeTimer);policeTimer=0;if($('policePanel').hidden)return;$('policePanel').hidden=true;open=false}
+function policeStartPoll(){clearInterval(policePoll);policeLoad(true);policePoll=setInterval(()=>{if(interior&&interior.room.family==='police'&&$('policePanel').hidden)policeLoad(true)},30000)}
+function policeStopPoll(){clearInterval(policePoll);policePoll=0}
+function policeTick(){
+ if($('policePanel').hidden||!policeState)return;let expired=false;
+ document.querySelectorAll('#policePanel .polCount').forEach(e=>{const left=Number(e.dataset.until)-policeNow();e.textContent=cityWait(left);if(left<=0)expired=true});
+ if(expired&&!policeReloaded&&!policeBusy){policeReloaded=true;policeLoad(true)}
+}
+async function policeAct(path,body,onOk){
+ if(policeBusy)return;policeBusy=true;policeReq++;$('policePanel').classList.add('busy');
+ try{const d=await policeRequest(path,body);policeApply(d);if(onOk)onOk(d);renderPolice();policeSay(d.message||'Pronto.');tone(880,.1,'sine',.05);return d}
+ catch(e){policeSay(e.message,true);tone(190,.14,'square',.04)}
+ finally{policeBusy=false;$('policePanel').classList.remove('busy')}
+}
+async function policeVerifyCode(){
+ const code=(($('polCode')||{}).value||'').trim().toUpperCase();
+ if(!/^SK-[0-9A-F]{8}$/.test(code)){policeVerify={err:'Código inválido. Use o formato SK-XXXXXXXX.'};renderPolice();return}
+ try{const d=await policeRequest('/cert/'+encodeURIComponent(code));policeVerify={cert:d.cert}}catch(e){policeVerify={err:e.message}}
+ policeDraft.polCode=code;renderPolice();
+}
+// Anima a ação no prédio e só depois fala com o servidor; o painel volta a abrir ao final.
+function policeDoAnimated(kind,ms,label,site,path,body){closePolicePanel();policeScan(kind,ms,label,()=>{openPolicePanel(site,policeTab);policeAct(path,body)})}
+$('policeClose').onclick=closePolicePanel;
+$('policeTabs').onclick=e=>{const b=e.target.closest('[data-ptab]');if(!b||policeBusy)return;policeTab=b.dataset.ptab;policeContest=null;policeSay('');renderPolice()};
+$('policeBody').addEventListener('input',e=>{const t=e.target;if(!t.id)return;policeDraft[t.id]=t.type==='checkbox'?t.checked:t.value;if(t.id==='polText')policeCounter()});
+$('policeBody').onclick=e=>{
+ const b=e.target.closest('[data-pol]');if(!b)return;const a=b.dataset.pol,val=id=>($(id)?.value||'').trim(),id=b.dataset.id;
+ const clear=(...k)=>k.forEach(x=>delete policeDraft[x]);
+ if(a==='retry')policeLoad();
+ else if(a==='report')policeAct('/report',{kind:$('polKind').value,text:val('polText'),target:val('polTarget')},()=>{clear('polText','polTarget');policeTab='mine'});
+ else if(a==='verify')policeVerifyCode();
+ else if(a==='pay')policeAct('/fine/pay',{id});
+ else if(a==='contestopen'){policeContest=id;renderPolice()}
+ else if(a==='contestclose'){policeContest=null;clear('polContestText');renderPolice()}
+ else if(a==='contest')policeAct('/fine/contest',{id,text:val('polContestText')},()=>{policeContest=null;clear('polContestText')});
+ else if(a==='fineissue')policeAct('/fine/issue',{target:val('polFineTarget'),kind:$('polFineKind').value,note:val('polFineNote'),warning:$('polFineWarn').checked},()=>clear('polFineTarget','polFineNote','polFineWarn'));
+ else if(a==='take')policeAct('/case/take',{id},()=>{policeTab='case'});
+ else if(a==='release'){if(confirm('Devolver este caso à fila?'))policeAct('/case/release',{id})}
+ else if(a==='close')policeAct('/case/close',{id,outcome:$('polOutcome').value,note:val('polResolution')},()=>{clear('polResolution');policeTab='queue'});
+ else if(a==='statement')policeDoAnimated('statement',2600,'Colhendo o depoimento…','interrogation','/case/step',{id,step:'statement'});
+ else if(a==='evidence')policeDoAnimated('evidence',2600,'Analisando as provas…','evidence','/case/step',{id,step:'evidence'});
+ else if(a==='cert')policeDoAnimated('pscan',2600,'Lendo a digital…','cert','/cert/issue',{});
+ else if(a==='alert')policeAct('/alert',{text:val('polAlertText'),broadcast:$('polAlertShout').checked},()=>clear('polAlertText','polAlertShout'));
+ else if(a==='decide')policeAct('/fine/decide',{id,keep:b.dataset.keep==='1'});
+};
+window.addEventListener('resize',()=>{if(!$('policePanel').hidden)policeDrawCharts()});
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
 let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
