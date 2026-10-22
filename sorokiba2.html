@@ -466,6 +466,78 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #policePanel button:focus-visible,#policePanel input:focus-visible,#policePanel textarea:focus-visible,#policePanel select:focus-visible{outline:2px solid #f2c14b;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){#policePanel::before,.polSteps li.now i,.polStamp{animation:none}}
 @media(max-width:560px){.polList li{flex-wrap:wrap}.polSteps{gap:2px}}
+/* ---------- Mercado ---------- */
+#marketPanel{position:fixed;z-index:42;left:50%;top:50%;transform:translate(-50%,-50%);width:min(960px,96vw);max-height:92vh;overflow:auto;padding:clamp(14px,3vw,24px);padding-top:clamp(18px,3.2vw,28px);border:2px solid #2bb3a3;border-radius:18px;background:linear-gradient(170deg,#fffaf0 0%,#fdf0d6 100%);box-shadow:0 24px 80px #000c,inset 0 0 0 2px #ffffff99;color:#16294a;overscroll-behavior:contain;display:flex;flex-direction:column}
+#marketPanel[hidden]{display:none}
+#marketPanel::before{content:"";flex:none;display:block;height:8px;margin:calc(-1 * clamp(18px,3.2vw,28px)) calc(-1 * clamp(14px,3vw,24px)) clamp(12px,2vw,18px);border-radius:16px 16px 0 0;background:repeating-linear-gradient(90deg,#e63946 0 24px,#fff9ee 24px 48px,#2bb3a3 48px 72px,#fff9ee 72px 96px);animation:mkBar 2.4s linear infinite}
+@keyframes mkBar{to{background-position:96px 0}}
+.mkHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:10px;border-bottom:2px dashed #2bb3a3aa}
+.mkKicker{margin:0 0 3px;color:#c0392b;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.mkHead h2{margin:0;color:#16294a;font-size:clamp(22px,4vw,30px)}
+.mkHead p:not(.mkKicker){margin:4px 0 0;color:#4a5a73;font-size:13px}
+#marketPanel button{font:inherit;cursor:pointer;text-shadow:none}
+#marketClose{border:2px solid #16294a33;border-radius:10px;padding:7px 12px;background:#fff;color:#16294a;font-weight:700}
+.mkTabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.mkTabs[hidden]{display:none}
+.mkTabs button{border:2px solid #2bb3a3;border-radius:999px;padding:7px 14px;background:#fff;color:#16294a;font-weight:700}
+.mkTabs button[aria-selected=true]{background:#2bb3a3;color:#fff}
+.mkMsg{min-height:20px;margin:8px 0;color:#1d6f62;font-size:13px;font-weight:600}
+.mkMsg.err{color:#c0392b}
+#marketBody{overflow:auto;min-height:0}
+.mkChips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+.mkChips button{border:2px solid #ffb703;border-radius:999px;padding:6px 12px;background:#fff;color:#16294a;font-weight:700;font-size:13px}
+.mkChips button[aria-pressed=true]{background:#ffb703}
+.mkHint{margin:0 0 10px;color:#4a5a73;font-size:12.5px;line-height:1.45}
+.mkGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mkProd{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px 10px;border:2px solid #16294a1f;border-radius:14px;background:#fff;text-align:center;box-shadow:0 3px 0 #16294a14}
+.mkProd.deal{border-color:#e63946}
+.mkProd b{font-size:14px}
+.mkProd small,.mkLeft{color:#5b6b83;font-size:11.5px}
+.mkLeft{margin-top:-2px}
+.mkIcon{font-size:34px;line-height:1.1}
+.mkBadge{position:absolute;top:-8px;right:-6px;padding:3px 8px;border-radius:999px;background:#e63946;color:#fff;font-weight:900;font-size:12px;transform:rotate(8deg);box-shadow:0 2px 0 #8f1d28}
+.mkPriceTag{margin:2px 0;padding:2px 12px;border-radius:8px 8px 8px 2px;background:#ffd166;color:#8f1d28;font-size:15px}
+.mkPriceTag s{color:#7a6a3a;font-size:12px;margin-right:4px}
+.mkQty{display:inline-flex;align-items:center;gap:8px}
+.mkQty button{width:30px;height:30px;border:0;border-radius:50%;background:#2bb3a3;color:#fff;font-weight:900;font-size:18px;line-height:1}
+.mkQty button:disabled{background:#c5ced6;cursor:not-allowed}
+.mkQty b{min-width:20px;text-align:center}
+.mkList{list-style:none;margin:0 0 10px;padding:0}
+.mkList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dotted #16294a33}
+.mkList li>span:first-child{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mkList li .mkIcon{font-size:26px}
+.mkList small{display:block;color:#5b6b83;font-size:12px}
+.mkRight{display:flex;align-items:center;gap:10px}
+.mkLineTotal{min-width:64px;text-align:right}
+.mkTotals{max-width:380px;margin:6px 0 10px auto;padding:12px 14px;border:2px dashed #16294a55;border-radius:12px;background:#fff}
+.mkTotals div{display:flex;justify-content:space-between;padding:2px 0}
+.mkTotals .mkSave{color:#1d6f62;font-weight:700}
+.mkTotals .mkTotal{margin-top:4px;padding-top:6px;border-top:2px solid #16294a;font-size:20px;font-weight:900}
+.mkTotals small{display:block;margin-top:4px;color:#5b6b83}
+.mkCheck{display:flex;align-items:center;gap:8px;margin:6px 0;font-weight:700}
+.mkActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mkActions button,.mkList button{border:0;border-radius:10px;padding:10px 16px;background:#ffb703;color:#16294a;font-weight:900;box-shadow:0 3px 0 #b27d00}
+.mkActions button.alt{background:#fff;border:2px solid #16294a33;box-shadow:none;font-weight:700}
+.mkActions button.on{background:#2bb3a3;color:#fff;box-shadow:0 3px 0 #1d6f62}
+.mkActions .mkPay{background:#e63946;color:#fff;box-shadow:0 3px 0 #8f1d28;font-size:16px}
+.mkList button{padding:7px 12px;font-size:13px}
+.mkActions button:disabled,.mkList button:disabled{opacity:.45;cursor:not-allowed}
+.mkCard2{padding:14px;border:2px solid #16294a1a;border-radius:14px;background:#fff;margin-bottom:10px}
+.mkCard2 h3{margin:0 0 8px;color:#16294a;font-size:17px}
+.mkLoyal{background:linear-gradient(135deg,#16294a,#1f4f6a);color:#fff;border-color:#2bb3a3}
+.mkLoyal h3{color:#ffd166}.mkLoyal .mkHint{color:#cfe3ea}
+.mkPts{display:flex;align-items:baseline;gap:8px;margin:6px 0}
+.mkPts strong{font-size:40px;color:#ffd166;font-variant-numeric:tabular-nums}
+.mkBar{height:12px;border-radius:99px;background:#ffffff26;overflow:hidden}
+.mkBar i{display:block;height:100%;background:linear-gradient(90deg,#2bb3a3,#ffd166);transition:width .6s}
+.mkNote{padding:18px;text-align:center;color:#4a5a73}
+.mkCount{font-variant-numeric:tabular-nums}
+.mkChip{position:fixed;z-index:41;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));padding:11px 16px;border:2px solid #16294a;border-radius:999px;background:#ffb703;color:#16294a;font:inherit;font-weight:900;box-shadow:0 4px 0 #b27d00,0 8px 24px #0008;cursor:pointer}
+.mkChip[hidden]{display:none}
+#marketPanel.busy button{pointer-events:none;opacity:.6}
+#marketPanel button:focus-visible,#marketPanel input:focus-visible,.mkChip:focus-visible{outline:3px solid #16294a;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#marketPanel::before{animation:none}.mkBar i{transition:none}}
+@media(max-width:560px){.mkGrid{grid-template-columns:repeat(2,1fr)}.mkList li{flex-wrap:wrap}.mkTotals{max-width:none}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -522,6 +594,8 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="hospitalPanel" hidden role="dialog" aria-labelledby="hospTitle"><header class="hospHead"><div><p class="hospKicker">Hospital de Sorokiba</p><h2 id="hospTitle">Atendimento</h2><p id="hospWho"></p></div><button id="hospClose" type="button" aria-label="Fechar hospital">Fechar</button></header><div class="hospHealth"><span>Saúde</span><div class="hospBar"><i id="hospBarFill"></i></div><strong id="hospHealthNum">…</strong></div><p id="hospSymptoms"></p><ol class="hospSteps" id="hospSteps" aria-label="Etapas do atendimento"></ol><div id="hospNextBar" class="hospNextBar"></div><p id="hospMsg" class="hospMsg" aria-live="polite"></p><div id="hospBody"></div></section>
 <section id="cityPanel" hidden role="dialog" aria-labelledby="cityTitle"><header class="cityHead"><div><p class="cityKicker">Prefeitura de Sorokiba</p><h2 id="cityTitle">Prefeitura</h2><p id="cityWho"></p></div><button id="cityClose" type="button" aria-label="Fechar Prefeitura">Fechar</button></header><nav id="cityTabs" class="cityTabs" role="tablist" aria-label="Seções" hidden></nav><p id="cityMsg" class="cityMsg" aria-live="polite"></p><div id="cityBody"></div></section>
 <section id="policePanel" hidden role="dialog" aria-labelledby="policeTitle"><header class="polHead"><div><p class="polKicker">Delegacia de Sorokiba</p><h2 id="policeTitle">Delegacia</h2><p id="policeWho"></p></div><button id="policeClose" type="button" aria-label="Fechar Delegacia">Fechar</button></header><nav id="policeTabs" class="polTabs" role="tablist" aria-label="Seções" hidden></nav><p id="policeMsg" class="polMsg" aria-live="polite"></p><div id="policeBody"></div></section>
+<section id="marketPanel" hidden role="dialog" aria-labelledby="marketTitle"><header class="mkHead"><div><p class="mkKicker">Mercado de Sorokiba · Ofertas todo dia</p><h2 id="marketTitle">Mercado de Sorokiba</h2><p>Escolha nos corredores, pague no caixa e guarde na despensa.</p></div><button id="marketClose" type="button" aria-label="Fechar Mercado">Fechar</button></header><nav id="marketTabs" class="mkTabs" role="tablist" aria-label="Seções do Mercado"></nav><p id="marketMsg" class="mkMsg" aria-live="polite"></p><div id="marketBody"></div></section>
+<button id="mkChip" class="mkChip" type="button" hidden aria-label="Abrir carrinho de compras">🛒 0</button>
 <div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
@@ -1258,6 +1332,7 @@ function makeInterior(building,floor=1){
  let family='office';
  if(n.includes('centro de empregos')||n.includes('carreiras'))family='employment';
  else if(n.includes('hospital'))family='hospital';
+ else if(n.includes('mercado'))family='grocery';
  else if(['mercado','supermercado','loja','padaria','farmácia','shopping','lavanderia'].some(s=>n.includes(s)))family='market';
  else if(n.includes('banco'))family='bank';
  else if(n.includes('prefeitura'))family='cityhall';
@@ -1277,6 +1352,7 @@ function makeInterior(building,floor=1){
   bank:['#e0d7c4','#afa58f','#b9b29f','#ccc4b0','#c5a05c','Atendimento bancário'],
   cityhall:['#e8dac2','#b7a487','#c5b59a','#d7c6aa','#b08a5a','Serviços municipais'],
   police:['#cfdde3','#8aa0ac','#35506a','#2d455d','#d9a239','Segurança e justiça'],
+  grocery:['#f6eedb','#cdbf9f','#ece6d6','#e2dbc8','#2bb3a3','Compras e ofertas'],
   restaurant:['#f0d8b8','#be9d7b','#b99470','#c9a783','#d2691e','Salão e balcão'],
   cinema:['#484a61','#292d43','#40435c','#494c66','#c06c84','Bilheteria e sala de exibição'],
   library:['#e6dcc7','#b9a98c','#b9aa8d','#cbbc9f','#8b7355','Leitura e consulta'],
@@ -1316,6 +1392,8 @@ function makeInterior(building,floor=1){
    cityHallZones(floor).forEach(o=>zones.push(o));
  }else if(family==='police'){
   policeZones().forEach(o=>zones.push(o));
+ }else if(family==='grocery'){
+  marketZones().forEach(o=>zones.push(o));
   }else if(family==='restaurant'){
   add('counter',4.6,1.05,3,.85,22,'#74452e','#d59b55','#472c20');add('table',2.2,3.3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   add('table',6,4.1,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');add('table',9,3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
@@ -1437,7 +1515,7 @@ function makeInterior(building,floor=1){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],grocery:[40,24,'market-zip'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1468,8 +1546,9 @@ function makeInterior(building,floor=1){
  }
  if(family==='cityhall'){room.floor=floor;room.items=cityHallCollision(floor);room.dividers=CHP[floor].walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit=floor===1?{x:.9,y:12}:{x:-50,y:-50}}
   if(family==='police'){room.items=policeCollision();room.dividers=PDZ.walls.concat(PDZ.cellWalls).map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
+  if(family==='grocery'){room.items=marketCollision();room.dividers=MKZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
   if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
-  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
+  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police'||family==='grocery',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
@@ -1478,6 +1557,7 @@ function makeInterior(building,floor=1){
   bank:[['Marcos','Caixa',5.8,2.05,'staff','#c5a05c','#d2a17d','#27394f'],['Ana','Gerente',2.5,5.5,'staff','#435c7b','#c28f6a','#202c3d'],['Cliente','Cliente',9,5.8,'visitor','#4a9c8a','#d7aa82','#30271f']],
    cityhall:cityHallCrowd(floor),
    police:policeCrowd(),
+   grocery:marketCrowd(),
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
   cinema:[['Nina','Bilheteira',6,2,'staff','#5f496f','#d7ad8d','#292a42'],['Espectador','Cliente',1.5,6.3,'visitor','#5c7fb2','#d4a078','#382d25'],['Espectadora','Cliente',10.2,6.4,'visitor','#b8708c','#e2b69a','#2b252a']],
   library:[['Clara','Bibliotecária',6.2,2,'staff','#7b6549','#d7a780','#32251c'],['Leitor','Visitante',4.3,6.2,'visitor','#6882a1','#c8946b','#32261e'],['Estudante','Visitante',7.8,6.2,'visitor','#72956e','#e0b58f','#2c2520']],
@@ -1494,7 +1574,7 @@ function makeInterior(building,floor=1){
   const sp=family==='hospital'?3.2:1,route=kind==='visitor'?[[x,y],[x+.65*sp,y-.35*sp],[x+.3*sp,y+.35*sp],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:family==='police'?policeLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
+   dialogue:family==='police'?policeLine(name,role):family==='grocery'?mkLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
@@ -1504,21 +1584,22 @@ function makeInterior(building,floor=1){
     'Olá! Sou '+name+' e trabalho como '+role.toLowerCase()+'. Como posso ajudar?',
    route:route.map(([rx,ry])=>findRoomSpot(room,rx*sx,ry*sy)).filter(Boolean),routeIndex:1,path:[],walkFrame:0});
  }
+ if(family==='grocery')marketSetup(room);
  return room;
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'?{x:1.25,y:13}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'||interior.room.family==='grocery'?{x:1.25,y:13}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
- tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75);
+ if(interior.room.family==='grocery')marketEnter();else{tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75)}
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
  if(interior.room.family==='cityhall')cityStartPoll();
  if(interior.room.family==='police')policeStartPoll();
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();if(interior.room&&interior.room.family==='grocery')marketLeave();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -2382,12 +2463,252 @@ function renderPoliceZip(t){
  c.setTransform(1,0,0,1,0,0);
 }
 
+/* ---------- MERCADO DE SOROKIBA: planta, mercadorias, animações e sons ---------- */
+const MKZ={
+ w:40,h:24,
+ rooms:[[0,0,9,6,'Hortifruti','p'],[9,0,9,6,'Padaria','b'],[18,0,22,3,'Refrigerados','f'],[0,15,11,9,'Caixas','c'],[33,15,7,9,'Estoque','s']],
+ walls:[['v',33,15,18],['v',33,20,24],['h',15,33,40]],
+ doors:[['v',33,18,20,'ESTOQUE']],
+ entrance:[11,15],
+ dec:[['mproduceA',1,1.2],['mproduceB',4.8,1.2],['mproduceB',1,3.8],['mproduceA',4.8,3.8],['mscale',8,2.4],
+  ['moven',10,.3],['mbread',11,3.4],['mbreadrack',15.4,.5],
+  ['mfridgeA',18,.3],['mfridgeA',20,.3],['mfridgeA',22,.3],['mfridgeB',24,.3],['mfridgeB',26,.3],['mfridgeB',28,.3],['mfridgeB',30,.3],['mfridgeC',32,.3],['mfridgeC',34,.3],['mfridgeC',36,.3],['mfridgeC',38,.3],
+  ['mgondA',10.5,6],['mgondB',15.1,6],['mgondC',19.7,6],['mgondD',24.3,6],['mgondA',28.9,6],
+  ['mgondD',10.5,9.3],['mgondC',15.1,9.3],['mgondB',19.7,9.3],['mgondA',24.3,9.3],['mgondC',28.9,9.3],
+  ['mgondB',12.5,17.2],['mgondD',17.1,17.2],['mgondA',21.7,17.2],['mgondB',26.3,17.2],
+  ['mfreezer',12.5,20.6],['mfreezer',17.1,20.6],['mgondC',21.7,20.6],['mgondD',26.3,20.6],
+  ['mpromo',17,12.4],['mpromo',26,12.4],['mpromo',36,9.6],
+  ['mcartrack',1,8.6],['mflowers',3.8,8.6],
+  ['mlane1',1.2,16.2],['mlane2',4.2,16.2],['mlane3',7.2,16.2],['mkiosk',10.2,16.4],['mkiosk',10.2,18.2],['mkiosk',10.2,20],
+  ['mdesk',34.2,5.4],['mpallet',35,17],['mpallet',37.4,17],['mpallet',35,21.5],['mbox',38.8,21.6],['mbox',38.8,23],
+  ['plant',9,23.2],['plant',1,23.2],['plant',38.8,3.6],['plant',31.8,10.6]]
+};
+MKZ.grid=Array.from({length:MKZ.h},(_,y)=>Array.from({length:MKZ.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of MKZ.rooms)if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'g'}));
+const MK_FLOOR={g:['#ece6d6','#e2dbc8'],p:['#d2e5c3','#c7dcb7'],b:['#ecd7b4','#e3cba5'],f:['#d9e7ee','#cfdfe8'],c:['#d4d8dd','#cbd0d6'],s:['#bdb7aa','#b3ada0']};
+const MK_STAFF={Marina:{f:1,pn:'#21354f',hat:0},Tiago:{pn:'#21354f'},Nando:{hat:'#f7f2e8',pn:'#d8d2c4'},Elisa:{f:1,gl:1,pn:'#21354f'},Davi:{pn:'#3a3f4a',hat:'#16294a'},Rafael:{pn:'#3a3f4a'},Lia:{f:1,st:2,pn:'#4a3a4a'},Lúcia:{f:1,st:2,pn:'#4a3a4a'}};
+const MK_LINES={
+ 'Caixa':'Boa compra! Escolha os produtos nos corredores e venha ao caixa. A economia das ofertas já é descontada aqui.',
+ 'Padeiro':'O pão sai quentinho várias vezes por dia. Se ouvir o sininho do forno, corra!',
+ 'Gerente':'Sou a Elisa, gerente. O Cartão Sorokiba junta 1 ponto a cada R$ 10. Com 100 pontos você ganha R$ 10 de desconto.',
+ 'Repositor':'Estou repondo as gôndolas. Dica: as ofertas do dia mudam todos os dias, confira a ilha de promoção!',
+ 'Cliente':'Ofertas boas hoje, não é? Eu sempre confiro a ilha de promoção antes de encher o carrinho.'
+};
+const MK_ROLE_SITE={'Caixa':['cart'],'Padeiro':['shop','padaria'],'Gerente':['card']};
+const mkLine=(name,role)=>MK_LINES[role]||('Olá! Sou '+name+', do Mercado.');
+function marketCrowd(){return[
+ ['Marina','Caixa',1.9,21.2,'staff','#2bb3a3','#dfb28b','#203b2c'],
+ ['Tiago','Caixa',7.9,21.2,'staff','#2bb3a3','#c99572','#222a33'],
+ ['Nando','Padeiro',12.6,2.1,'staff','#f4efe3','#d2a17d','#2a1f1c'],
+ ['Elisa','Gerente',36.2,4.3,'staff','#16294a','#d2a17d','#2b2230'],
+ ['Davi','Repositor',26,8.4,'visitor','#ffb703','#b77a55','#1f1f26'],
+ ['Rafael','Cliente',12,12.9,'visitor','#466d98','#e1b991','#2e2a27'],
+ ['Lia','Cliente',12,14.6,'visitor','#be6f72','#d69b72','#422a21'],
+ ['Lúcia','Cliente',6.4,6.4,'visitor','#8c87b4','#d5a783','#292520']]}
+function marketSetup(room){ // rotas mais longas para quem anda pelos corredores
+ const R2={Rafael:[[9.6,12.9],[31,12.9],[31,3.4],[17.5,3.4],[9.2,8.4]],Lia:[[9.8,14.6],[31,14.6],[31,19.7],[11.7,19.7]],Davi:[[26,8.4],[11.5,8.4],[17.5,4.6],[31,3.4]],'Lúcia':[[6.4,6.4],[8.6,6.4],[8.6,10.2],[4.4,10.2]]};
+ room.people.forEach(p=>{const r=R2[p.name];if(r){p.route=r.map(([x,y])=>findRoomSpot(room,x,y)).filter(Boolean);p.routeIndex=1;p.cart=p.role==='Cliente'}})}
+/* --- estado, sons e relógio do Mercado --- */
+const mkS={door:0,open:false,mistEnd:0,fridge:null,ovenFlash:0,nextOven:0,nextPA:0,nextMist:0,nextFridge:0,cart:0,lastStep:0,hum:null,deals:null};
+const mkNow=()=>performance.now()/1000;
+const mkOk=()=>!!AC&&AC.state==='running'&&!mute;
+const mkSfx={
+ chime(){if(!mkOk())return;tone(1318,.5,'sine',.07);setTimeout(()=>tone(988,.7,'sine',.06),170)},      // porta: ding-dong
+ chimeOut(){if(!mkOk())return;tone(988,.35,'sine',.05);setTimeout(()=>tone(784,.5,'sine',.045),150)},
+ door(){if(!mkOk())return;burst(420,.55,.05);setTimeout(()=>burst(900,.3,.03),90)},                        // porta automática deslizando
+ beep(){if(!mkOk())return;tone(1850,.07,'square',.04)},                                                     // leitor de código de barras
+ kaching(){if(!mkOk())return;burst(2400,.05,.09);tone(1568,.45,'sine',.07);setTimeout(()=>tone(2093,.6,'sine',.06),70);setTimeout(()=>tone(3136,.5,'sine',.04),140)},
+ cart(){if(!mkOk())return;for(let i=0;i<7;i++)setTimeout(()=>burst(900+Math.random()*900,.05,.05),i*45+Math.random()*25)},
+ clack(){if(!mkOk())return;burst(700,.08,.08);tone(260,.1,'square',.03)},
+ pop(){if(!mkOk())return;tone(520,.08,'sine',.06,880)},
+ unpop(){if(!mkOk())return;tone(700,.08,'sine',.05,420)},
+ buzz(){if(!mkOk())return;tone(150,.22,'sawtooth',.05);setTimeout(()=>tone(130,.2,'sawtooth',.05),130)},
+ oven(){if(!mkOk())return;tone(1320,.9,'triangle',.07);setTimeout(()=>tone(1760,.9,'triangle',.06),210);for(let i=0;i<4;i++)setTimeout(()=>burst(3200,.04,.03),380+i*70)},
+ fridge(vol=1){if(!mkOk())return;burst(3600,.45,.045*vol);setTimeout(()=>burst(1800,.4,.03*vol),80)},
+ bag(){if(!mkOk())return;for(let i=0;i<6;i++)setTimeout(()=>burst(2500+Math.random()*2000,.06,.045),i*60+Math.random()*30)},
+ mist(vol=1){if(!mkOk())return;burst(6200,.7,.04*vol);setTimeout(()=>burst(7600,.5,.025*vol),120)},
+ eat(){if(!mkOk())return;for(let i=0;i<3;i++)setTimeout(()=>{burst(1300,.06,.08);tone(210,.05,'square',.02)},i*110)},
+ pa(){if(!mkOk())return;[784,659,523].forEach((f,i)=>setTimeout(()=>tone(f,.45,'sine',.06),i*230))},         // anúncio no alto-falante
+ humOn(level){ // zumbido dos refrigeradores, mais alto perto da parede fria
+  if(!AC||AC.state!=='running')return;
+  if(!mkS.hum){const o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=50;f.type='lowpass';f.frequency.value=240;g.gain.value=0;o.connect(f);f.connect(g);g.connect(MG);o.start();mkS.hum=g}
+  mkS.hum.gain.setTargetAtTime(mute?0:level,AC.currentTime,.25)},
+ humOff(){if(mkS.hum&&AC)mkS.hum.gain.setTargetAtTime(0,AC.currentTime,.15)}
+};
+function marketEnter(){const n=mkNow();mkS.door=0;mkS.open=false;mkS.mistEnd=0;mkS.fridge=null;mkS.ovenFlash=0;mkS.cart=0;mkS.nextOven=n+45+R()*20;mkS.nextPA=n+22+R()*18;mkS.nextMist=n+8+R()*8;mkS.nextFridge=n+12+R()*10;
+ mkSfx.chime();setTimeout(mkSfx.door,70);marketStartPoll();mkChipUpdate()}
+function marketLeave(){mkSfx.humOff();mkS.cart=0;mkSfx.door();setTimeout(mkSfx.chimeOut,120);closeMarketPanel();marketStopPoll();$('mkChip').hidden=true}
+function marketTick(t){ // chamado a cada quadro dentro do Mercado
+ const n=mkNow(),dx=ipx-.4,dy=ipy-13,near=Math.hypot(dx*.9,dy)<3.4,want=near?1:0;
+ mkS.door+=(want-mkS.door)*.12;if(!mkS.open&&mkS.door>.55){mkS.open=true;mkSfx.door()}else if(mkS.open&&mkS.door<.3){mkS.open=false;mkSfx.door()}
+ const dist=(x,y)=>Math.hypot(ipx-x,ipy-y);
+ if(n>mkS.nextMist){mkS.nextMist=n+22+R()*14;mkS.mistEnd=n+3.4;mkSfx.mist(Math.max(.15,1-dist(4.5,3)/22))}
+ if(n>mkS.nextFridge){mkS.nextFridge=n+16+R()*16;mkS.fridge={i:(R()*11)|0,end:n+3.4};mkSfx.fridge(Math.max(.15,1-dist(28,2)/24))}
+ if(n>mkS.nextOven){mkS.nextOven=n+60+R()*30;mkS.ovenFlash=n+6;mkSfx.oven();toast('🥖 Fornada quentinha saiu da padaria!')}
+ if(n>mkS.nextPA){mkS.nextPA=n+70+R()*50;mkSfx.pa();const d=mkS.deals&&mkS.deals[0],m=d?['Atenção, clientes! Hoje '+d.name+' está com '+d.pct+'% de desconto.','Atenção, clientes! Aproveitem as ofertas do dia na ilha de promoção.','Atenção, clientes! Passem no atendimento e conheçam o Cartão Sorokiba.']:['Atenção, clientes! Pão quentinho na padaria.','Atenção, clientes! Confiram as ofertas do dia.'];setTimeout(()=>toast('📢 '+m[(R()*m.length)|0]),900)}
+ mkSfx.humOn(Math.max(0,1-Math.hypot(ipx-28,ipy-1.5)/16)*.03);
+ if(pf>0&&n-mkS.lastStep>.34){mkS.lastStep=n;burst(2800,.03,.035);if(mkS.cart===2)burst(1500,.05,.03)}
+}
+/* --- decoração --- */
+const mkH=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+const MK_PAL={A:['#d9534f','#f0ad4e','#5cb85c','#5bc0de','#f7e08a','#c58df2'],B:['#2f6bff','#ff8c42','#6adf83','#e84a5f','#ffd166','#7fd6e6'],C:['#7fd6e6','#c58df2','#ffffff','#a1e887','#f7a8c6','#ffd166'],D:['#ff5d5d','#ffc14d','#8d5a3b','#f2e3c6','#5ccf9a','#2f6bff']};
+function mkGond(pal,seed){return{s:[4,1.5],p:[[.05,.1,3.9,1.3,0,10,'#2f4a68','#3c5f86'],[.15,.2,3.7,1.1,10,56,'#eef2f5','#fafcfd'],[.05,.1,3.9,1.3,56,62,'#16294a','#2bb3a3']],
+ f:(c,x,y,t)=>{const yy=y+1.42;for(let L=0;L<3;L++){const z0=15+L*14;poly(c,[P(x+.2,yy,z0),P(x+3.8,yy,z0),P(x+3.8,yy,z0-1.8),P(x+.2,yy,z0-1.8)],'#ffb703');
+   for(let i=0;i<8;i++){const h=8+Math.floor(mkH(seed*31+L*8+i)*5),xa=x+.25+i*.44,col=pal[Math.floor(mkH(seed+L*13+i*7)*pal.length)];poly(c,[P(xa,yy,z0+h),P(xa+.36,yy,z0+h),P(xa+.36,yy,z0),P(xa,yy,z0)],col);poly(c,[P(xa+.04,yy,z0+h*.65),P(xa+.32,yy,z0+h*.65),P(xa+.32,yy,z0+h*.35),P(xa+.04,yy,z0+h*.35)],'rgba(255,255,255,.55)')}}}}}
+function mkFridge(pal,seed,label){return{s:[2,1],p:[[.03,.05,1.94,.9,0,72,'#aeb9c4','#d6dee6']],
+ f:(c,x,y,t)=>{const yy=y+.96,open=mkS.fridge&&mkS.fridge.end>mkNow()&&((x-18)/2|0)===mkS.fridge.i;
+  for(let d=0;d<2;d++){const xa=x+.1+d*.93,xb=xa+.86;
+   poly(c,[P(xa,yy,68),P(xb,yy,68),P(xb,yy,5),P(xa,yy,5)],open&&d===0?'rgba(120,150,170,.9)':'rgba(170,215,235,.62)');
+   for(let L=0;L<4;L++){const z=10+L*14;for(let i=0;i<4;i++){const col=pal[Math.floor(mkH(seed+L*9+i*3+d*17)*pal.length)];poly(c,[P(xa+.05+i*.2,yy,z+9),P(xa+.2+i*.2,yy,z+9),P(xa+.2+i*.2,yy,z),P(xa+.05+i*.2,yy,z)],col)}}
+   c.strokeStyle='#5c6b78';c.lineWidth=1.6;ln(c,P(xb-.08,yy,52),P(xb-.08,yy,30));
+   for(let k=0;k<3;k++){const tw=Math.sin(t*2.2+seed*3+d*5+k*2.1);if(tw>.55){const q=P(xa+.12+mkH(seed+k+d*4)*.6,yy,12+mkH(seed*2+k)*50);c.fillStyle='rgba(255,255,255,'+(tw-.3)+')';c.fillRect(q[0]-1,q[1]-1,2,2)}}}
+  const led=P(x+1,yy,71);c.fillStyle=pal[0];c.fillRect(led[0]-26,led[1]-1,52,2);
+  if(open){const q=P(x+.5,yy+.2,26);const g=c.createRadialGradient(q[0],q[1],2,q[0],q[1],40);g.addColorStop(0,'rgba(220,240,255,.6)');g.addColorStop(1,'rgba(220,240,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(q[0],q[1]+8,44,22,0,0,7);c.fill()}}}}
+Object.assign(DEC,{
+ mgondA:mkGond(MK_PAL.A,1),mgondB:mkGond(MK_PAL.B,2),mgondC:mkGond(MK_PAL.C,3),mgondD:mkGond(MK_PAL.D,4),
+ mfridgeA:mkFridge(['#f5f5f5','#ffe27a','#fff3d6','#cfe9ff'],5),mfridgeB:mkFridge(['#ff8c42','#2f6bff','#6adf83','#e84a5f','#ffd166'],6),mfridgeC:mkFridge(['#9fd4ff','#ffffff','#ffb3c6','#c5f0ff'],7),
+ mfreezer:{s:[4,1.5],p:[[.05,.1,3.9,1.3,0,16,'#f2f5f8','#ffffff'],[.2,.25,3.6,1,16,19,'#9fcbe6','#cdeaf8']],
+  f:(c,x,y,t)=>{const z=19.5;for(let i=0;i<8;i++){const col=['#ff9fb5','#ffe27a','#9fd4ff','#ffffff'][i%4],xa=x+.3+i*.43;poly(c,[P(xa,y+.4,z),P(xa+.3,y+.4,z),P(xa+.3,y+1.15,z),P(xa,y+1.15,z)],col)}
+   const sp=Math.sin(t*2);c.fillStyle='rgba(255,255,255,'+(.4+.3*sp)+')';const q=P(x+1+(t*.5%2),y+.7,21);c.fillRect(q[0]-1,q[1]-1,2,2)}},
+ mproduceA:{s:[3,1.3],p:[[.05,.1,2.9,1.1,0,12,'#8a5a32','#b07a45']],
+  f:(c,x,y,t)=>{for(let r=0;r<2;r++)for(let i=0;i<7;i++){const q=P(x+.25+i*.4+(r%2)*.18,y+.35+r*.45,15+r*2);c.fillStyle=['#d9382f','#f08a24','#5cb85c','#e04a3a','#ffd23a'][(i+r*2)%5];c.beginPath();c.arc(q[0],q[1],4.4,0,7);c.fill();c.fillStyle='rgba(255,255,255,.55)';c.fillRect(q[0]-2,q[1]-3,2,2)}
+   if(mkS.mistEnd>mkNow()){c.fillStyle='rgba(190,230,255,.7)';for(let i=0;i<10;i++){const q=P(x+.2+mkH(i)*2.6,y+.3+mkH(i+9)*.9,30+((t*40+i*13)%26));c.fillRect(q[0],q[1],1.4,3)}}}},
+ mproduceB:{s:[3,1.3],p:[[.05,.1,2.9,1.1,0,12,'#8a5a32','#b07a45']],
+  f:(c,x,y,t)=>{for(let r=0;r<2;r++)for(let i=0;i<6;i++){const q=P(x+.28+i*.46,y+.38+r*.45,15+r*2);c.fillStyle=['#4fae4f','#e9812a','#c94b3b','#7ecb5a','#f2d14a','#3f9a5a'][(i+r*3)%6];c.beginPath();c.ellipse(q[0],q[1],5.2,3.6,0,0,7);c.fill()}
+   if(mkS.mistEnd>mkNow()){c.fillStyle='rgba(190,230,255,.7)';for(let i=0;i<10;i++){const q=P(x+.2+mkH(i+3)*2.6,y+.3+mkH(i+5)*.9,30+((t*40+i*11)%26));c.fillRect(q[0],q[1],1.4,3)}}}},
+ mscale:{s:[1,1],p:[[.2,.2,.6,.6,0,10,'#aab4be','#d6dde4'],[.15,.15,.7,.2,10,24,'#2f4a68','#3c5f86']]},
+ moven:{s:[3,1],p:[[.05,.05,2.9,.9,0,52,'#a8503a','#c8694c'],[.5,.5,2,.1,6,34,'#1a0f0a','#2a1a12']],
+  f:(c,x,y,t)=>{const fl=mkS.ovenFlash>mkNow()?1.5:1,q=P(x+1.5,y+.62,20),f=.7+.3*Math.sin(t*9)+.2*Math.sin(t*23);const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],34*fl);g.addColorStop(0,'rgba(255,190,70,'+(.75*f)+')');g.addColorStop(1,'rgba(255,90,20,0)');c.fillStyle=g;c.beginPath();c.ellipse(q[0],q[1],38*fl,22*fl,0,0,7);c.fill();
+   c.fillStyle='rgba(255,255,255,.45)';for(let i=0;i<4;i++){const ph=(t*.7+i*.25)%1,s=P(x+.8+i*.45,y+.5,54+ph*34);c.globalAlpha=(1-ph)*.5;c.beginPath();c.arc(s[0],s[1],3+ph*5,0,7);c.fill()}c.globalAlpha=1;
+   c.strokeStyle='#2a1a12';c.lineWidth=2;ln(c,P(x+.15,y+.92,40),P(x+2.85,y+.92,40))}},
+ mbread:{s:[4,1],p:[[.05,.1,3.9,.8,0,14,'#7a5232','#a07045'],[.05,.1,3.9,.8,14,17,'#d9e8ef','#eef7fb']],
+  f:(c,x,y,t)=>{const hot=mkS.ovenFlash>mkNow();for(let i=0;i<8;i++){const q=P(x+.3+i*.46,y+.5,20);c.fillStyle=hot?'#f0b64a':'#d9a14a';c.beginPath();c.ellipse(q[0],q[1],6.4,3.4,0,0,7);c.fill();c.strokeStyle='#a56d27';c.lineWidth=1;ln(c,[q[0]-3,q[1]-1],[q[0]+1,q[1]+1])}
+   if(hot){c.fillStyle='rgba(255,255,255,.5)';for(let i=0;i<5;i++){const ph=(t*.8+i*.2)%1,s=P(x+.6+i*.7,y+.5,26+ph*22);c.globalAlpha=(1-ph)*.45;c.beginPath();c.arc(s[0],s[1],2.6+ph*3,0,7);c.fill()}c.globalAlpha=1}}},
+ mbreadrack:{s:[2,1],p:[[.05,.1,1.9,.8,0,60,'#7a5232','#a07045']],
+  f:(c,x,y,t)=>{for(let L=0;L<3;L++)for(let i=0;i<5;i++){const a=P(x+.2+i*.34,y+.96,14+L*15),b=P(x+.32+i*.34,y+.96,26+L*15);c.strokeStyle='#d9a14a';c.lineWidth=4;ln(c,a,b)}}},
+ mpromo:{s:[2,2],p:[[.1,.1,1.8,1.8,0,10,'#2f4a68','#3c5f86'],[.2,.2,1.6,1.6,10,30,'#ffb703','#ffd166']],
+  f:(c,x,y,t)=>{for(let i=0;i<4;i++)for(let r=0;r<2;r++){const q=P(x+.45+i*.38+r*.12,y+.6+r*.5,34);c.fillStyle=['#ef476f','#06d6a0','#118ab2','#ffd166'][(i+r)%4];c.fillRect(q[0]-5,q[1]-6,10,8)}
+   const q=P(x+1,y+1,70),sc=1+.12*Math.sin(t*4);c.save();c.translate(q[0],q[1]);c.rotate(Math.sin(t*1.2)*.12);c.scale(sc,sc);c.fillStyle='#e63946';c.beginPath();for(let k=0;k<16;k++){const a=k*Math.PI/8,r=k%2?13:19;c.lineTo(Math.cos(a)*r,Math.sin(a)*r*.8)}c.closePath();c.fill();c.fillStyle='#ffe9b0';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('OFERTA',0,3);c.restore();
+   c.strokeStyle='#fff';c.lineWidth=1;ln(c,P(x+1,y+1,30),P(x+1,y+1,58))}},
+ mcartrack:{s:[2,1],p:[[.05,.1,1.9,.8,0,6,'#6b7785','#8f9aa8']],
+  f:(c,x,y,t)=>{for(let i=0;i<4;i++){const o=P(x+.3+i*.4,y+.5,8+i*2);c.strokeStyle='#cfd8e0';c.lineWidth=2;c.strokeRect(o[0]-9,o[1]-12-i,18,12);c.strokeStyle='#8f9aa8';ln(c,[o[0]-9,o[1]-12-i],[o[0]-12,o[1]-17-i])}}},
+ mflowers:{s:[1.2,1],p:[[.1,.1,1,.8,0,10,'#7a5232','#a07045']],
+  f:(c,x,y,t)=>{for(let i=0;i<7;i++){const q=P(x+.2+i*.14,y+.5+(i%2)*.15,16+(i%3)*3);c.fillStyle=['#ef476f','#ffd166','#c77dff','#ff9f1c','#ffffff'][i%5];c.beginPath();c.arc(q[0],q[1],3.4,0,7);c.fill();c.strokeStyle='#3d8b4f';c.lineWidth=1.4;ln(c,q,P(x+.2+i*.14,y+.5+(i%2)*.15,11))}}},
+ mdesk:{s:[4,1],p:[[.05,.1,3.9,.8,0,24,'#16294a','#233c66'],[0,.05,4,.9,24,27,'#2bb3a3','#7fe0d4'],[.4,.5,.5,.1,27,40,'#0b1220','#10192b']],
+  f:(c,x,y,t)=>{const q=P(x+2.6,y+.55,32);c.fillStyle=((t*2)|0)%2?'#42f5d4':'#1f6f63';c.fillRect(q[0]-3,q[1]-2,6,3);const s=P(x+2,y+.96,56);c.fillStyle='#ffb703';c.fillRect(s[0]-30,s[1]-8,60,14);c.fillStyle='#16294a';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('ATENDIMENTO',s[0],s[1]+3)}},
+ mkiosk:{s:[1,1],p:[[.2,.2,.6,.6,0,36,'#2f4a68','#3c5f86'],[.15,.15,.7,.2,36,58,'#16294a','#233c66']],
+  f:(c,x,y,t)=>{const q=P(x+.5,y+.36,50);c.fillStyle=((t*1.5)|0)%3?'#42f5d4':'#ffb703';c.fillRect(q[0]-6,q[1]-5,12,8);c.fillStyle='rgba(0,0,0,.35)';c.fillRect(q[0]-6,q[1]-5,12,2)}},
+ mpallet:{s:[2,1.5],p:[[.1,.1,1.8,1.3,0,6,'#a07045','#b88a58'],[.15,.15,1.7,1.2,6,36,'#c99a5b','#e0b878'],[.4,.3,1,.8,36,56,'#d9a56a','#f0c590']],
+  f:(c,x,y,t)=>{const q=P(x+1,y+1.45,22);c.fillStyle='rgba(60,40,20,.35)';c.fillRect(q[0]-14,q[1]-1,28,2)}},
+ mbox:{s:[1,1],p:[[.1,.1,.8,.8,0,22,'#c99a5b','#e0b878'],[.15,.15,.7,.7,22,34,'#d9a56a','#f0c590']]}
+});
+function mkLane(n,closed){return{s:[1.4,4],p:[[.05,.15,1.3,2.7,0,14,'#4a5563','#6b7785'],[.1,.2,1.2,2.6,14,16,'#1d232c','#262e39'],[.05,2.95,1.3,.9,0,26,'#16294a','#233c66'],[.05,2.95,1.3,.9,26,29,'#2bb3a3','#7fe0d4']],
+ f:(c,x,y,t)=>{const open=!closed;
+  if(open){for(let i=0;i<6;i++){const ph=((t*.6+i/6)%1),q=P(x+.7,y+.25+ph*2.5,16.5);c.fillStyle='rgba(255,255,255,.18)';c.fillRect(q[0]-14,q[1]-1,28,2)}
+   if(((t*.5+n*.37)%1)<.22){const q=P(x+.7,y+2.8,17),a=.5+.5*Math.sin(t*40);c.strokeStyle='rgba(255,60,60,'+(.5+a*.5)+')';c.lineWidth=2;ln(c,[q[0]-14,q[1]],[q[0]+14,q[1]]);const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],20);g.addColorStop(0,'rgba(255,60,60,.35)');g.addColorStop(1,'rgba(255,60,60,0)');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1],20,0,7);c.fill()}
+   const sc=P(x+.7,y+3.4,33);c.fillStyle='#0b1220';c.fillRect(sc[0]-8,sc[1]-6,16,10);c.fillStyle=((t*1.3+n)|0)%2?'#42f5d4':'#7ff0a8';c.fillRect(sc[0]-6,sc[1]-4,12,6)}
+  const f=P(x+.7,y+3.4,70);c.fillStyle=open?'#2bb3a3':'#c0392b';c.fillRect(f[0]-14,f[1]-8,28,15);c.fillStyle='#fff';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText(open?'CAIXA '+n:'FECHADO',f[0],f[1]+3);c.strokeStyle='#8f9aa8';c.lineWidth=1.6;ln(c,P(x+.7,y+3.4,29),P(x+.7,y+3.4,62))}}}
+DEC.mlane1=mkLane(1,false);DEC.mlane2=mkLane(2,true);DEC.mlane3=mkLane(3,false);
+function marketCollision(){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ MKZ.dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ return solids;
+}
+function marketZones(){
+ const zs=[],go=(label,x,y,fn,desc='')=>zs.push({label,x,y,r:.95,desc,action:fn});
+ go('Carrinhos e cestas',2.2,10.4,()=>openMarketPanel('rack'));
+ go('Hortifruti',4.4,6.2,()=>openMarketPanel('shop','hortifruti'));
+ go('Padaria',13,4.9,()=>openMarketPanel('shop','padaria'));
+ go('Laticínios',21,2.2,()=>{mkSfx.fridge();openMarketPanel('shop','laticinios')});
+ go('Bebidas geladas',28,2.2,()=>{mkSfx.fridge();openMarketPanel('shop','bebidas')});
+ go('Congelados',36,2.2,()=>{mkSfx.fridge();openMarketPanel('shop','congelados')});
+ go('Mercearia',13,8.5,()=>openMarketPanel('shop','mercearia'));
+ go('Limpeza',26,8.5,()=>openMarketPanel('shop','limpeza'));
+ go('Freezers',15,19.7,()=>{mkSfx.fridge(.7);openMarketPanel('shop','congelados')});
+ go('Bebidas',26,19.7,()=>openMarketPanel('shop','bebidas'));
+ go('Ofertas do dia',17,14.9,()=>openMarketPanel('deals'));
+ go('Caixa 1',1.9,15.5,()=>openMarketPanel('cart'));go('Caixa 3',7.9,15.5,()=>openMarketPanel('cart'));
+ go('Autoatendimento',9.4,18.2,()=>openMarketPanel('cart'));
+ go('Atendimento e Cartão',36.2,6.9,()=>openMarketPanel('card'));
+ return zs;
+}
+function mkScan(kind,ms,label,done){cityDo(kind,ms,label,done)}
+function marketMedOverlay(t,m){
+ const k=Math.min(1,(performance.now()-m.t0)/m.ms),pt=P(ipx,ipy),cx=pt[0],cy=pt[1]-90;
+ c.save();c.fillStyle='rgba(255,252,243,.96)';c.strokeStyle='#2bb3a3';c.lineWidth=1.6;c.beginPath();c.roundRect(cx-34,cy-28,68,54,6);c.fill();c.stroke();
+ c.fillStyle='#16294a';for(let i=0;i<22;i++){const w=(i%3?1:2);c.fillRect(cx-26+i*2.4,cy-20,w,16)}
+ c.strokeStyle='#e63946';c.lineWidth=2;const by=cy-22+((t*1.7)%1)*20;c.beginPath();c.moveTo(cx-30,by);c.lineTo(cx+30,by);c.stroke();
+ c.fillStyle='#16294a';c.font='bold 7px sans-serif';c.textAlign='center';const ex=interior.medExtra||{};c.fillText('R$ '+String(ex.sum??'--'),cx,cy+10);c.fillStyle='#667';c.font='6px sans-serif';c.fillText(Math.round(k*(ex.n||1))+'/'+(ex.n||1)+' itens',cx,cy+19);c.restore();
+ c.font='bold 8px sans-serif';const bw=Math.max(84,Math.ceil(c.measureText(m.label).width)+14),bx=cx-bw/2,by2=cy+38;c.fillStyle='rgba(6,12,24,.88)';c.fillRect(bx-2,by2-13,bw+4,22);c.fillStyle='#bfeee6';c.textAlign='center';c.fillText(m.label,cx,by2-5);c.fillStyle='#1c3340';c.fillRect(bx,by2,bw,4);c.fillStyle='#ffb703';c.fillRect(bx,by2,bw*k,4);
+}
+function mkWallText(axis,text,px,py,z,font,color){wtxt(axis,text,px,py,z,font,color)}
+function mkCartCubes(){const ids=Object.keys(mkCart||{});return ids.slice(0,8).map(id=>({id,col:['#ef476f','#ffd166','#06d6a0','#118ab2','#c77dff','#ff9f1c','#8ac926','#ff595e'][Math.abs([...id].reduce((a,ch)=>a+ch.charCodeAt(0),0))%8]}))}
+function mkDrawCart(c,cx,cy,mode,cubes,t,moving){ // cesta na mão ou carrinho empurrado
+ const q=P(cx,cy);c.save();c.translate(q[0],q[1]);
+ if(mode===1){c.fillStyle='#e63946';c.strokeStyle='#8f1d28';c.lineWidth=1.4;c.beginPath();c.roundRect(-9,-12,18,10,2);c.fill();c.stroke();c.strokeStyle='#8f1d28';c.beginPath();c.arc(0,-12,8,Math.PI,0);c.stroke();cubes.slice(0,4).forEach((u,i)=>{c.fillStyle=u.col;c.fillRect(-7+i*4,-17-(i%2)*2,4,6)})}
+ else{c.fillStyle='rgba(0,0,0,.2)';c.beginPath();c.ellipse(0,0,13,5,0,0,7);c.fill();c.strokeStyle='#dfe6ec';c.lineWidth=1.6;c.fillStyle='rgba(220,230,240,.35)';c.beginPath();c.moveTo(-13,-18);c.lineTo(13,-18);c.lineTo(9,-5);c.lineTo(-9,-5);c.closePath();c.fill();c.stroke();for(let i=-8;i<=8;i+=4){c.beginPath();c.moveTo(i*1.1,-18);c.lineTo(i*.7,-5);c.stroke()}
+  cubes.forEach((u,i)=>{c.fillStyle=u.col;c.fillRect(-10+(i%4)*5.4,-23-Math.floor(i/4)*5,5,7)});c.strokeStyle='#8f9aa8';c.lineWidth=2;c.beginPath();c.moveTo(-13,-18);c.lineTo(-16,-24);c.stroke();c.fillStyle='#333';c.beginPath();c.arc(-8,-3,2,0,7);c.arc(8,-3,2,0,7);c.fill()}
+ c.restore();
+}
+function renderMarketZip(t){
+ const pl=MKZ,TOP=96;marketTick(t);
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#101a2c');bg.addColorStop(1,'#080d18');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.22,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ for(let y=0;y<pl.h;y++)for(let x=0;x<pl.w;x++){const f=MK_FLOOR[pl.grid[y][x]]||MK_FLOOR.g;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ // faixas de circulação e filas dos caixas
+ poly(c,[P(9,11.1),P(33,11.1),P(33,11.25),P(9,11.25)],'rgba(43,179,163,.55)');poly(c,[P(9,14.75),P(33,14.75),P(33,14.9),P(9,14.9)],'rgba(43,179,163,.55)');
+ for(let x=0;x<11;x+=1.5)poly(c,[P(x,15.15),P(x+.8,15.15),P(x+.8,15.3),P(x,15.3)],'rgba(255,183,3,.9)');
+ {const s=P(4.5,13);[[2.8,'#2bb3a3'],[2.3,'#fff9ee'],[1.7,'#16294a'],[1,'#ffb703']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45*r,22.5*r,0,0,7);c.fill()});c.fillStyle='#fff9ee';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('BEM-VINDO',s[0],s[1]+3)}
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(20,30,50,.22)';pl.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
+ const V=[],WALL='#f6eedb',WALLS='#cdbf9f';
+ const band=(axis,pos,u)=>{const F=(a,z)=>axis==='x'?P(u+a,pos,z):P(pos,u+a,z);poly(c,[F(0,48),F(1,48),F(1,43),F(0,43)],'#ffb703');poly(c,[F(0,52),F(1,52),F(1,48),F(0,48)],'#2bb3a3');poly(c,[F(0,7),F(1,7),F(1,0),F(0,0)],'rgba(22,41,74,.5)')};
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,WALL,WALLS);band('x',0,i)};
+ const door=mkS.door,ent=j=>j>=pl.entrance[0]&&j<pl.entrance[1];
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,WALL,WALLS);
+  if(ent(j)){const sl=Math.max(0,j-pl.entrance[0]-1.5)>0?1:-1;const off=door*1.7*sl;const y0=j+off;poly(c,[P(0,y0+.02,78),P(0,y0+.98,78),P(0,y0+.98,0),P(0,y0+.02,0)],'rgba(150,215,245,.42)');c.strokeStyle='#e6eef3';c.lineWidth=2;c.stroke();c.strokeStyle='rgba(255,255,255,.5)';ln(c,P(0,y0+.5,76),P(0,y0+.5,4))}
+  else{band('y',0,j);if((j<11&&j>=1)||(j>=16&&j<23)){poly(c,[P(0,j+.08,90),P(0,j+.92,90),P(0,j+.92,56),P(0,j+.08,56)],'rgba(150,215,245,.5)');c.strokeStyle='#e6eef3';c.lineWidth=1.2;c.stroke()}}};
+ for(let i=0;i<pl.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<pl.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ // viseira da porta automática: placa, letreiro de LED e sensor
+ V.push({k:13.5,f:()=>{const a=pl.entrance[0],b=pl.entrance[1];poly(c,[P(0,a,96),P(0,b,96),P(0,b,80),P(0,a,80)],'#16294a');c.strokeStyle='#ffb703';c.lineWidth=1.6;c.stroke();
+  const pts=[P(0,a+.2,94),P(0,b-.2,94),P(0,b-.2,82),P(0,a+.2,82)];pClip(pts);const msg='   BEM-VINDO AO MERCADO   ·   OFERTAS TODO DIA   ·   ',w=msg.length*4.3,sh=(t*30)%w;for(let n=0;n<3;n++)wtxtA('y',msg,0,a+.25+(n*w-sh)/32,85,'bold 6px sans-serif','#ffd166','left');c.restore();
+  const s=P(0,13,78);c.fillStyle=door>.3?'#5cf0a8':'#e63946';c.beginPath();c.arc(s[0],s[1],2.2,0,7);c.fill()}});
+ // letreiros de seção nas paredes
+ V.push({k:5,f:()=>{pScreen(0,2.2,7.6,64,88,'#1f7a46','#ffd166');wtxt('x','HORTIFRUTI',4.9,0,72,'bold 9px sans-serif','#fff9ee')}});
+ V.push({k:13.5,f:()=>{pScreen(0,10.4,16.8,64,88,'#a8503a','#ffd166');wtxt('x','PADARIA',13.6,0,72,'bold 9px sans-serif','#fff9ee')}});
+ [[18.2,23.8,'LATICÍNIOS','#2f6bff'],[24.2,31.8,'BEBIDAS GELADAS','#e84a5f'],[32.2,39.6,'CONGELADOS','#118ab2']].forEach(([a,b,txt,col])=>V.push({k:(a+b)/2,f:()=>{pScreen(0,a,b,78,92,col,'#fff9ee');wtxt('x',txt,(a+b)/2,0,82,'bold 7px sans-serif','#fff9ee')}}));
+ // quadro de ofertas do dia (LED) na parede da frente, ao lado dos caixas
+ V.push({k:19,f:()=>{const pts=[P(0,16.2,86),P(0,22.8,86),P(0,22.8,48),P(0,16.2,48)];poly(c,pts,'#0b1220');c.strokeStyle='#ffb703';c.lineWidth=2;c.stroke();pClip(pts);
+  wtxt('y','OFERTAS DO DIA',0,19.5,79,'bold 5.4px sans-serif','#ffd166');const dl=mkS.deals||[];dl.slice(0,4).forEach((d,i)=>{wtxtA('y',d.name,.01+0,17,68-i*9,'5px sans-serif','#e6f4f8','left');wtxtA('y','-'+d.pct+'%',0,22.5,68-i*9,'bold 5.4px sans-serif',['#ff8a95','#ffd166','#7ff0a8','#7fd6e6'][i%4],'right')});if(!dl.length)wtxt('y','Carregando…',0,19.5,62,'5px sans-serif','#9fb8c8');c.restore()}});
+ // placas de corredor (ficam acima das gôndolas)
+ [['MERCEARIA',12.5,6.2],['LIMPEZA',26.3,6.2],['CONGELADOS',14.5,20.8],['BEBIDAS',26,17.4]].forEach(([txt,x,y])=>V.push({k:x+y+1,f:()=>{poly(c,[P(x-1.1,y+.75,112),P(x+1.1,y+.75,112),P(x+1.1,y+.75,100),P(x-1.1,y+.75,100)],'#16294a');c.strokeStyle='#ffb703';c.lineWidth=1.4;c.stroke();wtxt('x',txt,x,y+.75,103,'bold 6px sans-serif','#ffe9b0');c.strokeStyle='#8f9aa8';c.lineWidth=1.4;ln(c,P(x,y+.75,100),P(x,y+.75,66))}}));
+ // estoque e porta
+ pl.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++){const fd=()=>axis==='v'?(ipx<pos&&pos-ipx<3.8&&Math.abs(ipy-(u+.5))<2.8):(ipy<pos&&pos-ipy<3.8&&Math.abs(ipx-(u+.5))<2.8);
+  V.push(axis==='v'?{k:pos+u+.5,f:()=>{if(fd())c.globalAlpha=.27;box(c,pos-.06,u,.12,1,0,TOP,WALL,WALLS);band('y',pos+.06,u);c.globalAlpha=1}}:{k:u+.5+pos,f:()=>{if(fd())c.globalAlpha=.27;box(c,u,pos-.06,1,.12,0,TOP,WALL,WALLS);band('x',pos+.06,u);c.globalAlpha=1}})}});
+ pl.doors.forEach(([axis,pos,a,b,text])=>{const m=(a+b)/2;V.push({k:pos+m+.6,f:()=>{box(c,pos-.06,a,.12,b-a,70,TOP,'#16294a','#ffb703');wtxt('y',text,pos+.07,m,80,'bold 7px sans-serif','#ffe9b0')}})});
+ // móveis altos na frente do jogador ficam translúcidos, para ele não sumir atrás das gôndolas
+ const tall=/^(mgond|mfreezer|mpromo|mlane|mkiosk|mpallet|mbreadrack|mdesk)/;
+ pl.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1],key=x+y+(d[0]+d[1])/2;V.push({k:key,f:()=>{const fd=tall.test(name)&&ipx+ipy<key&&ipy<y+d[1]&&y-ipy<2.8&&ipx>x-1.2&&ipx<x+d[0]+1.2;if(fd)c.globalAlpha=.32;drawDec(c,name,x,y,t);c.globalAlpha=1}})});
+ // carrinho ou cesta do jogador
+ const cubes=mkCartCubes(),med=interior.med,dirv=[[0,.85],[0,-.85],[-.9,0],[.9,0]][pd]||[0,.85];
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=MK_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.st||(o.f?2:0),pn:o.pn||'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl})}}));
+ interior.room.people.forEach(p=>{if(p.cart){const dv=[[0,.85],[0,-.85],[-.9,0],[.9,0]][p.face]||[0,.85];V.push({k:p.x+dv[0]+p.y+dv[1]+.1,f:()=>mkDrawCart(c,p.x+dv[0],p.y+dv[1],2,[{col:'#ffd166'},{col:'#06d6a0'},{col:'#ef476f'}],t)})}});
+ V.push({k:ipx+ipy,f:()=>{const q=P(ipx,ipy);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',myO)}});
+ if(mkS.cart)V.push({k:ipx+dirv[0]+ipy+dirv[1]+.1,f:()=>mkDrawCart(c,ipx+dirv[0],ipy+dirv[1]+(mkS.cart===1?0:0),mkS.cart,cubes,t)});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44);c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#7ff0e1';c.fillText(p.name,q[0],q[1])});
+ if(med&&med.kind==='mkscan')marketMedOverlay(t,med);
+ c.setTransform(1,0,0,1,0,0);
+}
+
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
   if(interior.room.shape==='hospital-zip'){renderHospitalZip(t);return}
   if(interior.room.shape==='cityhall-zip'){renderCityHallZip(t);return}
    if(interior.room.shape==='police-zip'){renderPoliceZip(t);return}
+   if(interior.room.shape==='market-zip'){renderMarketZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -2510,6 +2831,7 @@ function act(){
    if(interior.room.family==='condo'&&near.o.role==='Corretora'){openCondoPanel('marta');tone(640,.09,'sine',.06);return}
    if(interior.room.family==='cityhall'&&CITY_ROLE_SITE[near.o.role]){openCityPanel(CITY_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='police'&&POLICE_ROLE_SITE[near.o.role]){openPolicePanel(POLICE_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='grocery'&&MK_ROLE_SITE[near.o.role]){const r=MK_ROLE_SITE[near.o.role];openMarketPanel(r[0],r[1]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
@@ -2534,8 +2856,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('marketPanel').hidden||!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('marketPanel').hidden){closeMarketPanel()}else if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -3616,7 +3938,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;$('marketPanel').hidden=true;$('mkChip').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
 /* ---------- HOSPITAL: painel do paciente ---------- */
@@ -3834,8 +4156,8 @@ const CITY_SITES={
  health:{title:'Secretaria de Saúde',who:'Saúde pública',office:'saude',tabs:[['health','Saúde pública'],['dash','Painel']]},
  plenary:{title:'Plenário da Câmara',who:'Câmara Municipal',office:'vereador',tabs:[['laws','Votações'],['dash','Painel']]}
 };
-const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia'};
-const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança'};
+const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia',market_cashier:'Supermercado'};
+const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança',mercado:'Compras no Mercado'};
 const cityNow=()=>Date.now()+cityOffset;
 const cityMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const cityCompact=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':a>=1e3?(v/1e3).toFixed(1).replace('.',',')+' mil':String(Math.round(v))};
@@ -4256,6 +4578,146 @@ $('policeBody').onclick=e=>{
  else if(a==='decide')policeAct('/fine/decide',{id,keep:b.dataset.keep==='1'});
 };
 window.addEventListener('resize',()=>{if(!$('policePanel').hidden)policeDrawCharts()});
+/* ---------- MERCADO: painel de compras (corredores, carrinho, ofertas, despensa e cartão) ---------- */
+let mkState=null,mkCart={},mkTab='shop',mkAisle='todos',mkSite='anywhere',mkRedeem=false,mkBusy=false,mkReq=0,mkOffset=0,mkTimer=0,mkPoll=0,mkReloaded=false;
+try{const raw=JSON.parse(localStorage.getItem('sk2mkc')||'{}');if(raw&&typeof raw==='object')for(const [k,v] of Object.entries(raw))if(Number.isInteger(v)&&v>0&&v<=10)mkCart[k]=v}catch(e){}
+const mkSave=()=>{try{localStorage.setItem('sk2mkc',JSON.stringify(mkCart))}catch(e){}};
+const MK_TABS=[['shop','Corredores'],['cart','Carrinho'],['deals','Ofertas'],['pantry','Despensa'],['card','Cartão']];
+const mkNowMs=()=>Date.now()+mkOffset;
+const mkProd=id=>mkState&&mkState.products.find(p=>p.id===id);
+const mkUnits=()=>Object.values(mkCart).reduce((a,b)=>a+b,0);
+const mkCap=()=>mkS.cart===2?30:mkS.cart===1?10:4;
+const mkCapName=()=>mkS.cart===2?'carrinho':mkS.cart===1?'cesta':'mãos';
+const mkCount=until=>'<b class="mkCount" data-until="'+until+'">'+cityWait(until-mkNowMs())+'</b>';
+function mkQuote(){
+ const out={lines:[],units:0,subtotal:0,dealSaved:0,redeem:0,total:0,earn:0};if(!mkState)return out;
+ const dm=new Map(mkState.deals.map(d=>[d.id,d]));
+ for(const [id,qty] of Object.entries(mkCart)){const p=mkProd(id);if(!p||!(qty>0))continue;const d=dm.get(id),du=d?Math.min(qty,d.left):0,unit=d?d.price:p.price,line=p.price*qty,paid=unit*du+p.price*(qty-du);
+  out.lines.push({p,qty,deal:d||null,dealUnits:du,paid,saved:line-paid});out.units+=qty;out.subtotal+=line;out.dealSaved+=line-paid}
+ out.total=out.subtotal-out.dealSaved;const k=mkState.constants;
+ if(mkRedeem&&mkState.me.points>=k.REDEEM_POINTS&&out.total>=k.REDEEM_MIN_TOTAL){out.redeem=k.REDEEM_VALUE;out.total-=k.REDEEM_VALUE}
+ out.earn=Math.floor(out.total/k.POINT_EVERY);return out;
+}
+function mkChipUpdate(){const chip=$('mkChip');if(!chip)return;const inMk=!!interior&&interior.room.family==='grocery';chip.hidden=!inMk;if(!inMk)return;const q=mkQuote(),u=mkUnits();chip.textContent='🛒 '+u+(mkState?' · '+cityMoney(q.total):'')}
+async function mkRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/market'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível falar com o Mercado.');return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('O Mercado demorou para responder. Tente novamente.');throw e}finally{clearTimeout(timer)}
+}
+function mkApply(d){
+ if(d.player){user=d.player;$('hm').textContent=user.money}
+ if(d.market){mkState=d.market;mkOffset=mkState.serverNow-Date.now();mkReloaded=false;
+  mkS.deals=mkState.deals.map(x=>({name:(mkProd(x.id)||{}).name||x.id,pct:x.pct}));
+  // tira do carrinho o que já passou do limite de quantidade
+  for(const id of Object.keys(mkCart))if(!mkProd(id))delete mkCart[id];mkSave();mkChipUpdate()}
+}
+function mkSay(text,bad){const e=$('marketMsg');if(!e)return;e.textContent=text||'';e.classList.toggle('err',!!bad)}
+/* ---------- telas ---------- */
+const mkIcon=p=>'<span class="mkIcon" aria-hidden="true">'+p.icon+'</span>';
+function mkCard(p){
+ const d=mkState.deals.find(x=>x.id===p.id),q=mkCart[p.id]||0;
+ return '<div class="mkProd'+(d?' deal':'')+'">'+(d?'<span class="mkBadge">-'+d.pct+'%</span>':'')+mkIcon(p)+'<b>'+esc(p.name)+'</b><small>'+esc(mkState.constants.aisles[p.aisle])+(p.heal?' · +'+p.heal+' saúde':'')+'</small>'
+  +'<div class="mkPriceTag">'+(d&&d.left>0?'<s>'+cityMoney(p.price)+'</s> <strong>'+cityMoney(d.price)+'</strong>':'<strong>'+cityMoney(p.price)+'</strong>')+'</div>'
+  +'<div class="mkQty"><button type="button" data-mk="dec" data-id="'+p.id+'" aria-label="Tirar '+esc(p.name)+'"'+(q?'':' disabled')+'>−</button><b aria-live="polite">'+q+'</b><button type="button" data-mk="inc" data-id="'+p.id+'" aria-label="Pôr '+esc(p.name)+'">+</button></div></div>';
+}
+function vShop(){
+ const s=mkState,aisles=Object.entries(s.constants.aisles),list=s.products.filter(p=>mkAisle==='todos'||p.aisle===mkAisle);
+ return '<div class="mkChips" role="tablist" aria-label="Corredores">'+[['todos','Todos'],...aisles].map(([id,l])=>'<button type="button" data-mkaisle="'+id+'" aria-pressed="'+(id===mkAisle)+'">'+esc(l)+'</button>').join('')+'</div>'
+  +'<p class="mkHint">Você está levando '+mkUnits()+' de '+mkCap()+' itens ('+mkCapName()+').'+(mkS.cart<2?' Pegue '+(mkS.cart?'um carrinho':'uma cesta ou um carrinho')+' na entrada para levar mais.':'')+'</p>'
+  +'<div class="mkGrid">'+list.map(mkCard).join('')+'</div>';
+}
+function vCart(){
+ const s=mkState,q=mkQuote(),k=s.constants;
+ if(!q.lines.length)return '<div class="mkNote">Seu carrinho está vazio. Escolha produtos nos corredores.</div>';
+ const canRedeem=s.me.points>=k.REDEEM_POINTS&&q.subtotal-q.dealSaved>=k.REDEEM_MIN_TOTAL;
+ return '<ul class="mkList">'+q.lines.map(l=>'<li><span>'+mkIcon(l.p)+'<b>'+esc(l.p.name)+'</b><small>'+cityMoney(l.p.price)+' cada'+(l.dealUnits?' · oferta em '+l.dealUnits+' un.':'')+'</small></span><span class="mkRight"><span class="mkQty"><button type="button" data-mk="dec" data-id="'+l.p.id+'" aria-label="Tirar uma unidade">−</button><b>'+l.qty+'</b><button type="button" data-mk="inc" data-id="'+l.p.id+'" aria-label="Pôr mais uma unidade">+</button></span><b class="mkLineTotal">'+cityMoney(l.paid)+'</b></span></li>').join('')+'</ul>'
+  +'<div class="mkTotals"><div><span>Subtotal</span><b>'+cityMoney(q.subtotal)+'</b></div>'+(q.dealSaved?'<div class="mkSave"><span>Ofertas do dia</span><b>−'+cityMoney(q.dealSaved)+'</b></div>':'')+(q.redeem?'<div class="mkSave"><span>Pontos do Cartão Sorokiba</span><b>−'+cityMoney(q.redeem)+'</b></div>':'')+'<div class="mkTotal"><span>Total</span><b>'+cityMoney(q.total)+'</b></div><small>Você ganha '+q.earn+' ponto(s) · saldo atual '+cityMoney(user.money)+'</small></div>'
+  +(canRedeem?'<label class="mkCheck"><input id="mkRedeem" type="checkbox"'+(mkRedeem?' checked':'')+'> Usar '+k.REDEEM_POINTS+' pontos (−'+cityMoney(k.REDEEM_VALUE)+')</label>':'<p class="mkHint">'+(s.me.points>=k.REDEEM_POINTS?'Para usar os pontos, a compra precisa chegar a '+cityMoney(k.REDEEM_MIN_TOTAL)+'.':'Você tem '+s.me.points+' ponto(s). Com '+k.REDEEM_POINTS+' ganha '+cityMoney(k.REDEEM_VALUE)+' de desconto.')+'</p>')
+  +'<div class="mkActions">'+(mkSite==='cashier'?'<button type="button" class="mkPay" data-mk="pay">Passar no caixa · '+cityMoney(q.total)+'</button>':'<p class="mkHint">Para pagar, vá até um caixa ou ao autoatendimento.</p>')+'<button type="button" class="alt" data-mk="clear">Esvaziar carrinho</button></div>';
+}
+function vDeals(){
+ const s=mkState;
+ return '<div class="mkCard2"><h3>Ofertas do dia</h3><p class="mkHint">Até '+s.constants.DEAL_LIMIT+' unidades por oferta, por dia. Novas ofertas em '+mkCount(s.nextDealsAt)+'.</p><div class="mkGrid">'+s.deals.map(d=>{const p=mkProd(d.id);return p?mkCard(p).replace('<div class="mkQty">','<small class="mkLeft">'+(d.left?'restam '+d.left+' com desconto':'limite de hoje atingido')+'</small><div class="mkQty">'):''}).join('')+'</div></div>';
+}
+function vPantry(){
+ const s=mkState,items=Object.entries(s.pantry).map(([id,q])=>[mkProd(id),q]).filter(([p])=>p),wait=s.me.eatWaitUntil&&s.me.eatWaitUntil>mkNowMs();
+ return '<div class="mkCard2"><h3>Despensa</h3>'+(items.length?'<p class="mkHint">Comer devolve saúde (o mesmo relógio do Hospital).'+(wait?' Próxima mordida em '+mkCount(s.me.eatWaitUntil)+'.':'')+'</p><ul class="mkList">'+items.map(([p,q])=>'<li><span>'+mkIcon(p)+'<b>'+esc(p.name)+'</b><small>'+q+' na despensa'+(p.heal?' · +'+p.heal+' saúde':' · para estoque')+'</small></span><span class="mkRight">'+(p.heal?'<button type="button" data-mk="eat" data-id="'+p.id+'"'+(wait?' disabled':'')+'>Comer</button>':'')+'</span></li>').join('')+'</ul>':'<p class="mkHint">Sua despensa está vazia. Faça compras nos corredores!</p>')+'</div>';
+}
+function vCard(){
+ const s=mkState,k=s.constants,pts=s.me.points,pct=Math.min(100,pts%k.REDEEM_POINTS*100/k.REDEEM_POINTS+(pts>=k.REDEEM_POINTS&&pts%k.REDEEM_POINTS===0?100:0));
+ return '<div class="mkCard2 mkLoyal"><h3>Cartão Sorokiba</h3><p class="mkHint">1 ponto a cada '+cityMoney(k.POINT_EVERY)+' pagos. '+k.REDEEM_POINTS+' pontos viram '+cityMoney(k.REDEEM_VALUE)+' de desconto (compra mínima de '+cityMoney(k.REDEEM_MIN_TOTAL)+').</p><div class="mkPts"><strong>'+pts+'</strong><span>pontos</span></div><div class="mkBar" role="progressbar" aria-valuenow="'+Math.round(pct)+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div>'
+  +'<div class="mkCard2"><h3>Últimas compras</h3>'+(s.orders.length?'<ul class="mkList">'+s.orders.map(o=>'<li><span><b>'+cityMoney(o.total)+'</b><small>'+o.units+' item(ns) · '+cityTime(o.at)+(o.saved?' · economizou '+cityMoney(o.saved):'')+'</small></span></li>').join('')+'</ul>':'<p class="mkHint">Nenhuma compra ainda.</p>')+'</div>';
+}
+function vRack(){
+ return '<div class="mkCard2"><h3>Carrinhos e cestas</h3><p class="mkHint">Sem nada, você carrega até 4 itens. Com a cesta, até 10. Com o carrinho, até 30.</p><div class="mkActions"><button type="button" data-mk="basket"'+(mkS.cart===1?' class="on"':'')+'>🧺 Pegar cesta (10)</button><button type="button" data-mk="trolley"'+(mkS.cart===2?' class="on"':'')+'>🛒 Pegar carrinho (30)</button>'+(mkS.cart?'<button type="button" class="alt" data-mk="giveback">Devolver</button>':'')+'</div></div>';
+}
+function renderMarket(){
+ const nav=$('marketTabs');const shown=mkTab==='rack'?[]:MK_TABS;nav.hidden=!shown.length;nav.innerHTML=shown.map(t=>'<button type="button" role="tab" data-mktab="'+t[0]+'" aria-selected="'+(t[0]===mkTab)+'">'+t[1]+(t[0]==='cart'&&mkUnits()?' ('+mkUnits()+')':'')+'</button>').join('');
+ const body=$('marketBody');if(!mkState){body.innerHTML='<div class="mkNote">Carregando…</div>';return}
+ const keepScroll=body.scrollTop;body.innerHTML=({shop:vShop,cart:vCart,deals:vDeals,pantry:vPantry,card:vCard,rack:vRack}[mkTab]||vShop)();body.scrollTop=keepScroll;mkChipUpdate();
+}
+async function marketLoad(silent){
+ const id=++mkReq;
+ try{const d=await mkRequest('');if(id!==mkReq)return;mkApply(d);if(!$('marketPanel').hidden){if(!silent)mkSay('');renderMarket()}}
+ catch(e){if(id!==mkReq||$('marketPanel').hidden)return;if(!mkState)$('marketBody').innerHTML='<div class="mkNote" role="alert">'+esc(e.message)+'<div class="mkActions" style="justify-content:center"><button type="button" data-mk="retry">Tentar novamente</button></div></div>'}
+}
+function openMarketPanel(tab,aisle,site){
+ if(!interior||interior.room.family!=='grocery')return;
+ mkTab=tab||'shop';if(aisle)mkAisle=aisle;mkSite=site||(tab==='cart'?'cashier':'anywhere');
+ open=true;$('dlg').hidden=true;mkSay('');$('marketPanel').hidden=false;renderMarket();marketLoad();
+ clearInterval(mkTimer);mkTimer=setInterval(mkTick,1000);
+ $('marketTitle').textContent=({rack:'Carrinhos e cestas',card:'Atendimento e Cartão',deals:'Ofertas do dia'}[mkTab])||'Mercado de Sorokiba';
+}
+function closeMarketPanel(){mkReq++;clearInterval(mkTimer);mkTimer=0;if($('marketPanel').hidden)return;$('marketPanel').hidden=true;open=false}
+function marketStartPoll(){clearInterval(mkPoll);marketLoad(true);mkPoll=setInterval(()=>{if(interior&&interior.room.family==='grocery'&&$('marketPanel').hidden)marketLoad(true)},60000)}
+function marketStopPoll(){clearInterval(mkPoll);mkPoll=0}
+function mkTick(){
+ if($('marketPanel').hidden||!mkState)return;let expired=false;
+ document.querySelectorAll('#marketPanel .mkCount').forEach(e=>{const left=Number(e.dataset.until)-mkNowMs();e.textContent=cityWait(left);if(left<=0)expired=true});
+ if(expired&&!mkReloaded&&!mkBusy){mkReloaded=true;marketLoad(true)}
+}
+async function marketAct(path,body,onOk){
+ if(mkBusy)return;mkBusy=true;mkReq++;$('marketPanel').classList.add('busy');
+ try{const d=await mkRequest(path,body);mkApply(d);if(onOk)onOk(d);renderMarket();mkSay(d.message||'Pronto.');return d}
+ catch(e){mkSay(e.message,true);mkSfx.buzz()}
+ finally{mkBusy=false;$('marketPanel').classList.remove('busy')}
+}
+function mkAdd(id,delta){
+ const p=mkProd(id);if(!p)return;const cur=mkCart[id]||0;
+ if(delta>0){if(mkUnits()>=mkCap()){mkSay('Seu '+mkCapName()+' está cheio ('+mkCap()+' itens).'+(mkS.cart<2?' Pegue um carrinho na entrada.':''),true);mkSfx.buzz();return}if(cur>=10){mkSay('Máximo de 10 unidades de '+p.name+'.',true);mkSfx.buzz();return}mkCart[id]=cur+1;mkSfx.pop();mkSay('')}
+ else if(cur>0){if(cur<=1)delete mkCart[id];else mkCart[id]=cur-1;mkSfx.unpop()}
+ mkSave();renderMarket();
+}
+function marketCheckout(){
+ if(mkBusy)return;const q=mkQuote();if(!q.lines.length){mkSay('Seu carrinho está vazio.',true);return}
+ if(user.money<q.total){mkSay('Saldo insuficiente: a compra deu '+cityMoney(q.total)+'.',true);mkSfx.buzz();return}
+ const items=Object.entries(mkCart).map(([id,qty])=>({id,qty})),redeem=mkRedeem,units=q.units,ms=Math.min(3600,800+units*150);
+ closeMarketPanel();
+ const step=Math.max(70,Math.min(190,(ms-600)/Math.max(1,units)));for(let i=0;i<Math.min(units,16);i++)setTimeout(mkSfx.beep,450+i*step);
+ interior&&(interior.medExtra={sum:q.total,n:units});
+ mkScan('mkscan',ms,'Passando no caixa…',()=>{
+  openMarketPanel('cart',null,'cashier');
+  marketAct('/checkout',{items,redeem},()=>{mkCart={};mkSave();mkRedeem=false;mkTab='pantry';mkSfx.kaching();setTimeout(mkSfx.bag,380)});
+ });
+}
+$('marketClose').onclick=closeMarketPanel;
+$('mkChip').onclick=()=>{if($('marketPanel').hidden)openMarketPanel('cart',null,'anywhere');else closeMarketPanel()};
+$('marketTabs').onclick=e=>{const b=e.target.closest('[data-mktab]');if(!b||mkBusy)return;mkTab=b.dataset.mktab;mkSay('');if(mkTab==='cart'&&mkSite!=='cashier')mkSite='anywhere';$('marketTitle').textContent='Mercado de Sorokiba';renderMarket()};
+$('marketBody').onchange=e=>{if(e.target.id==='mkRedeem'){mkRedeem=e.target.checked;renderMarket()}};
+$('marketBody').onclick=e=>{
+ const ch=e.target.closest('[data-mkaisle]');if(ch){mkAisle=ch.dataset.mkaisle;renderMarket();return}
+ const b=e.target.closest('[data-mk]');if(!b||b.disabled)return;const a=b.dataset.mk,id=b.dataset.id;
+ if(a==='inc')mkAdd(id,1);else if(a==='dec')mkAdd(id,-1);
+ else if(a==='clear'){mkCart={};mkSave();mkSfx.unpop();renderMarket()}
+ else if(a==='pay')marketCheckout();
+ else if(a==='eat')marketAct('/eat',{id},()=>mkSfx.eat());
+ else if(a==='retry')marketLoad();
+ else if(a==='basket'){mkS.cart=1;mkSfx.cart();mkSay('Você pegou uma cesta (até 10 itens).');renderMarket()}
+ else if(a==='trolley'){mkS.cart=2;mkSfx.cart();mkSay('Você pegou um carrinho (até 30 itens).');renderMarket()}
+ else if(a==='giveback'){mkS.cart=0;mkSfx.clack();mkSay('Devolvido. Sem cesta, você carrega até 4 itens.');renderMarket()}
+};
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
 let bankData=null,bankTab='account',bankBusy=false,bankDeal=null,bankReq=0,bankLoanAmt=0;
