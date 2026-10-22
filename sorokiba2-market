@@ -1,0 +1,232 @@
+'use strict';
+// Sorokiba 2 – Mercado. Mesma regra do Banco, do Hospital e da Delegacia: preço, oferta, saldo e despensa são
+// decididos e gravados no servidor, em transação; o cliente só mostra o carrinho e pede a compra.
+//
+//   • catálogo fixo (PRODUCTS) em sete corredores; o servidor recalcula todos os preços;
+//   • ofertas do dia: 4 produtos com desconto, sorteados por dia (igual para todos), limite de 3 unidades por morador;
+//   • Cartão Sorokiba: 1 ponto a cada R$ 10 pagos; 100 pontos viram R$ 10 de desconto numa compra de R$ 20 ou mais;
+//   • o dinheiro das compras vai para o tesouro da cidade (extrato `mercado`);
+//   • despensa: comprar enche a despensa (até 20 de cada); comer devolve saúde pelo mesmo relógio de saúde do Hospital.
+const crypto = require('crypto');
+const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
+const hospital = require('./sorokiba2-hospital');
+
+// SK2_MARKET_TIME_SCALE=0.001 acelera a virada do "dia" das ofertas para testar. Em produção: 1.
+const SCALE = (() => { const n = Number(process.env.SK2_MARKET_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
+const DAY_MS = Math.max(1000, Math.round(86400e3 * SCALE));
+
+const MARKET = Object.freeze({
+  LINES_MAX: 12, QTY_MAX: 10, UNITS_MAX: 30, PANTRY_MAX: 20,
+  DEAL_COUNT: 4, DEAL_LIMIT: 3, DEAL_PCTS: [15, 20, 25, 30],
+  POINT_EVERY: 10, REDEEM_POINTS: 100, REDEEM_VALUE: 10, REDEEM_MIN_TOTAL: 20,
+  EAT_COOLDOWN_S: 20, ORDERS_KEEP: 5,
+});
+const AISLES = Object.freeze({
+  hortifruti: 'Hortifruti', padaria: 'Padaria', laticinios: 'Laticínios', bebidas: 'Bebidas',
+  mercearia: 'Mercearia', congelados: 'Congelados', limpeza: 'Limpeza',
+});
+// heal = saúde que o produto devolve ao ser comido (0 = não comestível).
+const PRODUCTS = Object.freeze([
+  { id: 'maca', name: 'Maçã', aisle: 'hortifruti', price: 6, heal: 5, icon: '🍎' },
+  { id: 'banana', name: 'Banana prata', aisle: 'hortifruti', price: 5, heal: 5, icon: '🍌' },
+  { id: 'tomate', name: 'Tomate', aisle: 'hortifruti', price: 7, heal: 4, icon: '🍅' },
+  { id: 'alface', name: 'Alface crespa', aisle: 'hortifruti', price: 4, heal: 3, icon: '🥬' },
+  { id: 'cenoura', name: 'Cenoura', aisle: 'hortifruti', price: 3, heal: 3, icon: '🥕' },
+  { id: 'pao', name: 'Pão francês', aisle: 'padaria', price: 3, heal: 4, icon: '🥖' },
+  { id: 'bolo', name: 'Bolo de milho', aisle: 'padaria', price: 9, heal: 6, icon: '🍰' },
+  { id: 'croissant', name: 'Croissant', aisle: 'padaria', price: 7, heal: 5, icon: '🥐' },
+  { id: 'leite', name: 'Leite integral', aisle: 'laticinios', price: 6, heal: 4, icon: '🥛' },
+  { id: 'iogurte', name: 'Iogurte natural', aisle: 'laticinios', price: 5, heal: 4, icon: '🍦' },
+  { id: 'queijo', name: 'Queijo minas', aisle: 'laticinios', price: 12, heal: 5, icon: '🧀' },
+  { id: 'suco', name: 'Suco de laranja', aisle: 'bebidas', price: 7, heal: 5, icon: '🧃' },
+  { id: 'agua', name: 'Água mineral', aisle: 'bebidas', price: 3, heal: 2, icon: '💧' },
+  { id: 'cha', name: 'Chá gelado', aisle: 'bebidas', price: 5, heal: 3, icon: '🍵' },
+  { id: 'refri', name: 'Refrigerante', aisle: 'bebidas', price: 6, heal: 1, icon: '🥤' },
+  { id: 'arroz', name: 'Arroz 1 kg', aisle: 'mercearia', price: 14, heal: 0, icon: '🍚' },
+  { id: 'feijao', name: 'Feijão 1 kg', aisle: 'mercearia', price: 9, heal: 0, icon: '🫘' },
+  { id: 'macarrao', name: 'Macarrão', aisle: 'mercearia', price: 6, heal: 0, icon: '🍝' },
+  { id: 'biscoito', name: 'Biscoito recheado', aisle: 'mercearia', price: 5, heal: 2, icon: '🍪' },
+  { id: 'chocolate', name: 'Barra de chocolate', aisle: 'mercearia', price: 8, heal: 3, icon: '🍫' },
+  { id: 'pizza', name: 'Pizza congelada', aisle: 'congelados', price: 18, heal: 6, icon: '🍕' },
+  { id: 'sorvete', name: 'Pote de sorvete', aisle: 'congelados', price: 15, heal: 4, icon: '🍨' },
+  { id: 'nuggets', name: 'Nuggets', aisle: 'congelados', price: 16, heal: 5, icon: '🍗' },
+  { id: 'sabao', name: 'Sabão em pó', aisle: 'limpeza', price: 12, heal: 0, icon: '🧼' },
+  { id: 'detergente', name: 'Detergente', aisle: 'limpeza', price: 4, heal: 0, icon: '🧴' },
+  { id: 'papel', name: 'Papel toalha', aisle: 'limpeza', price: 6, heal: 0, icon: '🧻' },
+]);
+const BY_ID = Object.freeze(Object.fromEntries(PRODUCTS.map(p => [p.id, p])));
+const has = id => typeof id === 'string' && Object.prototype.hasOwnProperty.call(BY_ID, id);
+
+/* ---------- funções puras (testadas em test/market.test.js) ---------- */
+const brl = n => 'R$ ' + Number(n).toLocaleString('pt-BR');
+const dayIndex = (now = Date.now()) => Math.floor(now / DAY_MS);
+function mulberry32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// Quatro produtos diferentes por dia, com desconto de 15 a 30%; o mesmo dia dá sempre as mesmas ofertas.
+function dealsFor(day) {
+  const rnd = mulberry32(Math.imul(Math.floor(day) + 1, 2654435761));
+  const pool = PRODUCTS.map(p => p.id);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, MARKET.DEAL_COUNT).map(id => ({ id, pct: MARKET.DEAL_PCTS[Math.floor(rnd() * MARKET.DEAL_PCTS.length)] }));
+}
+const dealPrice = (price, pct) => Math.max(1, Math.round(price * (100 - pct) / 100));
+// Valida o carrinho vindo do cliente: só ids do catálogo, quantidades inteiras e limites de linhas e unidades.
+function validateCart(raw) {
+  if (!Array.isArray(raw) || !raw.length) return { err: 'Seu carrinho está vazio.' };
+  const merged = new Map();
+  for (const l of raw) {
+    if (!l || !has(l.id)) return { err: 'Há um produto inválido no carrinho.' };
+    if (!Number.isInteger(l.qty) || l.qty < 1 || l.qty > MARKET.QTY_MAX) return { err: `Quantidade inválida (de 1 a ${MARKET.QTY_MAX} por produto).` };
+    merged.set(l.id, (merged.get(l.id) || 0) + l.qty);
+  }
+  if (merged.size > MARKET.LINES_MAX) return { err: `O carrinho aceita até ${MARKET.LINES_MAX} produtos diferentes.` };
+  for (const [id, q] of merged) if (q > MARKET.QTY_MAX) return { err: `Máximo de ${MARKET.QTY_MAX} unidades de ${BY_ID[id].name}.` };
+  const units = [...merged.values()].reduce((a, b) => a + b, 0);
+  if (units > MARKET.UNITS_MAX) return { err: `O carrinho aceita até ${MARKET.UNITS_MAX} unidades.` };
+  return { lines: [...merged].map(([id, qty]) => ({ id, qty })), units };
+}
+// Preço do carrinho. `deals` = ofertas do dia, `used` = unidades em oferta que o morador já comprou hoje (por produto).
+function priceCart(lines, { deals = [], used = {}, points = 0, redeem = false } = {}) {
+  const dm = new Map(deals.map(d => [d.id, d.pct]));
+  const out = []; let subtotal = 0, dealSaved = 0;
+  for (const { id, qty } of lines) {
+    const p = BY_ID[id], pct = dm.get(id) || 0;
+    const left = pct ? Math.max(0, MARKET.DEAL_LIMIT - (Number(used[id]) || 0)) : 0;
+    const dealUnits = Math.min(qty, left), unitDeal = pct ? dealPrice(p.price, pct) : p.price;
+    const line = p.price * qty, paid = unitDeal * dealUnits + p.price * (qty - dealUnits);
+    subtotal += line; dealSaved += line - paid;
+    out.push({ id, qty, unit: p.price, dealUnits, dealPct: pct, dealUnit: unitDeal, line: paid, saved: line - paid });
+  }
+  let total = subtotal - dealSaved, redeemValue = 0, pointsUsed = 0;
+  if (redeem && Number(points) >= MARKET.REDEEM_POINTS && total >= MARKET.REDEEM_MIN_TOTAL) { redeemValue = MARKET.REDEEM_VALUE; pointsUsed = MARKET.REDEEM_POINTS; total -= redeemValue; }
+  return { lines: out, subtotal, dealSaved, redeemValue, pointsUsed, total, pointsEarned: Math.floor(total / MARKET.POINT_EVERY), saved: dealSaved + redeemValue };
+}
+// Despensa cheia? Devolve a mensagem do primeiro produto que passaria do limite.
+function pantryOverflow(lines, pantry = {}) {
+  for (const { id, qty } of lines) if ((Number(pantry[id]) || 0) + qty > MARKET.PANTRY_MAX) return `Despensa cheia de ${BY_ID[id].name} (máximo de ${MARKET.PANTRY_MAX}).`;
+  return null;
+}
+function eatCheck({ id, qty = 0, health = 100, waitMs = 0 }) {
+  if (!has(id)) return { err: 'Produto inválido.' };
+  if (BY_ID[id].heal <= 0) return { err: `${BY_ID[id].name} não é para comer: é só para estocar em casa.` };
+  if (!(qty >= 1)) return { err: `Você não tem ${BY_ID[id].name} na despensa.` };
+  if (waitMs > 0) return { err: `Mastigue com calma: aguarde ${Math.ceil(waitMs / 1000)} s.` };
+  if (health >= 100) return { err: 'Sua saúde já está no máximo.' };
+  return { ok: true, gain: Math.min(BY_ID[id].heal, 100 - health) };
+}
+
+/* ---------- banco de dados ---------- */
+async function init() {
+  await db.query(`CREATE TABLE IF NOT EXISTS sk2_market_pantry (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, item_id TEXT NOT NULL,
+    qty INT NOT NULL CHECK (qty >= 0), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (username, item_id));
+  CREATE TABLE IF NOT EXISTS sk2_market_card (
+    username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, points INT NOT NULL DEFAULT 0 CHECK (points >= 0), eat_at TIMESTAMPTZ);
+  CREATE TABLE IF NOT EXISTS sk2_market_deals (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, day BIGINT NOT NULL, item_id TEXT NOT NULL,
+    qty INT NOT NULL DEFAULT 0, PRIMARY KEY (username, day, item_id));
+  CREATE TABLE IF NOT EXISTS sk2_market_orders (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE,
+    units INT NOT NULL, total INT NOT NULL, saved INT NOT NULL DEFAULT 0, redeemed INT NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE INDEX IF NOT EXISTS sk2_market_orders_user ON sk2_market_orders(username, created_at);`);
+}
+const fail = (err, status = 409) => ({ err, status });
+const epoch = d => (d ? new Date(d).getTime() : null);
+const catalog = () => PRODUCTS.map(p => ({ id: p.id, name: p.name, aisle: p.aisle, price: p.price, heal: p.heal, icon: p.icon }));
+
+async function loadCard(c, username, lock = false) {
+  await c.query('INSERT INTO sk2_market_card (username) VALUES ($1) ON CONFLICT DO NOTHING', [username]);
+  return (await c.query(`SELECT points, eat_at FROM sk2_market_card WHERE username = $1 ${lock ? 'FOR UPDATE' : ''}`, [username])).rows[0];
+}
+async function snapshot(c, row) {
+  const u = row.username, now = Date.now(), day = dayIndex(now);
+  const card = await loadCard(c, u);
+  const used = Object.fromEntries((await c.query('SELECT item_id, qty FROM sk2_market_deals WHERE username = $1 AND day = $2', [u, day])).rows.map(r => [r.item_id, r.qty]));
+  const pantry = Object.fromEntries((await c.query('SELECT item_id, qty FROM sk2_market_pantry WHERE username = $1 AND qty > 0', [u])).rows.map(r => [r.item_id, r.qty]));
+  const orders = (await c.query('SELECT id, units, total, saved, redeemed, created_at FROM sk2_market_orders WHERE username = $1 ORDER BY created_at DESC LIMIT $2', [u, MARKET.ORDERS_KEEP])).rows
+    .map(o => ({ id: o.id, units: o.units, total: o.total, saved: o.saved, redeemed: o.redeemed, at: epoch(o.created_at) }));
+  const deals = dealsFor(day).map(d => ({ id: d.id, pct: d.pct, price: dealPrice(BY_ID[d.id].price, d.pct), left: Math.max(0, MARKET.DEAL_LIMIT - (used[d.id] || 0)) }));
+  const eatAt = card.eat_at ? epoch(card.eat_at) + MARKET.EAT_COOLDOWN_S * 1000 : 0;
+  return {
+    serverNow: now, nextDealsAt: (day + 1) * DAY_MS,
+    me: { username: u, name: row.name, money: Number(row.money) || 0, points: card.points, eatWaitUntil: eatAt > now ? eatAt : 0 },
+    constants: { ...MARKET, aisles: AISLES }, products: catalog(), deals, pantry, orders,
+  };
+}
+const run = (username, fn) => db.withTx(async c => {
+  const locked = (await c.query('SELECT * FROM sk2_players WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  if (!locked) return fail('Jogador não encontrado', 404);
+  const out = await fn(c, locked);
+  if (out.err) return out;
+  const player = out.player || locked;
+  return { ...out, playerRow: player, market: await snapshot(c, player) };
+});
+const summary = username => run(username, (_c, p) => ({ player: p }));
+
+const checkout = (username, input) => run(username, async (c, p) => {
+  const v = validateCart(input?.items); if (v.err) return fail(v.err, 400);
+  const card = await loadCard(c, username, true), day = dayIndex();
+  const used = Object.fromEntries((await c.query('SELECT item_id, qty FROM sk2_market_deals WHERE username = $1 AND day = $2 FOR UPDATE', [username, day])).rows.map(r => [r.item_id, r.qty]));
+  const pantry = Object.fromEntries((await c.query('SELECT item_id, qty FROM sk2_market_pantry WHERE username = $1 FOR UPDATE', [username])).rows.map(r => [r.item_id, r.qty]));
+  const full = pantryOverflow(v.lines, pantry); if (full) return fail(full);
+  const priced = priceCart(v.lines, { deals: dealsFor(day), used, points: card.points, redeem: input?.redeem === true });
+  if (Number(p.money) < priced.total) return fail(`Saldo insuficiente: a compra deu ${brl(priced.total)}.`);
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, priced.total])).rows[0];
+  await city.credit(c, 'mercado', priced.total, `Compras no Mercado de ${p.name}`);
+  for (const l of priced.lines) {
+    await c.query(`INSERT INTO sk2_market_pantry (username, item_id, qty) VALUES ($1,$2,$3) ON CONFLICT (username, item_id) DO UPDATE SET qty = sk2_market_pantry.qty + EXCLUDED.qty, updated_at = now()`, [username, l.id, l.qty]);
+    if (l.dealUnits > 0) await c.query(`INSERT INTO sk2_market_deals (username, day, item_id, qty) VALUES ($1,$2,$3,$4) ON CONFLICT (username, day, item_id) DO UPDATE SET qty = sk2_market_deals.qty + EXCLUDED.qty`, [username, day, l.id, l.dealUnits]);
+  }
+  await c.query('UPDATE sk2_market_card SET points = points - $2 + $3 WHERE username = $1', [username, priced.pointsUsed, priced.pointsEarned]);
+  await c.query('INSERT INTO sk2_market_orders (id, username, units, total, saved, redeemed) VALUES ($1,$2,$3,$4,$5,$6)', [crypto.randomUUID(), username, v.units, priced.total, priced.saved, priced.redeemValue]);
+  const extras = [priced.dealSaved ? `economia de ${brl(priced.dealSaved)} em ofertas` : '', priced.redeemValue ? `${brl(priced.redeemValue)} com pontos` : '', priced.pointsEarned ? `+${priced.pointsEarned} pontos` : ''].filter(Boolean);
+  return { player, event: { kind: 'checkout', total: priced.total, saved: priced.saved }, message: `Compra de ${brl(priced.total)} paga${extras.length ? ' (' + extras.join(', ') + ')' : ''}. Os itens estão na sua despensa.` };
+});
+
+const eat = (username, id) => run(username, async (c, p) => {
+  if (!has(id)) return fail('Produto inválido.', 400);
+  const card = await loadCard(c, username, true);
+  const row = (await c.query('SELECT qty FROM sk2_market_pantry WHERE username = $1 AND item_id = $2 FOR UPDATE', [username, id])).rows[0];
+  const st = await hospital.settle(c, p);
+  const waitMs = card.eat_at ? epoch(card.eat_at) + MARKET.EAT_COOLDOWN_S * 1000 - Date.now() : 0;
+  const chk = eatCheck({ id, qty: row ? row.qty : 0, health: st.health, waitMs });
+  if (chk.err) return fail(chk.err);
+  await c.query('UPDATE sk2_hospital_patients SET health = $2, health_at = now() WHERE username = $1', [username, st.health + chk.gain]);
+  await c.query('UPDATE sk2_market_pantry SET qty = qty - 1, updated_at = now() WHERE username = $1 AND item_id = $2', [username, id]);
+  await c.query('UPDATE sk2_market_card SET eat_at = now() WHERE username = $1', [username]);
+  return { player: p, event: { kind: 'eat', item: id }, message: `${BY_ID[id].name}: +${chk.gain} de saúde (agora ${st.health + chk.gain}%).` };
+});
+
+/* ---------- rotas ---------- */
+function registerRoutes({ app, json, authUser, limited, userTries }) {
+  const guard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `market:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações no Mercado. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] mercado:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a operação no Mercado.' });
+    }
+  };
+  const done = (res, r) => {
+    if (r.err) return res.status(r.status || 409).json({ err: r.err });
+    res.json({ ok: 1, player: db.pub(r.playerRow), market: r.market, event: r.event || null, message: r.message || '' });
+  };
+  app.get('/api/sk2/market', guard(async (_q, res, row) => { res.set('Cache-Control', 'no-store'); done(res, await summary(row.username)); }));
+  app.post('/api/sk2/market/checkout', json, guard(async (req, res, row) => {
+    if (!Array.isArray(req.body?.items)) return res.status(400).json({ err: 'Envie os itens do carrinho.' });
+    done(res, await checkout(row.username, { items: req.body.items, redeem: req.body.redeem === true }));
+  }));
+  app.post('/api/sk2/market/eat', json, guard(async (req, res, row) => {
+    if (typeof req.body?.id !== 'string') return res.status(400).json({ err: 'Escolha o que comer.' });
+    done(res, await eat(row.username, req.body.id));
+  }));
+}
+
+module.exports = {
+  MARKET, AISLES, PRODUCTS, init, registerRoutes, summary, checkout, eat,
+  // puras (testes)
+  dayIndex, dealsFor, dealPrice, validateCart, priceCart, pantryOverflow, eatCheck,
+};
