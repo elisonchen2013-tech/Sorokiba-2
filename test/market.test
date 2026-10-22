@@ -1,0 +1,228 @@
+'use strict';
+// Testes de COMPORTAMENTO do Mercado. O banco é simulado em memória só para as regras de compra e despensa;
+// as consultas SQL em si não são exercitadas aqui (precisam de um PostgreSQL real).
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const market = require('../sorokiba2-market');
+const { MARKET, PRODUCTS } = market;
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+const byId = id => PRODUCTS.find(p => p.id === id);
+
+test('catálogo: ids únicos, preços inteiros positivos e todos os corredores com produtos', () => {
+  assert.equal(new Set(PRODUCTS.map(p => p.id)).size, PRODUCTS.length);
+  for (const p of PRODUCTS) { assert.ok(Number.isInteger(p.price) && p.price > 0, p.id); assert.ok(Number.isInteger(p.heal) && p.heal >= 0 && p.heal <= 10, p.id); assert.ok(p.name && p.icon, p.id); assert.ok(market.AISLES[p.aisle], p.id); }
+  for (const a of Object.keys(market.AISLES)) assert.ok(PRODUCTS.some(p => p.aisle === a), 'corredor vazio: ' + a);
+  assert.ok(PRODUCTS.some(p => p.heal === 0), 'há produtos só de estoque');
+});
+
+test('ofertas do dia: 4 produtos diferentes, descontos válidos e iguais para o mesmo dia', () => {
+  for (const day of [0, 1, 19000, 20000, 123456]) {
+    const a = market.dealsFor(day), b = market.dealsFor(day);
+    assert.deepEqual(a, b, 'determinístico');
+    assert.equal(a.length, MARKET.DEAL_COUNT);
+    assert.equal(new Set(a.map(d => d.id)).size, MARKET.DEAL_COUNT);
+    for (const d of a) { assert.ok(byId(d.id)); assert.ok(MARKET.DEAL_PCTS.includes(d.pct)); }
+  }
+  const days = new Set(Array.from({ length: 30 }, (_, i) => market.dealsFor(19000 + i).map(d => d.id).sort().join()));
+  assert.ok(days.size > 20, 'as ofertas mudam de um dia para o outro');
+  assert.equal(market.dealPrice(10, 25), 8, 'arredonda');
+  assert.equal(market.dealPrice(1, 30), 1, 'nunca abaixo de R$ 1');
+  assert.equal(market.dayIndex(86400e3 * 5 + 1), 5);
+});
+
+test('validar carrinho: só ids do catálogo, quantidades inteiras e limites', () => {
+  assert.deepEqual(market.validateCart([{ id: 'maca', qty: 2 }, { id: 'maca', qty: 3 }, { id: 'pao', qty: 1 }]), { lines: [{ id: 'maca', qty: 5 }, { id: 'pao', qty: 1 }], units: 6 }, 'junta linhas repetidas');
+  const bad = [null, [], 'x', [{ id: 'nada', qty: 1 }], [{ id: 'maca', qty: 0 }], [{ id: 'maca', qty: 1.5 }], [{ id: 'maca', qty: '2' }], [{ id: 'maca', qty: MARKET.QTY_MAX + 1 }], [{ id: 'maca', qty: -1 }], [{ id: '__proto__', qty: 1 }], [{ id: 'toString', qty: 1 }], [null], [{ id: 'maca', qty: 6 }, { id: 'maca', qty: 6 }]];
+  for (const raw of bad) assert.ok(market.validateCart(raw).err, JSON.stringify(raw));
+  const many = PRODUCTS.slice(0, MARKET.LINES_MAX + 1).map(p => ({ id: p.id, qty: 1 }));
+  assert.ok(market.validateCart(many).err, 'linhas demais');
+  const heavy = PRODUCTS.slice(0, 4).map(p => ({ id: p.id, qty: 9 }));
+  assert.ok(market.validateCart(heavy).err, 'unidades demais');
+  assert.ok(!market.validateCart(PRODUCTS.slice(0, 3).map(p => ({ id: p.id, qty: 10 }))).err, '30 unidades cabem');
+});
+
+test('preço: o servidor recalcula, oferta tem limite diário e pontos só valem com saldo e compra mínima', () => {
+  const deals = [{ id: 'maca', pct: 20 }];
+  const lines = [{ id: 'maca', qty: 5 }, { id: 'arroz', qty: 1 }];
+  const a = market.priceCart(lines, { deals, used: {} });
+  assert.equal(a.subtotal, 6 * 5 + 14);
+  assert.equal(a.lines[0].dealUnits, MARKET.DEAL_LIMIT, 'só 3 unidades com desconto');
+  assert.equal(a.dealSaved, (6 - market.dealPrice(6, 20)) * MARKET.DEAL_LIMIT);
+  assert.equal(a.total, a.subtotal - a.dealSaved);
+  assert.equal(a.pointsEarned, Math.floor(a.total / MARKET.POINT_EVERY));
+  const b = market.priceCart(lines, { deals, used: { maca: 2 } });
+  assert.equal(b.lines[0].dealUnits, 1, 'já usou 2 hoje');
+  assert.equal(market.priceCart(lines, { deals, used: { maca: 3 } }).dealSaved, 0, 'limite esgotado');
+  assert.equal(market.priceCart(lines, { deals: [], used: {} }).dealSaved, 0, 'sem oferta, sem desconto');
+  // pontos
+  assert.equal(market.priceCart(lines, { deals, used: {}, points: 99, redeem: true }).redeemValue, 0, 'faltam pontos');
+  const r = market.priceCart(lines, { deals, used: {}, points: 100, redeem: true });
+  assert.equal(r.redeemValue, MARKET.REDEEM_VALUE); assert.equal(r.pointsUsed, MARKET.REDEEM_POINTS); assert.equal(r.total, a.total - MARKET.REDEEM_VALUE);
+  assert.equal(market.priceCart([{ id: 'pao', qty: 2 }], { points: 500, redeem: true }).redeemValue, 0, 'compra abaixo do mínimo');
+  assert.equal(market.priceCart(lines, { deals, used: {}, points: 500, redeem: false }).redeemValue, 0, 'só usa se pedir');
+  assert.ok(market.priceCart(lines, { deals: [{ id: 'maca', pct: 30 }, { id: 'arroz', pct: 30 }], used: {} }).total > 0);
+});
+
+test('despensa cheia e regras de comer', () => {
+  assert.equal(market.pantryOverflow([{ id: 'pao', qty: 5 }], { pao: MARKET.PANTRY_MAX - 5 }), null);
+  assert.match(market.pantryOverflow([{ id: 'pao', qty: 6 }], { pao: MARKET.PANTRY_MAX - 5 }), /Despensa cheia/);
+  assert.ok(market.eatCheck({ id: 'nada', qty: 1 }).err);
+  assert.match(market.eatCheck({ id: 'arroz', qty: 1, health: 50 }).err, /estocar/, 'arroz é para estoque');
+  assert.ok(market.eatCheck({ id: 'maca', qty: 0, health: 50 }).err, 'sem unidade na despensa');
+  assert.ok(market.eatCheck({ id: 'maca', qty: 1, health: 50, waitMs: 5000 }).err, 'cooldown');
+  assert.match(market.eatCheck({ id: 'maca', qty: 1, health: 100 }).err, /máximo/);
+  assert.equal(market.eatCheck({ id: 'maca', qty: 1, health: 50 }).gain, byId('maca').heal);
+  assert.equal(market.eatCheck({ id: 'maca', qty: 1, health: 98 }).gain, 2, 'não passa de 100');
+});
+
+/* ---------- banco simulado em memória ---------- */
+function fakeWorld({ money = 200, points = 0, pantry = {}, deals = {}, health = 60, eatAt = null } = {}) {
+  const w = { player: { username: 'ana', name: 'Ana', money, xp: 0, role: 'cidadão' }, card: { points, eat_at: eatAt }, pantry: { ...pantry }, deals: { ...deals }, orders: [], credits: [], health };
+  const rows = o => ({ rows: o, rowCount: o.length });
+  w.query = async (sql, p = []) => {
+    const q = sql.replace(/\s+/g, ' ').trim();
+    if (/^SELECT \* FROM sk2_players WHERE username = \$1 FOR UPDATE/.test(q)) return rows([{ ...w.player }]);
+    if (/^INSERT INTO sk2_market_card/.test(q)) return rows([]);
+    if (/^SELECT points, eat_at FROM sk2_market_card/.test(q)) return rows([{ ...w.card }]);
+    if (/^SELECT item_id, qty FROM sk2_market_deals/.test(q)) return rows(Object.entries(w.deals).map(([item_id, qty]) => ({ item_id, qty })));
+    if (/^SELECT item_id, qty FROM sk2_market_pantry/.test(q)) return rows(Object.entries(w.pantry).filter(([, qty]) => !/qty > 0/.test(q) || qty > 0).map(([item_id, qty]) => ({ item_id, qty })));
+    if (/^SELECT qty FROM sk2_market_pantry WHERE username = \$1 AND item_id = \$2/.test(q)) return rows(w.pantry[p[1]] !== undefined ? [{ qty: w.pantry[p[1]] }] : []);
+    if (/^UPDATE sk2_players SET money = money - \$2/.test(q)) { w.player.money -= p[1]; return rows([{ ...w.player }]); }
+    if (/^INSERT INTO sk2_market_pantry/.test(q)) { w.pantry[p[1]] = (w.pantry[p[1]] || 0) + p[2]; return rows([]); }
+    if (/^INSERT INTO sk2_market_deals/.test(q)) { w.deals[p[2]] = (w.deals[p[2]] || 0) + p[3]; return rows([]); }
+    if (/^UPDATE sk2_market_card SET points/.test(q)) { w.card.points = w.card.points - p[1] + p[2]; return rows([]); }
+    if (/^UPDATE sk2_market_card SET eat_at/.test(q)) { w.card.eat_at = new Date(); return rows([]); }
+    if (/^INSERT INTO sk2_market_orders/.test(q)) { w.orders.push({ id: p[0], username: p[1], units: p[2], total: p[3], saved: p[4], redeemed: p[5], created_at: new Date() }); return rows([]); }
+    if (/^SELECT id, units, total, saved, redeemed, created_at FROM sk2_market_orders/.test(q)) return rows([...w.orders].reverse());
+    if (/^UPDATE sk2_hospital_patients SET health/.test(q)) { w.health = p[1]; return rows([]); }
+    if (/^UPDATE sk2_market_pantry SET qty = qty - 1/.test(q)) { w.pantry[p[1]] -= 1; return rows([]); }
+    throw new Error('SQL inesperado no teste: ' + q.slice(0, 80));
+  };
+  return w;
+}
+async function withWorld(world, fn) {
+  const db = require('../sorokiba2-db'), city = require('../sorokiba2-city'), hospital = require('../sorokiba2-hospital');
+  const orig = { tx: db.withTx, credit: city.credit, settle: hospital.settle };
+  db.withTx = async f => f({ query: world.query });
+  city.credit = async (_c, kind, amount, note) => { world.credits.push({ kind, amount, note }); return amount; };
+  hospital.settle = async () => ({ health: world.health });
+  try { return await fn(); } finally { db.withTx = orig.tx; city.credit = orig.credit; hospital.settle = orig.settle; }
+}
+
+test('compra: cobra o valor calculado no servidor, enche a despensa, soma pontos e manda o dinheiro ao tesouro', async () => {
+  const w = fakeWorld({ money: 200 });
+  const deals = market.dealsFor(market.dayIndex());
+  const dealId = deals[0].id, items = [{ id: dealId, qty: 2 }, { id: 'arroz', qty: 1 }, { id: 'pao', qty: 4 }].filter((l, i, a) => a.findIndex(x => x.id === l.id) === i);
+  const expected = market.priceCart(market.validateCart(items).lines, { deals, used: {} });
+  const r = await withWorld(w, () => market.checkout('ana', { items }));
+  assert.ok(!r.err, r.err);
+  assert.equal(w.player.money, 200 - expected.total);
+  assert.deepEqual(w.credits, [{ kind: 'mercado', amount: expected.total, note: 'Compras no Mercado de Ana' }]);
+  for (const l of items) assert.equal(w.pantry[l.id], l.qty);
+  assert.equal(w.deals[dealId], 2, 'uso da oferta registrado');
+  assert.equal(w.card.points, expected.pointsEarned);
+  assert.equal(w.orders.length, 1); assert.equal(w.orders[0].total, expected.total);
+  assert.equal(r.market.me.money, 200 - expected.total);
+  assert.match(r.message, /Compra de R\$/);
+});
+
+test('compra: saldo insuficiente e despensa cheia não mudam nada', async () => {
+  const poor = fakeWorld({ money: 5 });
+  const r1 = await withWorld(poor, () => market.checkout('ana', { items: [{ id: 'arroz', qty: 2 }] }));
+  assert.match(r1.err, /Saldo insuficiente/);
+  assert.equal(poor.player.money, 5); assert.deepEqual(poor.pantry, {}); assert.equal(poor.orders.length, 0); assert.equal(poor.credits.length, 0);
+  const full = fakeWorld({ money: 500, pantry: { pao: MARKET.PANTRY_MAX } });
+  const r2 = await withWorld(full, () => market.checkout('ana', { items: [{ id: 'pao', qty: 1 }] }));
+  assert.match(r2.err, /Despensa cheia/);
+  assert.equal(full.player.money, 500); assert.equal(full.orders.length, 0);
+  const bad = await withWorld(fakeWorld(), () => market.checkout('ana', { items: [{ id: 'inventado', qty: 1 }] }));
+  assert.equal(bad.status, 400);
+});
+
+test('compra: o limite diário da oferta vale entre compras seguidas', async () => {
+  const w = fakeWorld({ money: 1000 });
+  const deal = market.dealsFor(market.dayIndex())[0], p = byId(deal.id);
+  await withWorld(w, () => market.checkout('ana', { items: [{ id: deal.id, qty: 3 }] }));
+  const first = w.orders[0].total;
+  assert.equal(first, market.dealPrice(p.price, deal.pct) * 3);
+  await withWorld(w, () => market.checkout('ana', { items: [{ id: deal.id, qty: 2 }] }));
+  assert.equal(w.orders[1].total, p.price * 2, 'sem oferta na segunda compra: o limite de 3 já foi usado');
+  assert.equal(w.deals[deal.id], MARKET.DEAL_LIMIT);
+});
+
+test('compra: resgatar pontos desconta e gasta os 100 pontos', async () => {
+  const w = fakeWorld({ money: 500, points: 130 });
+  const items = [{ id: 'arroz', qty: 3 }];
+  const noOffer = market.priceCart(items, { deals: market.dealsFor(market.dayIndex()), used: {}, points: 130, redeem: true });
+  await withWorld(w, () => market.checkout('ana', { items, redeem: true }));
+  assert.equal(w.orders[0].redeemed, MARKET.REDEEM_VALUE);
+  assert.equal(w.card.points, 130 - MARKET.REDEEM_POINTS + noOffer.pointsEarned);
+  const few = fakeWorld({ money: 500, points: 50 });
+  await withWorld(few, () => market.checkout('ana', { items, redeem: true }));
+  assert.equal(few.orders[0].redeemed, 0, 'sem pontos suficientes, sem desconto');
+  assert.equal(few.card.points, 50 + Math.floor(few.orders[0].total / MARKET.POINT_EVERY));
+});
+
+test('comer: devolve saúde, gasta uma unidade, respeita o intervalo e o teto de 100', async () => {
+  const w = fakeWorld({ pantry: { maca: 2, arroz: 1 }, health: 60 });
+  const ok = await withWorld(w, () => market.eat('ana', 'maca'));
+  assert.ok(!ok.err, ok.err);
+  assert.equal(w.health, 65); assert.equal(w.pantry.maca, 1); assert.match(ok.message, /\+5 de saúde/);
+  const again = await withWorld(w, () => market.eat('ana', 'maca'));
+  assert.match(again.err, /Mastigue com calma/, 'intervalo entre mordidas');
+  assert.equal(w.pantry.maca, 1);
+  assert.match((await withWorld(fakeWorld({ pantry: { arroz: 1 } }), () => market.eat('ana', 'arroz'))).err, /estocar/);
+  assert.ok((await withWorld(fakeWorld({ pantry: {} }), () => market.eat('ana', 'maca'))).err, 'sem unidade');
+  assert.match((await withWorld(fakeWorld({ pantry: { maca: 1 }, health: 100 }), () => market.eat('ana', 'maca'))).err, /máximo/);
+  const near = fakeWorld({ pantry: { bolo: 1 }, health: 97 });
+  await withWorld(near, () => market.eat('ana', 'bolo'));
+  assert.equal(near.health, 100, 'nunca passa de 100');
+  assert.equal((await withWorld(fakeWorld(), () => market.eat('ana', 'nada'))).status, 400);
+});
+
+function mountRoutes(authUser, limited = () => false) {
+  const routes = {};
+  const app = { get: (p, ...h) => { routes['GET ' + p] = h[h.length - 1]; }, post: (p, ...h) => { routes['POST ' + p] = h[h.length - 1]; } };
+  market.registerRoutes({ app, json: (_q, _s, n) => n && n(), authUser, limited, userTries: new Map() });
+  return routes;
+}
+const call = async (handler, body = {}) => {
+  const res = { code: 200, body: null, headersSent: false, status(c) { this.code = c; return this; }, json(b) { this.body = b; this.headersSent = true; return this; }, set() { return this; } };
+  await handler({ body, params: {}, headers: {}, query: {} }, res);
+  return res;
+};
+
+test('rotas: exigem sessão, recusam corpo malformado e respeitam o limite por minuto', async () => {
+  const anon = mountRoutes(async () => null);
+  for (const r of ['GET /api/sk2/market', 'POST /api/sk2/market/checkout', 'POST /api/sk2/market/eat']) assert.equal((await call(anon[r])).code, 401, r);
+  const user = mountRoutes(async () => ({ username: 'ana', name: 'Ana' }));
+  assert.equal((await call(user['POST /api/sk2/market/checkout'], {})).code, 400);
+  assert.equal((await call(user['POST /api/sk2/market/checkout'], { items: 'x' })).code, 400);
+  assert.equal((await call(user['POST /api/sk2/market/eat'], { id: 5 })).code, 400);
+  const limited = mountRoutes(async () => ({ username: 'ana' }), () => true);
+  assert.equal((await call(limited['POST /api/sk2/market/eat'], { id: 'maca' })).code, 429);
+});
+
+test('ligação: servidor (carreira de operador de caixa, init e rotas), Hospital e cliente', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /require\('\.\/sorokiba2-market'\)/);
+  assert.match(server, /\.then\(\(\) => market\.init\(\)\)/);
+  assert.match(server, /market\.registerRoutes\(\{/);
+  assert.match(server, /id: 'market_cashier'[^\n]*building: 'Supermercado'/);
+  for (const table of ['INTERVIEW_QUESTIONS', 'WORK_TASKS', 'CAREER_LADDERS']) {
+    const start = server.indexOf(`const ${table} = Object.freeze({`);
+    assert.match(server.slice(start, start + 24000), /market_cashier:/, table);
+  }
+  assert.match(read('sorokiba2-hospital.js'), /summary, settle,/, 'o Hospital exporta settle para o Mercado');
+  const html = read('sorokiba2.html');
+  assert.match(html, /n\.includes\('mercado'\)\)family='grocery'/);
+  assert.match(html, /grocery:\[40,24,'market-zip'\]/);
+  assert.match(html, /shape==='market-zip'\)\{renderMarketZip\(t\)/);
+  assert.match(html, /id="marketPanel"/);
+  assert.match(html, /API\+'\/market'\+path/);
+  assert.match(html, /marketEnter\(\);else\{tone\(480/);
+  assert.match(html, /marketLeave\(\)/);
+  assert.match(html, /mercado:'Compras no Mercado'/);
+});
