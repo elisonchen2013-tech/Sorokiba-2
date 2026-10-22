@@ -1,0 +1,549 @@
+'use strict';
+// Sorokiba 2 – Delegacia. Mesma lógica do Banco, do Hospital e da Prefeitura: tudo é decidido e gravado no
+// servidor, o dinheiro só muda em transação e cada sala do prédio abre a sua função.
+//
+// Quem faz o quê (permissões em PERMS, sempre checadas no servidor):
+//   delegado – o Secretário de Segurança e Trânsito (ou o Prefeito): decide multas contestadas, cancela multas,
+//              publica alertas de segurança e acompanha a equipe e os números da cidade.
+//   agente   – quem foi contratado como Policial (carreira `police_officer`): assume e investiga ocorrências,
+//              aplica multas e advertências dentro do catálogo.
+//   cidadão  – registra Boletim de Ocorrência, paga ou contesta multas e tira certidão de antecedentes.
+//
+// Anti-abuso (a ideia é que ninguém ganhe dinheiro multando):
+//   • multa só existe no catálogo INFRACTIONS (valor fixo, o agente não digita valor);
+//   • quem tem pouco XP só recebe advertência; há limite por alvo, por agente e por par agente/alvo;
+//   • o agente NÃO ganha comissão de multa; o salário vem da carreira e há recompensa fixa por caso resolvido,
+//     paga pelo tesouro, com teto diário e sem repetir o mesmo par agente/denunciante;
+//   • toda multa pode ser contestada uma vez e quem decide é o Delegado.
+const crypto = require('crypto');
+const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
+
+// SK2_POLICE_TIME_SCALE=0.001 comprime prazos e esperas para testar. Em produção: 1.
+const SCALE = (() => { const n = Number(process.env.SK2_POLICE_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
+const minutesMs = m => Math.max(1000, Math.round(m * 60e3 * SCALE));
+const hoursMs = h => minutesMs(h * 60);
+
+/* ---------- regras (ajuste aqui) ---------- */
+const POLICE = Object.freeze({
+  JOB_ID: 'police_officer',
+  // Boletim de Ocorrência
+  REPORT_MIN: 15, REPORT_MAX: 240, REPORT_OPEN_MAX: 3, REPORT_COOLDOWN_MIN: 3,
+  CASE_STALE_HOURS: 24,          // caso parado volta para a fila
+  EVIDENCE_WAIT_MIN: 1,          // intervalo entre o depoimento e a análise das provas
+  RESOLUTION_MIN: 5, RESOLUTION_MAX: 160,
+  CASE_REWARD: 30, CASE_REWARD_XP: 20, REWARD_MAX_24H: 6, REWARD_PAIR_24H: 1,
+  // Multas
+  NOTE_MIN: 5, NOTE_MAX: 100,
+  DUE_HOURS: 72, RENEW_DUE_HOURS: 24, SURCHARGE_PCT: 10,
+  TARGET_MIN_XP: 100,            // abaixo disso: só advertência
+  PER_TARGET_24H: 2, PER_OFFICER_24H: 8, PAIR_HOURS: 6,
+  ROOKIE_FINE_CAP: 60,           // agente iniciante só aplica multas até este valor
+  CONTEST_MIN: 10, CONTEST_MAX: 160,
+  // Certidão de antecedentes
+  CERT_PRICE: 15, CERT_COOLDOWN_S: 30,
+  // Alertas do Delegado
+  ALERT_MIN: 10, ALERT_MAX: 160, ALERT_COOLDOWN_MIN: 10, ALERT_KEEP: 8,
+});
+const REPORT_KINDS = Object.freeze({
+  perda: 'Perda ou extravio de pertences',
+  transito: 'Ocorrência de trânsito',
+  sossego: 'Perturbação do sossego',
+  dano: 'Dano ao patrimônio público',
+  outro: 'Outra ocorrência',
+});
+const INFRACTIONS = Object.freeze({
+  faixa: { label: 'Atravessar fora da faixa', amount: 40 },
+  lixo: { label: 'Descarte irregular de lixo', amount: 50 },
+  sossego: { label: 'Perturbação do sossego', amount: 60 },
+  transito: { label: 'Imprudência no trânsito', amount: 90 },
+  dano: { label: 'Dano ao patrimônio público', amount: 120 },
+});
+const PERMS = Object.freeze({
+  take: ['agente', 'delegado'],
+  step: ['agente', 'delegado'],
+  close: ['agente', 'delegado'],
+  fine: ['agente', 'delegado'],
+  decide: ['delegado'],
+  alert: ['delegado'],
+  team: ['delegado'],
+  dashboard: ['agente', 'delegado'],
+});
+const OUTCOMES = Object.freeze(['resolvido', 'arquivado']);
+
+/* ---------- funções puras (testadas em test/police.test.js) ---------- */
+const can = (role, action) => !!role && Array.isArray(PERMS[action]) && PERMS[action].includes(role);
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+const brl = n => 'R$ ' + Number(n).toLocaleString('pt-BR');
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const NAME = /^[A-Za-z0-9_]{3,14}$/;
+
+// Delegado = Prefeito ou Secretário de Segurança; agente = contratado na carreira de Policial.
+function classifyRole(row, office) {
+  if (!row) return null;
+  if (row.role === 'prefeito' || office === 'prefeito' || office === 'seguranca') return 'delegado';
+  if (row.employment && row.employment.jobId === POLICE.JOB_ID) return 'agente';
+  return null;
+}
+function roleTitle(row, role, office) {
+  if (role === 'delegado') return row.role === 'prefeito' || office === 'prefeito' ? 'Prefeito(a) · Delegado(a) honorário(a)' : 'Delegado(a) · Segurança e Trânsito';
+  if (role === 'agente') return (row.employment && row.employment.title) || 'Agente';
+  return null;
+}
+// Teto de valor de multa por função: o agente iniciante só aplica as infrações leves.
+function fineCap(role, rank) {
+  if (role === 'delegado') return Infinity;
+  if (role === 'agente') return Number(rank) >= 1 ? Infinity : POLICE.ROOKIE_FINE_CAP;
+  return 0;
+}
+function validateReport({ kind, text, target }) {
+  if (typeof kind !== 'string' || !Object.prototype.hasOwnProperty.call(REPORT_KINDS, kind)) return { err: 'Escolha o tipo da ocorrência.' };
+  const body = clean(text, POLICE.REPORT_MAX);
+  if (body.length < POLICE.REPORT_MIN) return { err: `Descreva o que aconteceu (mínimo de ${POLICE.REPORT_MIN} caracteres).` };
+  let who = null;
+  if (target !== undefined && target !== null && String(target).trim() !== '') {
+    who = String(target).trim();
+    if (!NAME.test(who)) return { err: 'Nome do envolvido inválido (3 a 14 letras, números ou _).' };
+  }
+  return { kind, text: body, target: who };
+}
+function validateAlert(text) {
+  const t = clean(text, POLICE.ALERT_MAX);
+  return t.length < POLICE.ALERT_MIN ? { err: `Escreva o alerta (mínimo de ${POLICE.ALERT_MIN} caracteres).` } : { text: t };
+}
+// Todas as regras de uma multa, sem tocar no banco. `ctx` traz as contagens que o servidor consultou.
+function fineCheck({ role, rank = 0, kind, note, warning = false, selfTarget = false, targetXp = 0, targetFines24h = 0, officerFines24h = 0, pairRecent = false }) {
+  if (!can(role, 'fine')) return { err: 'Somente policiais e o Delegado aplicam multas.' };
+  if (typeof kind !== 'string' || !Object.prototype.hasOwnProperty.call(INFRACTIONS, kind)) return { err: 'Escolha a infração no catálogo.' };
+  if (selfTarget) return { err: 'Você não pode multar a si mesmo.' };
+  const text = clean(note, POLICE.NOTE_MAX);
+  if (text.length < POLICE.NOTE_MIN) return { err: `Descreva o motivo (mínimo de ${POLICE.NOTE_MIN} caracteres).` };
+  const inf = INFRACTIONS[kind];
+  const advert = !!warning || Number(targetXp) < POLICE.TARGET_MIN_XP;
+  if (!advert && inf.amount > fineCap(role, rank)) return { err: `Agentes iniciantes só aplicam multas de até ${brl(POLICE.ROOKIE_FINE_CAP)}. Use advertência ou peça a um agente sênior.` };
+  if (Number(officerFines24h) >= POLICE.PER_OFFICER_24H) return { err: `Limite de ${POLICE.PER_OFFICER_24H} autuações por 24 h atingido.` };
+  if (pairRecent) return { err: `Você já autuou esta pessoa nas últimas ${POLICE.PAIR_HOURS} horas.` };
+  if (!advert && Number(targetFines24h) >= POLICE.PER_TARGET_24H) return { err: `Esta pessoa já recebeu ${POLICE.PER_TARGET_24H} multas nas últimas 24 h.` };
+  return { kind, note: text, amount: advert ? 0 : inf.amount, advert };
+}
+// Valor devido agora: depois do vencimento a multa pendente recebe um acréscimo único.
+function dueNow({ amount, status, dueAt }, now = Date.now()) {
+  const base = Number(amount) || 0;
+  if (status !== 'pendente' || !(Number(dueAt) < now) || base <= 0) return { amount: base, overdue: false, surcharge: 0 };
+  const surcharge = Math.max(1, Math.round(base * POLICE.SURCHARGE_PCT / 100));
+  return { amount: base + surcharge, overdue: true, surcharge };
+}
+// Em que etapa está um caso (para o painel saber qual botão mostrar).
+function caseStage(r, now = Date.now()) {
+  if (!r) return 'none';
+  if (r.status === 'resolvido' || r.status === 'arquivado') return 'done';
+  if (r.status === 'aberto') return 'open';
+  if (!r.statementAt) return 'statement';
+  if (!r.evidenceAt) return now - r.statementAt >= minutesMs(POLICE.EVIDENCE_WAIT_MIN) ? 'evidence' : 'wait';
+  return 'close';
+}
+// Recompensa: teto diário e um caso por par agente/denunciante por dia.
+function rewardBlock({ officerCount24h = 0, pairCount24h = 0 }) {
+  if (Number(officerCount24h) >= POLICE.REWARD_MAX_24H) return `Limite diário de ${POLICE.REWARD_MAX_24H} recompensas atingido.`;
+  if (Number(pairCount24h) >= POLICE.REWARD_PAIR_24H) return 'Você já recebeu recompensa por um caso deste morador hoje.';
+  return null;
+}
+function certStatus({ pending = 0, overdue = 0 }) {
+  return Number(pending) > 0 || Number(overdue) > 0 ? 'CONSTA PENDÊNCIA' : 'NADA CONSTA';
+}
+
+/* ---------- banco de dados ---------- */
+async function init() {
+  await db.query(`CREATE TABLE IF NOT EXISTS sk2_police_reports (
+    id UUID PRIMARY KEY,
+    reporter TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, reporter_name TEXT NOT NULL,
+    kind TEXT NOT NULL, body TEXT NOT NULL, target TEXT, target_name TEXT,
+    status TEXT NOT NULL DEFAULT 'aberto' CHECK (status IN ('aberto','investigando','resolvido','arquivado')),
+    officer TEXT, officer_name TEXT, taken_at TIMESTAMPTZ, statement_at TIMESTAMPTZ, evidence_at TIMESTAMPTZ, closed_at TIMESTAMPTZ,
+    resolution TEXT, reward INT NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE INDEX IF NOT EXISTS sk2_police_reports_status ON sk2_police_reports(status, created_at);
+  CREATE INDEX IF NOT EXISTS sk2_police_reports_reporter ON sk2_police_reports(reporter, created_at);
+  CREATE INDEX IF NOT EXISTS sk2_police_reports_officer ON sk2_police_reports(officer, closed_at);
+  CREATE TABLE IF NOT EXISTS sk2_police_fines (
+    id UUID PRIMARY KEY,
+    target TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, target_name TEXT NOT NULL,
+    officer TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, officer_name TEXT NOT NULL,
+    kind TEXT NOT NULL, note TEXT NOT NULL, amount INT NOT NULL, paid_amount INT,
+    status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente','contestada','paga','cancelada','advertencia')),
+    contest_text TEXT, contest_result TEXT, decided_by TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), due_at TIMESTAMPTZ NOT NULL, paid_at TIMESTAMPTZ, decided_at TIMESTAMPTZ);
+  CREATE INDEX IF NOT EXISTS sk2_police_fines_target ON sk2_police_fines(target, created_at);
+  CREATE INDEX IF NOT EXISTS sk2_police_fines_officer ON sk2_police_fines(officer, created_at);
+  CREATE INDEX IF NOT EXISTS sk2_police_fines_status ON sk2_police_fines(status);
+  CREATE TABLE IF NOT EXISTS sk2_police_alerts (
+    id BIGSERIAL PRIMARY KEY, author TEXT NOT NULL, author_name TEXT NOT NULL, body TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_police_certs (
+    code TEXT PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, name TEXT NOT NULL,
+    status TEXT NOT NULL, pending INT NOT NULL DEFAULT 0, paid INT NOT NULL DEFAULT 0, issued_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE INDEX IF NOT EXISTS sk2_police_certs_user ON sk2_police_certs(username, issued_at);`);
+}
+
+const fail = (err, status = 409) => ({ err, status });
+const epoch = d => (d ? new Date(d).getTime() : null);
+const ago = ms => `now() - (${Math.max(1, Math.round(ms))}::bigint * interval '1 millisecond')`;
+
+/* ---------- consultas de leitura (DTOs) ---------- */
+const reportDto = (r, me) => {
+  const dto = { id: r.id, kind: r.kind, kindLabel: REPORT_KINDS[r.kind] || r.kind, text: r.body, status: r.status, reporter: r.reporter_name, target: r.target_name || null,
+    officer: r.officer_name || null, resolution: r.resolution || null, reward: r.reward || 0, at: epoch(r.created_at), closedAt: epoch(r.closed_at),
+    takenAt: epoch(r.taken_at), statementAt: epoch(r.statement_at), evidenceAt: epoch(r.evidence_at), mine: !!me && r.reporter === me };
+  dto.stage = caseStage(dto);
+  if (dto.stage === 'wait') dto.waitUntil = dto.statementAt + minutesMs(POLICE.EVIDENCE_WAIT_MIN);
+  return dto;
+};
+const fineDto = (f, now = Date.now()) => {
+  const due = dueNow({ amount: f.amount, status: f.status, dueAt: epoch(f.due_at) }, now);
+  return { id: f.id, target: f.target_name, officer: f.officer_name, kind: f.kind, label: INFRACTIONS[f.kind]?.label || f.kind, note: f.note, amount: f.amount,
+    due: due.amount, overdue: due.overdue, surcharge: due.surcharge, status: f.status, contestText: f.contest_text || null, contestResult: f.contest_result || null,
+    canContest: f.status === 'pendente' && !f.contest_result, at: epoch(f.created_at), dueAt: epoch(f.due_at), paidAt: epoch(f.paid_at), paidAmount: f.paid_amount };
+};
+
+async function settle(c) {
+  await c.query(`UPDATE sk2_police_reports SET status = 'aberto', officer = NULL, officer_name = NULL, taken_at = NULL, statement_at = NULL, evidence_at = NULL
+    WHERE status = 'investigando' AND taken_at < ${ago(hoursMs(POLICE.CASE_STALE_HOURS))}`);
+}
+
+async function snapshot(c, row, role) {
+  const u = row.username, now = Date.now();
+  const rank = Number(row.employment?.rank || 0);
+  const s = (await c.query(`SELECT
+    (SELECT COUNT(*) FROM sk2_police_reports WHERE status = 'aberto')::int AS open_count,
+    (SELECT COUNT(*) FROM sk2_police_reports WHERE status = 'investigando')::int AS investigating,
+    (SELECT COUNT(*) FROM sk2_police_reports WHERE status = 'resolvido' AND closed_at > now() - interval '7 days')::int AS solved7,
+    (SELECT COUNT(*) FROM sk2_police_reports WHERE status = 'arquivado' AND closed_at > now() - interval '7 days')::int AS archived7,
+    (SELECT COUNT(*) FROM sk2_police_fines WHERE status <> 'advertencia' AND created_at > now() - interval '24 hours')::int AS fines24,
+    (SELECT COUNT(*) FROM sk2_police_fines WHERE status = 'pendente')::int AS pending_fines,
+    (SELECT COALESCE(SUM(paid_amount), 0) FROM sk2_police_fines WHERE status = 'paga' AND paid_at > now() - interval '7 days')::bigint AS collected7`)).rows[0];
+  const stats = { open: s.open_count, investigating: s.investigating, solved7: s.solved7, archived7: s.archived7, fines24: s.fines24, pendingFines: s.pending_fines, collected7: Number(s.collected7) };
+  const alerts = (await c.query('SELECT id, author_name, body, created_at FROM sk2_police_alerts ORDER BY id DESC LIMIT $1', [POLICE.ALERT_KEEP])).rows
+    .map(a => ({ id: String(a.id), by: a.author_name, text: a.body, at: epoch(a.created_at) }));
+  const myReports = (await c.query(`SELECT * FROM sk2_police_reports WHERE reporter = $1 ORDER BY created_at DESC LIMIT 8`, [u])).rows.map(r => reportDto(r, u));
+  const myFines = (await c.query(`SELECT * FROM sk2_police_fines WHERE target = $1 ORDER BY created_at DESC LIMIT 10`, [u])).rows.map(f => fineDto(f, now));
+  const myCerts = (await c.query(`SELECT code, status, pending, paid, issued_at FROM sk2_police_certs WHERE username = $1 ORDER BY issued_at DESC LIMIT 3`, [u])).rows
+    .map(x => ({ code: x.code, status: x.status, pending: x.pending, paid: x.paid, at: epoch(x.issued_at) }));
+  const lastCert = myCerts[0] ? myCerts[0].at : 0;
+  const out = {
+    serverNow: now,
+    me: { username: u, name: row.name, role, rank, title: roleTitle(row, role, city.officeOfRow(row)), xp: Number(row.xp) || 0,
+      can: Object.fromEntries(Object.keys(PERMS).map(k => [k, can(role, k)])), fineCap: Number.isFinite(fineCap(role, rank)) ? fineCap(role, rank) : null,
+      certWaitUntil: lastCert ? lastCert + POLICE.CERT_COOLDOWN_S * 1000 : 0 },
+    constants: { reportKinds: REPORT_KINDS, infractions: Object.fromEntries(Object.entries(INFRACTIONS).map(([k, v]) => [k, { label: v.label, amount: v.amount }])),
+      certPrice: POLICE.CERT_PRICE, dueHours: POLICE.DUE_HOURS, surchargePct: POLICE.SURCHARGE_PCT, targetMinXp: POLICE.TARGET_MIN_XP, rookieCap: POLICE.ROOKIE_FINE_CAP,
+      reward: { money: POLICE.CASE_REWARD, xp: POLICE.CASE_REWARD_XP }, reportMin: POLICE.REPORT_MIN, reportMax: POLICE.REPORT_MAX, openMax: POLICE.REPORT_OPEN_MAX,
+      noteMin: POLICE.NOTE_MIN, noteMax: POLICE.NOTE_MAX, alertMax: POLICE.ALERT_MAX, evidenceWaitMin: POLICE.EVIDENCE_WAIT_MIN },
+    stats, alerts, myReports, myFines, myCerts,
+    queue: null, myCase: null, issued: null, contests: null, active: null, team: null, series: null,
+  };
+  if (can(role, 'dashboard')) {
+    out.queue = (await c.query(`SELECT * FROM sk2_police_reports WHERE status = 'aberto' ORDER BY created_at LIMIT 15`)).rows.map(r => reportDto(r, u));
+    const mine = (await c.query(`SELECT * FROM sk2_police_reports WHERE officer = $1 AND status = 'investigando'`, [u])).rows[0];
+    out.myCase = mine ? reportDto(mine, u) : null;
+    out.issued = (await c.query(`SELECT * FROM sk2_police_fines WHERE officer = $1 ORDER BY created_at DESC LIMIT 10`, [u])).rows.map(f => fineDto(f, now));
+  }
+  if (can(role, 'decide')) {
+    out.contests = (await c.query(`SELECT * FROM sk2_police_fines WHERE status = 'contestada' ORDER BY created_at LIMIT 15`)).rows.map(f => fineDto(f, now));
+    out.active = (await c.query(`SELECT * FROM sk2_police_reports WHERE status = 'investigando' ORDER BY taken_at LIMIT 15`)).rows.map(r => reportDto(r, u));
+  }
+  if (can(role, 'team')) {
+    out.team = (await c.query(`SELECT p.username, p.name, p.employment->>'title' AS title,
+      (SELECT COUNT(*) FROM sk2_police_reports r WHERE r.officer = p.username AND r.status = 'resolvido' AND r.closed_at > now() - interval '7 days')::int AS solved,
+      (SELECT COUNT(*) FROM sk2_police_fines f WHERE f.officer = p.username AND f.status <> 'advertencia' AND f.created_at > now() - interval '7 days')::int AS fines,
+      (SELECT COUNT(*) FROM sk2_police_fines f WHERE f.officer = p.username AND f.status = 'cancelada' AND f.created_at > now() - interval '7 days')::int AS cancelled
+      FROM sk2_players p WHERE p.employment->>'jobId' = $1 ORDER BY solved DESC, fines DESC, p.name LIMIT 20`, [POLICE.JOB_ID])).rows
+      .map(t => ({ username: t.username, name: t.name, title: t.title || 'Agente', solved: t.solved, fines: t.fines, cancelled: t.cancelled }));
+    out.series = (await c.query(`SELECT to_char(d, 'DD/MM') AS day,
+      (SELECT COUNT(*) FROM sk2_police_reports WHERE created_at::date = d::date)::int AS reports,
+      (SELECT COUNT(*) FROM sk2_police_fines WHERE created_at::date = d::date AND status <> 'advertencia')::int AS fines
+      FROM generate_series(current_date - 6, current_date, interval '1 day') d`)).rows.map(x => ({ day: x.day, reports: x.reports, fines: x.fines }));
+  }
+  return out;
+}
+
+/* ---------- operações ---------- */
+// Trava o jogador, aplica o que o tempo já decidiu, roda a regra e devolve o painel atualizado.
+const run = (username, fn) => db.withTx(async c => {
+  const locked = (await c.query('SELECT * FROM sk2_players WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  if (!locked) return fail('Jogador não encontrado', 404);
+  await settle(c);
+  const office = city.officeOfRow(locked), role = classifyRole(locked, office);
+  const out = await fn(c, locked, { role, office });
+  if (out.err) return out;
+  const player = out.player || locked;
+  return { ...out, playerRow: player, police: await snapshot(c, player, role), notifies: out.notifies || [] };
+});
+const noop = (_c, player) => ({ player });
+const summary = username => run(username, noop);
+const need = (role, action, msg) => (can(role, action) ? null : fail(msg || 'Sua função não permite esta ação.', 403));
+
+// Quem recebe aviso de ocorrência nova: policiais contratados e o comando da segurança.
+async function dutyRoster(c, except) {
+  const r = await c.query(`SELECT username FROM sk2_players WHERE employment->>'jobId' = $1 OR role = 'prefeito'
+    UNION SELECT username FROM sk2_city_offices WHERE office = 'seguranca' LIMIT 60`, [POLICE.JOB_ID]);
+  return r.rows.map(x => x.username).filter(u => u !== except);
+}
+
+const fileReport = (username, input) => run(username, async (c, p) => {
+  const v = validateReport(input || {}); if (v.err) return fail(v.err, 400);
+  const open = Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_police_reports WHERE reporter = $1 AND status IN ('aberto','investigando')`, [username])).rows[0].n);
+  if (open >= POLICE.REPORT_OPEN_MAX) return fail(`Você já tem ${POLICE.REPORT_OPEN_MAX} ocorrências em andamento. Aguarde o atendimento.`);
+  if ((await c.query(`SELECT 1 FROM sk2_police_reports WHERE reporter = $1 AND created_at > ${ago(minutesMs(POLICE.REPORT_COOLDOWN_MIN))}`, [username])).rowCount)
+    return fail(`Aguarde ${POLICE.REPORT_COOLDOWN_MIN} minutos entre ocorrências.`);
+  let targetName = null, target = null;
+  if (v.target) {
+    const t = (await c.query('SELECT username, name FROM sk2_players WHERE username = $1', [v.target.toLowerCase()])).rows[0];
+    if (!t) return fail('Não encontrei o envolvido informado.', 404);
+    if (t.username === username) return fail('O envolvido não pode ser você mesmo.', 400);
+    target = t.username; targetName = t.name;
+  }
+  await c.query(`INSERT INTO sk2_police_reports (id, reporter, reporter_name, kind, body, target, target_name) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [crypto.randomUUID(), username, p.name, v.kind, v.text, target, targetName]);
+  const notifies = (await dutyRoster(c, username)).map(u => [u, `Nova ocorrência na Delegacia: ${REPORT_KINDS[v.kind]}.`]);
+  return { player: p, notifies, message: 'Boletim de Ocorrência registrado. Um policial vai assumir o caso.' };
+});
+
+const takeCase = (username, id) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'take', 'Somente policiais e o Delegado assumem ocorrências.'); if (denied) return denied;
+  if (!UUID.test(String(id))) return fail('Ocorrência inválida.', 400);
+  if ((await c.query(`SELECT 1 FROM sk2_police_reports WHERE officer = $1 AND status = 'investigando'`, [username])).rowCount)
+    return fail('Termine o caso em andamento antes de assumir outro.');
+  const r = (await c.query(`SELECT * FROM sk2_police_reports WHERE id = $1 FOR UPDATE`, [id])).rows[0];
+  if (!r) return fail('Ocorrência não encontrada.', 404);
+  if (r.status !== 'aberto') return fail('Esta ocorrência já foi assumida.');
+  if (r.reporter === username) return fail('Você não pode investigar a própria ocorrência.');
+  await c.query(`UPDATE sk2_police_reports SET status = 'investigando', officer = $2, officer_name = $3, taken_at = now() WHERE id = $1`, [id, username, p.name]);
+  return { player: p, notifies: [[r.reporter, `${p.name} assumiu a sua ocorrência (${REPORT_KINDS[r.kind] || r.kind}).`]],
+    message: 'Caso assumido. Colha o depoimento na Sala de Interrogatório e analise as provas na Sala de Evidências.' };
+});
+
+const releaseCase = (username, id) => run(username, async (c, p, { role }) => {
+  if (!UUID.test(String(id))) return fail('Ocorrência inválida.', 400);
+  const r = (await c.query(`SELECT * FROM sk2_police_reports WHERE id = $1 FOR UPDATE`, [id])).rows[0];
+  if (!r || r.status !== 'investigando') return fail('Este caso não está em andamento.', 404);
+  if (r.officer !== username && role !== 'delegado') return fail('Somente quem assumiu o caso (ou o Delegado) pode devolvê-lo.', 403);
+  await c.query(`UPDATE sk2_police_reports SET status = 'aberto', officer = NULL, officer_name = NULL, taken_at = NULL, statement_at = NULL, evidence_at = NULL WHERE id = $1`, [id]);
+  return { player: p, message: 'Caso devolvido à fila.' };
+});
+
+// Etapas do caso: cada uma só abre depois da anterior (a ordem é decidida aqui, não no cliente).
+const caseStep = (username, id, step) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'step', 'Somente policiais e o Delegado investigam.'); if (denied) return denied;
+  if (!UUID.test(String(id)) || (step !== 'statement' && step !== 'evidence')) return fail('Etapa inválida.', 400);
+  const r = (await c.query(`SELECT * FROM sk2_police_reports WHERE id = $1 FOR UPDATE`, [id])).rows[0];
+  if (!r || r.status !== 'investigando') return fail('Este caso não está em andamento.', 404);
+  if (r.officer !== username) return fail('Este caso é de outro policial.', 403);
+  if (step === 'statement') {
+    if (r.statement_at) return fail('O depoimento já foi colhido.');
+    await c.query('UPDATE sk2_police_reports SET statement_at = now() WHERE id = $1', [id]);
+    return { player: p, message: 'Depoimento registrado. As provas ficam prontas para análise em instantes.' };
+  }
+  if (!r.statement_at) return fail('Colha o depoimento antes de analisar as provas.');
+  if (r.evidence_at) return fail('As provas já foram analisadas.');
+  const wait = minutesMs(POLICE.EVIDENCE_WAIT_MIN) - (Date.now() - epoch(r.statement_at));
+  if (wait > 0) return fail(`A perícia ainda está preparando o material (${Math.ceil(wait / 1000)} s).`);
+  await c.query('UPDATE sk2_police_reports SET evidence_at = now() WHERE id = $1', [id]);
+  return { player: p, message: 'Provas analisadas. Agora você pode encerrar o caso.' };
+});
+
+const closeCase = (username, id, outcome, note) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'close', 'Somente policiais e o Delegado encerram ocorrências.'); if (denied) return denied;
+  if (!UUID.test(String(id)) || !OUTCOMES.includes(outcome)) return fail('Dados do encerramento inválidos.', 400);
+  const text = clean(note, POLICE.RESOLUTION_MAX);
+  if (text.length < POLICE.RESOLUTION_MIN) return fail(`Escreva o parecer (mínimo de ${POLICE.RESOLUTION_MIN} caracteres).`, 400);
+  const r = (await c.query(`SELECT * FROM sk2_police_reports WHERE id = $1 FOR UPDATE`, [id])).rows[0];
+  if (!r || r.status !== 'investigando') return fail('Este caso não está em andamento.', 404);
+  if (r.officer !== username && role !== 'delegado') return fail('Este caso é de outro policial.', 403);
+  if (outcome === 'resolvido' && (!r.statement_at || !r.evidence_at)) return fail('Para resolver, colha o depoimento e analise as provas. Se não houver o que investigar, arquive o caso.');
+  let reward = 0, player = p, extra = '';
+  if (outcome === 'resolvido' && r.officer === username) {
+    const mine = Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_police_reports WHERE officer = $1 AND reward > 0 AND closed_at > ${ago(hoursMs(24))}`, [username])).rows[0].n);
+    const pair = Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_police_reports WHERE officer = $1 AND reporter = $2 AND reward > 0 AND closed_at > ${ago(hoursMs(24))}`, [username, r.reporter])).rows[0].n);
+    const blocked = rewardBlock({ officerCount24h: mine, pairCount24h: pair });
+    if (blocked) extra = ' ' + blocked;
+    else {
+      const paid = await city.debit(c, 'seguranca', POLICE.CASE_REWARD, `Caso resolvido por ${p.name}`);
+      if (paid === null) extra = ' O tesouro está sem saldo para a recompensa.';
+      else {
+        reward = POLICE.CASE_REWARD;
+        player = (await c.query('UPDATE sk2_players SET money = money + $2, xp = xp + $3 WHERE username = $1 RETURNING *', [username, reward, POLICE.CASE_REWARD_XP])).rows[0];
+        extra = ` Recompensa: ${brl(reward)} e ${POLICE.CASE_REWARD_XP} XP.`;
+      }
+    }
+  }
+  await c.query(`UPDATE sk2_police_reports SET status = $2, resolution = $3, reward = $4, closed_at = now() WHERE id = $1`, [id, outcome, text, reward]);
+  return { player, notifies: [[r.reporter, outcome === 'resolvido' ? `Sua ocorrência foi resolvida: ${text}` : `Sua ocorrência foi arquivada: ${text}`]],
+    message: (outcome === 'resolvido' ? 'Caso resolvido.' : 'Caso arquivado.') + extra };
+});
+
+const issueFine = (username, input) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'fine', 'Somente policiais e o Delegado aplicam multas.'); if (denied) return denied;
+  const name = String(input?.target ?? '').trim();
+  if (!NAME.test(name)) return fail('Informe o nome de quem será autuado.', 400);
+  const key = name.toLowerCase();
+  await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', ['police:fine:' + key]);
+  const t = (await c.query('SELECT username, name, xp FROM sk2_players WHERE username = $1', [key])).rows[0];
+  if (!t) return fail('Não encontrei essa pessoa.', 404);
+  const rank = Number(p.employment?.rank || 0);
+  const count = async (sql, args) => Number((await c.query(sql, args)).rows[0].n);
+  const check = fineCheck({ role, rank, kind: input?.kind, note: input?.note, warning: !!input?.warning, selfTarget: t.username === username, targetXp: Number(t.xp) || 0,
+    targetFines24h: await count(`SELECT COUNT(*) AS n FROM sk2_police_fines WHERE target = $1 AND status NOT IN ('advertencia','cancelada') AND created_at > ${ago(hoursMs(24))}`, [t.username]),
+    officerFines24h: await count(`SELECT COUNT(*) AS n FROM sk2_police_fines WHERE officer = $1 AND created_at > ${ago(hoursMs(24))}`, [username]),
+    pairRecent: (await c.query(`SELECT 1 FROM sk2_police_fines WHERE officer = $1 AND target = $2 AND created_at > ${ago(hoursMs(POLICE.PAIR_HOURS))}`, [username, t.username])).rowCount > 0 });
+  if (check.err) return fail(check.err, /Somente/.test(check.err) ? 403 : 409);
+  const id = crypto.randomUUID();
+  await c.query(`INSERT INTO sk2_police_fines (id, target, target_name, officer, officer_name, kind, note, amount, status, due_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now() + ($10::bigint * interval '1 millisecond'))`,
+    [id, t.username, t.name, username, p.name, check.kind, check.note, check.amount, check.advert ? 'advertencia' : 'pendente', hoursMs(POLICE.DUE_HOURS)]);
+  const label = INFRACTIONS[check.kind].label;
+  return { player: p, notifies: [[t.username, check.advert ? `Você recebeu uma advertência da Delegacia: ${label}.` : `Você foi multado em ${brl(check.amount)}: ${label}. Pague ou conteste na Delegacia.`]],
+    message: check.advert ? `Advertência registrada para ${t.name}.` : `Multa de ${brl(check.amount)} aplicada a ${t.name}.` };
+});
+
+const payFine = (username, id) => run(username, async (c, p) => {
+  if (!UUID.test(String(id))) return fail('Multa inválida.', 400);
+  const f = (await c.query('SELECT * FROM sk2_police_fines WHERE id = $1 AND target = $2 FOR UPDATE', [id, username])).rows[0];
+  if (!f) return fail('Multa não encontrada.', 404);
+  if (f.status !== 'pendente') return fail('Esta multa não está disponível para pagamento.');
+  const due = dueNow({ amount: f.amount, status: f.status, dueAt: epoch(f.due_at) });
+  if (Number(p.money) < due.amount) return fail(`Saldo insuficiente: a multa está em ${brl(due.amount)}.`);
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, due.amount])).rows[0];
+  await c.query(`UPDATE sk2_police_fines SET status = 'paga', paid_amount = $2, paid_at = now() WHERE id = $1`, [id, due.amount]);
+  await city.credit(c, 'multa', due.amount, `Multa: ${INFRACTIONS[f.kind]?.label || f.kind}`);
+  return { player, message: `Multa paga: ${brl(due.amount)}. O valor foi para o tesouro da cidade.` };
+});
+
+const contestFine = (username, id, text) => run(username, async (c, p) => {
+  if (!UUID.test(String(id))) return fail('Multa inválida.', 400);
+  const t = clean(text, POLICE.CONTEST_MAX);
+  if (t.length < POLICE.CONTEST_MIN) return fail(`Explique o motivo (mínimo de ${POLICE.CONTEST_MIN} caracteres).`, 400);
+  const f = (await c.query('SELECT * FROM sk2_police_fines WHERE id = $1 AND target = $2 FOR UPDATE', [id, username])).rows[0];
+  if (!f) return fail('Multa não encontrada.', 404);
+  if (f.status !== 'pendente') return fail('Esta multa não pode ser contestada agora.');
+  if (f.contest_result) return fail('Esta multa já foi analisada pelo Delegado.');
+  await c.query(`UPDATE sk2_police_fines SET status = 'contestada', contest_text = $2 WHERE id = $1`, [id, t]);
+  const notifies = (await c.query(`SELECT username FROM sk2_players WHERE role = 'prefeito' UNION SELECT username FROM sk2_city_offices WHERE office = 'seguranca'`)).rows
+    .map(x => x.username).filter(u => u !== username).map(u => [u, `${p.name} contestou uma multa. Ela espera a sua decisão na Delegacia.`]);
+  return { player: p, notifies, message: 'Contestação enviada ao Delegado.' };
+});
+
+const decideFine = (username, id, keep) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'decide', 'Somente o Delegado decide contestações.'); if (denied) return denied;
+  if (!UUID.test(String(id)) || typeof keep !== 'boolean') return fail('Decisão inválida.', 400);
+  const f = (await c.query(`SELECT * FROM sk2_police_fines WHERE id = $1 AND status = 'contestada' FOR UPDATE`, [id])).rows[0];
+  if (!f) return fail('Esta contestação já foi decidida.');
+  if (f.target === username) return fail('Você não pode decidir a contestação da sua própria multa.');
+  if (keep) {
+    await c.query(`UPDATE sk2_police_fines SET status = 'pendente', contest_result = 'mantida', decided_by = $2, decided_at = now(), due_at = now() + ($3::bigint * interval '1 millisecond') WHERE id = $1`,
+      [id, username, hoursMs(POLICE.RENEW_DUE_HOURS)]);
+    return { player: p, notifies: [[f.target, `Sua contestação foi analisada: a multa foi mantida. Novo prazo de ${POLICE.RENEW_DUE_HOURS} h.`]], message: 'Multa mantida, com novo prazo para pagamento.' };
+  }
+  await c.query(`UPDATE sk2_police_fines SET status = 'cancelada', contest_result = 'cancelada', decided_by = $2, decided_at = now() WHERE id = $1`, [id, username]);
+  return { player: p, notifies: [[f.target, 'Sua contestação foi aceita: a multa foi cancelada.']], message: 'Multa cancelada.' };
+});
+
+const cancelFine = (username, id) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'decide', 'Somente o Delegado cancela multas.'); if (denied) return denied;
+  if (!UUID.test(String(id))) return fail('Multa inválida.', 400);
+  const f = (await c.query(`SELECT * FROM sk2_police_fines WHERE id = $1 AND status = 'pendente' FOR UPDATE`, [id])).rows[0];
+  if (!f) return fail('Só multas pendentes podem ser canceladas.');
+  if (f.target === username) return fail('Você não pode cancelar a sua própria multa.');
+  await c.query(`UPDATE sk2_police_fines SET status = 'cancelada', contest_result = COALESCE(contest_result, 'cancelada'), decided_by = $2, decided_at = now() WHERE id = $1`, [id, username]);
+  return { player: p, notifies: [[f.target, 'O Delegado cancelou uma multa em seu nome.']], message: 'Multa cancelada.' };
+});
+
+const postAlert = (username, text, shout) => run(username, async (c, p, { role }) => {
+  const denied = need(role, 'alert', 'Somente o Delegado publica alertas de segurança.'); if (denied) return denied;
+  const v = validateAlert(text); if (v.err) return fail(v.err, 400);
+  if ((await c.query(`SELECT 1 FROM sk2_police_alerts WHERE author = $1 AND created_at > ${ago(minutesMs(POLICE.ALERT_COOLDOWN_MIN))}`, [username])).rowCount)
+    return fail(`Aguarde ${POLICE.ALERT_COOLDOWN_MIN} minutos entre alertas.`);
+  await c.query('INSERT INTO sk2_police_alerts (author, author_name, body) VALUES ($1,$2,$3)', [username, p.name, v.text]);
+  return { player: p, broadcast: shout === true ? { message: 'Delegacia: ' + v.text, by: p.name } : null,
+    message: shout === true ? 'Alerta publicado no mural e transmitido aos jogadores.' : 'Alerta publicado no mural da Delegacia.' };
+});
+
+const issueCertificate = username => run(username, async (c, p) => {
+  const last = (await c.query('SELECT issued_at FROM sk2_police_certs WHERE username = $1 ORDER BY issued_at DESC LIMIT 1', [username])).rows[0];
+  if (last && Date.now() - epoch(last.issued_at) < POLICE.CERT_COOLDOWN_S * 1000) return fail(`Aguarde ${POLICE.CERT_COOLDOWN_S} segundos para emitir outra certidão.`);
+  if (Number(p.money) < POLICE.CERT_PRICE) return fail(`Saldo insuficiente: a certidão custa ${brl(POLICE.CERT_PRICE)}.`);
+  const fines = (await c.query(`SELECT status, due_at FROM sk2_police_fines WHERE target = $1 AND status IN ('pendente','contestada','paga')`, [username])).rows;
+  const now = Date.now();
+  const pending = fines.filter(f => f.status !== 'paga').length, overdue = fines.filter(f => f.status === 'pendente' && epoch(f.due_at) < now).length, paid = fines.filter(f => f.status === 'paga').length;
+  const status = certStatus({ pending, overdue }), code = 'SK-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, POLICE.CERT_PRICE])).rows[0];
+  await c.query('INSERT INTO sk2_police_certs (code, username, name, status, pending, paid) VALUES ($1,$2,$3,$4,$5,$6)', [code, username, p.name, status, pending, paid]);
+  await city.credit(c, 'certidao', POLICE.CERT_PRICE, `Certidão de antecedentes de ${p.name}`);
+  return { player, message: `Certidão ${code} emitida: ${status}.` };
+});
+
+async function verifyCertificate(code) {
+  const k = clean(code, 16).toUpperCase();
+  if (!/^SK-[0-9A-F]{8}$/.test(k)) return null;
+  const r = (await db.query('SELECT code, name, status, pending, paid, issued_at FROM sk2_police_certs WHERE code = $1', [k])).rows[0];
+  return r ? { code: r.code, name: r.name, status: r.status, pending: r.pending, paid: r.paid, at: epoch(r.issued_at) } : null;
+}
+
+/* ---------- rotas ---------- */
+function registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify = () => {}, broadcast = () => {} }) {
+  const guard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `police:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações na Delegacia. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] delegacia:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a operação na Delegacia.' });
+    }
+  };
+  const done = (res, r) => {
+    if (r.err) return res.status(r.status || 409).json({ err: r.err });
+    for (const [u, m] of r.notifies || []) notify(u, { t: 'police', m });
+    if (r.broadcast) broadcast({ t: 'mayorAnnouncement', message: r.broadcast.message, by: r.broadcast.by, at: Date.now() });
+    res.json({ ok: 1, player: db.pub(r.playerRow), police: r.police, message: r.message || '' });
+  };
+  const bad = (res, m) => res.status(400).json({ err: m });
+  app.get('/api/sk2/police', guard(async (_q, res, row) => { res.set('Cache-Control', 'no-store'); done(res, await summary(row.username)); }));
+  app.post('/api/sk2/police/report', json, guard(async (req, res, row) => {
+    if (typeof req.body?.text !== 'string' || typeof req.body?.kind !== 'string') return bad(res, 'Informe o tipo e a descrição da ocorrência.');
+    done(res, await fileReport(row.username, { kind: req.body.kind, text: req.body.text, target: req.body.target }));
+  }));
+  app.post('/api/sk2/police/case/take', json, guard(async (req, res, row) => done(res, await takeCase(row.username, req.body?.id))));
+  app.post('/api/sk2/police/case/release', json, guard(async (req, res, row) => done(res, await releaseCase(row.username, req.body?.id))));
+  app.post('/api/sk2/police/case/step', json, guard(async (req, res, row) => done(res, await caseStep(row.username, req.body?.id, req.body?.step))));
+  app.post('/api/sk2/police/case/close', json, guard(async (req, res, row) => {
+    if (typeof req.body?.note !== 'string') return bad(res, 'Escreva o parecer do caso.');
+    done(res, await closeCase(row.username, req.body?.id, req.body?.outcome, req.body.note));
+  }));
+  app.post('/api/sk2/police/fine/issue', json, guard(async (req, res, row) => {
+    if (typeof req.body?.target !== 'string' || typeof req.body?.kind !== 'string' || typeof req.body?.note !== 'string') return bad(res, 'Informe quem, a infração e o motivo.');
+    done(res, await issueFine(row.username, { target: req.body.target, kind: req.body.kind, note: req.body.note, warning: req.body.warning === true }));
+  }));
+  app.post('/api/sk2/police/fine/pay', json, guard(async (req, res, row) => done(res, await payFine(row.username, req.body?.id))));
+  app.post('/api/sk2/police/fine/contest', json, guard(async (req, res, row) => {
+    if (typeof req.body?.text !== 'string') return bad(res, 'Explique o motivo da contestação.');
+    done(res, await contestFine(row.username, req.body?.id, req.body.text));
+  }));
+  app.post('/api/sk2/police/fine/decide', json, guard(async (req, res, row) => done(res, await decideFine(row.username, req.body?.id, req.body?.keep))));
+  app.post('/api/sk2/police/fine/cancel', json, guard(async (req, res, row) => done(res, await cancelFine(row.username, req.body?.id))));
+  app.post('/api/sk2/police/alert', json, guard(async (req, res, row) => {
+    if (typeof req.body?.text !== 'string') return bad(res, 'Escreva o alerta.');
+    done(res, await postAlert(row.username, req.body.text, req.body?.broadcast === true));
+  }));
+  app.post('/api/sk2/police/cert/issue', json, guard(async (_q, res, row) => done(res, await issueCertificate(row.username))));
+  app.get('/api/sk2/police/cert/:code', guard(async (req, res) => {
+    const cert = await verifyCertificate(req.params.code);
+    res.set('Cache-Control', 'no-store');
+    cert ? res.json({ ok: 1, cert }) : res.status(404).json({ err: 'Certidão não encontrada.' });
+  }));
+}
+
+module.exports = {
+  POLICE, REPORT_KINDS, INFRACTIONS, PERMS, OUTCOMES, init, registerRoutes,
+  summary, fileReport, takeCase, releaseCase, caseStep, closeCase, issueFine, payFine, contestFine, decideFine, cancelFine, postAlert, issueCertificate, verifyCertificate,
+  // puras (testes)
+  can, clean, classifyRole, roleTitle, fineCap, validateReport, validateAlert, fineCheck, dueNow, caseStage, rewardBlock, certStatus,
+};
