@@ -9,6 +9,7 @@ const db = require('./sorokiba2-db');
 const bank = require('./sorokiba2-bank');
 const hospital = require('./sorokiba2-hospital');
 const city = require('./sorokiba2-city');
+const police = require('./sorokiba2-police');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -33,6 +34,7 @@ const CAREERS = Object.freeze([
   { id: 'electrician', title: 'Eletricista de manutenção', profession: 'Eletricista', building: 'Fábrica', skills: ['manutencao'], minExperience: 1, minXp: 300, vacancies: 1 },
   { id: 'courier', title: 'Entregador urbano', profession: 'Entregador', building: 'Rodoviária', skills: ['organizacao'], minExperience: 0, minXp: 0, vacancies: 2 },
   { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 2 },
+  { id: 'police_officer', title: 'Agente de segurança urbana', profession: 'Policial', building: 'Delegacia', skills: ['atendimento', 'comunicacao'], minExperience: 1, minXp: 200, vacancies: 3 },
   { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, minXp: 400, vacancies: 1 },
 ]);
 const CAREER_SKILLS = Object.freeze({
@@ -61,6 +63,11 @@ const INTERVIEW_QUESTIONS = Object.freeze({
     { id: 'order', prompt: 'Como confirmar um pedido?', options: ['Repetir o pedido e as restrições', 'Adivinhar', 'Mandar o cliente para a cozinha'], correct: 0 },
     { id: 'rush', prompt: 'Durante o movimento, a prioridade é:', options: ['Organizar a fila e comunicar atrasos', 'Ignorar mesas', 'Servir apenas pedidos fáceis'], correct: 0 },
     { id: 'mistake', prompt: 'Um pedido saiu errado. Você:', options: ['Assume, corrige e informa o cliente', 'Culpa o cliente', 'Apaga o pedido'], correct: 0 },
+  ],
+  police_officer: [
+    { id: 'conflict', prompt: 'Dois moradores discutem na rua. A melhor atitude é:', options: ['Chegar com calma, ouvir os dois e orientar', 'Gritar para todos saírem', 'Fingir que não viu'], correct: 0 },
+    { id: 'records', prompt: 'Como registrar uma ocorrência?', options: ['Anotar fatos com precisão, sem inventar', 'Exagerar para parecer importante', 'Registrar só o que favorece um lado'], correct: 0 },
+    { id: 'fairness', prompt: 'Você conhece a pessoa que cometeu uma infração leve. Você:', options: ['Aplica a mesma regra de qualquer morador', 'Perdoa porque é amigo(a)', 'Multa mais alto por implicância'], correct: 0 },
   ],
   teacher_assistant: [
     { id: 'classroom', prompt: 'Uma turma está dispersa. Você:', options: ['Define uma instrução clara e uma atividade', 'Grita sem explicar', 'Cancela a aula'], correct: 0 },
@@ -110,6 +117,11 @@ const WORK_TASKS = Object.freeze({
     { id: 'identify', prompt: 'Selecione o componente indicado no relatório de simulação.', options: ['Componente marcado na ordem de serviço', 'Peça aleatória', 'Item não relacionado'], correct: 0 },
     { id: 'report', prompt: 'Finalize o serviço no sistema da oficina.', options: ['Registrar as observações e enviar o relatório', 'Ocultar o resultado', 'Marcar uma tarefa que não foi feita'], correct: 0 },
   ] },
+  police_officer: { type: 'patrol_report', supervisor: 'Sargento Ramos', money: 48, xp: 26, stages: [
+    { id: 'patrol', prompt: 'Ronda fictícia pelo bairro: escolha o procedimento correto.', options: ['Seguir o roteiro da ronda e observar com atenção', 'Pular a ronda', 'Abordar moradores sem motivo'], correct: 0 },
+    { id: 'approach', prompt: 'Um morador pede orientação. Como agir?', options: ['Ouvir, explicar com respeito e encaminhar', 'Ignorar o pedido', 'Dar ordens sem explicar'], correct: 0 },
+    { id: 'report', prompt: 'Finalize o turno registrando a ronda no sistema.', options: ['Registrar o que aconteceu com precisão', 'Omitir ocorrências', 'Inventar uma ocorrência'], correct: 0 },
+  ] },
   teacher_assistant: { type: 'classroom_support', supervisor: 'Lúcia', money: 38, xp: 22, stages: [
     { id: 'prepare', prompt: 'Prepare os materiais da atividade escolar.', options: ['Conferir a lista e separar os materiais pedidos', 'Levar materiais aleatórios', 'Começar sem verificar'], correct: 0 },
     { id: 'assist', prompt: 'Um aluno pede orientação na atividade simulada.', options: ['Explicar a próxima etapa com respeito', 'Ignorar o pedido', 'Fazer a atividade sem explicar'], correct: 0 },
@@ -124,6 +136,7 @@ const CAREER_LADDERS = Object.freeze({
   courier: [{ title: 'Entregador', salary: 800, xp: 0, tasks: 0, performance: 0 }, { title: 'Entregador sênior', salary: 1050, xp: 60, tasks: 3, performance: 70 }, { title: ' líder de rotas', salary: 1400, xp: 150, tasks: 8, performance: 80 }],
   fastfood_counter: [{ title: 'Atendente', salary: 820, xp: 0, tasks: 0, performance: 0 }, { title: 'Atendente sênior', salary: 1080, xp: 60, tasks: 3, performance: 70 }, { title: 'Líder de turno', salary: 1450, xp: 150, tasks: 8, performance: 80 }],
   mechanic: [{ title: 'Auxiliar de oficina', salary: 950, xp: 0, tasks: 0, performance: 0 }, { title: 'Mecânico', salary: 1300, xp: 70, tasks: 4, performance: 72 }, { title: 'Mecânico sênior', salary: 1750, xp: 170, tasks: 10, performance: 85 }],
+  police_officer: [{ title: 'Agente de patrulha', salary: 1000, xp: 0, tasks: 0, performance: 0 }, { title: 'Agente sênior', salary: 1350, xp: 70, tasks: 4, performance: 75 }, { title: 'Inspetor', salary: 1800, xp: 170, tasks: 10, performance: 85 }],
   teacher_assistant: [{ title: 'Auxiliar escolar', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Assistente escolar', salary: 1200, xp: 70, tasks: 4, performance: 75 }, { title: 'Coordenador pedagógico', salary: 1650, xp: 170, tasks: 10, performance: 88 }],
 });
 const TRAINING = Object.freeze({
@@ -135,7 +148,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital e Prefeitura de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura e Delegacia de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -384,6 +397,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   // Prefeitura: tesouro, cargos políticos, leis, eleição, auxílios e estatísticas da cidade.
   let cityBroadcast = () => {};
   city.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
+  // Delegacia: ocorrências, multas com contestação, certidão e alertas; carreira de Policial usa as mesmas entrevistas e turnos.
+  police.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
