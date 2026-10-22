@@ -51,7 +51,7 @@ Cada objetivo é salvo no PostgreSQL em `sk2_players.missions` e a atualização
 
 ## Etapa 1: central de carreiras
 
-O botão **Carreiras** abre uma central jogável com vagas derivadas dos NPCs e prédios existentes (Hospital, Biblioteca, Oficina, Restaurante e Escola). O currículo é persistido em `sk2_players.resume`, pode ser editado pelo painel e aceita apenas até quatro habilidades conhecidas e a experiência liberada pelo XP do jogador. As candidaturas são persistidas em `sk2_career_applications` com chave única por jogador e vaga.
+O botão **Carreiras** abre uma central jogável com vagas derivadas dos NPCs e prédios existentes (Hospital, Biblioteca, Oficina, Restaurante, Escola e Delegacia). O currículo é persistido em `sk2_players.resume`, pode ser editado pelo painel e aceita apenas até quatro habilidades conhecidas e a experiência liberada pelo XP do jogador. As candidaturas são persistidas em `sk2_career_applications` com chave única por jogador e vaga.
 
 Endpoints autenticados:
 
@@ -166,6 +166,34 @@ A Prefeitura tem dois andares, cada um com planta própria de 40×24 tiles (mesm
 Endpoints autenticados: `GET /api/sk2/city` e `POST /api/sk2/city/...` com `notice`, `office/appoint`, `office/dismiss`, `law/propose`, `law/vote`, `policy/subsidy`, `aid/request`, `aid/decide`, `salary/claim`, `election/candidate` e `election/vote`. `SK2_CITY_TIME_SCALE=0.001` comprime os prazos para teste.
 
 Limitações atuais: se o Prefeito sair, não há sucessão automática; o servidor não sabe em qual sala o jogador está (como no Banco e no Hospital); a doação de sangue do Hospital ainda é paga com dinheiro novo, não pelo tesouro.
+
+## Delegacia de Sorokiba
+
+A Delegacia é um piso único de 46×26 tiles, com a mesma técnica da Prefeitura (paredes com portas sinalizadas, colisão derivada da planta, câmera com zoom), mas com visual próprio: paredes claras com faixa âmbar e verde-água, piso azul-noite, letreiro neon, sirene giratória na entrada e no telhado, parede de câmeras com um radar que mostra os jogadores online, relógio real, espelho unidirecional, celas com grades e perícia com luz ultravioleta. Paredes que ficam na frente do jogador ficam quase transparentes, para ele não sumir atrás delas.
+
+**Salas e o que cada uma faz** (todas as telas abrem pelos NPCs ou pelos pontos do prédio; as regras vivem em `sorokiba2-police.js`):
+
+- **Saguão · Balcão de Atendimento** (Sargento Ramos): registrar Boletim de Ocorrência (B.O.), acompanhar os seus registros e validar uma certidão pelo código. **Mural de Alertas**: avisos de segurança e números da cidade.
+- **Multas e Trânsito** (Cabo Iara): ver, pagar e contestar as suas multas; a aba *Aplicar multa* aparece só para policiais e Delegado; tabela de infrações com as regras.
+- **Central de Despacho** (Soldado Vitor): fila de ocorrências para policiais assumirem, andamento do caso e números gerais. Parede de câmeras e radar.
+- **Identificação** (Perita Nina): certidão de antecedentes (R$ 15 para o tesouro), com leitura de digital animada. NADA CONSTA só sem multa pendente ou vencida. Cada certidão tem código `SK-XXXXXXXX` que qualquer morador valida no balcão.
+- **Interrogatório** (Detetive Caio) e **Evidências** (Perito Otto): etapas obrigatórias de cada caso, com animações de gravação e de análise.
+- **Gabinete da Delegada** (Mara): decide contestações, publica alertas (com transmissão opcional a todos os jogadores), vê equipe e painel de 7 dias.
+- **Carceragem**: três celas decorativas e um figurante. Não existe prisão de jogadores.
+
+**Quem faz o quê** (permissões em `PERMS`, sempre checadas no servidor):
+
+- **Delegado(a)**: o Secretário de Segurança e Trânsito (ou o Prefeito). Decide contestações, cancela multas, publica alertas, vê equipe e painel.
+- **Agente**: quem foi contratado na nova carreira **Policial** (`police_officer`, Centro de Empregos, 200 XP e 1 de experiência, 3 vagas, três cargos: Agente de patrulha, Agente sênior e Inspetor; turno com ronda em três etapas). Assume e encerra ocorrências e aplica multas dentro do catálogo.
+- **Cidadão**: registra B.O., paga ou contesta multas, tira certidão.
+
+**Caso de ocorrência.** Fila → o agente assume (um por vez) → depoimento na Sala de Interrogatório → espera da perícia (1 min) → análise das provas na Sala de Evidências → parecer. A ordem das etapas é validada no servidor. *Resolvido* exige as duas etapas; *arquivado* pode ser feito a qualquer momento. Caso parado por 24 h volta à fila. Ninguém pode assumir o próprio B.O.
+
+**Multas sem incentivo para abuso.** O valor vem do catálogo `INFRACTIONS` (o agente nunca digita valor). Agente iniciante só aplica multas até R$ 60. Moradores com menos de 100 XP recebem só advertência. Limites: 2 multas por alvo e 8 autuações por agente em 24 h, e 6 h entre autuações do mesmo par. Prazo de 72 h; depois dele, acréscimo único de 10%. Toda multa pode ser contestada uma vez e quem decide é o Delegado (que não decide a própria). **O agente não ganha comissão de multa.** O dinheiro vai para o tesouro (`multa` no extrato da Prefeitura). Cada caso resolvido paga R$ 30 e 20 XP pelo tesouro, com teto de 6 por dia e 1 por par agente/denunciante por dia.
+
+Endpoints autenticados: `GET /api/sk2/police` e `POST /api/sk2/police/...` com `report`, `case/take`, `case/release`, `case/step`, `case/close`, `fine/issue`, `fine/pay`, `fine/contest`, `fine/decide`, `fine/cancel`, `alert` e `cert/issue`; `GET /api/sk2/police/cert/:code` valida uma certidão. Tabelas: `sk2_police_reports`, `sk2_police_fines`, `sk2_police_alerts` e `sk2_police_certs`, criadas em `police.init()`. Avisos ao vivo chegam pelo WebSocket como `{t:'police'}`. `SK2_POLICE_TIME_SCALE=0.001` comprime prazos e esperas para teste.
+
+Limitações atuais: como no Banco, no Hospital e na Prefeitura, o servidor não sabe em qual sala o jogador está (a ordem das etapas do caso é validada, mas não o lugar físico); não há prisão nem pena além de multa; as rotas e o SQL da Delegacia têm testes de regras e de ligação, mas as consultas ao PostgreSQL ainda não foram exercitadas contra um banco real.
 
 ## Testes
 
