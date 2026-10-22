@@ -1,0 +1,214 @@
+'use strict';
+// Testes de COMPORTAMENTO da Delegacia (executam o código, não procuram texto no fonte, exceto a parte de ligação).
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const police = require('../sorokiba2-police');
+const { POLICE, INFRACTIONS, REPORT_KINDS, PERMS } = police;
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+
+test('cada função só faz o que o cargo permite', () => {
+  const matrix = {
+    delegado: ['take', 'step', 'close', 'fine', 'decide', 'alert', 'team', 'dashboard'],
+    agente: ['take', 'step', 'close', 'fine', 'dashboard'],
+  };
+  for (const [role, allowed] of Object.entries(matrix))
+    for (const action of Object.keys(PERMS)) assert.equal(police.can(role, action), allowed.includes(action), `${role} → ${action}`);
+  for (const action of Object.keys(PERMS)) { assert.equal(police.can(null, action), false, `cidadão → ${action}`); assert.equal(police.can('', action), false); }
+  assert.equal(police.can('agente', 'decide'), false, 'só o Delegado decide contestação');
+  assert.equal(police.can('agente', 'alert'), false, 'só o Delegado publica alertas');
+  assert.equal(police.can('delegado', 'inexistente'), false);
+});
+
+test('papel: Prefeito e Secretário de Segurança são Delegado; Policial contratado é agente; o resto é cidadão', () => {
+  assert.equal(police.classifyRole({ role: 'prefeito' }, null), 'delegado');
+  assert.equal(police.classifyRole({ role: 'cidadão' }, 'seguranca'), 'delegado');
+  assert.equal(police.classifyRole({ role: 'cidadão' }, 'prefeito'), 'delegado');
+  assert.equal(police.classifyRole({ role: 'cidadão', employment: { jobId: 'police_officer' } }, null), 'agente');
+  assert.equal(police.classifyRole({ role: 'cidadão', employment: { jobId: 'courier' } }, null), null);
+  assert.equal(police.classifyRole({ role: 'cidadão', employment: {} }, 'vereador'), null, 'vereador não é polícia');
+  assert.equal(police.classifyRole({ role: 'cidadão' }, 'financas'), null);
+  assert.equal(police.classifyRole(null, null), null);
+});
+
+test('catálogos: infrações com valor fixo e tipos de ocorrência completos', () => {
+  for (const [id, i] of Object.entries(INFRACTIONS)) { assert.ok(i.label, id); assert.ok(Number.isInteger(i.amount) && i.amount > 0, id); }
+  assert.ok(Object.keys(REPORT_KINDS).length >= 4);
+  assert.ok(Math.min(...Object.values(INFRACTIONS).map(i => i.amount)) <= POLICE.ROOKIE_FINE_CAP, 'o agente iniciante precisa ter infrações ao alcance');
+  assert.ok(Math.max(...Object.values(INFRACTIONS).map(i => i.amount)) > POLICE.ROOKIE_FINE_CAP, 'existem infrações só para agentes mais experientes');
+});
+
+test('validar B.O.: tipo do catálogo, descrição com tamanho mínimo e envolvido opcional válido', () => {
+  const ok = police.validateReport({ kind: 'perda', text: '  Perdi a minha mochila   perto do parque ', target: ' Ana_01 ' });
+  assert.deepEqual(ok, { kind: 'perda', text: 'Perdi a minha mochila perto do parque', target: 'Ana_01' });
+  assert.equal(police.validateReport({ kind: 'perda', text: 'Perdi a mochila' }).target, null);
+  for (const bad of [{ kind: 'x', text: 'texto bem comprido o bastante' }, { kind: 'perda', text: 'curto' }, { kind: 'perda', text: '' }, { kind: 'perda', text: 'texto bem comprido o bastante', target: 'a b' }, { kind: 'perda', text: 'texto bem comprido o bastante', target: 'ab' }, { kind: 'toString', text: 'texto bem comprido o bastante' }, { kind: 'perda', text: null }])
+    assert.ok(police.validateReport(bad).err, JSON.stringify(bad));
+  assert.equal(police.validateReport({ kind: 'perda', text: 'a'.repeat(1000) }).text.length, POLICE.REPORT_MAX);
+  assert.equal(police.validateReport({ kind: 'perda', text: 'linha um\u0000\n\tlinha dois dois' }).text, 'linha um linha dois dois', 'controles viram espaço');
+});
+
+test('multa: valor vem do catálogo, nunca do agente, e advertência custa zero', () => {
+  const base = { role: 'delegado', rank: 0, kind: 'transito', note: 'Furou o sinal vermelho', targetXp: 500 };
+  assert.deepEqual(police.fineCheck(base), { kind: 'transito', note: 'Furou o sinal vermelho', amount: INFRACTIONS.transito.amount, advert: false });
+  assert.equal(police.fineCheck({ ...base, warning: true }).amount, 0);
+  assert.equal(police.fineCheck({ ...base, warning: true }).advert, true);
+  assert.equal(police.fineCheck({ ...base, amount: 99999 }).amount, INFRACTIONS.transito.amount, 'um valor enviado pelo cliente é ignorado');
+  assert.equal(police.fineCheck({ ...base, kind: 'inventada' }).err.length > 0, true);
+});
+
+test('multa: iniciante, novatos, limites e auto-multa', () => {
+  const base = { role: 'agente', rank: 0, kind: 'sossego', note: 'Som alto de madrugada', targetXp: 500 };
+  assert.equal(police.fineCheck(base).amount, INFRACTIONS.sossego.amount, 'iniciante aplica multa até o teto');
+  assert.ok(police.fineCheck({ ...base, kind: 'dano' }).err, 'iniciante não aplica a multa maior');
+  assert.equal(police.fineCheck({ ...base, kind: 'dano', warning: true }).amount, 0, 'mas pode dar advertência');
+  assert.equal(police.fineCheck({ ...base, kind: 'dano', rank: 1 }).amount, INFRACTIONS.dano.amount, 'sênior aplica qualquer uma');
+  assert.equal(police.fineCheck({ ...base, targetXp: POLICE.TARGET_MIN_XP - 1 }).advert, true, 'novato só recebe advertência');
+  assert.equal(police.fineCheck({ ...base, targetXp: POLICE.TARGET_MIN_XP }).advert, false);
+  assert.ok(police.fineCheck({ ...base, selfTarget: true }).err);
+  assert.ok(police.fineCheck({ ...base, note: 'oi' }).err, 'motivo precisa ter tamanho mínimo');
+  assert.ok(police.fineCheck({ ...base, officerFines24h: POLICE.PER_OFFICER_24H }).err);
+  assert.ok(!police.fineCheck({ ...base, officerFines24h: POLICE.PER_OFFICER_24H - 1 }).err);
+  assert.ok(police.fineCheck({ ...base, targetFines24h: POLICE.PER_TARGET_24H }).err, 'limite de multas por alvo');
+  assert.ok(!police.fineCheck({ ...base, targetFines24h: POLICE.PER_TARGET_24H, warning: true }).err, 'advertência não conta no limite do alvo');
+  assert.ok(police.fineCheck({ ...base, pairRecent: true }).err, 'mesmo agente não autua a mesma pessoa de novo logo em seguida');
+  assert.ok(police.fineCheck({ ...base, role: null }).err, 'cidadão não multa');
+  assert.ok(police.fineCheck({ ...base, role: 'cidadão' }).err);
+});
+
+test('valor devido: acréscimo único só depois do vencimento e só em multa pendente', () => {
+  const now = 1e12, amount = 100;
+  assert.deepEqual(police.dueNow({ amount, status: 'pendente', dueAt: now + 1 }, now), { amount: 100, overdue: false, surcharge: 0 });
+  assert.deepEqual(police.dueNow({ amount, status: 'pendente', dueAt: now - 1 }, now), { amount: 100 + Math.round(100 * POLICE.SURCHARGE_PCT / 100), overdue: true, surcharge: 10 });
+  for (const status of ['paga', 'cancelada', 'contestada', 'advertencia']) assert.equal(police.dueNow({ amount, status, dueAt: now - 1e9 }, now).overdue, false, status);
+  assert.equal(police.dueNow({ amount: 0, status: 'pendente', dueAt: 0 }, now).amount, 0, 'advertência nunca cobra');
+  assert.equal(police.dueNow({ amount: 3, status: 'pendente', dueAt: 0 }, now).surcharge, 1, 'acréscimo mínimo de R$ 1');
+});
+
+test('etapas do caso: fila → depoimento → espera da perícia → provas → parecer', () => {
+  const now = 1e12, wait = POLICE.EVIDENCE_WAIT_MIN * 60e3;
+  assert.equal(police.caseStage(null), 'none');
+  assert.equal(police.caseStage({ status: 'aberto' }, now), 'open');
+  assert.equal(police.caseStage({ status: 'investigando' }, now), 'statement');
+  assert.equal(police.caseStage({ status: 'investigando', statementAt: now - 1000 }, now), 'wait');
+  assert.equal(police.caseStage({ status: 'investigando', statementAt: now - wait }, now), 'evidence');
+  assert.equal(police.caseStage({ status: 'investigando', statementAt: now - wait, evidenceAt: now }, now), 'close');
+  assert.equal(police.caseStage({ status: 'resolvido' }, now), 'done');
+  assert.equal(police.caseStage({ status: 'arquivado' }, now), 'done');
+});
+
+test('recompensa: teto diário e um caso por par agente/denunciante', () => {
+  assert.equal(police.rewardBlock({ officerCount24h: 0, pairCount24h: 0 }), null);
+  assert.ok(police.rewardBlock({ officerCount24h: POLICE.REWARD_MAX_24H }));
+  assert.ok(police.rewardBlock({ officerCount24h: 0, pairCount24h: POLICE.REWARD_PAIR_24H }));
+  assert.ok(POLICE.CASE_REWARD > 0 && POLICE.CASE_REWARD <= 60, 'recompensa pequena, para o tesouro aguentar');
+});
+
+test('certidão: NADA CONSTA só sem pendência nem multa vencida', () => {
+  assert.equal(police.certStatus({ pending: 0, overdue: 0 }), 'NADA CONSTA');
+  assert.equal(police.certStatus({}), 'NADA CONSTA');
+  assert.equal(police.certStatus({ pending: 1, overdue: 0 }), 'CONSTA PENDÊNCIA');
+  assert.equal(police.certStatus({ pending: 0, overdue: 2 }), 'CONSTA PENDÊNCIA');
+});
+
+test('alerta do Delegado: tamanho mínimo e máximo, sem caracteres de controle', () => {
+  assert.ok(police.validateAlert('curto').err);
+  assert.equal(police.validateAlert('Cuidado ao atravessar a avenida\n central').text, 'Cuidado ao atravessar a avenida central');
+  assert.equal(police.validateAlert('x'.repeat(500)).text.length, POLICE.ALERT_MAX);
+  assert.ok(police.validateAlert(null).err);
+});
+
+test('título do cargo e teto de multa por função', () => {
+  assert.equal(police.fineCap('delegado', 0), Infinity);
+  assert.equal(police.fineCap('agente', 0), POLICE.ROOKIE_FINE_CAP);
+  assert.equal(police.fineCap('agente', 1), Infinity);
+  assert.equal(police.fineCap(null, 5), 0);
+  assert.match(police.roleTitle({ role: 'prefeito' }, 'delegado', 'prefeito'), /Prefeito/);
+  assert.match(police.roleTitle({ role: 'cidadão' }, 'delegado', 'seguranca'), /Delegado/);
+  assert.equal(police.roleTitle({ role: 'cidadão', employment: { title: 'Agente sênior' } }, 'agente', null), 'Agente sênior');
+  assert.equal(police.roleTitle({}, null, null), null);
+});
+
+// Rotas com um "app" falso: nada disto toca no banco (a validação acontece antes).
+function mountRoutes(authUser) {
+  const routes = {};
+  const app = { get: (p, ...h) => { routes['GET ' + p] = h[h.length - 1]; }, post: (p, ...h) => { routes['POST ' + p] = h[h.length - 1]; } };
+  police.registerRoutes({ app, json: (_q, _s, n) => n && n(), authUser, limited: () => false, userTries: new Map(), addInterval: () => {} });
+  return routes;
+}
+const call = async (handler, body = {}, params = {}) => {
+  const res = { code: 200, body: null, headersSent: false, status(c) { this.code = c; return this; }, json(b) { this.body = b; this.headersSent = true; return this; }, set() { return this; } };
+  await handler({ body, params, headers: {}, query: {} }, res);
+  return res;
+};
+
+test('rotas: todas existem e exigem sessão', async () => {
+  const routes = mountRoutes(async () => null);
+  const expected = ['GET /api/sk2/police', 'POST /api/sk2/police/report', 'POST /api/sk2/police/case/take', 'POST /api/sk2/police/case/release', 'POST /api/sk2/police/case/step', 'POST /api/sk2/police/case/close',
+    'POST /api/sk2/police/fine/issue', 'POST /api/sk2/police/fine/pay', 'POST /api/sk2/police/fine/contest', 'POST /api/sk2/police/fine/decide', 'POST /api/sk2/police/fine/cancel',
+    'POST /api/sk2/police/alert', 'POST /api/sk2/police/cert/issue', 'GET /api/sk2/police/cert/:code'];
+  for (const r of expected) { assert.equal(typeof routes[r], 'function', r); const res = await call(routes[r]); assert.equal(res.code, 401, r); }
+});
+
+test('rotas: corpo malformado é recusado com 400 antes de qualquer consulta', async () => {
+  const routes = mountRoutes(async () => ({ username: 'ana', name: 'Ana', role: 'cidadão' }));
+  for (const [route, body] of [['POST /api/sk2/police/report', {}], ['POST /api/sk2/police/report', { kind: 1, text: 2 }], ['POST /api/sk2/police/case/close', {}], ['POST /api/sk2/police/fine/issue', { target: 'x' }], ['POST /api/sk2/police/fine/contest', {}], ['POST /api/sk2/police/alert', {}]]) {
+    const res = await call(routes[route], body);
+    assert.equal(res.code, 400, route + ' ' + JSON.stringify(body));
+    assert.ok(res.body.err);
+  }
+});
+
+test('rotas: limite de ações por minuto responde 429', async () => {
+  const routes = {};
+  const app = { get: (p, ...h) => { routes['GET ' + p] = h[h.length - 1]; }, post: (p, ...h) => { routes['POST ' + p] = h[h.length - 1]; } };
+  police.registerRoutes({ app, json: (_q, _s, n) => n && n(), authUser: async () => ({ username: 'ana' }), limited: () => true, userTries: new Map(), addInterval: () => {} });
+  assert.equal((await call(routes['POST /api/sk2/police/fine/pay'], { id: 'x' })).code, 429);
+});
+
+test('operações recusam ids inválidos antes de mexer no dinheiro (sem banco)', async () => {
+  const db = require('../sorokiba2-db');
+  const original = db.withTx;
+  // Simula só a transação: o jogador existe e nada mais; qualquer SQL de regra inesperado quebra o teste.
+  db.withTx = async fn => fn({ query: async sql => { if (/FROM sk2_players WHERE username = \$1 FOR UPDATE/.test(sql)) return { rows: [{ username: 'ana', name: 'Ana', money: 500, xp: 0, role: 'cidadão', employment: {} }] }; if (/UPDATE sk2_police_reports/.test(sql)) return { rows: [], rowCount: 0 }; throw new Error('SQL inesperado: ' + sql.slice(0, 60)); } });
+  try {
+    for (const op of [() => police.payFine('ana', 'nao-e-uuid'), () => police.contestFine('ana', 'nao-e-uuid', 'texto de contestação'), () => police.takeCase('ana', 'xx'), () => police.closeCase('ana', 'xx', 'resolvido', 'parecer ok')]) {
+      const r = await op();
+      assert.ok(r.err, 'recusado');
+    }
+    const denied = await police.takeCase('ana', '00000000-0000-4000-8000-000000000000');
+    assert.equal(denied.status, 403, 'cidadão não assume caso');
+    const noRole = await police.issueFine('ana', { target: 'bruno', kind: 'faixa', note: 'atravessou fora da faixa' });
+    assert.equal(noRole.status, 403, 'cidadão não multa');
+    const alert = await police.postAlert('ana', 'Alerta de teste para todos', true);
+    assert.equal(alert.status, 403, 'cidadão não publica alerta');
+    const decide = await police.decideFine('ana', '00000000-0000-4000-8000-000000000000', true);
+    assert.equal(decide.status, 403, 'cidadão não decide contestação');
+  } finally { db.withTx = original; }
+});
+
+test('ligação no servidor: carreira de Policial completa, banco e rotas iniciados', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /require\('\.\/sorokiba2-police'\)/);
+  assert.match(server, /\.then\(\(\) => police\.init\(\)\)/);
+  assert.match(server, /police\.registerRoutes\(\{/);
+  assert.match(server, /id: 'police_officer'[^\n]*building: 'Delegacia'/);
+  for (const table of ['INTERVIEW_QUESTIONS', 'WORK_TASKS', 'CAREER_LADDERS']) {
+    const start = server.indexOf(`const ${table} = Object.freeze({`);
+    assert.ok(start > 0, table);
+    assert.match(server.slice(start, start + 20000), /police_officer:/, `${table} tem a carreira de Policial`);
+  }
+});
+
+test('ligação no cliente: família, planta, painel, mensagens ao vivo e sirene externa', () => {
+  const html = read('sorokiba2.html');
+  assert.match(html, /n\.includes\('delegacia'\)\)family='police'/);
+  assert.match(html, /police:\[46,26,'police-zip'\]/);
+  assert.match(html, /shape==='police-zip'\)\{renderPoliceZip\(t\)/);
+  assert.match(html, /id="policePanel"/);
+  assert.match(html, /m\.t==='police'/);
+  assert.match(html, /bd\('Delegacia','#3F5E8C',0,\['siren',0\]/);
+  assert.match(html, /closePolicePanel\(\);policeStopPoll\(\)/);
+  assert.match(html, /API\+'\/police'\+path/);
+});
