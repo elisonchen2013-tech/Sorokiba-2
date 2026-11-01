@@ -538,6 +538,79 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #marketPanel button:focus-visible,#marketPanel input:focus-visible,.mkChip:focus-visible{outline:3px solid #16294a;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){#marketPanel::before{animation:none}.mkBar i{transition:none}}
 @media(max-width:560px){.mkGrid{grid-template-columns:repeat(2,1fr)}.mkList li{flex-wrap:wrap}.mkTotals{max-width:none}}
+/* ---------- Universidade ---------- */
+#uniPanel{position:fixed;z-index:42;left:50%;top:50%;transform:translate(-50%,-50%);width:min(940px,96vw);max-height:92vh;overflow:auto;padding:clamp(14px,3vw,24px);padding-top:clamp(18px,3.2vw,28px);border:2px solid #c9a227;border-radius:16px;background:linear-gradient(170deg,#fbf6ea 0%,#f1e6cb 100%);box-shadow:0 24px 80px #000c,inset 0 0 0 2px #fff8;color:#1d2540;overscroll-behavior:contain;display:flex;flex-direction:column}
+#uniPanel[hidden]{display:none}
+#uniPanel::before{content:"";flex:none;display:block;height:9px;margin:calc(-1 * clamp(18px,3.2vw,28px)) calc(-1 * clamp(14px,3vw,24px)) clamp(12px,2vw,18px);border-radius:14px 14px 0 0;background:repeating-linear-gradient(90deg,#7b2d3a 0 30px,#c9a227 30px 36px,#7b2d3a 36px 66px,#f4efe3 66px 72px)}
+.unHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:10px;border-bottom:2px double #c9a227}
+.unKicker{margin:0 0 3px;color:#7b2d3a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.unHead h2{margin:0;color:#7b2d3a;font-size:clamp(22px,4vw,30px);font-family:Georgia,'Times New Roman',serif}
+.unHead p:not(.unKicker){margin:4px 0 0;color:#5b5668;font-size:13px}
+#uniPanel button{font:inherit;cursor:pointer;text-shadow:none}
+#uniClose{border:2px solid #7b2d3a44;border-radius:10px;padding:7px 12px;background:#fff;color:#7b2d3a;font-weight:700}
+.unTabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+.unTabs[hidden]{display:none}
+.unTabs button{border:2px solid #7b2d3a;border-radius:999px;padding:7px 14px;background:#fff;color:#7b2d3a;font-weight:700}
+.unTabs button[aria-selected=true]{background:#7b2d3a;color:#fff}
+.unMsg{min-height:20px;margin:8px 0;color:#1f6a44;font-size:13px;font-weight:700}
+.unMsg.err{color:#b3262e}
+#uniBody{overflow:auto;min-height:0}
+.unCard{padding:14px;border:2px solid #7b2d3a22;border-radius:12px;background:#fffdf7;margin-bottom:10px}
+.unCard h3{margin:0 0 8px;color:#7b2d3a;font-size:17px;font-family:Georgia,'Times New Roman',serif}
+.unCard h4{margin:12px 0 6px;color:#1d2540}
+.unCard label{display:block;margin:8px 0 5px;font-size:13px;font-weight:700}
+.unCard select{width:100%;max-width:520px;box-sizing:border-box;padding:10px 12px;border:2px solid #c9a227;border-radius:9px;background:#fff;color:#1d2540;font:inherit;font-size:16px}
+.unHint{margin:0 0 10px;color:#5b5668;font-size:12.5px;line-height:1.5}
+.unLesson{margin:0 0 10px;font-size:15px;line-height:1.65;padding:12px 14px;border-left:4px solid #c9a227;background:#fbf3dc;border-radius:0 10px 10px 0}
+.unActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.unActions button,.unList button,.unFood button{border:0;border-radius:10px;padding:10px 16px;background:#7b2d3a;color:#fff;font-weight:800;box-shadow:0 3px 0 #4c1a24}
+.unActions button.alt{background:#fff;color:#7b2d3a;border:2px solid #7b2d3a55;box-shadow:none}
+.unList button{padding:7px 12px;font-size:13px}
+.unActions button:disabled,.unList button:disabled,.unFood button:disabled{opacity:.4;cursor:not-allowed}
+.unList{list-style:none;margin:0 0 6px;padding:0}
+.unList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dotted #7b2d3a33}
+.unList small{display:block;color:#6b6578;font-size:12px}
+.unRight{display:flex;align-items:center;gap:8px}
+.unTag{padding:3px 10px;border-radius:99px;background:#7b2d3a14;color:#7b2d3a;font-size:12px;font-weight:700;white-space:nowrap}
+.unTag.ok{background:#1f6a4426;color:#1f6a44}.unTag.bad{background:#b3262e22;color:#b3262e}
+.unRules{margin:0;padding-left:20px;font-size:13.5px;line-height:1.6}
+.unDisc{margin:8px 0 12px}
+.unGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.unFood{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:2px solid #c9a22755;border-radius:12px;background:#fff;text-align:center}
+.unIcon{font-size:32px}
+.unPrice{color:#7b2d3a;font-size:16px}.unPrice s{color:#8a8498;font-size:12px}
+.unRadios{display:grid;gap:6px}
+.unCard label.unRadio{display:flex;align-items:flex-start;gap:8px;margin:0 0 6px;padding:7px 9px;border:1px solid #7b2d3a22;border-radius:9px;background:#fff;font-weight:600;cursor:pointer}
+.unCard label.unRadio:hover{border-color:#c9a227;background:#fffaf0}
+.unCard label.unRadio input{width:auto;flex:none;margin:3px 0 0;padding:0;accent-color:#7b2d3a}
+.unCard label.unRadio span{font-size:14px;font-weight:600}
+.unRadio small{display:block;color:#6b6578;font-weight:400;font-size:12px}
+.unQuiz{padding-left:20px;margin:0}
+.unQuiz li{margin-bottom:12px}
+.unQuiz li small{display:block;color:#6b6578}
+.unScore{display:flex;align-items:baseline;gap:8px}.unScore strong{font-size:48px;color:#7b2d3a}
+.unNote{padding:18px;text-align:center;color:#5b5668}
+.unCount{font-variant-numeric:tabular-nums}
+.unLive{border-color:#b3262e;background:#fff5f4}
+.unPass{position:relative;overflow:hidden;display:grid;gap:4px;max-width:360px;margin:0 0 12px;padding:14px 16px 14px 96px;border-radius:14px;color:#fff;box-shadow:0 8px 24px #0004;min-height:128px}
+.unPass small{opacity:.85;font-size:11px;letter-spacing:.06em}
+.unPass strong{font-size:19px}
+.unPass .unRole{font-weight:900;letter-spacing:.12em}
+.unPass .unPhoto{position:absolute;left:14px;top:34px;width:68px;height:82px;display:grid;place-items:center;border-radius:8px;background:#ffffff33;font-size:40px}
+.unPass.aluno{background:linear-gradient(135deg,#1f3f7a,#3a7bd5)}
+.unPass.professor{background:linear-gradient(135deg,#7a5a0d,#c9a227)}
+.unPass.visitante{background:linear-gradient(135deg,#1f6a44,#2ea36b)}
+.unPass.none{background:linear-gradient(135deg,#555,#888);padding-left:16px}
+.unPass.expired{filter:grayscale(.85)}
+.unPass:not(.none):not(.expired)::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,#ffffff55 50%,transparent 65%);transform:translateX(-120%);animation:unShine 3.6s ease-in-out infinite}
+@keyframes unShine{60%,100%{transform:translateX(120%)}}
+.uniChip{position:fixed;z-index:41;left:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));padding:10px 15px;border:2px solid #fff;border-radius:999px;color:#fff;font:inherit;font-weight:800;box-shadow:0 4px 0 #0005,0 8px 24px #0008;cursor:pointer}
+.uniChip[hidden]{display:none}
+.uniChip.aluno{background:#3a7bd5}.uniChip.professor{background:#a8851d}.uniChip.visitante{background:#2ea36b}.uniChip.none{background:#8a2d3a}
+#uniPanel.busy button{pointer-events:none;opacity:.6}
+#uniPanel button:focus-visible,#uniPanel select:focus-visible,#uniPanel input:focus-visible,.uniChip:focus-visible{outline:3px solid #1d2540;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.unPass:not(.none)::after{animation:none}}
+@media(max-width:560px){.unList li{flex-wrap:wrap}.unPass{max-width:none}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -596,6 +669,8 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <section id="policePanel" hidden role="dialog" aria-labelledby="policeTitle"><header class="polHead"><div><p class="polKicker">Delegacia de Sorokiba</p><h2 id="policeTitle">Delegacia</h2><p id="policeWho"></p></div><button id="policeClose" type="button" aria-label="Fechar Delegacia">Fechar</button></header><nav id="policeTabs" class="polTabs" role="tablist" aria-label="Seções" hidden></nav><p id="policeMsg" class="polMsg" aria-live="polite"></p><div id="policeBody"></div></section>
 <section id="marketPanel" hidden role="dialog" aria-labelledby="marketTitle"><header class="mkHead"><div><p class="mkKicker">Mercado de Sorokiba · Ofertas todo dia</p><h2 id="marketTitle">Mercado de Sorokiba</h2><p>Escolha nos corredores, pague no caixa e guarde na despensa.</p></div><button id="marketClose" type="button" aria-label="Fechar Mercado">Fechar</button></header><nav id="marketTabs" class="mkTabs" role="tablist" aria-label="Seções do Mercado"></nav><p id="marketMsg" class="mkMsg" aria-live="polite"></p><div id="marketBody"></div></section>
 <button id="mkChip" class="mkChip" type="button" hidden aria-label="Abrir carrinho de compras">🛒 0</button>
+<section id="uniPanel" hidden role="dialog" aria-labelledby="uniTitle"><header class="unHead"><div><p class="unKicker">Universidade de Sorokiba</p><h2 id="uniTitle">Universidade</h2><p id="uniWho"></p></div><button id="uniClose" type="button" aria-label="Fechar Universidade">Fechar</button></header><nav id="uniTabs" class="unTabs" role="tablist" aria-label="Seções" hidden></nav><p id="uniMsg" class="unMsg" aria-live="polite"></p><div id="uniBody"></div></section>
+<button id="uniChip" class="uniChip none" type="button" hidden aria-label="Ver minha carteirinha">🪪 Sem carteirinha</button>
 <div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
@@ -1345,6 +1420,7 @@ function makeInterior(building,floor=1){
  else if(n.includes('igreja'))family='church';
  else if(n.includes('condomínio'))family='condo';
  else if(n.includes('residencial')||n.includes('hotel'))family='home';
+ else if(n.includes('universidade'))family='university';
  else if(n.includes('escola')||n.includes('universidade'))family='school';
  const colors={
   market:['#e9dfcc','#b7aa95','#c6b99f','#d8cbb1','#4c9865','Loja e atendimento'],
@@ -1353,6 +1429,7 @@ function makeInterior(building,floor=1){
   cityhall:['#e8dac2','#b7a487','#c5b59a','#d7c6aa','#b08a5a','Serviços municipais'],
   police:['#cfdde3','#8aa0ac','#35506a','#2d455d','#d9a239','Segurança e justiça'],
   grocery:['#f6eedb','#cdbf9f','#ece6d6','#e2dbc8','#2bb3a3','Compras e ofertas'],
+  university:['#efe6d2','#c9b995','#d8cdb4','#cfc3a8','#7b2d3a','Ensino superior'],
   restaurant:['#f0d8b8','#be9d7b','#b99470','#c9a783','#d2691e','Salão e balcão'],
   cinema:['#484a61','#292d43','#40435c','#494c66','#c06c84','Bilheteria e sala de exibição'],
   library:['#e6dcc7','#b9a98c','#b9aa8d','#cbbc9f','#8b7355','Leitura e consulta'],
@@ -1394,6 +1471,8 @@ function makeInterior(building,floor=1){
   policeZones().forEach(o=>zones.push(o));
  }else if(family==='grocery'){
   marketZones().forEach(o=>zones.push(o));
+ }else if(family==='university'){
+  universityZones().forEach(o=>zones.push(o));
   }else if(family==='restaurant'){
   add('counter',4.6,1.05,3,.85,22,'#74452e','#d59b55','#472c20');add('table',2.2,3.3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   add('table',6,4.1,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');add('table',9,3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
@@ -1515,7 +1594,7 @@ function makeInterior(building,floor=1){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],grocery:[40,24,'market-zip'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],grocery:[40,24,'market-zip'],university:[56,30,'uni-zip'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1547,8 +1626,9 @@ function makeInterior(building,floor=1){
  if(family==='cityhall'){room.floor=floor;room.items=cityHallCollision(floor);room.dividers=CHP[floor].walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit=floor===1?{x:.9,y:12}:{x:-50,y:-50}}
   if(family==='police'){room.items=policeCollision();room.dividers=PDZ.walls.concat(PDZ.cellWalls).map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
   if(family==='grocery'){room.items=marketCollision();room.dividers=MKZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
+  if(family==='university'){room.items=unCollision();room.dividers=UNZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:15}}
   if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
-  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police'||family==='grocery',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
+  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police'||family==='grocery'||family==='university',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
@@ -1558,6 +1638,7 @@ function makeInterior(building,floor=1){
    cityhall:cityHallCrowd(floor),
    police:policeCrowd(),
    grocery:marketCrowd(),
+   university:universityCrowd(),
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
   cinema:[['Nina','Bilheteira',6,2,'staff','#5f496f','#d7ad8d','#292a42'],['Espectador','Cliente',1.5,6.3,'visitor','#5c7fb2','#d4a078','#382d25'],['Espectadora','Cliente',10.2,6.4,'visitor','#b8708c','#e2b69a','#2b252a']],
   library:[['Clara','Bibliotecária',6.2,2,'staff','#7b6549','#d7a780','#32251c'],['Leitor','Visitante',4.3,6.2,'visitor','#6882a1','#c8946b','#32261e'],['Estudante','Visitante',7.8,6.2,'visitor','#72956e','#e0b58f','#2c2520']],
@@ -1574,7 +1655,7 @@ function makeInterior(building,floor=1){
   const sp=family==='hospital'?3.2:1,route=kind==='visitor'?[[x,y],[x+.65*sp,y-.35*sp],[x+.3*sp,y+.35*sp],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:family==='police'?policeLine(name,role):family==='grocery'?mkLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
+   dialogue:family==='police'?policeLine(name,role):family==='grocery'?mkLine(name,role):family==='university'?unLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
@@ -1585,21 +1666,22 @@ function makeInterior(building,floor=1){
    route:route.map(([rx,ry])=>findRoomSpot(room,rx*sx,ry*sy)).filter(Boolean),routeIndex:1,path:[],walkFrame:0});
  }
  if(family==='grocery')marketSetup(room);
+ if(family==='university')unRoutes(room);
  return room;
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'||interior.room.family==='grocery'?{x:1.25,y:13}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'||interior.room.family==='grocery'?{x:1.25,y:13}:interior.room.family==='university'?{x:1.25,y:15}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
- if(interior.room.family==='grocery')marketEnter();else{tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75)}
+ if(interior.room.family==='grocery')marketEnter();else if(interior.room.family==='university')universityEnter();else{tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75)}
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
  if(interior.room.family==='cityhall')cityStartPoll();
  if(interior.room.family==='police')policeStartPoll();
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();if(interior.room&&interior.room.family==='grocery')marketLeave();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();if(interior.room&&interior.room.family==='grocery')marketLeave();if(interior.room&&interior.room.family==='university')universityLeave();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -2702,6 +2784,285 @@ function renderMarketZip(t){
  c.setTransform(1,0,0,1,0,0);
 }
 
+/* ---------- UNIVERSIDADE DE SOROKIBA: campus, portaria, áreas abertas e fechadas, animações e sons ---------- */
+const UNZ={
+ w:56,h:30,
+ rooms:[[0,0,9,30,'Portaria','o'],[9,8,38,14,'Pátio central','p'],[47,8,9,22,'Jardim','j'],[9,0,10,8,'Secretaria','s'],[19,0,10,8,'Salas de aula','a'],[29,0,9,8,'Laboratórios','l'],[38,0,9,8,'Auditório','u'],[47,0,9,8,'Reitoria','r'],
+  [9,22,10,8,'Biblioteca','b'],[19,22,10,8,'Cantina','c'],[29,22,9,8,'Sala de Provas','v'],[38,22,9,8,'Professores','t']],
+ walls:[['v',9,0,12],['v',9,18,30],['v',19,0,8],['v',29,0,8],['v',38,0,8],['v',47,0,8],['v',19,22,30],['v',29,22,30],['v',38,22,30],['v',47,22,30],
+  ['h',8,9,13],['h',8,15,23],['h',8,25,32],['h',8,34,41],['h',8,43,50],['h',8,52,56],
+  ['h',22,9,13],['h',22,15,23],['h',22,25,32],['h',22,34,41],['h',22,43,47]],
+ // portas: eixo, posição, de, até, placa, zona (a zona decide se a porta abre)
+ doors:[['h',8,13,15,'SECRETARIA','secretaria'],['h',8,23,25,'SALAS DE AULA','salas'],['h',8,32,34,'LABORATÓRIOS','labs'],['h',8,41,43,'AUDITÓRIO','auditorio'],['h',8,50,52,'REITORIA','reitoria'],
+  ['h',22,13,15,'BIBLIOTECA','biblioteca'],['h',22,23,25,'CANTINA','cantina'],['h',22,32,34,'SALA DE PROVAS','provas'],['h',22,41,43,'PROFESSORES','professores']],
+ gate:[12,18],entrance:[13,17],
+ dec:[['uguard',1.1,8.6],['urecep',1.1,19.6],['uprinter',5.6,20.4],['ubench',6.2,2.8],['ubench',6.2,26.2],['ubench',1.2,4.4],['ubench',1.2,24.6],['uturnstile',8,12.2],['uturnstile',8,14.2],['uturnstile',8,16.2],['plant',1,1],['plant',7.4,8.8],['plant',7.4,20.6],
+  ['ufountain',24,12.2],['ubench',16.4,9.2],['ubench',27,9.2],['ubench',35.2,9.2],['ubench',44,9.2],['ubench',16.4,20.2],['ubench',27,20.2],['ubench',35.2,20.2],['ubench',44,20.2],
+  ['utree',11,11],['utree',11,17],['utree',45,11],['utree',45,17],['utree',19.4,15],['utree',32,15],['uflag',20,9.8],['uflag',29.6,9.8],['ulamp',17,14.5],['ulamp',36,14.5],['uboard',38.2,8.9],['umap',11.2,8.9],
+  ['ucounter',10.6,2.8],['ucabinet',9.4,.3],['ucabinet',10.6,.3],['ucabinet',11.8,.3],['ucabinet',17.4,.3],
+  ['utdesk',22.6,1.5],['udesk',20,4.6],['udesk',21.5,4.6],['udesk',25.8,4.6],['udesk',27.2,4.6],['udesk',20,6.4],['udesk',21.5,6.4],['udesk',25.8,6.4],['udesk',27.2,6.4],
+  ['ulab',30,2.4],['ulab',34,2.4],['ucomp',29.8,5.8],['ucomp',35,5.8],['uprinter3d',36.6,5.8],
+  ['ustage',40.2,.3],['useats',38.4,4.2],['useats',43.4,4.2],['useats',38.4,5.9],['useats',43.4,5.9],
+  ['ubigdesk',49.8,2.8],['ucabinet',47.6,.3],['ucabinet',54.2,.3],['cflag',48,1.6],['cflag',54,1.6],
+  ['ushelf',9.2,23],['ushelf',9.2,28.6],['ushelf',14.4,28.6],['utable',10.8,25.4],['utable',15.2,25.4],
+  ['ucantcounter',20.4,24.2],['utable',20.6,27.4],['utable',23.4,27.4],['utable',26.2,27.4],['plant',27.6,22.6],
+  ['utdesk',34.6,23.4],['uexamdesk',30.4,26],['uexamdesk',32.8,26],['uexamdesk',35.2,26],['uexamdesk',30.4,28],['uexamdesk',32.8,28],['uexamdesk',35.2,28],
+  ['hsofa',39.4,26.2],['hsofa',43.6,26.2],['ucoffee',45.4,22.6],['ucabinet',39,22.2],['ucabinet',40.2,22.2],['htable',42,27.4],
+  ['upond',50,18],['utree',50,11],['utree',54,13],['utree',53.6,25],['utree',49,27],['ubench',50,14],['ubench',51,24],['ustatue',51.8,10.8],['ubed',48,21],['ubed',54,21]]
+};
+UNZ.grid=Array.from({length:UNZ.h},(_,y)=>Array.from({length:UNZ.w},(_,x)=>{for(const [rx,ry,rw,rh,,code]of [...UNZ.rooms.slice(3),...UNZ.rooms.slice(0,3)])if(x>=rx&&x<rx+rw&&y>=ry&&y<ry+rh)return code;return'p'}));
+const UN_FLOOR={o:['#e6dfd0','#dcd4c2'],p:['#d8cdb4','#cfc3a8'],j:['#86b86b','#7cae62'],s:['#b58b5a','#a9804f'],a:['#c7a26b','#bd9860'],l:['#dfe7ec','#d3dde3'],u:['#6d2a35','#63242f'],r:['#6b4528','#5f3d23'],b:['#4f7a58','#486f50'],c:['#f2e2b0','#eadaa0'],v:['#b8bcc4','#adb1ba'],t:['#4a5f86','#42557a']};
+const UN_ROLE_SITE={'Segurança':'seguranca','Recepcionista':'recepcao','Secretária':'secretaria','Professor':'aula','Cantineira':'cantina','Fiscal de prova':'provas'};
+const UN_LINES={
+ 'Segurança':'Bom dia! Sou o Sargento Cardoso. Sem carteirinha ninguém passa das catracas. Fale com a recepção e depois confira as regras comigo.',
+ 'Recepcionista':'Bem-vindo à Universidade de Sorokiba! Aqui você retira a carteirinha de aluno, professor ou visitante.',
+ 'Secretária':'Secretaria da Universidade. Aqui você consulta cursos, notas de corte, matrícula e histórico.',
+ 'Professor':'Sou o professor Almeida. As aulas têm leitura e uma prova curta. Ao final do curso, vem o diploma!',
+ 'Técnico':'Os laboratórios são de Computação e Engenharia Civil. É preciso ser aluno desses cursos ou professor para entrar.',
+ 'Reitora':'Sou a reitora Valéria. A Reitoria é reservada ao corpo docente. Cuidem da universidade!',
+ 'Bibliotecário':'A biblioteca é aberta a quem tem carteirinha de aluno, professor ou visitante com esse motivo. Silêncio, por favor.',
+ 'Cantineira':'Cantina da Tia Rosa! Aluno paga 20% a menos, professor 10%. É para quem tem carteirinha com acesso.',
+ 'Fiscal de prova':'Vestibular: só com carteirinha de visitante com motivo "vestibular". Silêncio e boa prova!',
+ 'Professora':'Esta é a Sala dos Professores. Aqui só professores com carteirinha entram. Aceita um café?',
+ 'Aluno':'Estou no 2º semestre! Quando termina a prova da aula, a gente corre para a cantina.',
+ 'Visitante':'Vim fazer o vestibular. Peguei a carteirinha de visitante na recepção!'
+};
+const unLine=(name,role)=>UN_LINES[role]||('Olá! Sou '+name+', da Universidade.');
+function universityCrowd(){return[
+ ['Cardoso','Segurança',3.2,10.4,'staff','#1f2a44','#b77a55','#1f1f26'],
+ ['Cláudia','Recepcionista',3.4,21.4,'staff','#7b2d3a','#dfb28b','#2a1f1c'],
+ ['Helena','Secretária',14,1.8,'staff','#7b2d3a','#d2a17d','#3a2a22'],
+ ['Almeida','Professor',24.6,2.8,'staff','#4a5f86','#bb865f','#30271e'],
+ ['Marcos','Técnico',35.2,4,'staff','#eef2f4','#c99572','#222a33'],
+ ['Valéria','Reitora',52.2,2,'staff','#16294a','#d2a17d','#2b2230'],
+ ['Leo','Bibliotecário',17,25,'staff','#4f7a58','#c28f6a','#23232b'],
+ ['Rosa','Cantineira',23.6,23.2,'staff','#f4efe3','#c99572','#3a2a22'],
+ ['Paulo','Fiscal de prova',36.2,24.4,'staff','#1f2a44','#bb865f','#2a2420'],
+ ['Beatriz','Professora',44.2,24.6,'staff','#8c6a3a','#d7a781','#3a2a22'],
+ ['Estudante','Aluno',14,13,'visitor','#65a19b','#d7a981','#2f2924'],
+ ['Estudante','Aluno',34,14,'visitor','#c27b9a','#a87857','#292421'],
+ ['Estudante','Aluno',30,19,'visitor','#d9a441','#d69b72','#422a21'],
+ ['Visitante','Visitante',42,15,'visitor','#2ea36b','#e1b991','#2e2a27']]}
+const UN_STAFF={Cardoso:{hat:'#1f2a44',pn:'#1a2236'},Cláudia:{f:1,pn:'#3a2a3a'},Helena:{f:1,gl:1,pn:'#3a2a3a'},Almeida:{gl:1,pn:'#3a3f4a'},Marcos:{gl:1,pn:'#2a3a4a'},Valéria:{f:1,gl:1,pn:'#101c33'},Leo:{gl:1,pn:'#3a3f4a'},Rosa:{f:1,hat:'#f7f2e8',pn:'#d8d2c4'},Paulo:{pn:'#1a2236'},Beatriz:{f:1,st:2,pn:'#3a3f4a'},Estudante:{pn:'#3a3f4a'},Visitante:{pn:'#3a3f4a'}};
+function unRoutes(room){
+ const R={Estudante:null};let n=0;const lists=[[[12,13],[21,13],[21,18],[12,18]],[[33,12],[41,12],[41,17],[33,17]],[[29,19],[37,19],[37,10.6],[29,10.6]]];
+ room.people.forEach(p=>{if(p.name==='Estudante'){const r=lists[n++%lists.length];p.route=r.map(([x,y])=>findRoomSpot(room,x,y)).filter(Boolean);p.routeIndex=1}
+  if(p.name==='Visitante'){const r=[[42,15],[44,10.4],[40,19],[36,16]];p.route=r.map(([x,y])=>findRoomSpot(room,x,y)).filter(Boolean);p.routeIndex=1}});
+}
+/* --- estado, acesso (portas abertas ou trancadas), sons e relógio --- */
+const unS={doors:{},gate:0,gateOpen:false,lastBump:{},nextBell:0,nextApplause:0,fount:null,sig:'',gatePass:0,lastStep:0};
+const unNow=()=>performance.now()/1000;
+const unOk=()=>!!AC&&AC.state==='running'&&!mute;
+const unSfx={
+ gateOk(){if(!unOk())return;burst(2200,.04,.07);tone(880,.09,'square',.04);setTimeout(()=>tone(1320,.14,'square',.04),110)},
+ gateDeny(){if(!unOk())return;tone(180,.18,'sawtooth',.05);setTimeout(()=>tone(150,.22,'sawtooth',.05),140)},
+ lock(){if(!unOk())return;burst(500,.1,.08);tone(140,.12,'square',.04);setTimeout(()=>tone(520,.07,'square',.03),120)},
+ open(){if(!unOk())return;burst(700,.35,.04);tone(990,.07,'square',.03)},
+ print(){if(!unOk())return;for(let i=0;i<9;i++)setTimeout(()=>burst(1800+Math.random()*900,.05,.05),i*70);setTimeout(()=>{tone(1568,.5,'sine',.07);setTimeout(()=>tone(2093,.6,'sine',.05),90)},760)},
+ bell(){if(!unOk())return;[523,659,784].forEach((f,i)=>setTimeout(()=>{tone(f,1.1,'sine',.07);tone(f*2,.6,'sine',.025)},i*620))},
+ chalk(){if(!unOk())return;for(let i=0;i<6;i++)setTimeout(()=>burst(4200+Math.random()*1500,.05,.04),i*90)},
+ examStart(){if(!unOk())return;tone(196,1.3,'sine',.09);tone(392,1.0,'sine',.04);setTimeout(()=>{tone(784,.5,'sine',.06);setTimeout(()=>tone(1046,.7,'sine',.05),150)},700)},
+ examEnd(){if(!unOk())return;[784,659,523,392].forEach((f,i)=>setTimeout(()=>tone(f,.5,'sine',.06),i*200))},
+ quizOk(){if(!unOk())return;tone(784,.12,'sine',.07);setTimeout(()=>tone(1046,.12,'sine',.07),110);setTimeout(()=>tone(1318,.3,'sine',.06),230)},
+ quizFail(){if(!unOk())return;tone(330,.18,'triangle',.06);setTimeout(()=>tone(247,.3,'triangle',.06),170)},
+ diploma(){if(!unOk())return;[523,659,784,1046].forEach((f,i)=>setTimeout(()=>{tone(f,.5,'triangle',.07);tone(f*2,.3,'sine',.03)},i*180));setTimeout(()=>unSfx.applause(),800)},
+ applause(){if(!unOk())return;for(let i=0;i<22;i++)setTimeout(()=>burst(1800+Math.random()*3000,.06,.04),i*55+Math.random()*30)},
+ cantina(){if(!unOk())return;for(let i=0;i<4;i++)setTimeout(()=>{burst(2600,.05,.06);tone(1500-i*120,.05,'square',.02)},i*90);setTimeout(()=>burst(5000,.5,.035),380)},
+ coffee(){if(!unOk())return;burst(900,.9,.04);setTimeout(()=>tone(1760,.2,'sine',.04),950)},
+ pass(){if(!unOk())return;tone(740,.1,'sine',.06);setTimeout(()=>tone(988,.2,'sine',.06),100)},
+ fountOn(level){ // água da fonte, mais alta perto dela
+  if(!AC||AC.state!=='running')return;
+  if(!unS.fount){const len=AC.sampleRate*2,b=AC.createBuffer(1,len,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;const s=AC.createBufferSource();s.buffer=b;s.loop=true;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1500;f.Q.value=.6;const g=AC.createGain();g.gain.value=0;s.connect(f);f.connect(g);g.connect(MG);s.start();unS.fount=g}
+  unS.fount.gain.setTargetAtTime(mute?0:level,AC.currentTime,.3)},
+ fountOff(){if(unS.fount&&AC)unS.fount.gain.setTargetAtTime(0,AC.currentTime,.15)}
+};
+const unRole=()=>uniState&&uniState.pass&&uniState.pass.valid?uniState.pass.role:null;
+const unOkZone=z=>!!(uniState&&uniState.access&&uniState.access[z]&&uniState.access[z].ok);
+const unWhy=z=>(uniState&&uniState.access&&uniState.access[z]&&uniState.access[z].why)||'Retire a carteirinha na recepção.';
+// Portas trancadas e catracas viram paredes na colisão; abrem quando a carteirinha permite.
+function uniApplyAccess(room){
+ if(!room)return;
+ const sig=UNZ.doors.map(d=>unOkZone(d[5])?1:0).join('')+(unOkZone('patio')?1:0);
+ if(sig===unS.sig&&room.dividers&&room.dividers.length)return;
+ unS.sig=sig;const blockers=[];
+ UNZ.doors.forEach(([axis,pos,a,b,,zone])=>{if(!unOkZone(zone))blockers.push({axis,pos,from:a,to:b})});
+ if(!unOkZone('patio'))blockers.push({axis:'v',pos:9,from:UNZ.gate[0],to:UNZ.gate[1]});
+ room.dividers=UNZ.walls.concat(UNZ.cellWalls||[]).map(([axis,pos,from,to])=>({axis,pos,from,to})).concat(blockers);
+}
+function universityEnter(){const n=unNow();unS.doors={};unS.gate=0;unS.gateOpen=false;unS.lastBump={};unS.sig='';unS.nextBell=n+120+R()*60;unS.nextApplause=n+90+R()*80;unSfx.pass();universityStartPoll();uniChipUpdate()}
+function universityLeave(){unSfx.fountOff();closeUniPanel();universityStopPoll();$('uniChip').hidden=true}
+function universityTick(t){
+ const n=unNow(),room=interior.room;uniApplyAccess(room);
+ // catraca: abre o braço e toca o som quando você chega com carteirinha; nega se não tiver
+ const dg=Math.hypot(ipx-7.4,ipy-15),ok=unOkZone('patio');
+ if(dg<1.8&&!unS.gateOpen){unS.gateOpen=true;(ok?unSfx.gateOk:unSfx.gateDeny)()}else if(dg>2.6)unS.gateOpen=false;
+ unS.gate+=((dg<1.8&&ok?1:0)-unS.gate)*.18;
+ // portas: abrem para quem tem acesso; quem encosta numa trancada ouve e lê o motivo
+ UNZ.doors.forEach(d=>{const zone=d[5],m=(d[2]+d[3])/2,near=Math.hypot(ipx-m,ipy-(d[1]+(ipy>d[1]?.9:-.9)))<2.2,okz=unOkZone(zone),st=unS.doors[zone]||(unS.doors[zone]={o:0,was:false});
+  st.o+=((okz&&near?1:0)-st.o)*.15;
+  if(okz&&near&&!st.was){st.was=true;unSfx.open()}else if(!near)st.was=false;
+  if(!okz&&near&&Math.abs(ipy-d[1])<1.4&&n-(unS.lastBump[zone]||0)>5){unS.lastBump[zone]=n;unSfx.lock();toast('🔒 '+ZONES_UN[zone]+': '+unWhy(zone))}});
+ // sino da universidade e palmas distantes do auditório
+ if(n>unS.nextBell){unS.nextBell=n+170+R()*80;unSfx.bell();toast('🔔 Sino da universidade: troca de aula!')}
+ if(n>unS.nextApplause){unS.nextApplause=n+140+R()*100;unSfx.applause();toast('👏 Terminou a palestra no auditório.')}
+ unSfx.fountOn(Math.max(0,1-Math.hypot(ipx-26,ipy-14.2)/15)*.035);
+ if(pf>0&&n-unS.lastStep>.36){unS.lastStep=n;burst(ipx<9?3000:ipy<8||ipy>22?3000:1500,.03,ipx<9||ipy<8||ipy>22?.035:.02)}
+}
+const ZONES_UN={secretaria:'Secretaria',salas:'Salas de aula',labs:'Laboratórios',auditorio:'Auditório',reitoria:'Reitoria',biblioteca:'Biblioteca',cantina:'Cantina',provas:'Sala de Provas',professores:'Sala dos Professores'};
+/* --- móveis --- */
+const uB=(ox,oy,w,h,z0,z1,a,b)=>[ox,oy,w,h,z0,z1,a,b];
+function unBox(s,p,f){return{s,p,f}}
+Object.assign(HZ_SEAT,{ubench:{n:2,label:'Banco'}});
+Object.assign(DEC,{
+ uguard:unBox([3,1.4],[uB(.05,.1,2.9,1.2,0,28,'#1f2a44','#2f4066'),uB(.05,.1,2.9,1.2,28,31,'#c9a227','#f0d36a')],
+  (c,x,y,t)=>{for(let k=0;k<3;k++){const q=P(x+.35+k*.9,y+1.42,50);poly(c,[P(x+.2+k*.9,y+1.42,64),P(x+.9+k*.9,y+1.42,64),P(x+.9+k*.9,y+1.42,36),P(x+.2+k*.9,y+1.42,36)],'#06141a');c.strokeStyle=k%2?'#c9a227':'#42f5d4';c.lineWidth=1.2;c.beginPath();for(let i=0;i<=5;i++){const r=P(x+.24+k*.9+i*.12,y+1.42,50+Math.sin(t*3+i+k)*5);i?c.lineTo(r[0],r[1]):c.moveTo(r[0],r[1])}c.stroke()}
+   const cam=P(x+1.5,y+.7,82);c.save();c.translate(cam[0],cam[1]);c.rotate(Math.sin(t*.8)*.5);c.fillStyle='#222';c.fillRect(-6,-3,12,6);c.fillStyle=((t*2)|0)%2?'#ff4d5e':'#5a1f27';c.fillRect(4,-1,2,2);c.restore()}),
+ urecep:unBox([4,1.4],[uB(.05,.1,3.9,1.2,0,26,'#7b2d3a','#9a3c4c'),uB(0,.05,4,1.3,26,29,'#c9a227','#f0d36a')],
+  (c,x,y,t)=>{const s=P(x+2,y+1.42,52);c.fillStyle='#16294a';c.fillRect(s[0]-34,s[1]-9,68,15);c.fillStyle='#ffe9b0';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('RECEPÇÃO',s[0],s[1]+2);const q=P(x+3.3,y+1.42,18);c.fillStyle=((t*1.5)|0)%2?'#42f5d4':'#1f6f63';c.fillRect(q[0]-3,q[1]-2,6,3)}),
+ uprinter:unBox([1,1],[uB(.15,.15,.7,.7,0,26,'#3a4252','#566074'),uB(.1,.1,.8,.5,26,34,'#222a37','#2f3a4d')],
+  (c,x,y,t)=>{const ph=(t*.5)%1,a=P(x+.3,y+.5,34+ph*10),b=P(x+.7,y+.5,34+ph*10);c.strokeStyle='#fff';c.lineWidth=5;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();const l=P(x+.2,y+.9,18);c.fillStyle=((t*3)|0)%2?'#42f5d4':'#ffb703';c.fillRect(l[0],l[1],3,3)}),
+ ubench:unBox([2,1],[uB(.1,.2,1.8,.6,0,12,'#6b4528','#a0713f'),uB(.1,.15,1.8,.1,12,30,'#6b4528','#a0713f')]),
+ uturnstile:unBox([1.4,1.6],[uB(.55,.1,.3,1.4,0,34,'#8c96a0','#c5ced8')],
+  (c,x,y,t)=>{const ok=unOkZone('patio'),led=P(x+.7,y+.3,40);c.fillStyle=ok?'#5cf0a8':'#ff4d5e';c.beginPath();c.arc(led[0],led[1],3,0,7);c.fill();
+   const base=P(x+.7,y+.8,26),ang=unS.gate*1.4+t*0;c.strokeStyle='#dfe6ec';c.lineWidth=3;for(let k=0;k<3;k++){const a=ang+k*Math.PI*2/3;c.beginPath();c.moveTo(base[0],base[1]);c.lineTo(base[0]+Math.cos(a)*16,base[1]+Math.sin(a)*8-Math.abs(Math.sin(a))*4);c.stroke()}
+   c.fillStyle=ok?'rgba(92,240,168,.9)':'rgba(255,77,94,.9)';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText(ok?'→':'✕',led[0],led[1]-6)}),
+ ufountain:unBox([4,4],[uB(.1,.1,3.8,3.8,0,10,'#9aa3ad','#c5ccd4'),uB(.5,.5,3,3,10,13,'#4aa0d0','#7fd0f2'),uB(1.6,1.6,.8,.8,13,34,'#9aa3ad','#c5ccd4')],
+  (c,x,y,t)=>{const q=P(x+2,y+2,38);for(let i=0;i<9;i++){const ph=((t*.9+i/9)%1),a=i/9*Math.PI*2,h=ph*(1-ph)*70,r=ph*34;c.fillStyle='rgba(190,235,255,'+(.8-ph*.5)+')';c.beginPath();c.arc(q[0]+Math.cos(a)*r*.7,q[1]-h+Math.sin(a)*r*.35+30*ph,2.1,0,7);c.fill()}
+   const p=P(x+2,y+2,13);c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;for(let k=0;k<3;k++){const rr=((t*.5+k/3)%1);c.globalAlpha=1-rr;c.beginPath();c.ellipse(p[0],p[1],14+rr*44,7+rr*22,0,0,7);c.stroke()}c.globalAlpha=1}),
+ utree:unBox([1.6,1.6],[uB(.65,.65,.3,.3,0,26,'#6b4528','#8a5a35')],
+  (c,x,y,t)=>{const q=P(x+.8,y+.8,52),sw=Math.sin(t*1.3+x)*1.6;for(const [dx,dy,r,col] of [[-9,6,15,'#2f7d3a'],[9,5,15,'#378a44'],[0,-6,18,'#3f9a4b'],[-4,-16,12,'#49a856']]){c.fillStyle=col;c.beginPath();c.ellipse(q[0]+dx+sw*(dy<0?1.6:1),q[1]+dy,r,r*.85,0,0,7);c.fill()}}),
+ uflag:unBox([1,1],[uB(.45,.45,.1,.1,0,92,'#9aa3ad','#c5ccd4')],
+  (c,x,y,t)=>{const o=P(x+.5,y+.5,90),col=['#7b2d3a','#c9a227','#16294a'];for(let i=0;i<10;i++){const k=i/10,wave=Math.sin(t*4+i*.6)*3*k;c.fillStyle=col[(i/3.4)|0];c.fillRect(o[0]+i*3.4,o[1]-8+wave,3.6,15)}}),
+ ulamp:unBox([1,1],[uB(.42,.42,.16,.16,0,64,'#2a2f3a','#3a4252')],(c,x,y,t)=>{const q=P(x+.5,y+.5,70);const g=c.createRadialGradient(q[0],q[1],1,q[0],q[1],34);g.addColorStop(0,'rgba(255,236,170,.5)');g.addColorStop(1,'rgba(255,236,170,0)');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1],34,0,7);c.fill();c.fillStyle='#fff3c0';c.beginPath();c.arc(q[0],q[1],4,0,7);c.fill()}),
+ uboard:unBox([2,1],[uB(.1,.4,.1,.3,0,40,'#6b4528','#8a5a35'),uB(1.8,.4,.1,.3,0,40,'#6b4528','#8a5a35'),uB(.05,.45,1.9,.2,40,70,'#6b4528','#d8c79c')],
+  (c,x,y,t)=>{const s=P(x+1,y+.7,56);c.fillStyle='#fffaf0';c.fillRect(s[0]-30,s[1]-12,60,22);c.fillStyle='#7b2d3a';c.font='bold 6px sans-serif';c.textAlign='center';c.fillText('AVISOS',s[0],s[1]-4);c.fillStyle='#333';c.font='5px sans-serif';c.fillText('Vestibular aberto',s[0],s[1]+3);c.fillText('Matrículas na Secretaria',s[0],s[1]+9)}),
+ umap:unBox([1,1],[uB(.1,.4,.1,.3,0,52,'#6b4528','#8a5a35'),uB(.8,.4,.1,.3,0,52,'#6b4528','#8a5a35'),uB(.05,.45,.9,.2,52,72,'#2f4a68','#cfe3ea')],(c,x,y,t)=>{const s=P(x+.5,y+.7,62);c.fillStyle='#f4efe3';c.fillRect(s[0]-12,s[1]-8,24,16);c.fillStyle='#7b2d3a';for(let i=0;i<5;i++)c.fillRect(s[0]-10+i*4.4,s[1]-5+(i%2)*5,3,3);c.fillStyle='#e63946';const pulse=1.5+Math.sin(t*4);c.beginPath();c.arc(s[0]+3,s[1]+3,pulse,0,7);c.fill()}),
+ ucounter:unBox([6,1.2],[uB(.05,.1,5.9,1,0,24,'#6b4528','#8a5a35'),uB(0,.05,6,1.1,24,27,'#c9a227','#f0d36a')]),
+ ucabinet:unBox([1,1],[uB(.1,.1,.8,.8,0,58,'#6f7782','#98a2ae')],(c,x,y,t)=>{c.strokeStyle='#4a5260';c.lineWidth=1;for(let k=1;k<4;k++){const a=P(x+.12,y+.91,k*14),b=P(x+.88,y+.91,k*14);c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke()}}),
+ utdesk:unBox([2.4,1],[uB(.05,.1,2.3,.8,0,22,'#6b4528','#8a5a35'),uB(.05,.1,2.3,.8,22,25,'#3a2a1c','#5a4028')]),
+ udesk:unBox([1.4,1],[uB(.05,.15,1.3,.7,0,13,'#8a6a40','#c7a26b'),uB(.2,.35,.5,.3,13,15,'#fffaf0','#fffaf0')]),
+ ulab:unBox([3,1.2],[uB(.05,.1,2.9,1,0,22,'#c8d3da','#eef3f6')],
+  (c,x,y,t)=>{for(let k=0;k<3;k++){const q=P(x+.6+k*.9,y+.6,26),col=['#7ff0e1','#ffd166','#c77dff'][k];c.fillStyle='rgba(220,240,250,.7)';c.fillRect(q[0]-4,q[1]-12,8,12);c.fillStyle=col;c.fillRect(q[0]-3,q[1]-7,6,6);for(let b=0;b<2;b++){const ph=(t*.9+b*.5+k*.2)%1;c.fillStyle='rgba(255,255,255,'+(1-ph)+')';c.beginPath();c.arc(q[0]-1+b*2,q[1]-7-ph*10,1.4,0,7);c.fill()}}}),
+ ucomp:unBox([1.2,1],[uB(.1,.2,1,.7,0,14,'#6b7785','#8f9aa8'),uB(.2,.45,.8,.1,14,40,'#10192b','#10192b')],
+  (c,x,y,t)=>{const q=P(x+.6,y+.56,28);c.fillStyle='#06141a';c.fillRect(q[0]-12,q[1]-9,24,14);c.fillStyle='#42f5d4';for(let i=0;i<4;i++){const w=6+((Math.sin(t*2+i*1.7)+1)*5);c.fillRect(q[0]-10,q[1]-7+i*3,w,1.6)}}),
+ uprinter3d:unBox([1,1],[uB(.1,.1,.8,.8,0,40,'#2f4a68','#4a6a90')],(c,x,y,t)=>{const q=P(x+.5,y+.9,24),hx=Math.sin(t*2)*8;c.strokeStyle='#ffb703';c.lineWidth=2;c.beginPath();c.moveTo(q[0]-10,q[1]-16);c.lineTo(q[0]+10,q[1]-16);c.stroke();c.fillStyle='#ff6b35';c.fillRect(q[0]+hx-2,q[1]-20,5,6);c.fillStyle='#7ff0e1';c.fillRect(q[0]-5,q[1]-6,10,5)}),
+ ustage:unBox([5,1.7],[uB(.05,.05,4.9,1.6,0,10,'#6b4528','#9a6a3a')],(c,x,y,t)=>{const beam=P(x+2.5,y+.8,90);const g=c.createLinearGradient(beam[0],beam[1],beam[0],beam[1]+60);g.addColorStop(0,'rgba(255,240,180,.5)');g.addColorStop(1,'rgba(255,240,180,0)');c.fillStyle=g;c.beginPath();c.moveTo(beam[0]-8,beam[1]);c.lineTo(beam[0]+8,beam[1]);c.lineTo(beam[0]+44,beam[1]+60);c.lineTo(beam[0]-44,beam[1]+60);c.closePath();c.fill()}),
+ useats:unBox([2.6,1.2],[uB(.05,.1,2.5,.5,0,10,'#4a1d27','#7b2d3a'),uB(.05,.1,2.5,.2,10,22,'#4a1d27','#7b2d3a')]),
+ ubigdesk:unBox([4,1.4],[uB(.05,.1,3.9,1.2,0,26,'#4a3220','#6a4a30'),uB(0,.05,4,1.3,26,29,'#16294a','#2a4565'),uB(1.5,.9,.9,.2,29,37,'#c9a227','#f0d36a')]),
+ ushelf:unBox([4,1],[uB(.05,.1,3.9,.8,0,70,'#6b4528','#8a5a35')],
+  (c,x,y,t)=>{for(let L=0;L<4;L++)for(let i=0;i<14;i++){const h=9+Math.floor(mkH(L*14+i+x)*5),xa=x+.15+i*.27,col=['#7b2d3a','#2f6b8a','#c9a227','#2f7d3a','#6a4a30','#8a5a9a'][Math.floor(mkH(L*7+i*3+x)*6)];poly(c,[P(xa,y+.91,6+L*16+h),P(xa+.22,y+.91,6+L*16+h),P(xa+.22,y+.91,6+L*16),P(xa,y+.91,6+L*16)],col)}
+   for(let k=0;k<3;k++){const ph=(t*.15+k*.37)%1,q=P(x+.5+k*1.4,y+.5,20+ph*50);c.fillStyle='rgba(255,236,170,'+(.35*(1-ph))+')';c.fillRect(q[0],q[1],1.6,1.6)}}),
+ utable:unBox([2,1.2],[uB(.1,.1,1.8,1,0,13,'#8a6a40','#c7a26b'),uB(.35,.25,.5,.6,13,15,'#fffaf0','#fffaf0')]),
+ ucantcounter:unBox([6,1.3],[uB(.05,.1,5.9,1.1,0,22,'#f4efe3','#ffffff'),uB(0,.05,6,1.2,22,26,'#7b2d3a','#9a3c4c')],
+  (c,x,y,t)=>{for(let i=0;i<5;i++){const q=P(x+.5+i*1.1,y+.55,30);c.fillStyle=['#d9a14a','#e63946','#ffd166','#7ec850','#f4a261'][i];c.beginPath();c.ellipse(q[0],q[1],9,4.4,0,0,7);c.fill();for(let s=0;s<2;s++){const ph=(t*.6+i*.17+s*.5)%1;c.fillStyle='rgba(255,255,255,'+(.5*(1-ph))+')';c.beginPath();c.arc(q[0]-2+s*4,q[1]-6-ph*20,2+ph*3,0,7);c.fill()}}}),
+ uexamdesk:unBox([1.2,.9],[uB(.05,.1,1.1,.7,0,13,'#8c929c','#c5cbd4'),uB(.2,.25,.7,.4,13,14.5,'#fffaf0','#fffaf0')]),
+ ucoffee:unBox([1,1],[uB(.15,.15,.7,.7,0,40,'#3a4252','#566074')],(c,x,y,t)=>{const q=P(x+.5,y+.86,24);c.fillStyle=((t*1.2)|0)%2?'#ff4d5e':'#6a2a30';c.fillRect(q[0]-8,q[1]-4,3,3);c.fillStyle='rgba(255,255,255,.45)';const ph=(t*.7)%1;c.beginPath();c.arc(q[0]+4,q[1]-12-ph*18,2+ph*2,0,7);c.fill()}),
+ upond:unBox([4,3],[uB(.1,.1,3.8,2.8,0,5,'#7b8a96','#a8b8c4'),uB(.35,.35,3.3,2.3,5,7,'#4aa0d0','#6bc0e8')],
+  (c,x,y,t)=>{for(let k=0;k<2;k++){const ph=t*.35+k*3,q=P(x+2+Math.cos(ph)*1.1,y+1.5+Math.sin(ph)*.7,10);c.fillStyle='#fff';c.beginPath();c.ellipse(q[0],q[1]-3,5,3,0,0,7);c.fill();c.fillStyle='#ffb703';c.fillRect(q[0]+(Math.sin(ph)>0?4:-6),q[1]-4,3,1.6)}
+   const p=P(x+2,y+1.5,7);c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=1;const rr=(t*.4)%1;c.globalAlpha=1-rr;c.beginPath();c.ellipse(p[0],p[1],10+rr*36,5+rr*18,0,0,7);c.stroke();c.globalAlpha=1}),
+ ustatue:unBox([1,1],[uB(.2,.2,.6,.6,0,14,'#9aa3ad','#c5ccd4'),uB(.35,.35,.3,.3,14,54,'#c9a227','#f0d36a')]),
+ ubed:unBox([2.4,1.2],[uB(.05,.1,2.3,1,0,6,'#6b4528','#7a5030')],(c,x,y,t)=>{for(let i=0;i<9;i++){const q=P(x+.25+i*.24,y+.35+(i%2)*.4,10+(i%3)*2);c.fillStyle=['#ef476f','#ffd166','#c77dff','#ffffff','#ff9f1c'][i%5];c.beginPath();c.arc(q[0],q[1],2.6+Math.sin(t*2+i)*.3,0,7);c.fill()}})
+});
+function unCollision(){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ UNZ.dec.forEach(([name,x,y])=>{if(name==='uturnstile'||name==='ulamp'||name==='uflag'||name==='ubed')return;const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ return solids;
+}
+function universityZones(){
+ const zs=[],go=(label,x,y,fn,desc='')=>zs.push({label,x,y,r:1,desc,action:fn});
+ go('Segurança',3.8,11.8,()=>openUniPanel('seguranca'));
+ go('Recepção',3.4,18.4,()=>openUniPanel('recepcao'));
+ go('Impressora de carteirinha',5.9,19,()=>openUniPanel('recepcao','pass'));
+ go('Quadro de regras',5.8,1.9,()=>openUniPanel('seguranca','rules'));
+ go('Catracas',6.9,15,()=>{const ok=unOkZone('patio');toast(ok?'🪪 Carteirinha lida: acesso liberado ao campus.':'🔒 Catracas travadas: '+unWhy('patio'));(ok?unSfx.gateOk:unSfx.gateDeny)()});
+ go('Balcão da Secretaria',14,4.4,()=>openUniPanel('secretaria'));
+ go('Lousa e mesa do professor',24.4,3.6,()=>openUniPanel('aula'));
+ go('Bancada do laboratório',32.8,4.6,()=>toast('🔬 Laboratório: bancadas, computadores e impressora 3D. Aqui só entram alunos de Computação e Engenharia, e professores.'),'Laboratório de Computação e Engenharia.');
+ go('Palco do auditório',42.8,3.2,()=>{unSfx.applause();toast('🎤 Auditório: palestras e eventos abertos a visitantes com esse motivo.')});
+ go('Gabinete da Reitoria',51.6,5,()=>toast('🏛️ Reitoria: sala reservada ao corpo docente.'));
+ go('Estante de livros',13.9,26,()=>{const f=['As bibliotecas medievais acorrentavam os livros às estantes para evitar roubos.','O código binário usa só 0 e 1: oito bits formam um byte.','Planejar começa pelo objetivo: sem saber aonde ir, qualquer caminho serve.','O concreto resiste bem à compressão; o aço dá a resistência à tração.'];toast('📚 Você aprendeu: '+f[(R()*f.length)|0])});
+ go('Balcão da Cantina',23.6,26.2,()=>{unSfx.cantina();openUniPanel('cantina')});
+ go('Mesa do fiscal',35.8,25,()=>openUniPanel('provas'));
+ go('Cafeteira dos professores',44.6,24.2,()=>{unSfx.coffee();toast('☕ Café fresquinho da sala dos professores.')});
+ go('Fonte',26,16.6,()=>toast('⛲ A fonte do campus: ponto de encontro dos alunos.'),'Fonte do campus.');
+ go('Quadro de avisos',39.2,10.6,()=>openUniPanel('avisos'));
+ go('Mapa do campus',12,10.6,()=>toast('🗺️ Portaria (oeste), Pátio (centro), salas e laboratórios (norte), biblioteca, cantina e provas (sul), jardim (leste).'));
+ go('Lagoa do jardim',50,20.6,()=>toast('🦆 A lagoa do jardim: patos e silêncio.'));
+ UNZ.dec.forEach(([name,x,y])=>{const cfg=HZ_SEAT[name];if(cfg){const sz=DEC[name].s;for(let k=0;k<cfg.n;k++){const sx=x+(k+.5)*sz[0]/cfg.n,sy=y+sz[1]*.58;zs.push({label:cfg.label,x:sx,y:y+sz[1]+.35,r:.7,desc:'',seat:{x:sx,y:sy},action(){hospSitAt(this)}})}}});
+ return zs;
+}
+function unMedOverlay(t,m){
+ const k=Math.min(1,(performance.now()-m.t0)/m.ms),pt=P(ipx,ipy),cx=pt[0],cy=pt[1]-90;
+ c.save();c.fillStyle='rgba(255,252,243,.96)';c.strokeStyle='#7b2d3a';c.lineWidth=1.6;c.beginPath();c.roundRect(cx-34,cy-26,68,50,6);c.fill();c.stroke();
+ c.fillStyle='#7b2d3a';c.fillRect(cx-34,cy-26,68,10);c.fillStyle='#fff';c.font='bold 6px sans-serif';c.textAlign='center';c.fillText('CARTEIRINHA',cx,cy-18.5);
+ c.fillStyle='#c5ccd4';c.fillRect(cx-28,cy-10,18,22);c.fillStyle='#8a929c';c.beginPath();c.arc(cx-19,cy-3,5,0,7);c.fill();c.fillRect(cx-25,cy+3,12,8);
+ c.fillStyle='#16294a';for(let i=0;i<5;i++)c.fillRect(cx-4,cy-8+i*5,Math.max(6,28-i*5)*k+4,2.4);
+ c.fillStyle='rgba(255,255,255,'+(.2+.25*Math.sin(t*8))+')';c.fillRect(cx-34+((t*50)%68),cy-26,10,50);c.restore();
+ c.font='bold 8px sans-serif';const bw=Math.max(84,Math.ceil(c.measureText(m.label).width)+14),bx=cx-bw/2,by=cy+34;c.fillStyle='rgba(6,12,24,.88)';c.fillRect(bx-2,by-13,bw+4,22);c.fillStyle='#ffe9b0';c.textAlign='center';c.fillText(m.label,cx,by-5);c.fillStyle='#3a2a2f';c.fillRect(bx,by,bw,4);c.fillStyle='#c9a227';c.fillRect(bx,by,bw*k,4);
+}
+function unBadge(c,x,y,role){const q=P(x,y,24),col=role==='professor'?'#c9a227':role==='visitante'?'#2ea36b':'#3a7bd5';c.fillStyle='#fff';c.fillRect(q[0]-5,q[1]-2,10,12);c.fillStyle=col;c.fillRect(q[0]-5,q[1]-2,10,4);c.fillStyle='#8a929c';c.fillRect(q[0]-3,q[1]+5,6,2)}
+function renderUniZip(t){
+ const pl=UNZ,TOP=96;universityTick(t);
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#141a2c');bg.addColorStop(1,'#0a0e1a');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.15,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ for(let y=0;y<pl.h;y++)for(let x=0;x<pl.w;x++){const f=UN_FLOOR[pl.grid[y][x]]||UN_FLOOR.p;poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],(x+y)%2?f[0]:f[1])}
+ // tapete bordô da portaria, faixas do pátio e brasão
+ poly(c,[P(0,12.2),P(9,12.2),P(9,17.8),P(0,17.8)],'rgba(123,45,58,.55)');poly(c,[P(0,12.2),P(9,12.2),P(9,12.34),P(0,12.34)],'rgba(201,162,39,.9)');poly(c,[P(0,17.66),P(9,17.66),P(9,17.8),P(0,17.8)],'rgba(201,162,39,.9)');
+ {const s=P(4.2,15);[[1.5,'#c9a227'],[1.2,'#7b2d3a'],[.8,'#f4efe3'],[.45,'#16294a']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45*r,22.5*r,0,0,7);c.fill()})}
+ for(let x=10;x<47;x+=2)poly(c,[P(x,14.9),P(x+1,14.9),P(x+1,15.1),P(x,15.1)],'rgba(123,45,58,.25)');
+ {const s=P(26,14.2);[[3.2,'#bfb394'],[2.6,'#d8cdb4'],[2.2,'#bfb394']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45*r*.5,22.5*r*.5,0,0,7);c.fill()})}
+ c.font='bold 9px sans-serif';c.textAlign='center';c.fillStyle='rgba(30,30,50,.2)';pl.rooms.forEach(([x,y,w,h,label])=>{if(label){const q=P(x+w/2,y+h/2);c.fillText(label,q[0],q[1])}});
+ // folhas caindo no pátio
+ for(let i=0;i<12;i++){const ph=(t*.08+i*.083)%1,lx=12+(i*37%34)+Math.sin(t*.9+i)*1.4,ly=9+ph*12,q=P(lx,ly,70-ph*68);c.fillStyle=['#c9a227','#b5573f','#7cae62'][i%3];c.globalAlpha=.8;c.save();c.translate(q[0],q[1]);c.rotate(t+i);c.fillRect(-2,-1,4,2);c.restore();c.globalAlpha=1}
+ const V=[],INT='#efe6d2',INTS='#c9b995',BRICK='#b5573f',BRICKS='#8a3f2e';
+ const band=(axis,pos,u,gold)=>{const F=(a,z)=>axis==='x'?P(u+a,pos,z):P(pos,u+a,z);poly(c,[F(0,50),F(1,50),F(1,45),F(0,45)],'#c9a227');poly(c,[F(0,8),F(1,8),F(1,0),F(0,0)],'rgba(30,20,20,.45)')};
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,INT,INTS);band('x',0,i)};
+ const ent=j=>j>=pl.entrance[0]&&j<pl.entrance[1];
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,INT,INTS);
+  if(ent(j)){poly(c,[P(0,j+.04,76),P(0,j+.96,76),P(0,j+.96,0),P(0,j+.04,0)],'rgba(150,215,245,.5)');c.strokeStyle='#c9a227';c.lineWidth=2;c.stroke();ln(c,P(0,j+.5,76),P(0,j+.5,0))}
+  else{band('y',0,j);if(j%3===1&&(j<12||j>17)){poly(c,[P(0,j+.14,86),P(0,j+.86,86),P(0,j+.86,52),P(0,j+.14,52)],'#7fb8d0');c.strokeStyle='#7b2d3a';c.lineWidth=1.4;c.stroke()}}};
+ for(let i=0;i<pl.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<pl.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ // viseira da entrada e letreiro
+ V.push({k:15.6,f:()=>{const a=pl.entrance[0],b=pl.entrance[1];poly(c,[P(0,a,96),P(0,b,96),P(0,b,78),P(0,a,78)],'#7b2d3a');c.strokeStyle='#c9a227';c.lineWidth=1.6;c.stroke();wtxt('y','UNIVERSIDADE DE SOROKIBA',0,(a+b)/2,84,'bold 5px sans-serif','#ffe9b0');const s=P(0,15,76);c.fillStyle=unOkZone('patio')?'#5cf0a8':'#ffb703';c.beginPath();c.arc(s[0],s[1],2.2,0,7);c.fill()}});
+ // quadro de regras na parede norte da portaria
+ V.push({k:5.8,f:()=>{pScreen(0,2.8,8.2,34,86,'#f7efdc','#7b2d3a');wtxt('x','REGRAS DA UNIVERSIDADE',5.5,0,78,'bold 5.6px sans-serif','#7b2d3a');['1. Carteirinha sempre visível.','2. Visitante: só áreas liberadas.','3. Cantina: aluno, professor','    ou visitante com motivo.','4. Prova: só no vestibular.','5. Silêncio nas salas e biblioteca.'].forEach((l,i)=>wtxtA('x',l,3.1,0,70-i*6.6,'4.6px sans-serif','#16294a','left'))}});
+ // fachadas do pátio (tijolo, janelas e placas) e paredes internas
+ pl.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++){
+  const fd=()=>axis==='v'?(ipx<pos&&pos-ipx<3.8&&Math.abs(ipy-(u+.5))<2.8):(ipy<pos&&pos-ipy<3.8&&Math.abs(ipx-(u+.5))<2.8);
+  const facade=axis==='h'&&pos===8,isW=axis==='h'&&pos===22;
+  V.push(axis==='v'?{k:pos+u+.5,f:()=>{if(fd())c.globalAlpha=.27;box(c,pos-.06,u,.12,1,0,TOP,INT,INTS);band('y',pos+.06,u);c.globalAlpha=1}}
+   :{k:u+.5+pos,f:()=>{if(fd())c.globalAlpha=.27;box(c,u,pos-.06,1,.12,0,TOP,facade?BRICK:INT,facade?BRICKS:INTS);band('x',pos+.06,u);
+     if(facade&&(u%2===0)){poly(c,[P(u+.18,pos+.07,84),P(u+.82,pos+.07,84),P(u+.82,pos+.07,52),P(u+.18,pos+.07,52)],'rgba(255,225,150,.75)');c.strokeStyle='#5a2a1e';c.lineWidth=1.2;c.stroke()}c.globalAlpha=1}})}});
+ // portas: abertas (verde) ou trancadas (vermelho) conforme a carteirinha
+ pl.doors.forEach(([axis,pos,a,b,text,zone])=>{const m=(a+b)/2;V.push({k:m+pos+.7,f:()=>{
+  const okz=unOkZone(zone),st=unS.doors[zone]||{o:0};
+  box(c,a,pos-.06,b-a,.12,70,TOP,'#7b2d3a','#c9a227');wtxt('x',text,m,pos+.07,78,'bold 6.4px sans-serif','#ffe9b0');
+  if(!okz){poly(c,[P(a+.1,pos+.04,68),P(b-.1,pos+.04,68),P(b-.1,pos+.04,0),P(a+.1,pos+.04,0)],'rgba(110,50,60,.82)');c.strokeStyle='#c9a227';c.lineWidth=1.4;c.stroke();ln(c,P(m,pos+.04,68),P(m,pos+.04,0));
+   const l=P(m,pos+.06,40);c.fillStyle=((performance.now()/500)|0)%2?'#ff4d5e':'#6a2a30';c.beginPath();c.arc(l[0],l[1],3,0,7);c.fill();c.fillStyle='#ffe9b0';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('🔒',l[0],l[1]-8)}
+  else{const op=st.o,w=(b-a)/2;poly(c,[P(a,pos+.04,68),P(a+w*(1-op),pos+.04,68),P(a+w*(1-op),pos+.04,0),P(a,pos+.04,0)],'rgba(180,215,235,.55)');poly(c,[P(b-w*(1-op),pos+.04,68),P(b,pos+.04,68),P(b,pos+.04,0),P(b-w*(1-op),pos+.04,0)],'rgba(180,215,235,.55)');const l=P(m,pos+.06,74);c.fillStyle='#5cf0a8';c.beginPath();c.arc(l[0],l[1],2.4,0,7);c.fill()}}})});
+ // parede das catracas: sinal de acesso
+ V.push({k:9.5+15,f:()=>{const ok=unOkZone('patio'),s=P(9,15,86);c.fillStyle=ok?'#1f7a46':'#8a2d3a';c.fillRect(s[0]-34,s[1]-8,68,15);c.fillStyle='#fff';c.font='bold 7px sans-serif';c.textAlign='center';c.fillText(ok?'ACESSO LIBERADO':'COM CARTEIRINHA',s[0],s[1]+3)}});
+ // Cantina: cardápio na parede e Provas: relógio
+ V.push({k:27,f:()=>{pScreen(22.07,25.6,28.6,34,80,'#2a1f1c','#c9a227');wtxt('x','CARDÁPIO',27.1,22.07,72,'bold 6px sans-serif','#ffd166');[['Café','R$ 4'],['Pão de queijo','R$ 5'],['Sanduíche','R$ 9'],['Prato do dia','R$ 14']].forEach(([n,p],i)=>{wtxtA('x',n,25.8,22.07,60-i*7.5,'4.8px sans-serif','#f4efe3','left');wtxtA('x',p,28.4,22.07,60-i*7.5,'bold 4.8px sans-serif','#ffd166','right')})}});
+ V.push({k:36,f:()=>policeDrawClock(36.2,22.07,64,t)});
+ // lousa da sala de aula com giz
+ V.push({k:24,f:()=>{pScreen(0,20.6,28,36,80,'#1f3a2c','#8a6a40');const lesson=(typeof uniState==='object'&&uniState&&uniState.student)?'Aula: '+uniState.student.name:'Aula de hoje';wtxt('x',lesson,24.3,0,68,'bold 6px sans-serif','#f4efe3');const n=((t*.4)|0)%4;['a² + b² = c²','Planejar · Organizar','if (x > 0) { ... }','1 byte = 8 bits'].slice(0,n+1).forEach((l,i)=>wtxt('x',l,24.3,0,56-i*6.5,'italic 5px sans-serif','rgba(244,239,227,.85)'))}});
+ // telão do auditório
+ V.push({k:42.5,f:()=>{pScreen(0,40,45,34,84,'#f4efe3','#2a2a2a');const sl=((t/4)|0)%3;wtxt('x',['BEM-VINDOS','CIÊNCIA & CIDADE','PERGUNTAS?'][sl],42.5,0,66,'bold 7px sans-serif',['#7b2d3a','#16294a','#1f7a46'][sl])}});
+ pl.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1],key=x+y+(d[0]+d[1])/2;V.push({k:key,f:()=>drawDec(c,name,x,y,t)})});
+ const med=interior.med,role=unRole();
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=UN_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.st||(o.f?2:0),pn:o.pn||'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl});if(p.role==='Aluno')unBadge(c,p.x,p.y,'aluno');else if(p.role==='Visitante')unBadge(c,p.x,p.y,'visitante');else if(p.role==='Professor'||p.role==='Professora'||p.role==='Técnico')unBadge(c,p.x,p.y,'professor')}}));
+ const sat=!!interior.seat;
+ V.push({k:ipx+ipy+(sat?1.3:0),f:()=>{const q=P(ipx,ipy,sat?9:0);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',(med&&med.sit)||sat?{...myO,seated:true}:myO);if(role)unBadge(c,ipx,ipy+(sat?0:0),role)}});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44+(sat?9:0));c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#ffe9b0';c.fillText(p.name,q[0],q[1])});
+ if(med&&med.kind==='unpass')unMedOverlay(t,med);
+ c.setTransform(1,0,0,1,0,0);
+}
+
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
@@ -2709,6 +3070,7 @@ function renderInterior(t,h){
   if(interior.room.shape==='cityhall-zip'){renderCityHallZip(t);return}
    if(interior.room.shape==='police-zip'){renderPoliceZip(t);return}
    if(interior.room.shape==='market-zip'){renderMarketZip(t);return}
+   if(interior.room.shape==='uni-zip'){renderUniZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -2832,6 +3194,7 @@ function act(){
    if(interior.room.family==='cityhall'&&CITY_ROLE_SITE[near.o.role]){openCityPanel(CITY_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='police'&&POLICE_ROLE_SITE[near.o.role]){openPolicePanel(POLICE_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='grocery'&&MK_ROLE_SITE[near.o.role]){const r=MK_ROLE_SITE[near.o.role];openMarketPanel(r[0],r[1]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='university'&&UN_ROLE_SITE[near.o.role]){openUniPanel(UN_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
@@ -2856,8 +3219,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('marketPanel').hidden||!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('marketPanel').hidden){closeMarketPanel()}else if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('uniPanel').hidden||!$('marketPanel').hidden||!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('uniPanel').hidden){closeUniPanel()}else if(!$('marketPanel').hidden){closeMarketPanel()}else if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -3938,7 +4301,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;$('marketPanel').hidden=true;$('mkChip').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;$('marketPanel').hidden=true;$('mkChip').hidden=true;$('uniPanel').hidden=true;$('uniChip').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
 /* ---------- HOSPITAL: painel do paciente ---------- */
@@ -4156,8 +4519,8 @@ const CITY_SITES={
  health:{title:'Secretaria de Saúde',who:'Saúde pública',office:'saude',tabs:[['health','Saúde pública'],['dash','Painel']]},
  plenary:{title:'Plenário da Câmara',who:'Câmara Municipal',office:'vereador',tabs:[['laws','Votações'],['dash','Painel']]}
 };
-const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia',market_cashier:'Supermercado'};
-const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança',mercado:'Compras no Mercado'};
+const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia',market_cashier:'Supermercado',university_professor:'Universidade'};
+const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança',mercado:'Compras no Mercado',universidade:'Universidade (taxas e cantina)'};
 const cityNow=()=>Date.now()+cityOffset;
 const cityMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const cityCompact=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':a>=1e3?(v/1e3).toFixed(1).replace('.',',')+' mil':String(Math.round(v))};
@@ -4717,6 +5080,181 @@ $('marketBody').onclick=e=>{
  else if(a==='basket'){mkS.cart=1;mkSfx.cart();mkSay('Você pegou uma cesta (até 10 itens).');renderMarket()}
  else if(a==='trolley'){mkS.cart=2;mkSfx.cart();mkSay('Você pegou um carrinho (até 30 itens).');renderMarket()}
  else if(a==='giveback'){mkS.cart=0;mkSfx.clack();mkSay('Devolvido. Sem cesta, você carrega até 4 itens.');renderMarket()}
+};
+/* ---------- UNIVERSIDADE: painel (carteirinha, secretaria, aulas, vestibular, cantina) ---------- */
+let uniState=null,uniSite='recepcao',uniTab='pass',uniBusy=false,uniReq=0,uniOffset=0,uniTimer=0,uniPoll=0,uniReloaded=false,uniPurpose='vestibular',uniLesson=null,uniExam=null,uniResult=null,uniExamResult=null,uniLiveModule='';
+const UNI_SITES={
+ recepcao:{title:'Recepção',who:'Cláudia · Carteirinha de acesso',tabs:[]},
+ seguranca:{title:'Segurança da portaria',who:'Sargento Cardoso · Regras do campus',tabs:[['rules','Regras'],['status','Minha situação']]},
+ secretaria:{title:'Secretaria',who:'Dona Helena · Matrícula e histórico',tabs:[['enroll','Matrícula'],['history','Histórico'],['vest','Vestibular']]},
+ aula:{title:'Sala de aula',who:'Professor Almeida · Aulas',tabs:[]},
+ provas:{title:'Sala de Provas',who:'Fiscal Paulo · Vestibular',tabs:[]},
+ cantina:{title:'Cantina',who:'Tia Rosa · Comida do campus',tabs:[]},
+ avisos:{title:'Quadro de avisos',who:'Informações da universidade',tabs:[]}
+};
+const UN_ROLE_LABEL={aluno:'ALUNO',professor:'PROFESSOR',visitante:'VISITANTE'};
+const unNowMs=()=>Date.now()+uniOffset;
+const unCount=until=>'<b class="unCount" data-until="'+until+'">'+cityWait(until-unNowMs())+'</b>';
+const unCan=z=>unOkZone(z);
+async function uniRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/university'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível falar com a Universidade.');return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('A Universidade demorou para responder. Tente novamente.');throw e}finally{clearTimeout(timer)}
+}
+function uniApply(d){
+ if(d.player){user=d.player;$('hm').textContent=user.money}
+ if(d.university){uniState=d.university;uniOffset=uniState.serverNow-Date.now();uniReloaded=false;if(interior&&interior.room.family==='university')uniApplyAccess(interior.room);uniChipUpdate()}
+}
+function uniSay(text,bad){const e=$('uniMsg');if(!e)return;e.textContent=text||'';e.classList.toggle('err',!!bad)}
+function uniChipUpdate(){
+ const chip=$('uniChip');if(!chip)return;const inUn=!!interior&&interior.room.family==='university';chip.hidden=!inUn;if(!inUn)return;
+ const p=uniState&&uniState.pass;chip.className='uniChip '+(p&&p.valid?p.role:'none');
+ chip.textContent=p&&p.valid?'🪪 '+UN_ROLE_LABEL[p.role]+(p.role==='aluno'&&p.courseName?' · '+p.courseName:p.role==='visitante'&&uniState.constants.purposes[p.purpose]?' · '+uniState.constants.purposes[p.purpose].label:''):'🪪 Sem carteirinha';
+}
+/* ---------- telas ---------- */
+function vPassCard(p){
+ if(!p)return '<div class="unPass none"><small>UNIVERSIDADE DE SOROKIBA</small><strong>Sem carteirinha</strong><span>Retire a sua na recepção para passar pelas catracas.</span></div>';
+ const k=uniState.constants,extra=p.role==='aluno'?(p.courseName||'Aluno'):p.role==='visitante'?(k.purposes[p.purpose]?k.purposes[p.purpose].label:'Visita'):'Corpo docente';
+ return '<div class="unPass '+p.role+(p.valid?'':' expired')+'"><small>UNIVERSIDADE DE SOROKIBA</small><div class="unPhoto" aria-hidden="true">👤</div><strong>'+esc(uniState.me.name)+'</strong><span class="unRole">'+UN_ROLE_LABEL[p.role]+'</span><span>'+esc(extra)+'</span><small>'+esc(p.code)+' · '+(p.valid?'válida por '+unCount(p.expiresAt):'VENCIDA')+'</small></div>';
+}
+function vRecepcao(){
+ const s=uniState,k=s.constants,p=s.pass,el=s.me.eligible;
+ const purposes=Object.entries(k.purposes).map(([id,v])=>'<label class="unRadio"><input type="radio" name="unPurpose" value="'+id+'"'+(uniPurpose===id?' checked':'')+'><span><b>'+esc(v.label)+'</b><small>Libera: '+v.zones.filter(z=>z!=='patio'&&z!=='jardim').map(z=>esc(k.zones[z])).join(', ')+' (e o pátio e o jardim)</small></span></label>').join('');
+ return vPassCard(p)
+  +'<div class="unCard"><h3>Retirar carteirinha</h3><p class="unHint">A carteirinha é a sua entrada: sem ela as catracas ficam travadas. Alunos e professores renovam todo dia; visitantes têm '+k.PASS_HOURS.visitante+' h.</p><div class="unActions">'
+  +(el.includes('aluno')?'<button type="button" data-un="pass" data-role="aluno">🎓 Carteirinha de aluno</button>':'')
+  +(el.includes('professor')?'<button type="button" data-un="pass" data-role="professor">📖 Carteirinha de professor</button>':'')+'</div>'
+  +(el.includes('aluno')||el.includes('professor')?'':'<p class="unHint">Você ainda não é aluno nem professor: use a carteirinha de visitante. Para virar aluno, faça o vestibular e matricule-se na Secretaria.</p>')
+  +'<h3 style="margin-top:14px">Visitante: qual o motivo da visita?</h3><div class="unRadios">'+purposes+'</div><div class="unActions"><button type="button" class="alt" data-un="pass" data-role="visitante">🪪 Carteirinha de visitante</button>'+(p?'<button type="button" class="alt" data-un="return">Devolver carteirinha</button>':'')+'</div></div>';
+}
+function vSeguranca(){
+ const s=uniState,k=s.constants;
+ if(uniTab==='status'){
+  return vPassCard(s.pass)+'<div class="unCard"><h3>Áreas do campus</h3><ul class="unList">'+Object.entries(k.zones).filter(([z])=>z!=='portaria').map(([z,l])=>{const a=s.access[z];return '<li><span><b>'+esc(l)+'</b>'+(a.ok?'':'<small>'+esc(a.why)+'</small>')+'</span><span class="unTag '+(a.ok?'ok':'bad')+'">'+(a.ok?'Liberada':'Fechada')+'</span></li>'}).join('')+'</ul></div>';
+ }
+ return '<div class="unCard"><h3>Regras do campus</h3><ol class="unRules"><li>Mantenha a <b>carteirinha à vista</b>. Sem ela, as catracas não abrem.</li><li><b>Visitante</b> circula só pelas áreas do motivo informado na recepção e a carteirinha vale '+k.PASS_HOURS.visitante+' h.</li><li>A <b>cantina</b> é de alunos, professores e visitantes com motivo de visita que a inclua.</li><li>A <b>Sala de Provas</b> é só para quem faz o vestibular, com carteirinha de visitante com esse motivo.</li><li>Os <b>laboratórios</b> são de alunos de Computação e Engenharia Civil, e de professores.</li><li><b>Salas de aula</b>: alunos matriculados e professores. <b>Reitoria</b> e <b>Sala dos Professores</b>: só professores.</li><li>Silêncio na biblioteca e nas salas. Cuide do patrimônio da universidade.</li></ol></div>'
+  +'<div class="unCard"><h3>Como fazer parte</h3><p class="unHint">1) Retire a carteirinha de visitante (motivo: vestibular). 2) Faça a prova na Sala de Provas. 3) Matricule-se na Secretaria no curso em que passou. 4) Retire a carteirinha de aluno e frequente as aulas.</p></div>';
+}
+function vSecretaria(){
+ const s=uniState,k=s.constants,st=s.student;
+ if(uniTab==='history'){
+  return (st?'<div class="unCard"><h3>'+esc(st.name)+' · '+(st.status==='ativo'?'matrícula ativa':'formado')+'</h3><p class="unHint">Créditos: '+st.credits+' · Aulas concluídas: '+st.modulesDone+'/'+st.modulesTotal+'</p>'+st.disciplines.map(d=>'<div class="unDisc"><b>'+(d.done?'✅ ':'📘 ')+esc(d.name)+'</b><ul class="unList">'+d.modules.map(m=>'<li><span>'+(m.done?'✔ ':m.unlocked?'▶ ':'🔒 ')+esc(m.title)+'</span></li>').join('')+'</ul></div>').join('')+'</div>':'<div class="unCard"><p class="unHint">Você não tem matrícula. Faça o vestibular e matricule-se.</p></div>')
+   +'<div class="unCard"><h3>Diplomas</h3>'+(s.diplomas.length?'<ul class="unList">'+s.diplomas.map(d=>'<li><span>🎓 <b>'+esc(d.name)+'</b><small>'+cityTime(d.at)+'</small></span></li>').join('')+'</ul>':'<p class="unHint">Nenhum diploma ainda. Conclua todas as aulas de um curso!</p>')+'</div>';
+ }
+ if(uniTab==='vest'){
+  const v=s.vest;
+  return '<div class="unCard"><h3>Vestibular de Sorokiba</h3><p class="unHint">Prova de '+k.VEST_QUESTIONS+' questões (Português, Matemática, Ciências, História e Geografia e Cidadania), com '+k.VEST_MINUTES+' minutos. Taxa de '+cityMoney(k.VEST_FEE)+'. Até '+v.attemptsMax+' provas por dia. Só entra na Sala de Provas quem tem carteirinha de visitante com motivo <b>vestibular</b>.</p><ul class="unList"><li><span>Sua melhor nota</span><b>'+v.best+'/'+k.VEST_QUESTIONS+'</b></li><li><span>Provas nas últimas 24 h</span><b>'+v.attemptsToday+'/'+v.attemptsMax+'</b></li></ul></div>';
+ }
+ const can=unCan('secretaria');
+ return '<div class="unCard"><h3>Cursos e notas de corte</h3>'+(st&&st.status==='ativo'?'<p class="unHint">Matrícula ativa em <b>'+esc(st.name)+'</b>. Conclua o curso para se matricular em outro.</p>':'<p class="unHint">Sua melhor nota no vestibular é <b>'+s.vest.best+'/'+k.VEST_QUESTIONS+'</b>. Matrícula: '+cityMoney(k.ENROLL_FEE)+'.'+(can?'':' <b>'+esc(unWhy('secretaria'))+'</b>')+'</p>')
+  +'<ul class="unList">'+s.courses.map(c=>{const ok=s.vest.approved.includes(c.id),done=s.diplomas.some(d=>d.course===c.id),act=st&&st.status==='ativo';return '<li><span>'+c.icon+' <b>'+esc(c.name)+'</b><small>Nota de corte '+c.cutoff+' · '+c.disciplines.length+' disciplinas, '+c.disciplines.reduce((a,d)=>a+d.modules.length,0)+' aulas'+(c.labs?' · laboratórios':'')+'</small></span><span class="unRight">'+(done?'<span class="unTag ok">Formado</span>':'<button type="button" data-un="enroll" data-course="'+c.id+'"'+(ok&&!act&&can?'':' disabled')+'>'+(ok?'Matricular':'Nota insuficiente')+'</button>')+'</span></li>'}).join('')+'</ul></div>';
+}
+function vLessonOpen(){
+ const L=uniLesson,wait=L.until>unNowMs();
+ if(uniResult){const r=uniResult;
+  return '<div class="unCard"><h3>'+esc(L.title)+' · '+(r.passed?'Aprovado':'Tente de novo')+'</h3><p class="unHint">Você acertou <b>'+r.correct+' de '+r.total+'</b>. '+(r.passed?(r.repeat?'Sem recompensa repetida.':'+'+r.reward.xp+' XP.'):'Releia a aula e tente de novo (espere alguns segundos).')+'</p>'
+   +'<ol class="unQuiz">'+L.questions.map((q,i)=>'<li><b>'+esc(q.q)+'</b><span class="unTag '+(r.review[i].ok?'ok':'bad')+'">'+(r.review[i].ok?'Certo':'Errado')+'</span>'+(r.review[i].why?'<small>'+esc(r.review[i].why)+'</small>':'')+'</li>').join('')+'</ol>'
+   +'<div class="unActions"><button type="button" data-un="backlessons">Voltar às aulas</button>'+(r.passed?'':'<button type="button" class="alt" data-un="retry">Reler e tentar de novo</button>')+'</div></div>';}
+ return '<div class="unCard"><h3>'+esc(L.title)+'</h3><p class="unLesson">'+esc(L.text)+'</p>'
+  +(wait?'<p class="unHint">A prova libera em '+unCount(L.until)+'. Aproveite para reler.</p>'
+   :'<h4>Prova rápida (acerte pelo menos '+uniState.constants.QUIZ_PASS+' de '+L.questions.length+')</h4><ol class="unQuiz">'+L.questions.map((q,i)=>'<li><b>'+esc(q.q)+'</b>'+q.options.map((o,j)=>'<label class="unRadio"><input type="radio" name="uq'+i+'" value="'+j+'"><span>'+esc(o)+'</span></label>').join('')+'</li>').join('')+'</ol><div class="unActions"><button type="button" data-un="submitlesson">Enviar respostas</button><button type="button" class="alt" data-un="backlessons">Voltar</button></div>')+'</div>';
+}
+function vAula(){
+ const s=uniState,role=unRole();
+ if(role==='professor'){
+  const ml=s.myLive,mods=s.courses.flatMap(c=>c.disciplines.flatMap(d=>d.modules.map(m=>({id:m.id,label:c.name+' · '+m.title}))));
+  if(!uniLiveModule)uniLiveModule=mods[0].id;
+  return (ml?'<div class="unCard"><h3>Aula ao vivo em andamento</h3><p class="unHint"><b>'+esc(ml.title)+'</b> · '+ml.attendees+' aluno(s) presente(s) · '+(ml.running?'termina em '+unCount(ml.endsAt):'terminou: encerre para receber')+'</p><div class="unActions"><button type="button" data-un="liveclose" data-id="'+ml.id+'"'+(ml.running?' disabled':'')+'>Encerrar e receber</button></div></div>'
+   :'<div class="unCard"><h3>Dar aula ao vivo</h3><p class="unHint">Escolha a aula do dia. Os alunos do curso podem entrar e pulam o tempo de estudo. Você recebe '+cityMoney(s.constants.LIVE_PAY)+' por aluno presente (até '+s.constants.LIVE_PAY_MAX+') e ganha '+s.constants.LIVE_HOST_XP+' XP, em até '+s.constants.LIVE_DAILY_PAID+' aulas pagas por dia.'+(s.professor?' Hoje: '+s.professor.paidToday+'/'+s.professor.paidMax+'.':'')+'</p><label for="unLiveSel">Aula</label><select id="unLiveSel">'+mods.map(m=>'<option value="'+m.id+'"'+(m.id===uniLiveModule?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select><div class="unActions"><button type="button" data-un="liveopen">Abrir aula ao vivo ('+s.constants.LIVE_MINUTES+' min)</button></div></div>');
+ }
+ if(role!=='aluno'||!s.student||s.student.status!=='ativo')return '<div class="unCard"><h3>Aulas</h3><p class="unHint">As aulas são para alunos matriculados com carteirinha de aluno válida. Faça o vestibular, matricule-se na Secretaria e retire a carteirinha na recepção.</p></div>';
+ if(uniLesson)return vLessonOpen();
+ const st=s.student;
+ return (s.live.length?'<div class="unCard unLive"><h3>🔴 Aula ao vivo agora</h3><ul class="unList">'+s.live.map(l=>'<li><span><b>'+esc(l.title)+'</b><small>Prof. '+esc(l.professor)+' · termina em '+unCount(l.endsAt)+'</small></span><span class="unRight"><button type="button" data-un="livejoin" data-id="'+l.id+'" data-mod="'+l.module+'">'+(l.joined?'Entrar de novo':'Entrar ao vivo')+'</button></span></li>').join('')+'</ul></div>':'')
+  +'<div class="unCard"><h3>'+esc(st.name)+'</h3><p class="unHint">Leia a aula, espere o tempo de estudo ('+s.constants.STUDY_SECONDS+' s) e responda a prova rápida. As aulas seguem em ordem.</p>'+st.disciplines.map(d=>'<div class="unDisc"><b>'+(d.done?'✅ ':'📘 ')+esc(d.name)+'</b><ul class="unList">'+d.modules.map(m=>'<li><span>'+(m.done?'✔ ':m.unlocked?'':'🔒 ')+esc(m.title)+'</span><span class="unRight"><button type="button" data-un="lesson" data-id="'+m.id+'"'+(m.unlocked?'':' disabled')+'>'+(m.done?'Rever':'Assistir')+'</button></span></li>').join('')+'</ul></div>').join('')+'</div>';
+}
+function vProvas(){
+ const s=uniState,k=s.constants,v=s.vest;
+ if(uniExamResult){const r=uniExamResult;return '<div class="unCard"><h3>Resultado do vestibular</h3><div class="unScore"><strong>'+r.score+'</strong><span>de '+r.total+'</span></div><p class="unHint">'+(r.approved.length?'Aprovado em: <b>'+r.approved.map(esc).join(', ')+'</b>. Vá à Secretaria e matricule-se.':'Você não alcançou a nota de corte de nenhum curso. Estude e tente de novo.')+' Sua melhor nota: '+r.best+'/'+r.total+'.</p><ol class="unQuiz">'+uniExam.questions.map((q,i)=>'<li><b>'+esc(q.q)+'</b><span class="unTag '+(r.review[i]?'ok':'bad')+'">'+(r.review[i]?'Certo':'Errado')+'</span></li>').join('')+'</ol><div class="unActions"><button type="button" data-un="doneexam">Fechar</button></div></div>';}
+ if(uniExam&&uniExam.until>unNowMs()){return '<div class="unCard"><h3>Prova em andamento · termina em '+unCount(uniExam.until)+'</h3><ol class="unQuiz">'+uniExam.questions.map((q,i)=>'<li><small>'+esc(q.subject)+'</small><b>'+esc(q.q)+'</b>'+q.options.map((o,j)=>'<label class="unRadio"><input type="radio" name="ue'+i+'" value="'+j+'"><span>'+esc(o)+'</span></label>').join('')+'</li>').join('')+'</ol><div class="unActions"><button type="button" data-un="submitexam">Entregar a prova</button></div></div>';}
+ const role=unRole(),elig=role==='visitante'&&s.pass.purpose==='vestibular';
+ if(!elig)return '<div class="unCard"><h3>Sala de Provas</h3><p class="unHint">Área restrita: só entra quem tem <b>carteirinha de visitante com motivo "vestibular"</b>. Retire a sua na recepção.</p></div>';
+ return '<div class="unCard"><h3>Vestibular de Sorokiba</h3><p class="unHint">'+k.VEST_QUESTIONS+' questões em '+k.VEST_MINUTES+' minutos. Taxa de '+cityMoney(k.VEST_FEE)+' (paga ao tesouro da cidade). Você fez '+v.attemptsToday+' de '+v.attemptsMax+' provas hoje. Melhor nota: '+v.best+'/'+k.VEST_QUESTIONS+'.</p>'+(v.nextAt&&v.nextAt>unNowMs()?'<p class="unHint">Próxima prova em '+unCount(v.nextAt)+'.</p>':'')+'<div class="unActions"><button type="button" data-un="startexam">'+(v.activeId?'Retomar prova':'Iniciar prova · '+cityMoney(k.VEST_FEE))+'</button></div></div>';
+}
+function vCantina(){
+ const s=uniState,c=s.canteen,can=unCan('cantina'),wait=c.waitUntil&&c.waitUntil>unNowMs();
+ if(!can)return '<div class="unCard"><h3>Cantina</h3><p class="unHint">'+esc(unWhy('cantina'))+' A cantina atende alunos, professores e visitantes com motivo de visita.</p></div>';
+ return '<div class="unCard"><h3>Cardápio</h3><p class="unHint">'+(c.discount?'Seu desconto de '+(unRole()==='aluno'?'aluno':'professor')+': <b>'+c.discount+'%</b>. ':'Visitantes pagam o preço cheio. ')+'Comer devolve saúde.'+(wait?' Próximo pedido em '+unCount(c.waitUntil)+'.':'')+'</p><div class="unGrid">'+c.menu.map(i=>'<div class="unFood"><span class="unIcon">'+i.icon+'</span><b>'+esc(i.name)+'</b><small>+'+i.heal+' saúde</small><div class="unPrice">'+(i.pay<i.price?'<s>'+cityMoney(i.price)+'</s> ':'')+'<strong>'+cityMoney(i.pay)+'</strong></div><button type="button" data-un="buy" data-id="'+i.id+'"'+(wait?' disabled':'')+'>Pedir</button></div>').join('')+'</div></div>';
+}
+function vAvisos(){
+ const s=uniState,k=s.constants;
+ return '<div class="unCard"><h3>Vestibular aberto</h3><p class="unHint">Taxa de '+cityMoney(k.VEST_FEE)+' · '+k.VEST_QUESTIONS+' questões · '+k.VEST_MINUTES+' min · até '+k.VEST_ATTEMPTS_DAY+' provas por dia. Sua melhor nota: '+s.vest.best+'/'+k.VEST_QUESTIONS+'.</p></div>'
+  +'<div class="unCard"><h3>Cursos</h3><ul class="unList">'+s.courses.map(c=>'<li><span>'+c.icon+' <b>'+esc(c.name)+'</b><small>'+c.disciplines.map(d=>esc(d.name)).join(' · ')+'</small></span><span class="unTag">Corte '+c.cutoff+'</span></li>').join('')+'</ul></div>'
+  +'<div class="unCard"><h3>Para professores</h3><p class="unHint">A carreira de Professor universitário está no Centro de Empregos (exige experiência). Professores dão aula ao vivo e recebem por aluno presente. Alunos têm '+k.PASS_HOURS.aluno+' h de carteirinha e 20% de desconto na cantina; professores, 10%.</p></div>';
+}
+function renderUni(){
+ const S=UNI_SITES[uniSite];$('uniTitle').textContent=S.title;$('uniWho').textContent=S.who;
+ const tabs=S.tabs;if(tabs.length&&!tabs.some(t=>t[0]===uniTab))uniTab=tabs[0][0];
+ const nav=$('uniTabs');nav.hidden=tabs.length<2;nav.innerHTML=tabs.map(t=>'<button type="button" role="tab" data-untab="'+t[0]+'" aria-selected="'+(t[0]===uniTab)+'">'+t[1]+'</button>').join('');
+ const body=$('uniBody');if(!uniState){body.innerHTML='<div class="unNote">Carregando…</div>';return}
+ const keep=body.scrollTop;body.innerHTML=({recepcao:vRecepcao,seguranca:vSeguranca,secretaria:vSecretaria,aula:vAula,provas:vProvas,cantina:vCantina,avisos:vAvisos}[uniSite])();body.scrollTop=keep;
+}
+async function uniLoad(silent){
+ const id=++uniReq;
+ try{const d=await uniRequest('');if(id!==uniReq)return;uniApply(d);if(!$('uniPanel').hidden){if(!silent)uniSay('');renderUni()}}
+ catch(e){if(id!==uniReq||$('uniPanel').hidden)return;if(!uniState)$('uniBody').innerHTML='<div class="unNote" role="alert">'+esc(e.message)+'<div class="unActions" style="justify-content:center"><button type="button" data-un="retryload">Tentar novamente</button></div></div>'}
+}
+function openUniPanel(site,tab){
+ if(!interior||interior.room.family!=='university')return;
+ uniSite=site;const S=UNI_SITES[site];uniTab=tab||(S.tabs[0]?S.tabs[0][0]:'');if(site!=='aula')uniLesson=null;uniResult=null;if(site!=='provas')uniExamResult=null;
+ open=true;$('dlg').hidden=true;uniSay('');$('uniPanel').hidden=false;renderUni();uniLoad();
+ clearInterval(uniTimer);uniTimer=setInterval(uniTick,1000);
+}
+function closeUniPanel(){uniReq++;clearInterval(uniTimer);uniTimer=0;if($('uniPanel').hidden)return;$('uniPanel').hidden=true;open=false}
+function universityStartPoll(){clearInterval(uniPoll);uniLoad(true);uniPoll=setInterval(()=>{if(interior&&interior.room.family==='university'&&$('uniPanel').hidden)uniLoad(true)},45000)}
+function universityStopPoll(){clearInterval(uniPoll);uniPoll=0}
+function uniTick(){
+ if($('uniPanel').hidden||!uniState)return;let expired=false,rerender=false;
+ document.querySelectorAll('#uniPanel .unCount').forEach(e=>{const left=Number(e.dataset.until)-unNowMs();e.textContent=cityWait(left);if(left<=0){expired=true;if(uniLesson&&uniSite==='aula')rerender=true}});
+ if(rerender)renderUni();
+ if(expired&&!uniReloaded&&!uniBusy){uniReloaded=true;uniLoad(true)}
+}
+function uniEvent(ev){
+ if(!ev)return;
+ if(ev.kind==='exam')unSfx.examStart();else if(ev.kind==='examDone')unSfx.examEnd();else if(ev.kind==='quizOk'){ev.diploma?unSfx.diploma():unSfx.quizOk()}else if(ev.kind==='quizFail')unSfx.quizFail();
+ else if(ev.kind==='canteen')unSfx.cantina();else if(ev.kind==='liveOpen')unSfx.bell();else if(ev.kind==='liveJoin')unSfx.chalk();else if(ev.kind==='liveClose'&&ev.pay)unSfx.pass();
+ else if(ev.kind==='enroll')unSfx.diploma();
+}
+async function uniAct(path,body,onOk){
+ if(uniBusy)return;uniBusy=true;uniReq++;$('uniPanel').classList.add('busy');
+ try{const d=await uniRequest(path,body);uniApply(d);if(onOk)onOk(d);uniEvent(d.event);renderUni();uniSay(d.message||'Pronto.');return d}
+ catch(e){uniSay(e.message,true);unSfx.gateDeny()}
+ finally{uniBusy=false;$('uniPanel').classList.remove('busy')}
+}
+$('uniClose').onclick=closeUniPanel;
+$('uniChip').onclick=()=>{if($('uniPanel').hidden)openUniPanel('seguranca','status');else closeUniPanel()};
+$('uniTabs').onclick=e=>{const b=e.target.closest('[data-untab]');if(!b||uniBusy)return;uniTab=b.dataset.untab;uniLesson=null;uniResult=null;uniSay('');renderUni()};
+$('uniBody').addEventListener('change',e=>{if(e.target.name==='unPurpose')uniPurpose=e.target.value;if(e.target.id==='unLiveSel')uniLiveModule=e.target.value});
+function uniAnswers(prefix,n){const out=[];for(let i=0;i<n;i++){const c=document.querySelector('#uniBody input[name="'+prefix+i+'"]:checked');if(!c)return null;out.push(Number(c.value))}return out}
+$('uniBody').onclick=e=>{
+ const b=e.target.closest('[data-un]');if(!b||b.disabled)return;const a=b.dataset.un,id=b.dataset.id;
+ if(a==='retryload')uniLoad();
+ else if(a==='pass'){const role=b.dataset.role,purpose=role==='visitante'?uniPurpose:undefined;closeUniPanel();unSfx.print();cityDo('unpass',2400,'Imprimindo a carteirinha…',()=>{openUniPanel('recepcao');uniAct('/pass',{role,purpose})})}
+ else if(a==='return')uniAct('/pass/return',{});
+ else if(a==='enroll')uniAct('/enroll',{course:b.dataset.course},()=>{uniTab='history'});
+ else if(a==='lesson')uniAct('/lesson/start',{module:id},d=>{uniLesson=d.data.lesson;uniResult=null;unSfx.chalk()});
+ else if(a==='backlessons'){uniLesson=null;uniResult=null;renderUni()}
+ else if(a==='retry'){uniResult=null;uniAct('/lesson/start',{module:uniLesson.id},d=>{uniLesson=d.data.lesson})}
+ else if(a==='submitlesson'){const ans=uniAnswers('uq',uniLesson.questions.length);if(!ans){uniSay('Responda todas as perguntas.',true);unSfx.gateDeny();return}uniAct('/lesson/submit',{module:uniLesson.id,answers:ans},d=>{uniResult=d.data.result})}
+ else if(a==='livejoin'){(async()=>{const d1=await uniAct('/live/join',{id});if(d1)await uniAct('/lesson/start',{module:b.dataset.mod},d=>{uniLesson=d.data.lesson;uniResult=null})})()}
+ else if(a==='liveopen')uniAct('/live/open',{module:($('unLiveSel')||{}).value||uniLiveModule});
+ else if(a==='liveclose')uniAct('/live/close',{id});
+ else if(a==='startexam')uniAct('/vest/start',{},d=>{uniExam=d.data.exam;uniExamResult=null});
+ else if(a==='submitexam'){const ans=uniAnswers('ue',uniExam.questions.length);if(!ans){uniSay('Responda todas as questões antes de entregar.',true);unSfx.gateDeny();return}uniAct('/vest/submit',{id:uniExam.id,answers:ans},d=>{uniExamResult=d.data.result})}
+ else if(a==='doneexam'){uniExamResult=null;uniExam=null;renderUni()}
+ else if(a==='buy')uniAct('/canteen',{item:id});
 };
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
