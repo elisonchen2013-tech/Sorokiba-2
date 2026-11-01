@@ -1,0 +1,381 @@
+'use strict';
+// Testes de COMPORTAMENTO da Universidade. O banco é simulado em memória só para as regras; as consultas SQL
+// em si precisam de um PostgreSQL real e não são exercitadas aqui.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const uni = require('../sorokiba2-university');
+const { UNI, COURSES, MODULE_BY_ID, VEST_BANK, ZONES, VISIT_PURPOSES } = uni;
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+const NOW = 1e12;
+const pass = (role, extra = {}) => ({ role, purpose: null, code: 'UN-TEST', expiresAt: NOW + 3600e3, ...extra });
+const stu = (course = 'comp', status = 'ativo') => ({ course, status, credits: 0 });
+const zonesOk = (p, s) => Object.keys(ZONES).filter(z => uni.zoneAccess(z, p, s, NOW).ok).sort();
+
+test('acesso: sem carteirinha só a portaria; vencida não vale; zona desconhecida é negada', () => {
+  assert.deepEqual(zonesOk(null, null), ['portaria']);
+  assert.match(uni.zoneAccess('patio', null, null, NOW).why, /carteirinha/);
+  const expired = pass('aluno', { expiresAt: NOW - 1 });
+  assert.deepEqual(zonesOk(expired, stu()), ['portaria']);
+  assert.match(uni.zoneAccess('patio', expired, stu(), NOW).why, /venceu/);
+  assert.equal(uni.zoneAccess('cofre', pass('professor'), null, NOW).ok, false);
+  assert.equal(uni.zoneAccess('__proto__', pass('professor'), null, NOW).ok, false);
+  assert.equal(uni.passValid(pass('aluno'), NOW), true);
+  assert.equal(uni.passValid(null, NOW), false);
+});
+
+test('acesso: visitante só entra onde o motivo da visita permite', () => {
+  const expected = { vestibular: ['cantina', 'jardim', 'patio', 'portaria', 'provas', 'secretaria'], matricula: ['cantina', 'jardim', 'patio', 'portaria', 'secretaria'], evento: ['auditorio', 'cantina', 'jardim', 'patio', 'portaria'], reuniao: ['cantina', 'jardim', 'patio', 'portaria', 'secretaria'], biblioteca: ['biblioteca', 'jardim', 'patio', 'portaria'] };
+  for (const [purpose, zones] of Object.entries(expected)) assert.deepEqual(zonesOk(pass('visitante', { purpose }), null), zones, purpose);
+  assert.deepEqual(Object.keys(VISIT_PURPOSES).sort(), Object.keys(expected).sort());
+  assert.deepEqual(zonesOk(pass('visitante', { purpose: 'inventado' }), null), ['portaria'], 'motivo inválido não abre nada');
+  assert.deepEqual(zonesOk(pass('visitante'), null), ['portaria'], 'visitante sem motivo não abre nada');
+  for (const purpose of Object.keys(expected)) { for (const z of ['salas', 'labs', 'professores', 'reitoria']) assert.equal(uni.zoneAccess(z, pass('visitante', { purpose }), null, NOW).ok, false, purpose + ' → ' + z); }
+});
+
+test('acesso: aluno depende do curso (laboratórios) e da matrícula; só professor entra nas áreas docentes', () => {
+  assert.deepEqual(zonesOk(pass('aluno'), stu('comp')), ['auditorio', 'biblioteca', 'cantina', 'jardim', 'labs', 'patio', 'portaria', 'salas', 'secretaria']);
+  assert.equal(uni.zoneAccess('labs', pass('aluno'), stu('eng'), NOW).ok, true);
+  assert.equal(uni.zoneAccess('labs', pass('aluno'), stu('adm'), NOW).ok, false, 'Administração não usa laboratório');
+  assert.equal(uni.zoneAccess('labs', pass('aluno'), stu('ped'), NOW).ok, false);
+  assert.equal(uni.zoneAccess('salas', pass('aluno'), stu('comp', 'formado'), NOW).ok, false, 'formado não assiste mais aula');
+  assert.equal(uni.zoneAccess('salas', pass('aluno'), null, NOW).ok, false);
+  for (const z of ['provas', 'professores', 'reitoria']) assert.equal(uni.zoneAccess(z, pass('aluno'), stu(), NOW).ok, false, 'aluno → ' + z);
+  assert.deepEqual(zonesOk(pass('professor'), null), Object.keys(ZONES).sort(), 'professor entra em tudo');
+});
+
+test('cantina: desconto por perfil e preço nunca abaixo de R$ 1', () => {
+  assert.equal(uni.canteenPrice('prato', 'visitante'), 14);
+  assert.equal(uni.canteenPrice('prato', 'professor'), Math.round(14 * .9));
+  assert.equal(uni.canteenPrice('prato', 'aluno'), Math.round(14 * .8));
+  assert.equal(uni.canteenPrice('cafe', 'aluno'), Math.round(4 * .8));
+  assert.equal(uni.canteenPrice('nada', 'aluno'), null);
+  for (const i of uni.CANTEEN) for (const r of ['aluno', 'professor', 'visitante']) assert.ok(uni.canteenPrice(i.id, r) >= 1 && uni.canteenPrice(i.id, r) <= i.price);
+});
+
+test('conteúdo: perguntas bem formadas, resposta certa válida e ordem embaralhada de forma estável', () => {
+  assert.equal(Object.keys(COURSES).length, 4);
+  for (const c of Object.values(COURSES)) {
+    assert.ok(c.cutoff >= 1 && c.cutoff <= UNI.VEST_QUESTIONS, c.id);
+    assert.equal(c.disciplines.length, 2); assert.equal(c.modules.length, 4);
+    c.modules.forEach((m, i) => { assert.equal(m.order, i + 1); assert.ok(m.text.length > 120, m.id); assert.equal(m.quiz.length, 3, m.id); });
+  }
+  const ids = new Set();
+  for (const q of [...Object.values(MODULE_BY_ID).flatMap(m => m.quiz), ...VEST_BANK]) {
+    assert.ok(!ids.has(q.id), 'id repetido ' + q.id); ids.add(q.id);
+    assert.equal(q.options.length, 3, q.id); assert.equal(new Set(q.options).size, 3, 'opções repetidas ' + q.id);
+    assert.ok(Number.isInteger(q.a) && q.a >= 0 && q.a < 3, q.id); assert.ok(q.q.endsWith(':') || q.q.endsWith('?') || q.q.endsWith('.'), q.id);
+  }
+  const pos = [0, 0, 0]; for (const q of [...Object.values(MODULE_BY_ID).flatMap(m => m.quiz), ...VEST_BANK]) pos[q.a]++;
+  assert.ok(pos.every(n => n >= 10), 'a resposta certa não pode ficar sempre na mesma posição: ' + pos);
+  const again = uni.buildQuestion('x1', { q: 'Q?', o: ['certa', 'b', 'c'] });
+  assert.deepEqual(again, uni.buildQuestion('x1', { q: 'Q?', o: ['certa', 'b', 'c'] }));
+  assert.equal(again.options[again.a], 'certa');
+  assert.ok(VEST_BANK.length >= 20 && new Set(VEST_BANK.map(q => q.subject)).size >= 4);
+  assert.ok(Object.values(COURSES).some(c => c.cutoff <= 5) && Object.values(COURSES).some(c => c.cutoff >= 6), 'cortes diferentes');
+});
+
+test('prova: correção exige uma resposta válida por pergunta; aprovação em 2 de 3', () => {
+  const m = Object.values(MODULE_BY_ID)[0], right = m.quiz.map(q => q.a);
+  assert.deepEqual(uni.grade(m.quiz, right), { correct: 3, total: 3, review: [true, true, true] });
+  const wrong = m.quiz.map(q => (q.a + 1) % 3), one = uni.grade(m.quiz, [right[0], wrong[1], wrong[2]]);
+  assert.equal(one.correct, 1); assert.equal(uni.quizPassed(one.correct), false);
+  assert.equal(uni.quizPassed(2), true);
+  for (const bad of [[], [0, 0], [0, 0, 0, 0], [0, 1, 'a'], [0, 1, 3], [0, 1, -1], [0, 1, 1.5], null, 'x', [0, null, 1]]) assert.ok(uni.grade(m.quiz, bad).err, JSON.stringify(bad));
+  assert.equal(uni.publicQuestion(VEST_BANK[0]).a, undefined, 'a resposta nunca vai para o cliente');
+});
+
+test('cursos: as aulas são sequenciais e o diploma só vem com todas concluídas', () => {
+  const c = COURSES.comp, ms = c.modules.map(m => m.id);
+  assert.equal(uni.moduleUnlocked(ms[0], new Set()), true);
+  assert.equal(uni.moduleUnlocked(ms[1], new Set()), false);
+  assert.equal(uni.moduleUnlocked(ms[1], new Set([ms[0]])), true);
+  assert.equal(uni.moduleUnlocked('inventado', new Set()), false);
+  const half = uni.courseStatus('comp', new Set(ms.slice(0, 2)));
+  assert.equal(half.modulesDone, 2); assert.equal(half.finished, false); assert.equal(half.disciplines[0].done, true); assert.equal(half.disciplines[1].done, false);
+  assert.equal(half.disciplines[1].modules[0].unlocked, true);
+  assert.equal(uni.courseStatus('comp', new Set(ms)).finished, true);
+});
+
+test('vestibular: sorteio sem repetir, notas de corte por curso e pagamento de aula ao vivo', () => {
+  const ids = uni.pickExam(); assert.equal(ids.length, UNI.VEST_QUESTIONS); assert.equal(new Set(ids).size, ids.length);
+  assert.ok(ids.every(i => VEST_BANK.some(q => q.id === i)));
+  assert.notDeepEqual(uni.pickExam(() => 0.1), uni.pickExam(() => 0.9));
+  assert.deepEqual(uni.approvedCourses(0), []);
+  assert.deepEqual(uni.approvedCourses(5).sort(), ['adm', 'ped']);
+  assert.deepEqual(uni.approvedCourses(6).sort(), ['adm', 'comp', 'eng', 'ped']);
+  assert.equal(uni.livePay(0, 0), 0); assert.equal(uni.livePay(3, 0), 3 * UNI.LIVE_PAY);
+  assert.equal(uni.livePay(50, 0), UNI.LIVE_PAY_MAX * UNI.LIVE_PAY, 'teto de alunos pagos');
+  assert.equal(uni.livePay(3, UNI.LIVE_DAILY_PAID), 0, 'teto diário de aulas pagas');
+});
+
+/* ---------- banco simulado em memória ---------- */
+function world(o = {}) {
+  const w = { player: { username: 'ana', name: 'Ana', money: 500, xp: 300, role: 'cidadão', employment: o.employment || {} }, pass: o.pass || null, student: o.student || null, best: o.best || 0,
+    exams: [], progress: {}, diplomas: [], live: [], att: [], meta: {}, credits: [], debits: [], health: o.health ?? 60, treasury: o.treasury ?? 10000, patients: 0 };
+  const T = () => Date.now(), rows = r => ({ rows: r, rowCount: r.length });
+  w.query = async (sql, p = []) => {
+    const q = sql.replace(/\s+/g, ' ').trim();
+    if (/^SELECT \* FROM sk2_players WHERE username = \$1 FOR UPDATE/.test(q)) return rows([{ ...w.player }]);
+    if (/^SELECT role, purpose, code, issued_at, expires_at FROM sk2_uni_passes/.test(q)) return rows(w.pass ? [{ role: w.pass.role, purpose: w.pass.purpose, code: w.pass.code, issued_at: w.pass.issued, expires_at: w.pass.expires }] : []);
+    if (/^SELECT course, status, credits, enrolled_at FROM sk2_uni_students/.test(q)) return rows(w.student ? [{ ...w.student, enrolled_at: T() }] : []);
+    if (/^SELECT module_id FROM sk2_uni_progress WHERE username = \$1 AND passed/.test(q)) return rows(Object.entries(w.progress).filter(([, v]) => v.passed).map(([module_id]) => ({ module_id })));
+    if (/^SELECT course, at FROM sk2_uni_diplomas/.test(q)) return rows(w.diplomas.map(course => ({ course, at: T() })));
+    if (/^SELECT best FROM sk2_uni_vest/.test(q)) return rows(w.best ? [{ best: w.best }] : []);
+    if (/^SELECT id, status, started_at, expires_at FROM sk2_uni_exams/.test(q)) return rows([...w.exams].reverse().map(e => ({ id: e.id, status: e.status, started_at: e.started, expires_at: e.expires })));
+    if (/^SELECT canteen_at FROM sk2_uni_meta/.test(q)) return rows(w.meta.canteen_at ? [{ canteen_at: w.meta.canteen_at }] : []);
+    if (/^SELECT l\.id, l\.professor_name/.test(q)) return rows(w.live.filter(l => !l.closed && l.ends > T() && l.course === p[0]).map(l => ({ id: l.id, professor_name: l.professor_name, module_id: l.module_id, ends_at: l.ends, joined: w.att.some(a => a.live === l.id && a.user === p[1]) })));
+    if (/^SELECT l\.id, l\.module_id, l\.ends_at, l\.closed_at, l\.paid/.test(q)) return rows(w.live.filter(l => !l.closed && l.professor === p[0]).map(l => ({ id: l.id, module_id: l.module_id, ends_at: l.ends, closed_at: null, paid: l.paid, n: w.att.filter(a => a.live === l.id).length })));
+    if (/^SELECT COUNT\(\*\) AS n FROM sk2_uni_live WHERE professor = \$1 AND paid > 0/.test(q)) return rows([{ n: w.live.filter(l => l.professor === p[0] && l.paid > 0 && l.closed).length }]);
+    if (/^INSERT INTO sk2_uni_passes/.test(q)) { w.pass = { role: p[1], purpose: p[2], code: p[3], issued: T(), expires: T() + p[4] }; return rows([]); }
+    if (/^DELETE FROM sk2_uni_passes/.test(q)) { w.pass = null; return rows([]); }
+    if (/^SELECT id, qids, expires_at FROM sk2_uni_exams WHERE username = \$1 AND status = 'aberta'/.test(q)) return rows(w.exams.filter(e => e.status === 'aberta' && e.expires > T()).map(e => ({ id: e.id, qids: e.qids, expires_at: e.expires })).slice(-1));
+    if (/^SELECT started_at FROM sk2_uni_exams WHERE username = \$1 AND started_at/.test(q)) return rows([...w.exams].reverse().map(e => ({ started_at: e.started })));
+    if (/^UPDATE sk2_players SET money = money - \$2 WHERE/.test(q)) { w.player.money -= p[1]; return rows([{ ...w.player }]); }
+    if (/^INSERT INTO sk2_uni_exams/.test(q)) { w.exams.push({ id: p[0], qids: p[2], status: 'aberta', started: T(), expires: T() + p[3] }); return rows([]); }
+    if (/^SELECT id, qids, status, expires_at FROM sk2_uni_exams WHERE id = \$1/.test(q)) return rows(w.exams.filter(e => e.id === p[0]).map(e => ({ id: e.id, qids: e.qids, status: e.status, expires_at: e.expires })));
+    if (/^UPDATE sk2_uni_exams SET status = 'concluida'/.test(q)) { const e = w.exams.find(x => x.id === p[0]); e.status = 'concluida'; e.score = p[1]; return rows([]); }
+    if (/^UPDATE sk2_uni_exams SET status = 'expirada'/.test(q)) { w.exams.find(x => x.id === p[0]).status = 'expirada'; return rows([]); }
+    if (/^INSERT INTO sk2_uni_vest/.test(q)) { w.best = Math.max(w.best, p[1]); return rows([]); }
+    if (/^SELECT 1 FROM sk2_uni_diplomas WHERE/.test(q)) return rows(w.diplomas.includes(p[1]) ? [{}] : []);
+    if (/^INSERT INTO sk2_uni_students/.test(q)) { w.student = { course: p[1], status: 'ativo', credits: 0 }; return rows([]); }
+    if (/^SELECT 1 FROM sk2_uni_live l JOIN sk2_uni_live_att a/.test(q)) return rows(w.live.filter(l => !l.closed && l.ends > T() && l.module_id === p[1] && w.att.some(a => a.live === l.id && a.user === p[0])).map(() => ({})));
+    if (/^INSERT INTO sk2_uni_progress/.test(q)) { const cur = w.progress[p[1]] || { passed: false, best: 0, attempt: null }; w.progress[p[1]] = { ...cur, started: T() - p[2] }; return rows([]); }
+    if (/^SELECT started_at, attempt_at, passed FROM sk2_uni_progress/.test(q)) { const v = w.progress[p[1]]; return rows(v ? [{ started_at: v.started, attempt_at: v.attempt, passed: v.passed }] : []); }
+    if (/^UPDATE sk2_uni_progress SET attempt_at = now\(\)/.test(q)) { const v = w.progress[p[1]]; v.attempt = T(); v.best = Math.max(v.best, p[2]); v.passed = v.passed || p[3]; return rows([]); }
+    if (/^UPDATE sk2_uni_students SET credits = credits \+ \$2/.test(q)) { w.student.credits += p[1]; return rows([]); }
+    if (/^INSERT INTO sk2_uni_diplomas/.test(q)) { if (!w.diplomas.includes(p[1])) w.diplomas.push(p[1]); return rows([]); }
+    if (/^UPDATE sk2_uni_students SET status = 'formado'/.test(q)) { w.student.status = 'formado'; return rows([]); }
+    if (/^UPDATE sk2_players SET xp = xp \+ \$2, money = money \+ \$3/.test(q)) { w.player.xp += p[1]; w.player.money += p[2]; return rows([{ ...w.player }]); }
+    if (/^UPDATE sk2_players SET xp = xp \+ \$2 WHERE/.test(q)) { w.player.xp += p[1]; return rows([{ ...w.player }]); }
+    if (/^UPDATE sk2_players SET money = money \+ \$2, xp = xp \+ \$3/.test(q)) { w.player.money += p[1]; w.player.xp += p[2]; return rows([{ ...w.player }]); }
+    if (/^SELECT 1 FROM sk2_uni_live WHERE professor = \$1 AND closed_at IS NULL/.test(q)) return rows(w.live.filter(l => l.professor === p[0] && !l.closed).map(() => ({})));
+    if (/^INSERT INTO sk2_uni_live \(/.test(q)) { w.live.push({ id: p[0], professor: p[1], professor_name: p[2], module_id: p[3], course: p[4], ends: T() + p[5], closed: false, paid: 0 }); return rows([]); }
+    if (/^SELECT id, module_id, course, ends_at, closed_at FROM sk2_uni_live WHERE id = \$1/.test(q)) return rows(w.live.filter(l => l.id === p[0]).map(l => ({ id: l.id, module_id: l.module_id, course: l.course, ends_at: l.ends, closed_at: l.closed ? T() : null })));
+    if (/^INSERT INTO sk2_uni_live_att/.test(q)) { if (w.att.some(a => a.live === p[0] && a.user === p[1])) return { rows: [], rowCount: 0 }; w.att.push({ live: p[0], user: p[1] }); return { rows: [], rowCount: 1 }; }
+    if (/^SELECT id, professor, ends_at, closed_at FROM sk2_uni_live WHERE id = \$1 AND professor = \$2/.test(q)) return rows(w.live.filter(l => l.id === p[0] && l.professor === p[1]).map(l => ({ id: l.id, professor: l.professor, ends_at: l.ends, closed_at: l.closed ? T() : null })));
+    if (/^SELECT COUNT\(\*\) AS n FROM sk2_uni_live_att WHERE live_id = \$1/.test(q)) return rows([{ n: w.att.filter(a => a.live === p[0]).length }]);
+    if (/^UPDATE sk2_uni_live SET closed_at = now\(\), paid = \$2/.test(q)) { const l = w.live.find(x => x.id === p[0]); l.closed = true; l.paid = p[1]; return rows([]); }
+    if (/^SELECT canteen_at FROM sk2_uni_meta WHERE username = \$1 FOR UPDATE/.test(q)) return rows(w.meta.canteen_at ? [{ canteen_at: w.meta.canteen_at }] : []);
+    if (/^UPDATE sk2_hospital_patients SET health/.test(q)) { w.health = p[1]; return rows([]); }
+    if (/^INSERT INTO sk2_uni_meta/.test(q)) { w.meta.canteen_at = T(); return rows([]); }
+    throw new Error('SQL inesperado no teste: ' + q.slice(0, 90));
+  };
+  return w;
+}
+async function inWorld(w, fn) {
+  const db = require('../sorokiba2-db'), city = require('../sorokiba2-city'), hospital = require('../sorokiba2-hospital');
+  const orig = { tx: db.withTx, credit: city.credit, debit: city.debit, settle: hospital.settle };
+  db.withTx = async f => f({ query: w.query });
+  city.credit = async (_c, kind, amount, note) => { w.credits.push({ kind, amount, note }); w.treasury += amount; return w.treasury; };
+  city.debit = async (_c, kind, amount, note) => { if (w.treasury < amount) return null; w.treasury -= amount; w.debits.push({ kind, amount, note }); return w.treasury; };
+  hospital.settle = async () => ({ health: w.health });
+  try { return await fn(); } finally { db.withTx = orig.tx; city.credit = orig.credit; city.debit = orig.debit; hospital.settle = orig.settle; }
+}
+const passRow = (role, purpose = null, ms = 3600e3) => ({ role, purpose, code: 'UN-TEST', issued: Date.now(), expires: Date.now() + ms });
+const goodAnswers = qids => qids.map(id => VEST_BANK.find(q => q.id === id).a);
+
+test('carteirinha: cada perfil só recebe a sua, com validade e código', async () => {
+  const w = world();
+  assert.equal((await inWorld(w, () => uni.issuePass('ana', { role: 'chefe' }))).status, 400);
+  assert.equal((await inWorld(w, () => uni.issuePass('ana', { role: 'visitante' }))).status, 400, 'visitante precisa do motivo');
+  assert.equal((await inWorld(w, () => uni.issuePass('ana', { role: 'visitante', purpose: 'passeio' }))).status, 400);
+  assert.equal((await inWorld(w, () => uni.issuePass('ana', { role: 'aluno' }))).status, 403, 'sem matrícula não é aluno');
+  assert.equal((await inWorld(w, () => uni.issuePass('ana', { role: 'professor' }))).status, 403, 'sem contrato não é professor');
+  const r = await inWorld(w, () => uni.issuePass('ana', { role: 'visitante', purpose: 'vestibular' }));
+  assert.ok(!r.err, r.err); assert.equal(w.pass.role, 'visitante'); assert.equal(w.pass.purpose, 'vestibular'); assert.match(w.pass.code, /^UN-[0-9A-F]{6}$/);
+  assert.ok(Math.abs((w.pass.expires - Date.now()) - UNI.PASS_HOURS.visitante * 3600e3) < 5000);
+  assert.equal(r.university.pass.valid, true); assert.equal(r.university.access.provas.ok, true); assert.equal(r.university.access.salas.ok, false);
+  assert.deepEqual(r.university.me.eligible, ['visitante']);
+  const back = await inWorld(w, () => uni.returnPass('ana')); assert.ok(!back.err); assert.equal(w.pass, null);
+  assert.ok((await inWorld(w, () => uni.returnPass('ana'))).err, 'não devolve duas vezes');
+  const al = world({ student: { course: 'adm', status: 'ativo', credits: 0 } });
+  const ra = await inWorld(al, () => uni.issuePass('ana', { role: 'aluno' })); assert.ok(!ra.err);
+  assert.ok(Math.abs((al.pass.expires - Date.now()) - UNI.PASS_HOURS.aluno * 3600e3) < 5000);
+  const pr = world({ employment: { jobId: 'university_professor', title: 'Professor assistente' } });
+  const rp = await inWorld(pr, () => uni.issuePass('ana', { role: 'professor' })); assert.ok(!rp.err); assert.ok(rp.university.me.eligible.includes('professor'));
+});
+
+test('vestibular: só visitante com motivo certo, taxa, retomada, limite diário e correção no servidor', async () => {
+  assert.equal((await inWorld(world(), () => uni.vestStart('ana'))).status, 403, 'sem carteirinha');
+  assert.equal((await inWorld(world({ pass: passRow('visitante', 'matricula') }), () => uni.vestStart('ana'))).status, 403, 'motivo errado');
+  assert.equal((await inWorld(world({ pass: passRow('aluno'), student: { course: 'adm', status: 'ativo', credits: 0 } }), () => uni.vestStart('ana'))).status, 403, 'aluno não faz vestibular');
+  const poor = world({ pass: passRow('visitante', 'vestibular') }); poor.player.money = 5;
+  assert.match((await inWorld(poor, () => uni.vestStart('ana'))).err, /Saldo insuficiente/); assert.equal(poor.exams.length, 0);
+  const w = world({ pass: passRow('visitante', 'vestibular') });
+  const s = await inWorld(w, () => uni.vestStart('ana'));
+  assert.ok(!s.err, s.err); assert.equal(w.player.money, 500 - UNI.VEST_FEE); assert.deepEqual(w.credits[0], { kind: 'universidade', amount: UNI.VEST_FEE, note: 'Taxa de vestibular de Ana' });
+  const qs = s.data.exam.questions; assert.equal(qs.length, UNI.VEST_QUESTIONS); assert.ok(qs.every(q => q.a === undefined && q.options.length === 3));
+  const again = await inWorld(w, () => uni.vestStart('ana'));
+  assert.deepEqual(again.data.exam.questions.map(q => q.id), qs.map(q => q.id), 'retoma a mesma prova'); assert.equal(w.player.money, 500 - UNI.VEST_FEE, 'sem cobrar de novo');
+  const id = w.exams[0].id, ids = w.exams[0].qids.split(',');
+  assert.equal((await inWorld(w, () => uni.vestSubmit('ana', id, [0, 1]))).status, 400, 'respostas incompletas');
+  assert.equal((await inWorld(w, () => uni.vestSubmit('ana', 'nao-e-uuid', goodAnswers(ids)))).status, 400);
+  const ok = await inWorld(w, () => uni.vestSubmit('ana', id, goodAnswers(ids)));
+  assert.ok(!ok.err, ok.err); assert.equal(ok.data.result.score, 8); assert.equal(w.best, 8); assert.equal(ok.data.result.approved.length, 4);
+  assert.ok((await inWorld(w, () => uni.vestSubmit('ana', id, goodAnswers(ids)))).err, 'não entrega duas vezes');
+  // nota ruim não derruba a melhor nota
+  const s2 = await inWorld(w, () => uni.vestStart('ana')); assert.match(s2.err || '', /Aguarde/, 'intervalo entre provas');
+  w.exams[0].started -= 4 * 60e3;
+  const s3 = await inWorld(w, () => uni.vestStart('ana')); assert.ok(!s3.err, s3.err);
+  const id3 = w.exams[1].id, ids3 = w.exams[1].qids.split(','), wrong = ids3.map(i => (VEST_BANK.find(q => q.id === i).a + 1) % 3);
+  const bad = await inWorld(w, () => uni.vestSubmit('ana', id3, wrong)); assert.equal(bad.data.result.score, 0); assert.equal(w.best, 8, 'melhor nota preservada');
+  assert.deepEqual(bad.data.result.approved, [], 'nota baixa não aprova em nada na tentativa');
+});
+
+test('vestibular: limite de 3 provas por dia e prova expirada', async () => {
+  const w = world({ pass: passRow('visitante', 'vestibular') });
+  for (let i = 0; i < UNI.VEST_ATTEMPTS_DAY; i++) { const s = await inWorld(w, () => uni.vestStart('ana')); assert.ok(!s.err, 'prova ' + (i + 1) + ': ' + s.err); const e = w.exams[i]; e.status = 'concluida'; e.started -= 5 * 60e3 * (UNI.VEST_ATTEMPTS_DAY - i); }
+  assert.match((await inWorld(w, () => uni.vestStart('ana'))).err, /Limite de 3 provas/);
+  const x = world({ pass: passRow('visitante', 'vestibular') });
+  await inWorld(x, () => uni.vestStart('ana')); x.exams[0].expires = Date.now() - 1000;
+  assert.match((await inWorld(x, () => uni.vestSubmit('ana', x.exams[0].id, goodAnswers(x.exams[0].qids.split(','))))).err, /tempo da prova/);
+  assert.equal(x.exams[0].status, 'expirada');
+});
+
+test('matrícula: Secretaria, nota de corte, taxa e uma matrícula ativa por vez', async () => {
+  const noAccess = world({ pass: passRow('visitante', 'biblioteca'), best: 8 });
+  assert.equal((await inWorld(noAccess, () => uni.enroll('ana', 'comp'))).status, 403, 'sem acesso à Secretaria');
+  const w = world({ pass: passRow('visitante', 'matricula'), best: 5 });
+  assert.equal((await inWorld(w, () => uni.enroll('ana', 'nada'))).status, 400);
+  assert.match((await inWorld(w, () => uni.enroll('ana', 'comp'))).err, /Nota de corte/, 'nota 5 não passa em Computação (corte 6)');
+  w.player.money = 10; assert.match((await inWorld(w, () => uni.enroll('ana', 'adm'))).err, /Saldo insuficiente/); w.player.money = 500;
+  const r = await inWorld(w, () => uni.enroll('ana', 'adm')); assert.ok(!r.err, r.err);
+  assert.equal(w.player.money, 500 - UNI.ENROLL_FEE); assert.equal(w.student.course, 'adm'); assert.equal(w.credits.at(-1).amount, UNI.ENROLL_FEE);
+  assert.match((await inWorld(w, () => uni.enroll('ana', 'ped'))).err, /matrícula ativa/);
+  const grad = world({ pass: passRow('visitante', 'matricula'), best: 8, student: { course: 'adm', status: 'formado', credits: 8 }, }); grad.diplomas = ['adm'];
+  assert.match((await inWorld(grad, () => uni.enroll('ana', 'adm'))).err, /já é formado/);
+  assert.ok(!(await inWorld(grad, () => uni.enroll('ana', 'eng'))).err, 'formado pode fazer outro curso');
+});
+
+test('aulas: só aluno do curso, em ordem, com tempo de estudo, intervalo e recompensa única', async () => {
+  const mods = COURSES.comp.modules.map(m => m.id), right = id => MODULE_BY_ID[id].quiz.map(q => q.a), wrong = id => MODULE_BY_ID[id].quiz.map(q => (q.a + 1) % 3);
+  assert.equal((await inWorld(world({ pass: passRow('visitante', 'matricula') }), () => uni.lessonStart('ana', mods[0]))).status, 403, 'visitante não assiste aula');
+  const w = world({ pass: passRow('aluno'), student: { course: 'comp', status: 'ativo', credits: 0 } });
+  assert.equal((await inWorld(w, () => uni.lessonStart('ana', COURSES.adm.modules[0].id))).status, 403, 'aula de outro curso');
+  assert.equal((await inWorld(w, () => uni.lessonStart('ana', 'nada'))).status, 400);
+  assert.match((await inWorld(w, () => uni.lessonStart('ana', mods[1]))).err, /anterior/, 'ordem das aulas');
+  const st = await inWorld(w, () => uni.lessonStart('ana', mods[0]));
+  assert.ok(!st.err, st.err); assert.ok(st.data.lesson.text.length > 100); assert.ok(st.data.lesson.questions.every(q => q.a === undefined)); assert.ok(st.data.lesson.until > Date.now());
+  assert.match((await inWorld(w, () => uni.lessonSubmit('ana', mods[0], right(mods[0])))).err, /libera em/, 'precisa ler antes');
+  w.progress[mods[0]].started -= 40e3;
+  const fail = await inWorld(w, () => uni.lessonSubmit('ana', mods[0], wrong(mods[0])));
+  assert.equal(fail.data.result.passed, false); assert.equal(fail.data.result.review.every(r => !r.ok && !r.why), true, 'reprovado não vê explicações'); assert.equal(w.player.xp, 300);
+  assert.match((await inWorld(w, () => uni.lessonSubmit('ana', mods[0], right(mods[0])))).err, /Aguarde/, 'intervalo entre tentativas');
+  w.progress[mods[0]].attempt -= 30e3;
+  const ok = await inWorld(w, () => uni.lessonSubmit('ana', mods[0], right(mods[0])));
+  assert.equal(ok.data.result.passed, true); assert.equal(w.player.xp, 300 + UNI.MODULE_XP); assert.ok(ok.data.result.review.every(r => r.ok && r.why), 'aprovado vê o porquê');
+  assert.equal(w.progress[mods[0]].passed, true);
+  w.progress[mods[0]].attempt -= 30e3;
+  const rep = await inWorld(w, () => uni.lessonSubmit('ana', mods[0], right(mods[0])));
+  assert.equal(rep.data.result.repeat, true); assert.equal(w.player.xp, 300 + UNI.MODULE_XP, 'sem recompensa repetida');
+  // segundo módulo fecha a disciplina de Lógica: XP extra e créditos
+  await inWorld(w, () => uni.lessonStart('ana', mods[1])); w.progress[mods[1]].started -= 40e3;
+  const d = await inWorld(w, () => uni.lessonSubmit('ana', mods[1], right(mods[1])));
+  assert.equal(d.data.result.reward.discipline, 'Lógica de Programação'); assert.equal(w.student.credits, UNI.DISCIPLINE_CREDITS);
+  assert.equal(w.player.xp, 300 + 2 * UNI.MODULE_XP + UNI.DISCIPLINE_XP);
+});
+
+test('diploma: concluir o curso dá XP, bolsa paga pelo tesouro e encerra a matrícula', async () => {
+  const mods = COURSES.comp.modules, right = m => m.quiz.map(q => q.a);
+  const w = world({ pass: passRow('aluno'), student: { course: 'comp', status: 'ativo', credits: 0 } });
+  let last;
+  for (const m of mods) { await inWorld(w, () => uni.lessonStart('ana', m.id)); w.progress[m.id].started -= 40e3; last = await inWorld(w, () => uni.lessonSubmit('ana', m.id, right(m))); assert.ok(!last.err, last.err); }
+  const rw = last.data.result.reward;
+  assert.equal(rw.diploma, 'Ciência da Computação'); assert.equal(rw.money, UNI.DIPLOMA_REWARD); assert.equal(w.student.status, 'formado'); assert.deepEqual(w.diplomas, ['comp']);
+  assert.equal(w.debits.at(-1).amount, UNI.DIPLOMA_REWARD); assert.equal(w.player.money, 500 + UNI.DIPLOMA_REWARD);
+  assert.equal(w.player.xp, 300 + 4 * UNI.MODULE_XP + 2 * UNI.DISCIPLINE_XP + UNI.DIPLOMA_XP);
+  assert.equal(last.university.diplomas[0].name, 'Ciência da Computação');
+  assert.equal(last.university.access.salas.ok, false, 'formado não tem mais aula');
+  const broke = world({ pass: passRow('aluno'), student: { course: 'adm', status: 'ativo', credits: 0 }, treasury: 0 });
+  for (const m of COURSES.adm.modules) { await inWorld(broke, () => uni.lessonStart('ana', m.id)); broke.progress[m.id].started -= 40e3; last = await inWorld(broke, () => uni.lessonSubmit('ana', m.id, right(m))); }
+  assert.equal(last.data.result.reward.money, 0, 'tesouro vazio: diploma sai, mas sem dinheiro'); assert.equal(broke.student.status, 'formado');
+});
+
+test('aula ao vivo: professor abre, aluno entra sem esperar, professor encerra e recebe por presença', async () => {
+  const prof = world({ employment: { jobId: 'university_professor' }, pass: passRow('professor') });
+  const mod = COURSES.comp.modules[0].id;
+  assert.equal((await inWorld(world({ pass: passRow('aluno'), student: stu() }), () => uni.liveOpen('ana', mod))).status, 403, 'aluno não abre aula');
+  assert.equal((await inWorld(prof, () => uni.liveOpen('ana', 'nada'))).status, 400);
+  const o = await inWorld(prof, () => uni.liveOpen('ana', mod)); assert.ok(!o.err, o.err); assert.equal(o.university.myLive.running, true);
+  assert.match((await inWorld(prof, () => uni.liveOpen('ana', mod))).err, /já tem uma aula aberta/);
+  const liveId = prof.live[0].id;
+  assert.match((await inWorld(prof, () => uni.liveClose('ana', liveId))).err, /em andamento/, 'não encerra antes da hora');
+  // aluno entra
+  const al = world({ pass: passRow('aluno'), student: stu('comp') }); al.live = prof.live; al.treasury = prof.treasury;
+  const j = await inWorld(al, () => uni.liveJoin('ana', liveId)); assert.ok(!j.err, j.err); assert.equal(al.player.xp, 300 + UNI.LIVE_JOIN_XP); assert.equal(al.att.length, 1);
+  const again = await inWorld(al, () => uni.liveJoin('ana', liveId)); assert.equal(al.player.xp, 300 + UNI.LIVE_JOIN_XP, 'XP de entrada só uma vez'); assert.match(again.message, /já está/);
+  const st = await inWorld(al, () => uni.lessonStart('ana', mod)); assert.equal(st.data.lesson.live, true); assert.ok(st.data.lesson.until <= Date.now() + 50, 'sem espera de estudo');
+  const sub = await inWorld(al, () => uni.lessonSubmit('ana', mod, MODULE_BY_ID[mod].quiz.map(q => q.a))); assert.equal(sub.data.result.passed, true, 'passa direto, sem esperar');
+  const other = world({ pass: passRow('aluno'), student: stu('adm') }); other.live = prof.live;
+  assert.equal((await inWorld(other, () => uni.liveJoin('ana', liveId))).status, 403, 'aluno de outro curso');
+  // professor encerra depois do tempo
+  prof.att = al.att; prof.live[0].ends = Date.now() - 1000;
+  const c = await inWorld(prof, () => uni.liveClose('ana', liveId)); assert.ok(!c.err, c.err);
+  assert.equal(prof.player.money, 500 + UNI.LIVE_PAY); assert.equal(prof.player.xp, 300 + UNI.LIVE_HOST_XP); assert.equal(prof.debits.at(-1).amount, UNI.LIVE_PAY);
+  assert.match((await inWorld(prof, () => uni.liveClose('ana', liveId))).err, /já foi encerrada/);
+});
+
+test('aula ao vivo: sem alunos não paga, e há teto diário de aulas pagas', async () => {
+  const w = world({ employment: { jobId: 'university_professor' }, pass: passRow('professor') });
+  const mod = COURSES.adm.modules[0].id;
+  await inWorld(w, () => uni.liveOpen('ana', mod)); w.live[0].ends = Date.now() - 1; const empty = await inWorld(w, () => uni.liveClose('ana', w.live[0].id));
+  assert.match(empty.message, /Nenhum aluno/); assert.equal(w.player.money, 500);
+  for (let i = 0; i < UNI.LIVE_DAILY_PAID; i++) { w.live.push({ id: '00000000-0000-4000-8000-00000000000' + i, professor: 'ana', module_id: mod, course: 'adm', ends: 0, closed: true, paid: 10 }); }
+  await inWorld(w, () => uni.liveOpen('ana', mod)); const open = w.live.find(l => !l.closed); open.ends = Date.now() - 1; w.att.push({ live: open.id, user: 'x' });
+  const capped = await inWorld(w, () => uni.liveClose('ana', open.id)); assert.match(capped.message, /Limite diário/); assert.equal(w.player.money, 500);
+  const poor = world({ employment: { jobId: 'university_professor' }, pass: passRow('professor'), treasury: 0 });
+  await inWorld(poor, () => uni.liveOpen('ana', mod)); poor.live[0].ends = Date.now() - 1; poor.att.push({ live: poor.live[0].id, user: 'x' });
+  const none = await inWorld(poor, () => uni.liveClose('ana', poor.live[0].id)); assert.match(none.message, /sem saldo/); assert.equal(poor.player.money, 500);
+});
+
+test('cantina: só com acesso, desconto de aluno, intervalo entre pedidos e saúde cheia', async () => {
+  assert.equal((await inWorld(world(), () => uni.canteenBuy('ana', 'cafe'))).status, 403, 'sem carteirinha');
+  assert.equal((await inWorld(world({ pass: passRow('visitante', 'biblioteca') }), () => uni.canteenBuy('ana', 'cafe'))).status, 403, 'visita à biblioteca não inclui a cantina');
+  assert.equal((await inWorld(world({ pass: passRow('aluno'), student: stu() }), () => uni.canteenBuy('ana', 'inventado'))).status, 400);
+  const al = world({ pass: passRow('aluno'), student: stu() });
+  const r = await inWorld(al, () => uni.canteenBuy('ana', 'prato')); assert.ok(!r.err, r.err);
+  assert.equal(al.player.money, 500 - uni.canteenPrice('prato', 'aluno')); assert.equal(al.health, 68); assert.equal(al.credits.at(-1).kind, 'universidade'); assert.match(r.message, /desconto de 20%/);
+  assert.match((await inWorld(al, () => uni.canteenBuy('ana', 'cafe'))).err, /Mastigue com calma/);
+  const vis = world({ pass: passRow('visitante', 'evento') });
+  await inWorld(vis, () => uni.canteenBuy('ana', 'prato')); assert.equal(vis.player.money, 500 - 14, 'visitante paga o preço cheio');
+  const full = world({ pass: passRow('aluno'), student: stu(), health: 100 }); assert.match((await inWorld(full, () => uni.canteenBuy('ana', 'cafe'))).err, /já está no máximo/); assert.equal(full.player.money, 500);
+  const poor = world({ pass: passRow('aluno'), student: stu() }); poor.player.money = 1; assert.match((await inWorld(poor, () => uni.canteenBuy('ana', 'prato'))).err, /Saldo insuficiente/);
+  const near = world({ pass: passRow('professor'), health: 99 }); await inWorld(near, () => uni.canteenBuy('ana', 'prato')); assert.equal(near.health, 100, 'nunca passa de 100');
+});
+
+function mountRoutes(authUser, limited = () => false) {
+  const routes = {};
+  const app = { get: (p, ...h) => { routes['GET ' + p] = h[h.length - 1]; }, post: (p, ...h) => { routes['POST ' + p] = h[h.length - 1]; } };
+  uni.registerRoutes({ app, json: (_q, _s, n) => n && n(), authUser, limited, userTries: new Map() });
+  return routes;
+}
+const call = async (handler, body = {}) => {
+  const res = { code: 200, body: null, headersSent: false, status(c) { this.code = c; return this; }, json(b) { this.body = b; this.headersSent = true; return this; }, set() { return this; } };
+  await handler({ body, params: {}, headers: {}, query: {} }, res); return res;
+};
+test('rotas: exigem sessão, recusam corpo malformado e limitam ações por minuto', async () => {
+  const anon = mountRoutes(async () => null);
+  const all = ['GET /api/sk2/university', 'POST /api/sk2/university/pass', 'POST /api/sk2/university/pass/return', 'POST /api/sk2/university/vest/start', 'POST /api/sk2/university/vest/submit', 'POST /api/sk2/university/enroll',
+    'POST /api/sk2/university/lesson/start', 'POST /api/sk2/university/lesson/submit', 'POST /api/sk2/university/live/open', 'POST /api/sk2/university/live/join', 'POST /api/sk2/university/live/close', 'POST /api/sk2/university/canteen'];
+  for (const r of all) { assert.equal(typeof anon[r], 'function', r); assert.equal((await call(anon[r])).code, 401, r); }
+  const user = mountRoutes(async () => ({ username: 'ana', name: 'Ana' }));
+  for (const [route, body] of [['POST /api/sk2/university/pass', {}], ['POST /api/sk2/university/vest/submit', {}], ['POST /api/sk2/university/vest/submit', { id: 'x', answers: 'a' }], ['POST /api/sk2/university/enroll', {}], ['POST /api/sk2/university/lesson/start', {}],
+    ['POST /api/sk2/university/lesson/submit', { module: 'm' }], ['POST /api/sk2/university/live/open', {}], ['POST /api/sk2/university/canteen', {}]]) assert.equal((await call(user[route], body)).code, 400, route + ' ' + JSON.stringify(body));
+  assert.equal((await call(mountRoutes(async () => ({ username: 'ana' }), () => true)['POST /api/sk2/university/canteen'], { item: 'cafe' })).code, 429);
+});
+
+test('ligação: servidor (carreira de professor, init e rotas) e cliente (família, painel, portas, sons)', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /require\('\.\/sorokiba2-university'\)/); assert.match(server, /\.then\(\(\) => university\.init\(\)\)/); assert.match(server, /university\.registerRoutes\(\{/);
+  assert.match(server, /id: 'university_professor'[^\n]*building: 'Universidade'/);
+  for (const table of ['INTERVIEW_QUESTIONS', 'WORK_TASKS', 'CAREER_LADDERS']) { const i = server.indexOf(`const ${table} = Object.freeze({`); assert.match(server.slice(i, i + 30000), /university_professor:/, table); }
+  const html = read('sorokiba2.html');
+  assert.match(html, /n\.includes\('universidade'\)\)family='university'/);
+  assert.match(html, /university:\[56,30,'uni-zip'\]/); assert.match(html, /shape==='uni-zip'\)\{renderUniZip\(t\)/);
+  assert.match(html, /id="uniPanel"/); assert.match(html, /id="uniChip"/); assert.match(html, /API\+'\/university'\+path/);
+  assert.match(html, /universityEnter\(\)/); assert.match(html, /universityLeave\(\)/);
+  assert.match(html, /function uniApplyAccess\(room\)/); assert.match(html, /universidade:'Universidade \(taxas e cantina\)'/); assert.match(html, /university_professor:'Universidade'/);
+  assert.match(html, /n\.includes\('escola'\)\|\|n\.includes\('universidade'\)\)family='school'/, 'a Escola continua com o interior simples');
+});
