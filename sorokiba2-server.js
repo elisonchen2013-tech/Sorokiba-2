@@ -11,6 +11,7 @@ const hospital = require('./sorokiba2-hospital');
 const city = require('./sorokiba2-city');
 const police = require('./sorokiba2-police');
 const market = require('./sorokiba2-market');
+const university = require('./sorokiba2-university');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -37,6 +38,7 @@ const CAREERS = Object.freeze([
   { id: 'fastfood_counter', title: 'Atendente de fast-food', profession: 'Atendente de fast-food', building: 'Restaurante', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 2 },
   { id: 'police_officer', title: 'Agente de segurança urbana', profession: 'Policial', building: 'Delegacia', skills: ['atendimento', 'comunicacao'], minExperience: 1, minXp: 200, vacancies: 3 },
   { id: 'market_cashier', title: 'Operador de caixa', profession: 'Operador de caixa', building: 'Supermercado', skills: ['atendimento', 'organizacao'], minExperience: 0, minXp: 50, vacancies: 3 },
+  { id: 'university_professor', title: 'Professor universitário', profession: 'Professor', building: 'Universidade', skills: ['comunicacao', 'organizacao'], minExperience: 3, minXp: 600, vacancies: 2 },
   { id: 'teacher_assistant', title: 'Assistente escolar', profession: 'Professor', building: 'Escola', skills: ['organizacao', 'comunicacao'], minExperience: 2, minXp: 400, vacancies: 1 },
 ]);
 const CAREER_SKILLS = Object.freeze({
@@ -75,6 +77,11 @@ const INTERVIEW_QUESTIONS = Object.freeze({
     { id: 'greeting', prompt: 'Um cliente chega ao caixa com pressa. Você:', options: ['Cumprimenta, passa os itens com atenção e agradece', 'Passa tudo em silêncio e sem olhar', 'Pede que ele volte mais tarde'], correct: 0 },
     { id: 'expiry', prompt: 'Você nota um iogurte vencido na gôndola. O certo é:', options: ['Avisar o repositor para tirar da venda', 'Deixar onde está', 'Esconder atrás de outros produtos'], correct: 0 },
     { id: 'change', prompt: 'A compra deu R$ 37 e o cliente pagou com R$ 50. Qual é o troco?', options: ['R$ 13', 'R$ 23', 'R$ 17'], correct: 0 },
+  ],
+  university_professor: [
+    { id: 'objective', prompt: 'Ao planejar uma aula, o primeiro passo é:', options: ['Definir o que o aluno deve aprender', 'Escolher o slide mais colorido', 'Decidir a hora do intervalo'], correct: 0 },
+    { id: 'fair', prompt: 'Um aluno vai mal em uma prova. Você:', options: ['Dá retorno claro e oferece reforço', 'Expõe a nota para a turma', 'Ignora o resultado'], correct: 0 },
+    { id: 'respect', prompt: 'Um visitante entra na sala sem carteirinha. O correto é:', options: ['Orientar a ir à recepção', 'Deixar ficar em silêncio', 'Pedir que fique escondido'], correct: 0 },
   ],
   teacher_assistant: [
     { id: 'classroom', prompt: 'Uma turma está dispersa. Você:', options: ['Define uma instrução clara e uma atividade', 'Grita sem explicar', 'Cancela a aula'], correct: 0 },
@@ -134,6 +141,11 @@ const WORK_TASKS = Object.freeze({
     { id: 'change', prompt: 'A compra deu R$ 37 e o cliente pagou R$ 50. Qual o troco?', options: ['R$ 13', 'R$ 23', 'R$ 17'], correct: 0 },
     { id: 'pack', prompt: 'Na hora de embalar, o que vai por cima na sacola?', options: ['Os itens leves e frágeis, como pão e ovos', 'Os itens mais pesados', 'Tanto faz'], correct: 0 },
   ] },
+  university_professor: { type: 'lecture_shift', supervisor: 'Reitora Valéria', money: 60, xp: 34, stages: [
+    { id: 'prep', prompt: 'Antes da aula, o que preparar?', options: ['Objetivo, conteúdo, método e forma de avaliar', 'Só o material mais bonito', 'Nada: improvisar tudo'], correct: 0 },
+    { id: 'teach', prompt: 'Metade da turma não entendeu o exemplo. Você:', options: ['Explica de outro jeito e confere o entendimento', 'Segue em frente sem olhar para a turma', 'Repete a mesma frase mais alto'], correct: 0 },
+    { id: 'assess', prompt: 'Para saber se a turma aprendeu, você usa:', options: ['Perguntas curtas e tarefas durante a aula', 'Apenas a prova do fim do semestre', 'O palpite do professor'], correct: 0 },
+  ] },
   teacher_assistant: { type: 'classroom_support', supervisor: 'Lúcia', money: 38, xp: 22, stages: [
     { id: 'prepare', prompt: 'Prepare os materiais da atividade escolar.', options: ['Conferir a lista e separar os materiais pedidos', 'Levar materiais aleatórios', 'Começar sem verificar'], correct: 0 },
     { id: 'assist', prompt: 'Um aluno pede orientação na atividade simulada.', options: ['Explicar a próxima etapa com respeito', 'Ignorar o pedido', 'Fazer a atividade sem explicar'], correct: 0 },
@@ -150,6 +162,7 @@ const CAREER_LADDERS = Object.freeze({
   mechanic: [{ title: 'Auxiliar de oficina', salary: 950, xp: 0, tasks: 0, performance: 0 }, { title: 'Mecânico', salary: 1300, xp: 70, tasks: 4, performance: 72 }, { title: 'Mecânico sênior', salary: 1750, xp: 170, tasks: 10, performance: 85 }],
   police_officer: [{ title: 'Agente de patrulha', salary: 1000, xp: 0, tasks: 0, performance: 0 }, { title: 'Agente sênior', salary: 1350, xp: 70, tasks: 4, performance: 75 }, { title: 'Inspetor', salary: 1800, xp: 170, tasks: 10, performance: 85 }],
   market_cashier: [{ title: 'Operador de caixa', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Operador sênior', salary: 1200, xp: 60, tasks: 4, performance: 75 }, { title: 'Supervisor de loja', salary: 1600, xp: 150, tasks: 10, performance: 85 }],
+  university_professor: [{ title: 'Professor assistente', salary: 1800, xp: 0, tasks: 0, performance: 0 }, { title: 'Professor adjunto', salary: 2400, xp: 120, tasks: 5, performance: 80 }, { title: 'Professor titular', salary: 3200, xp: 300, tasks: 12, performance: 88 }],
   teacher_assistant: [{ title: 'Auxiliar escolar', salary: 900, xp: 0, tasks: 0, performance: 0 }, { title: 'Assistente escolar', salary: 1200, xp: 70, tasks: 4, performance: 75 }, { title: 'Coordenador pedagógico', salary: 1650, xp: 170, tasks: 10, performance: 88 }],
 });
 const TRAINING = Object.freeze({
@@ -161,7 +174,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => market.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura, Delegacia e Mercado de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => market.init()).then(() => university.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura, Delegacia, Mercado e Universidade de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -414,6 +427,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   police.registerRoutes({ app, json, authUser, limited, userTries, addInterval, notify: (u, m) => bankNotify(u, m), broadcast: m => cityBroadcast(m) });
   // Mercado: catálogo, ofertas do dia, Cartão Sorokiba, compra com carrinho e despensa.
   market.registerRoutes({ app, json, authUser, limited, userTries });
+  // Universidade: carteirinha na portaria, áreas abertas e fechadas, vestibular, cursos, aula ao vivo e cantina.
+  university.registerRoutes({ app, json, authUser, limited, userTries });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
