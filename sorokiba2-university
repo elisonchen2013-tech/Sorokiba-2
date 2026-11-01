@@ -1,0 +1,581 @@
+'use strict';
+// Sorokiba 2 – Universidade. Diferente da Escola (aberta e simples), aqui tudo passa pela portaria:
+//
+//   • carteirinha emitida na Recepção: ALUNO (matriculado), PROFESSOR (contratado) ou VISITANTE (com motivo declarado);
+//   • áreas abertas e fechadas: cada zona do campus só abre para quem a carteirinha permite (matriz em ZONES/ACCESS);
+//   • vestibular: só para visitante com motivo "vestibular", com taxa, sorteio de questões e correção no servidor;
+//   • matrícula na Secretaria, aulas (texto + prova curta), créditos, XP e diploma por curso;
+//   • aula ao vivo: o professor abre, os alunos entram (sem esperar o tempo de estudo) e ele recebe por aluno presente;
+//   • cantina: só quem tem carteirinha com acesso (aluno 20% e professor 10% de desconto).
+// O servidor decide permissões e dinheiro; como nos outros prédios, ele não sabe em que sala o jogador está.
+const crypto = require('crypto');
+const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
+const hospital = require('./sorokiba2-hospital');
+
+// SK2_UNI_TIME_SCALE=0.001 comprime validade da carteirinha, estudo, esperas e aula ao vivo. Em produção: 1.
+const SCALE = (() => { const n = Number(process.env.SK2_UNI_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
+const scaled = ms => Math.max(1000, Math.round(ms * SCALE));
+const hoursMs = h => scaled(h * 3600e3), minutesMs = m => scaled(m * 60e3), secondsMs = s => scaled(s * 1000);
+
+const UNI = Object.freeze({
+  PASS_HOURS: { aluno: 24, professor: 24, visitante: 2 },
+  VEST_FEE: 30, VEST_QUESTIONS: 8, VEST_MINUTES: 8, VEST_ATTEMPTS_DAY: 3, VEST_COOLDOWN_MIN: 3,
+  ENROLL_FEE: 60,
+  STUDY_SECONDS: 30, QUIZ_PASS: 2, QUIZ_COOLDOWN_S: 20,
+  MODULE_XP: 15, DISCIPLINE_XP: 40, DISCIPLINE_CREDITS: 4, DIPLOMA_XP: 150, DIPLOMA_REWARD: 150,
+  LIVE_MINUTES: 3, LIVE_PAY: 10, LIVE_PAY_MAX: 5, LIVE_DAILY_PAID: 3, LIVE_JOIN_XP: 5, LIVE_HOST_XP: 8,
+  CANTEEN_COOLDOWN_S: 30, PROFESSOR_JOB: 'university_professor',
+});
+const ZONES = Object.freeze({
+  portaria: 'Portaria', patio: 'Pátio central', jardim: 'Jardim', secretaria: 'Secretaria', biblioteca: 'Biblioteca', salas: 'Salas de aula',
+  labs: 'Laboratórios', auditorio: 'Auditório', cantina: 'Cantina', provas: 'Sala de Provas', professores: 'Sala dos Professores', reitoria: 'Reitoria',
+});
+const VISIT_PURPOSES = Object.freeze({
+  vestibular: { label: 'Fazer o vestibular', zones: ['patio', 'jardim', 'secretaria', 'provas', 'cantina'] },
+  matricula: { label: 'Matrícula e informações', zones: ['patio', 'jardim', 'secretaria', 'cantina'] },
+  evento: { label: 'Palestra ou evento', zones: ['patio', 'jardim', 'auditorio', 'cantina'] },
+  reuniao: { label: 'Reunião na secretaria', zones: ['patio', 'jardim', 'secretaria', 'cantina'] },
+  biblioteca: { label: 'Consultar a biblioteca', zones: ['patio', 'jardim', 'biblioteca'] },
+});
+const ROLE_ZONES = Object.freeze({
+  aluno: ['patio', 'jardim', 'secretaria', 'biblioteca', 'salas', 'labs', 'auditorio', 'cantina'],
+  professor: ['patio', 'jardim', 'secretaria', 'biblioteca', 'salas', 'labs', 'auditorio', 'cantina', 'professores', 'reitoria', 'provas'],
+});
+const LAB_COURSES = Object.freeze(['comp', 'eng']);
+const CANTEEN = Object.freeze([
+  { id: 'cafe', name: 'Café com leite', price: 4, heal: 2, icon: '☕' },
+  { id: 'paodequeijo', name: 'Pão de queijo', price: 5, heal: 3, icon: '🧀' },
+  { id: 'suco', name: 'Suco natural', price: 6, heal: 4, icon: '🧃' },
+  { id: 'bolo', name: 'Fatia de bolo', price: 7, heal: 4, icon: '🍰' },
+  { id: 'fruta', name: 'Salada de frutas', price: 8, heal: 5, icon: '🍓' },
+  { id: 'sanduiche', name: 'Sanduíche natural', price: 9, heal: 5, icon: '🥪' },
+  { id: 'prato', name: 'Prato do dia', price: 14, heal: 8, icon: '🍛' },
+]);
+const CANTEEN_BY_ID = Object.freeze(Object.fromEntries(CANTEEN.map(i => [i.id, i])));
+const DISCOUNT = Object.freeze({ aluno: 20, professor: 10, visitante: 0 });
+
+/* ---------- conteúdo: perguntas (a primeira opção é a certa; a ordem é embaralhada de forma fixa) ---------- */
+function mulberry32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+function buildQuestion(id, raw) {
+  const rnd = mulberry32(hashStr(id)), idx = raw.o.map((_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  return { id, q: raw.q, options: idx.map(i => raw.o[i]), a: idx.indexOf(0), why: raw.why || '' };
+}
+const Q = (q, ...o) => ({ q, o });
+const QW = (why, q, ...o) => ({ q, o, why });
+const MODULES_RAW = {
+  adm: { name: 'Administração', icon: '📊', cutoff: 5, disciplines: [
+    { id: 'intro', name: 'Introdução à Administração', modules: [
+      { title: 'Planejar, organizar, dirigir e controlar', text: 'A administração se apoia em quatro funções: planejar (definir objetivos e caminhos), organizar (distribuir pessoas e recursos), dirigir (orientar e motivar a equipe) e controlar (comparar o resultado com o plano e corrigir desvios). Elas formam um ciclo: o controle alimenta o próximo planejamento.', quiz: [
+        QW('Planejar é definir onde se quer chegar e como.', 'Qual função define objetivos e caminhos para alcançá-los?', 'Planejar', 'Controlar', 'Dirigir'),
+        QW('Controlar compara o realizado com o planejado.', 'Comparar o resultado com o planejado e corrigir desvios é:', 'Controlar', 'Organizar', 'Planejar'),
+        QW('Organizar distribui pessoas, tarefas e recursos.', 'Distribuir tarefas, pessoas e recursos entre as áreas é a função de:', 'Organizar', 'Dirigir', 'Controlar')] },
+      { title: 'Fluxo de caixa', text: 'Fluxo de caixa é o registro das entradas e saídas de dinheiro de um período. Se as entradas superam as saídas, o saldo é positivo; no caso contrário, a empresa precisa de reserva ou crédito. Acompanhar o fluxo evita surpresas e ajuda a decidir quando investir.', quiz: [
+        QW('500 − 350 = 150.', 'Entradas de R$ 500 e saídas de R$ 350 deixam saldo de:', 'R$ 150', 'R$ 850', 'R$ 50'),
+        QW('Saídas maiores que entradas dão saldo negativo.', 'Se as saídas superam as entradas, o saldo do período é:', 'Negativo', 'Positivo', 'Sempre zero'),
+        QW('O fluxo mostra se há dinheiro para investir ou se falta.', 'Para que serve acompanhar o fluxo de caixa?', 'Evitar surpresas e decidir quando investir', 'Aumentar os preços automaticamente', 'Dispensar o planejamento')] }] },
+    { id: 'mkt', name: 'Marketing', modules: [
+      { title: 'Os 4 Ps', text: 'O composto de marketing reúne produto, preço, praça (onde se vende) e promoção (como se divulga). Mudar um deles afeta os outros: um produto premium pede preço e praça coerentes com essa imagem.', quiz: [
+        QW('Praça é o caminho até o cliente: loja, site, entrega.', 'O "P" de praça trata de:', 'Onde e como o produto chega ao cliente', 'Quanto o produto custa', 'A cor da embalagem'),
+        QW('Promoção é a comunicação: anúncios, ofertas, divulgação.', 'Divulgar com anúncios e ofertas pertence a:', 'Promoção', 'Preço', 'Produto'),
+        QW('Os 4 Ps são produto, preço, praça e promoção.', 'Qual alternativa lista os 4 Ps?', 'Produto, preço, praça e promoção', 'Planejar, preço, pessoas e prazo', 'Produto, prazo, patrão e prêmio')] },
+      { title: 'Segmentação de público', text: 'Segmentar é dividir o mercado em grupos com necessidades parecidas (idade, interesses, região). Assim a mensagem fica mais clara e o dinheiro de divulgação rende mais. Falar com todo mundo do mesmo jeito costuma não convencer ninguém.', quiz: [
+        QW('Grupos parecidos recebem mensagens sob medida.', 'Segmentar o público significa:', 'Dividir em grupos com necessidades parecidas', 'Vender só para amigos', 'Baixar todos os preços'),
+        QW('Segmentar deixa a comunicação mais precisa.', 'Qual é a vantagem de segmentar?', 'Mensagens mais claras e divulgação mais eficiente', 'Eliminar a concorrência', 'Dispensar pesquisa'),
+        QW('Idade, interesse e região são critérios comuns.', 'Um critério de segmentação é:', 'Faixa etária', 'O nome do dono da loja', 'A cor do logotipo')] }] }] },
+  comp: { name: 'Ciência da Computação', icon: '💻', cutoff: 6, disciplines: [
+    { id: 'logica', name: 'Lógica de Programação', modules: [
+      { title: 'Algoritmos e fluxogramas', text: 'Um algoritmo é uma sequência finita de passos que resolve um problema. Ele precisa ser claro, ordenado e terminar em algum momento. O fluxograma desenha o algoritmo com formas: início e fim, ações e decisões (sim ou não).', quiz: [
+        QW('Algoritmo é uma receita de passos finitos.', 'Um algoritmo é:', 'Uma sequência finita de passos para resolver um problema', 'Um tipo de computador', 'Uma linguagem de marcação'),
+        QW('No fluxograma, a decisão costuma ser um losango.', 'Qual forma costuma representar uma decisão (sim ou não) no fluxograma?', 'Losango', 'Retângulo', 'Círculo de início'),
+        QW('Sem fim, o algoritmo trava; sem clareza, ninguém executa.', 'Um bom algoritmo precisa:', 'Ser claro e terminar', 'Ser infinito', 'Ter passos secretos')] },
+      { title: 'Variáveis, condições e laços', text: 'Variável guarda um valor que pode mudar, como os pontos de um jogo. Condição (se... então... senão) escolhe caminhos. Laço (enquanto, para) repete passos até que uma condição seja atingida.', quiz: [
+        QW('Variáveis guardam dados que mudam.', 'Uma variável serve para:', 'Guardar um valor que pode mudar', 'Desligar o computador', 'Apagar o programa'),
+        QW('A condição escolhe entre caminhos.', 'A estrutura "se... então... senão" é:', 'Uma condição', 'Um laço', 'Uma variável'),
+        QW('O laço repete até a condição ser atingida.', 'Repetir passos até que algo aconteça é função do:', 'Laço', 'Comentário', 'Fluxograma de início')] }] },
+    { id: 'sistemas', name: 'Sistemas Digitais', modules: [
+      { title: 'Sistema binário', text: 'Computadores usam o sistema binário, com apenas dois dígitos: 0 e 1 (bits). Cada posição vale uma potência de 2: 1, 2, 4, 8... Assim, 101 em binário é 4 + 0 + 1 = 5. Oito bits formam um byte.', quiz: [
+        QW('101 = 4 + 0 + 1 = 5.', 'Quanto vale 101 em binário?', '5', '3', '10'),
+        QW('1 byte = 8 bits.', 'Quantos bits formam um byte?', '8', '2', '16'),
+        QW('Binário só usa 0 e 1.', 'Os dígitos do sistema binário são:', '0 e 1', '1 e 2', '0 a 9')] },
+      { title: 'Redes e Internet', text: 'Uma rede conecta dispositivos para trocar dados, e a internet é a rede das redes. Cada dispositivo tem um endereço (IP), e os dados viajam em pacotes que podem seguir caminhos diferentes e são reorganizados no destino.', quiz: [
+        QW('A internet liga redes menores entre si.', 'A internet pode ser descrita como:', 'A rede das redes', 'Um único computador gigante', 'Um programa de edição de texto'),
+        QW('Os dados são divididos em pacotes.', 'Os dados na rede viajam divididos em:', 'Pacotes', 'Cadeados', 'Planilhas'),
+        QW('O IP identifica o dispositivo na rede.', 'O endereço que identifica um dispositivo na rede é o:', 'IP', 'CEP', 'CPF')] }] }] },
+  ped: { name: 'Pedagogia', icon: '🍎', cutoff: 5, disciplines: [
+    { id: 'didatica', name: 'Didática', modules: [
+      { title: 'Planejamento de aula', text: 'Planejar uma aula é definir o objetivo (o que o aluno deve aprender), o conteúdo, o método (como ensinar) e a avaliação (como saber se aprendeu). Começar pelo objetivo evita aulas bonitas que não ensinam nada.', quiz: [
+        QW('Sem objetivo, não há como escolher conteúdo nem avaliar.', 'Por onde começa o planejamento de uma aula?', 'Pelo objetivo de aprendizagem', 'Pela decoração da sala', 'Pelo horário do recreio'),
+        QW('Método é o "como".', 'O "método" responde a:', 'Como ensinar', 'Quem vai à aula', 'Onde fica a escola'),
+        QW('Avaliar mostra se o objetivo foi alcançado.', 'Avaliar serve para:', 'Saber se os objetivos foram alcançados', 'Castigar a turma', 'Substituir o planejamento')] },
+      { title: 'Avaliação formativa', text: 'A avaliação formativa acontece durante o aprendizado: perguntas, tarefas curtas e conversas mostram o que a turma já entendeu e o que precisa de reforço. O professor usa esse retorno para ajustar a aula, e o aluno aprende com o erro.', quiz: [
+        QW('Formativa = durante o processo.', 'A avaliação formativa acontece:', 'Durante o processo de aprendizagem', 'Só no fim do ano', 'Nunca com retorno'),
+        QW('Ela orienta o ensino e apoia o aluno.', 'Seu principal uso é:', 'Ajustar o ensino e apoiar o aluno', 'Ordenar alunos por nota', 'Dar prêmios'),
+        QW('O erro é informação para melhorar.', 'Aprender com o erro significa:', 'Usar o erro como informação para melhorar', 'Esconder os erros', 'Repetir sem mudar')] }] },
+    { id: 'psico', name: 'Psicologia da Educação', modules: [
+      { title: 'Aprendizagem e motivação', text: 'A motivação cresce quando a tarefa tem sentido, é desafiadora na medida certa e o aluno recebe retorno claro. Desafio fácil demais entedia; difícil demais frustra. O papel do professor é encontrar o ponto médio e apoiar o progresso.', quiz: [
+        QW('Nem tédio, nem frustração.', 'Um desafio ideal é:', 'Nem fácil demais nem difícil demais', 'Sempre o mais difícil', 'Sempre o mais fácil'),
+        QW('Sentido e retorno sustentam o interesse.', 'O que ajuda a motivação?', 'Sentido na tarefa e retorno claro', 'Ameaças constantes', 'Tarefas sem objetivo'),
+        QW('Difícil demais gera frustração.', 'Tarefas difíceis demais tendem a causar:', 'Frustração', 'Tédio', 'Motivação máxima')] },
+      { title: 'Inclusão', text: 'A educação inclusiva garante que todos os estudantes aprendam juntos, com apoios e adaptações quando necessário (materiais acessíveis, tempo extra, recursos de comunicação). Incluir é ajustar o ambiente, e não exigir que o aluno se encaixe sozinho.', quiz: [
+        QW('Todos juntos, com os apoios necessários.', 'Educação inclusiva busca:', 'Que todos aprendam juntos, com apoios', 'Separar alunos por dificuldade', 'Retirar alunos da turma'),
+        QW('Adaptações removem barreiras.', 'Um exemplo de adaptação é:', 'Material acessível e tempo extra', 'Provas iguais sem apoio', 'Ignorar a necessidade'),
+        QW('A mudança é no ambiente.', 'Incluir é principalmente:', 'Adaptar o ambiente às necessidades', 'Exigir que o aluno se adapte sozinho', 'Reduzir o conteúdo para todos')] }] }] },
+  eng: { name: 'Engenharia Civil', icon: '🏗️', cutoff: 6, disciplines: [
+    { id: 'fisica', name: 'Física Aplicada', modules: [
+      { title: 'Forças e equilíbrio', text: 'Uma estrutura está em equilíbrio quando a soma das forças sobre ela é zero. O peso da construção empurra para baixo e o apoio responde empurrando para cima. Força se mede em newtons (N), e o peso é a massa vezes a gravidade (cerca de 10 m/s² nas contas simples).', quiz: [
+        QW('Equilíbrio: forças se anulam.', 'Em equilíbrio, a soma das forças é:', 'Zero', 'Infinita', 'Sempre positiva'),
+        QW('A unidade de força no SI é o newton.', 'Qual a unidade de força no SI?', 'Newton', 'Metro', 'Segundo'),
+        QW('P = m · g = 20 · 10 = 200 N.', 'Com g ≈ 10 m/s², o peso de 20 kg é:', '200 N', '2 N', '20 N')] },
+      { title: 'Materiais e resistência', text: 'Cada material reage de um jeito às forças: o concreto resiste muito à compressão (esmagamento), mas pouco à tração (esticar). Por isso se colocam barras de aço dentro dele, formando o concreto armado, que resiste aos dois esforços.', quiz: [
+        QW('O concreto é forte na compressão.', 'O concreto resiste bem a:', 'Compressão', 'Tração', 'Nenhum esforço'),
+        QW('O aço trabalha na tração.', 'O aço no concreto armado ajuda a resistir a:', 'Tração', 'Somente à chuva', 'Somente ao calor'),
+        QW('Concreto armado = concreto + aço.', 'Concreto armado é:', 'Concreto com barras de aço dentro', 'Concreto sem água', 'Concreto com madeira por fora')] }] },
+    { id: 'desenho', name: 'Desenho Técnico', modules: [
+      { title: 'Escalas e plantas', text: 'A escala relaciona o tamanho do desenho ao tamanho real. Na escala 1:50, 1 cm no papel representa 50 cm na obra. A planta baixa mostra a construção vista de cima, com paredes, portas e medidas.', quiz: [
+        QW('2 × 50 = 100 cm.', 'Na escala 1:50, 2 cm no desenho representam:', '100 cm', '52 cm', '25 cm'),
+        QW('Planta baixa é a vista superior.', 'A planta baixa mostra a construção:', 'Vista de cima', 'Só o telhado', 'Só a fachada'),
+        QW('Escala liga papel e obra.', 'A escala serve para:', 'Relacionar o tamanho do desenho ao real', 'Escolher a cor da parede', 'Calcular o preço do terreno')] },
+      { title: 'Segurança na obra', text: 'Na obra, o equipamento de proteção individual (EPI), como capacete, luvas, botas e óculos, reduz riscos. A sinalização avisa dos perigos, e andaimes e escavações exigem verificação antes do uso. Segurança faz parte do planejamento, não é um extra.', quiz: [
+        QW('EPI = Equipamento de Proteção Individual.', 'EPI significa:', 'Equipamento de Proteção Individual', 'Estudo Prévio de Imóveis', 'Estrutura de Piso Interno'),
+        QW('O capacete protege a cabeça.', 'Qual item é um EPI?', 'Capacete', 'Martelo', 'Planta baixa'),
+        QW('Verificar antes de usar evita acidentes.', 'Antes de usar um andaime, é preciso:', 'Verificar se está seguro', 'Subir rápido', 'Ignorar a sinalização')] }] }] },
+};
+const COURSES = (() => {
+  const out = {};
+  for (const [cid, c] of Object.entries(MODULES_RAW)) {
+    let n = 0;
+    out[cid] = { id: cid, name: c.name, icon: c.icon, cutoff: c.cutoff, labs: LAB_COURSES.includes(cid), disciplines: c.disciplines.map(d => ({ id: `${cid}-${d.id}`, name: d.name, modules: d.modules.map(m => {
+      n++; const id = `${cid}-${d.id}-${n}`;
+      return { id, course: cid, discipline: `${cid}-${d.id}`, order: n, title: m.title, text: m.text, quiz: m.quiz.map((q, i) => buildQuestion(`${id}-q${i}`, q)) };
+    }) })) };
+    out[cid].modules = out[cid].disciplines.flatMap(d => d.modules);
+  }
+  return Object.freeze(out);
+})();
+const MODULE_BY_ID = Object.freeze(Object.fromEntries(Object.values(COURSES).flatMap(c => c.modules.map(m => [m.id, m]))));
+const VEST_RAW = [
+  ['Português', 'Qual frase está de acordo com a norma culta?', 'Nós fomos ao mercado ontem.', 'Nós foi ao mercado ontem.', 'Nós vai ao mercado ontem.'],
+  ['Português', 'A palavra "exceção" é escrita com:', 'ç', 'ss', 'c'],
+  ['Português', 'Qual é o plural de "cidadão"?', 'cidadãos', 'cidadões', 'cidadães'],
+  ['Português', 'Um sinônimo de "veloz" é:', 'rápido', 'lento', 'pesado'],
+  ['Português', 'Em "A cidade acordou cedo", o sujeito é:', 'A cidade', 'acordou', 'cedo'],
+  ['Matemática', 'Quanto é 15% de 200?', '30', '15', '20'],
+  ['Matemática', 'Se 3 cadernos custam R$ 18, quanto custam 5 cadernos?', 'R$ 30', 'R$ 24', 'R$ 36'],
+  ['Matemática', 'Qual é a área de um retângulo de 6 m por 4 m?', '24 m²', '20 m²', '10 m²'],
+  ['Matemática', 'Resolva: 2x + 6 = 20.', 'x = 7', 'x = 13', 'x = 10'],
+  ['Matemática', 'Qual é a média de 4, 8 e 12?', '8', '12', '6'],
+  ['Ciências', 'Qual gás as plantas absorvem na fotossíntese?', 'Gás carbônico', 'Oxigênio', 'Nitrogênio'],
+  ['Ciências', 'Ao nível do mar, a água ferve a:', '100 °C', '50 °C', '0 °C'],
+  ['Ciências', 'Qual órgão bombeia o sangue pelo corpo?', 'Coração', 'Pulmão', 'Estômago'],
+  ['Ciências', 'O que puxa os objetos em direção ao centro da Terra?', 'A gravidade', 'O magnetismo', 'A pressão do vento'],
+  ['Ciências', 'Qual é o planeta mais próximo do Sol?', 'Mercúrio', 'Vênus', 'Marte'],
+  ['História e Geografia', 'Qual país europeu colonizou o Brasil?', 'Portugal', 'Espanha', 'França'],
+  ['História e Geografia', 'Qual é a capital do Brasil?', 'Brasília', 'Rio de Janeiro', 'Salvador'],
+  ['História e Geografia', 'Qual oceano banha a costa leste do Brasil?', 'Atlântico', 'Pacífico', 'Índico'],
+  ['História e Geografia', 'A abolição da escravatura no Brasil aconteceu em:', '1888', '1822', '1930'],
+  ['História e Geografia', 'Qual é o maior rio do Brasil, que corta a Amazônia?', 'Amazonas', 'São Francisco', 'Tietê'],
+  ['Cidadania em Sorokiba', 'Em Sorokiba, quem decide a contestação de uma multa?', 'A Delegada', 'O padeiro', 'O carteiro'],
+  ['Cidadania em Sorokiba', 'Ao receber uma advertência, a atitude cidadã é:', 'Respeitar a orientação e corrigir o comportamento', 'Ignorar para sempre', 'Reclamar aos gritos'],
+  ['Cidadania em Sorokiba', 'O dinheiro de multas e taxas da cidade vai para:', 'O tesouro municipal', 'O bolso do policial', 'Uma conta secreta'],
+  ['Cidadania em Sorokiba', 'Quem pode fazer a prova do vestibular na universidade?', 'Visitante com carteirinha de vestibular', 'Qualquer pessoa sem identificação', 'Somente professores'],
+];
+const VEST_BANK = Object.freeze(VEST_RAW.map(([subject, q, ...o], i) => ({ ...buildQuestion(`v${i}`, { q, o }), subject })));
+const VEST_BY_ID = Object.freeze(Object.fromEntries(VEST_BANK.map(q => [q.id, q])));
+
+/* ---------- funções puras (testadas em test/university.test.js) ---------- */
+const brl = n => 'R$ ' + Number(n).toLocaleString('pt-BR');
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const hasOwn = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
+const passValid = (pass, now = Date.now()) => !!pass && Number(pass.expiresAt) > now;
+// Acesso a uma zona: { ok, why }. Só a Portaria é pública; o resto depende da carteirinha.
+function zoneAccess(zone, pass, student, now = Date.now()) {
+  if (!hasOwn(ZONES, zone)) return { ok: false, why: 'Zona desconhecida.' };
+  if (zone === 'portaria') return { ok: true, why: '' };
+  if (!pass) return { ok: false, why: 'Retire a sua carteirinha na recepção para entrar no campus.' };
+  if (!passValid(pass, now)) return { ok: false, why: 'Sua carteirinha venceu. Renove na recepção.' };
+  if (pass.role === 'visitante') {
+    const p = VISIT_PURPOSES[pass.purpose];
+    return p && p.zones.includes(zone) ? { ok: true, why: '' } : { ok: false, why: `Visitante (${p ? p.label.toLowerCase() : 'sem motivo'}): ${ZONES[zone]} é área restrita.` };
+  }
+  const allowed = ROLE_ZONES[pass.role] || [];
+  if (!allowed.includes(zone)) return { ok: false, why: `${ZONES[zone]}: acesso restrito a ${zone === 'professores' || zone === 'reitoria' || zone === 'provas' ? 'professores' : 'outros perfis'}.` };
+  if (zone === 'labs' && pass.role === 'aluno' && !(student && student.status === 'ativo' && LAB_COURSES.includes(student.course))) return { ok: false, why: 'Os laboratórios são de Computação e Engenharia Civil.' };
+  if (zone === 'salas' && pass.role === 'aluno' && !(student && student.status === 'ativo')) return { ok: false, why: 'As aulas são para alunos com matrícula ativa.' };
+  return { ok: true, why: '' };
+}
+const buildAccess = (pass, student, now) => Object.fromEntries(Object.keys(ZONES).map(z => [z, zoneAccess(z, pass, student, now)]));
+function canteenPrice(itemId, role) {
+  const it = CANTEEN_BY_ID[itemId]; if (!it) return null;
+  const pct = DISCOUNT[role] || 0;
+  return Math.max(1, Math.round(it.price * (100 - pct) / 100));
+}
+// Corrige respostas: `answers` precisa ter um índice válido por pergunta.
+function grade(questions, answers) {
+  if (!Array.isArray(answers) || answers.length !== questions.length) return { err: 'Responda todas as perguntas.' };
+  const review = [];
+  for (let i = 0; i < questions.length; i++) {
+    const a = answers[i];
+    if (!Number.isInteger(a) || a < 0 || a >= questions[i].options.length) return { err: 'Resposta inválida.' };
+    review.push(a === questions[i].a);
+  }
+  return { correct: review.filter(Boolean).length, total: questions.length, review };
+}
+const quizPassed = correct => correct >= UNI.QUIZ_PASS;
+// Próximo módulo liberado de um curso: os módulos são sequenciais.
+function moduleUnlocked(moduleId, passedSet) {
+  const m = MODULE_BY_ID[moduleId]; if (!m) return false;
+  const list = COURSES[m.course].modules, i = list.findIndex(x => x.id === moduleId);
+  return i === 0 || passedSet.has(list[i - 1].id);
+}
+function courseStatus(course, passedSet) {
+  const c = COURSES[course];
+  const disciplines = c.disciplines.map(d => ({ id: d.id, name: d.name, done: d.modules.every(m => passedSet.has(m.id)), modules: d.modules.map(m => ({ id: m.id, title: m.title, done: passedSet.has(m.id), unlocked: moduleUnlocked(m.id, passedSet) })) }));
+  return { disciplines, modulesDone: c.modules.filter(m => passedSet.has(m.id)).length, modulesTotal: c.modules.length, finished: c.modules.every(m => passedSet.has(m.id)) };
+}
+// Escolhe as questões do vestibular (ids) com um sorteio injetável (para teste).
+function pickExam(rnd = Math.random, n = UNI.VEST_QUESTIONS) {
+  const ids = VEST_BANK.map(q => q.id);
+  for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  return ids.slice(0, n);
+}
+const approvedCourses = best => Object.values(COURSES).filter(c => Number(best) >= c.cutoff).map(c => c.id);
+function livePay(attendees, paidToday) {
+  const n = Math.min(Math.max(0, attendees | 0), UNI.LIVE_PAY_MAX);
+  return paidToday >= UNI.LIVE_DAILY_PAID || n < 1 ? 0 : n * UNI.LIVE_PAY;
+}
+const publicQuestion = q => ({ id: q.id, q: q.q, options: q.options, subject: q.subject });
+
+/* ---------- banco de dados ---------- */
+async function init() {
+  await db.query(`CREATE TABLE IF NOT EXISTS sk2_uni_passes (
+    username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, role TEXT NOT NULL CHECK (role IN ('aluno','professor','visitante')),
+    purpose TEXT, code TEXT NOT NULL, issued_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL);
+  CREATE TABLE IF NOT EXISTS sk2_uni_vest (username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, best INT NOT NULL DEFAULT 0, updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_uni_exams (
+    id UUID PRIMARY KEY, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, qids TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'aberta' CHECK (status IN ('aberta','concluida','expirada')), score INT, started_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL);
+  CREATE INDEX IF NOT EXISTS sk2_uni_exams_user ON sk2_uni_exams(username, started_at);
+  CREATE TABLE IF NOT EXISTS sk2_uni_students (
+    username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, course TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ativo' CHECK (status IN ('ativo','formado')), credits INT NOT NULL DEFAULT 0, enrolled_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  CREATE TABLE IF NOT EXISTS sk2_uni_progress (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, module_id TEXT NOT NULL, started_at TIMESTAMPTZ, attempt_at TIMESTAMPTZ,
+    passed BOOLEAN NOT NULL DEFAULT false, best INT NOT NULL DEFAULT 0, PRIMARY KEY (username, module_id));
+  CREATE TABLE IF NOT EXISTS sk2_uni_diplomas (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, course TEXT NOT NULL, at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY (username, course));
+  CREATE TABLE IF NOT EXISTS sk2_uni_live (
+    id UUID PRIMARY KEY, professor TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, professor_name TEXT NOT NULL, module_id TEXT NOT NULL, course TEXT NOT NULL,
+    opened_at TIMESTAMPTZ NOT NULL DEFAULT now(), ends_at TIMESTAMPTZ NOT NULL, closed_at TIMESTAMPTZ, paid INT NOT NULL DEFAULT 0);
+  CREATE INDEX IF NOT EXISTS sk2_uni_live_open ON sk2_uni_live(course, ends_at);
+  CREATE TABLE IF NOT EXISTS sk2_uni_live_att (live_id UUID NOT NULL REFERENCES sk2_uni_live(id) ON DELETE CASCADE, username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, PRIMARY KEY (live_id, username));
+  CREATE TABLE IF NOT EXISTS sk2_uni_meta (username TEXT PRIMARY KEY REFERENCES sk2_players(username) ON DELETE CASCADE, canteen_at TIMESTAMPTZ);`);
+}
+const fail = (err, status = 409) => ({ err, status });
+const epoch = d => (d ? new Date(d).getTime() : null);
+const ago = ms => `now() - (${Math.max(1, Math.round(ms))}::bigint * interval '1 millisecond')`;
+const secondsLeft = ms => Math.ceil(ms / 1000);
+
+async function loadContext(c, row) {
+  const passRow = (await c.query('SELECT role, purpose, code, issued_at, expires_at FROM sk2_uni_passes WHERE username = $1', [row.username])).rows[0];
+  const pass = passRow ? { role: passRow.role, purpose: passRow.purpose, code: passRow.code, issuedAt: epoch(passRow.issued_at), expiresAt: epoch(passRow.expires_at) } : null;
+  const st = (await c.query('SELECT course, status, credits, enrolled_at FROM sk2_uni_students WHERE username = $1', [row.username])).rows[0];
+  const student = st ? { course: st.course, status: st.status, credits: st.credits, enrolledAt: epoch(st.enrolled_at) } : null;
+  const now = Date.now();
+  return { pass, student, now, access: buildAccess(pass, student, now), role: pass && passValid(pass, now) ? pass.role : null };
+}
+const allowed = (ctx, zone) => ctx.access[zone] && ctx.access[zone].ok;
+const denyZone = (ctx, zone) => fail(ctx.access[zone] ? ctx.access[zone].why : 'Acesso negado.', 403);
+
+async function snapshot(c, row, ctx) {
+  const u = row.username, now = Date.now();
+  const passed = new Set((await c.query('SELECT module_id FROM sk2_uni_progress WHERE username = $1 AND passed', [u])).rows.map(r => r.module_id));
+  const diplomas = (await c.query('SELECT course, at FROM sk2_uni_diplomas WHERE username = $1 ORDER BY at', [u])).rows.map(d => ({ course: d.course, name: COURSES[d.course]?.name || d.course, at: epoch(d.at) }));
+  const vest = (await c.query('SELECT best FROM sk2_uni_vest WHERE username = $1', [u])).rows[0];
+  const exams = (await c.query(`SELECT id, status, started_at, expires_at FROM sk2_uni_exams WHERE username = $1 AND started_at > ${ago(hoursMs(24))} ORDER BY started_at DESC`, [u])).rows;
+  const open = exams.find(e => e.status === 'aberta' && epoch(e.expires_at) > now);
+  const cool = exams[0] ? epoch(exams[0].started_at) + minutesMs(UNI.VEST_COOLDOWN_MIN) : 0;
+  const meta = (await c.query('SELECT canteen_at FROM sk2_uni_meta WHERE username = $1', [u])).rows[0];
+  const canteenAt = meta && meta.canteen_at ? epoch(meta.canteen_at) + secondsMs(UNI.CANTEEN_COOLDOWN_S) : 0;
+  const best = vest ? vest.best : 0;
+  const eligible = ['visitante'];
+  if (ctx.student && ctx.student.status === 'ativo') eligible.push('aluno');
+  if (row.employment && row.employment.jobId === UNI.PROFESSOR_JOB) eligible.push('professor');
+  const out = {
+    serverNow: now,
+    me: { username: u, name: row.name, money: Number(row.money) || 0, xp: Number(row.xp) || 0, eligible, role: ctx.role },
+    pass: ctx.pass ? { ...ctx.pass, valid: passValid(ctx.pass, now), courseName: ctx.student && ctx.student.course ? COURSES[ctx.student.course]?.name : null } : null,
+    access: Object.fromEntries(Object.entries(ctx.access).map(([z, a]) => [z, { ok: a.ok, why: a.why }])),
+    student: ctx.student ? { ...ctx.student, name: COURSES[ctx.student.course]?.name, ...courseStatus(ctx.student.course, passed) } : null,
+    diplomas,
+    vest: { best, approved: approvedCourses(best), attemptsToday: exams.length, attemptsMax: UNI.VEST_ATTEMPTS_DAY, nextAt: cool > now && exams.length ? cool : 0, activeId: open ? open.id : null, activeUntil: open ? epoch(open.expires_at) : 0 },
+    courses: Object.values(COURSES).map(cs => ({ id: cs.id, name: cs.name, icon: cs.icon, cutoff: cs.cutoff, labs: cs.labs, disciplines: cs.disciplines.map(d => ({ id: d.id, name: d.name, modules: d.modules.map(m => ({ id: m.id, title: m.title })) })) })),
+    canteen: { menu: CANTEEN.map(i => ({ id: i.id, name: i.name, icon: i.icon, heal: i.heal, price: i.price, pay: ctx.role ? canteenPrice(i.id, ctx.role) : i.price })), discount: ctx.role ? DISCOUNT[ctx.role] : 0, waitUntil: canteenAt > now ? canteenAt : 0 },
+    constants: { ...UNI, purposes: Object.fromEntries(Object.entries(VISIT_PURPOSES).map(([k, v]) => [k, { label: v.label, zones: v.zones }])), zones: ZONES },
+    live: [], myLive: null,
+  };
+  if (ctx.student && ctx.student.status === 'ativo') {
+    out.live = (await c.query(`SELECT l.id, l.professor_name, l.module_id, l.ends_at, EXISTS (SELECT 1 FROM sk2_uni_live_att a WHERE a.live_id = l.id AND a.username = $2) AS joined
+      FROM sk2_uni_live l WHERE l.course = $1 AND l.closed_at IS NULL AND l.ends_at > now() ORDER BY l.opened_at DESC LIMIT 5`, [ctx.student.course, u])).rows
+      .map(l => ({ id: l.id, professor: l.professor_name, module: l.module_id, title: MODULE_BY_ID[l.module_id]?.title || l.module_id, endsAt: epoch(l.ends_at), joined: l.joined }));
+  }
+  if (eligible.includes('professor')) {
+    const l = (await c.query(`SELECT l.id, l.module_id, l.ends_at, l.closed_at, l.paid, (SELECT COUNT(*) FROM sk2_uni_live_att a WHERE a.live_id = l.id)::int AS n
+      FROM sk2_uni_live l WHERE l.professor = $1 AND l.closed_at IS NULL ORDER BY l.opened_at DESC LIMIT 1`, [u])).rows[0];
+    out.myLive = l ? { id: l.id, module: l.module_id, title: MODULE_BY_ID[l.module_id]?.title || l.module_id, endsAt: epoch(l.ends_at), attendees: l.n, running: epoch(l.ends_at) > now } : null;
+    const paidToday = Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_uni_live WHERE professor = $1 AND paid > 0 AND closed_at > ${ago(hoursMs(24))}`, [u])).rows[0].n);
+    out.professor = { paidToday, paidMax: UNI.LIVE_DAILY_PAID };
+  }
+  return out;
+}
+const run = (username, fn) => db.withTx(async c => {
+  const locked = (await c.query('SELECT * FROM sk2_players WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  if (!locked) return fail('Jogador não encontrado', 404);
+  const ctx = await loadContext(c, locked);
+  const out = await fn(c, locked, ctx);
+  if (out.err) return out;
+  const player = out.player || locked, ctx2 = out.reload ? await loadContext(c, player) : ctx;
+  return { ...out, playerRow: player, university: await snapshot(c, player, ctx2) };
+});
+const summary = username => run(username, (_c, p) => ({ player: p }));
+const newCode = () => 'UN-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
+/* ---------- operações ---------- */
+const issuePass = (username, input) => run(username, async (c, p, ctx) => {
+  const role = input?.role;
+  if (!['aluno', 'professor', 'visitante'].includes(role)) return fail('Escolha o tipo de carteirinha.', 400);
+  let purpose = null;
+  if (role === 'visitante') {
+    purpose = input?.purpose;
+    if (!hasOwn(VISIT_PURPOSES, purpose)) return fail('Informe o motivo da visita.', 400);
+  } else if (role === 'aluno') {
+    if (!(ctx.student && ctx.student.status === 'ativo')) return fail('Só alunos com matrícula ativa recebem a carteirinha de aluno. Faça o vestibular e se matricule.', 403);
+  } else if (!(p.employment && p.employment.jobId === UNI.PROFESSOR_JOB)) return fail('Só professores contratados recebem a carteirinha de professor.', 403);
+  const code = newCode(), ms = hoursMs(UNI.PASS_HOURS[role]);
+  await c.query(`INSERT INTO sk2_uni_passes (username, role, purpose, code, issued_at, expires_at) VALUES ($1,$2,$3,$4, now(), now() + ($5::bigint * interval '1 millisecond'))
+    ON CONFLICT (username) DO UPDATE SET role = EXCLUDED.role, purpose = EXCLUDED.purpose, code = EXCLUDED.code, issued_at = now(), expires_at = EXCLUDED.expires_at`, [username, role, purpose, code, ms]);
+  const label = role === 'visitante' ? `visitante (${VISIT_PURPOSES[purpose].label.toLowerCase()})` : role;
+  return { player: p, reload: true, event: { kind: 'pass', role }, message: `Carteirinha de ${label} emitida: ${code}. Passe pelas catracas e mantenha-a à vista.` };
+});
+const returnPass = username => run(username, async (c, p, ctx) => {
+  if (!ctx.pass) return fail('Você não está com carteirinha.');
+  await c.query('DELETE FROM sk2_uni_passes WHERE username = $1', [username]);
+  return { player: p, reload: true, event: { kind: 'return' }, message: 'Carteirinha devolvida. Volte sempre!' };
+});
+
+const vestStart = username => run(username, async (c, p, ctx) => {
+  if (!(ctx.role === 'visitante' && ctx.pass.purpose === 'vestibular')) return fail('O vestibular é para visitantes com carteirinha de motivo "vestibular".', 403);
+  if (!allowed(ctx, 'provas')) return denyZone(ctx, 'provas');
+  const now = Date.now();
+  const open = (await c.query(`SELECT id, qids, expires_at FROM sk2_uni_exams WHERE username = $1 AND status = 'aberta' AND expires_at > now() ORDER BY started_at DESC LIMIT 1 FOR UPDATE`, [username])).rows[0];
+  const mk = (id, qids, until) => ({ id, until, questions: qids.split(',').map(i => publicQuestion(VEST_BY_ID[i])) });
+  if (open) return { player: p, data: { exam: mk(open.id, open.qids, epoch(open.expires_at)) }, message: 'Sua prova em andamento foi retomada.' };
+  const recent = (await c.query(`SELECT started_at FROM sk2_uni_exams WHERE username = $1 AND started_at > ${ago(hoursMs(24))} ORDER BY started_at DESC`, [username])).rows;
+  if (recent.length >= UNI.VEST_ATTEMPTS_DAY) return fail(`Limite de ${UNI.VEST_ATTEMPTS_DAY} provas por dia atingido.`);
+  if (recent[0] && epoch(recent[0].started_at) + minutesMs(UNI.VEST_COOLDOWN_MIN) > now) return fail(`Aguarde ${secondsLeft(epoch(recent[0].started_at) + minutesMs(UNI.VEST_COOLDOWN_MIN) - now)} s para tentar de novo.`);
+  if (Number(p.money) < UNI.VEST_FEE) return fail(`Saldo insuficiente: a taxa do vestibular é ${brl(UNI.VEST_FEE)}.`);
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, UNI.VEST_FEE])).rows[0];
+  await city.credit(c, 'universidade', UNI.VEST_FEE, `Taxa de vestibular de ${p.name}`);
+  const qids = pickExam(() => crypto.randomInt(0, 1e9) / 1e9).join(','), id = crypto.randomUUID();
+  await c.query(`INSERT INTO sk2_uni_exams (id, username, qids, expires_at) VALUES ($1,$2,$3, now() + ($4::bigint * interval '1 millisecond'))`, [id, username, qids, minutesMs(UNI.VEST_MINUTES)]);
+  return { player, event: { kind: 'exam' }, data: { exam: mk(id, qids, now + minutesMs(UNI.VEST_MINUTES)) }, message: `Taxa de ${brl(UNI.VEST_FEE)} paga. Boa prova! Você tem ${UNI.VEST_MINUTES} minutos.` };
+});
+const vestSubmit = (username, id, answers) => run(username, async (c, p, ctx) => {
+  if (!UUID.test(String(id))) return fail('Prova inválida.', 400);
+  const ex = (await c.query(`SELECT id, qids, status, expires_at FROM sk2_uni_exams WHERE id = $1 AND username = $2 FOR UPDATE`, [id, username])).rows[0];
+  if (!ex || ex.status !== 'aberta') return fail('Esta prova não está em andamento.', 404);
+  if (epoch(ex.expires_at) < Date.now()) { await c.query(`UPDATE sk2_uni_exams SET status = 'expirada' WHERE id = $1`, [id]); return fail('O tempo da prova acabou.'); }
+  const qs = ex.qids.split(',').map(i => VEST_BY_ID[i]), g = grade(qs, answers);
+  if (g.err) return fail(g.err, 400);
+  await c.query(`UPDATE sk2_uni_exams SET status = 'concluida', score = $2 WHERE id = $1`, [id, g.correct]);
+  await c.query(`INSERT INTO sk2_uni_vest (username, best) VALUES ($1,$2) ON CONFLICT (username) DO UPDATE SET best = GREATEST(sk2_uni_vest.best, EXCLUDED.best), updated_at = now()`, [username, g.correct]);
+  const best = Number((await c.query('SELECT best FROM sk2_uni_vest WHERE username = $1', [username])).rows[0].best), ok = approvedCourses(g.correct);
+  return { player: p, event: { kind: 'examDone', score: g.correct }, data: { result: { score: g.correct, total: g.total, review: g.review, best, approved: ok.map(k => COURSES[k].name) } },
+    message: ok.length ? `Nota ${g.correct}/${g.total}: aprovado em ${ok.map(k => COURSES[k].name).join(', ')}. Matricule-se na Secretaria.` : `Nota ${g.correct}/${g.total}: não alcançou a nota de corte de nenhum curso. Estude e tente de novo.` };
+});
+
+const enroll = (username, course) => run(username, async (c, p, ctx) => {
+  if (!hasOwn(COURSES, course)) return fail('Curso inválido.', 400);
+  if (!allowed(ctx, 'secretaria')) return denyZone(ctx, 'secretaria');
+  if (ctx.student && ctx.student.status === 'ativo') return fail('Você já tem uma matrícula ativa. Conclua o curso antes de se matricular em outro.');
+  const best = Number((await c.query('SELECT best FROM sk2_uni_vest WHERE username = $1', [username])).rows[0]?.best || 0);
+  if (best < COURSES[course].cutoff) return fail(`Nota de corte de ${COURSES[course].name}: ${COURSES[course].cutoff}. Sua melhor nota é ${best}.`);
+  if (Number(p.money) < UNI.ENROLL_FEE) return fail(`Saldo insuficiente: a matrícula custa ${brl(UNI.ENROLL_FEE)}.`);
+  const dip = (await c.query('SELECT 1 FROM sk2_uni_diplomas WHERE username = $1 AND course = $2', [username, course])).rowCount;
+  if (dip) return fail(`Você já é formado em ${COURSES[course].name}.`);
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, UNI.ENROLL_FEE])).rows[0];
+  await city.credit(c, 'universidade', UNI.ENROLL_FEE, `Matrícula de ${p.name} em ${COURSES[course].name}`);
+  await c.query(`INSERT INTO sk2_uni_students (username, course, status, credits, enrolled_at) VALUES ($1,$2,'ativo',0, now())
+    ON CONFLICT (username) DO UPDATE SET course = EXCLUDED.course, status = 'ativo', credits = 0, enrolled_at = now()`, [username, course]);
+  return { player, reload: true, event: { kind: 'enroll' }, message: `Matrícula em ${COURSES[course].name} confirmada! Retire a carteirinha de aluno na recepção.` };
+});
+
+async function passedModules(c, username) { return new Set((await c.query('SELECT module_id FROM sk2_uni_progress WHERE username = $1 AND passed', [username])).rows.map(r => r.module_id)); }
+function needStudent(ctx, mod) {
+  if (ctx.role !== 'aluno') return fail('As aulas são para alunos com carteirinha de aluno válida.', 403);
+  if (!allowed(ctx, 'salas')) return denyZone(ctx, 'salas');
+  if (!mod) return fail('Aula inválida.', 400);
+  if (!(ctx.student && ctx.student.status === 'ativo' && ctx.student.course === mod.course)) return fail('Esta aula não é do seu curso.', 403);
+  return null;
+}
+const lessonStart = (username, moduleId) => run(username, async (c, p, ctx) => {
+  const mod = hasOwn(MODULE_BY_ID, moduleId) ? MODULE_BY_ID[moduleId] : null, bad = needStudent(ctx, mod); if (bad) return bad;
+  if (!moduleUnlocked(moduleId, await passedModules(c, username))) return fail('Conclua a aula anterior antes desta.');
+  // quem está numa aula ao vivo desse módulo já cumpriu o tempo de estudo
+  const live = (await c.query(`SELECT 1 FROM sk2_uni_live l JOIN sk2_uni_live_att a ON a.live_id = l.id WHERE a.username = $1 AND l.module_id = $2 AND l.closed_at IS NULL AND l.ends_at > now()`, [username, moduleId])).rowCount > 0;
+  const study = secondsMs(UNI.STUDY_SECONDS);
+  await c.query(`INSERT INTO sk2_uni_progress (username, module_id, started_at) VALUES ($1,$2, now() - ($3::bigint * interval '1 millisecond')) ON CONFLICT (username, module_id) DO UPDATE SET started_at = EXCLUDED.started_at`, [username, moduleId, live ? study + 1000 : 0]);
+  return { player: p, event: { kind: 'lesson' }, data: { lesson: { id: mod.id, title: mod.title, text: mod.text, studyMs: study, until: live ? Date.now() : Date.now() + study, live, questions: mod.quiz.map(q => ({ id: q.id, q: q.q, options: q.options })) } },
+    message: live ? 'Aula ao vivo: o tempo de estudo foi dispensado. Faça a prova quando quiser.' : `Aula iniciada: leia com atenção. A prova libera em ${UNI.STUDY_SECONDS} s.` };
+});
+const lessonSubmit = (username, moduleId, answers) => run(username, async (c, p, ctx) => {
+  const mod = hasOwn(MODULE_BY_ID, moduleId) ? MODULE_BY_ID[moduleId] : null, bad = needStudent(ctx, mod); if (bad) return bad;
+  const row = (await c.query('SELECT started_at, attempt_at, passed FROM sk2_uni_progress WHERE username = $1 AND module_id = $2 FOR UPDATE', [username, moduleId])).rows[0];
+  if (!row || !row.started_at) return fail('Comece a aula antes de fazer a prova.');
+  const now = Date.now();
+  if (epoch(row.started_at) + secondsMs(UNI.STUDY_SECONDS) > now) return fail(`Leia a aula com calma: a prova libera em ${secondsLeft(epoch(row.started_at) + secondsMs(UNI.STUDY_SECONDS) - now)} s.`);
+  if (row.attempt_at && epoch(row.attempt_at) + secondsMs(UNI.QUIZ_COOLDOWN_S) > now) return fail(`Aguarde ${secondsLeft(epoch(row.attempt_at) + secondsMs(UNI.QUIZ_COOLDOWN_S) - now)} s para tentar de novo.`);
+  const g = grade(mod.quiz, answers); if (g.err) return fail(g.err, 400);
+  const ok = quizPassed(g.correct);
+  await c.query('UPDATE sk2_uni_progress SET attempt_at = now(), best = GREATEST(best, $3), passed = passed OR $4 WHERE username = $1 AND module_id = $2', [username, moduleId, g.correct, ok]);
+  const reward = { xp: 0, money: 0, discipline: null, diploma: null };
+  let player = p, reload = false;
+  if (ok && !row.passed) {
+    reward.xp += UNI.MODULE_XP;
+    const passed = await passedModules(c, username), cs = courseStatus(mod.course, passed);
+    const disc = cs.disciplines.find(d => d.id === mod.discipline);
+    if (disc && disc.done) { reward.xp += UNI.DISCIPLINE_XP; reward.discipline = disc.name; await c.query('UPDATE sk2_uni_students SET credits = credits + $2 WHERE username = $1', [username, UNI.DISCIPLINE_CREDITS]); }
+    if (cs.finished) {
+      reward.xp += UNI.DIPLOMA_XP; reward.diploma = COURSES[mod.course].name; reload = true;
+      await c.query(`INSERT INTO sk2_uni_diplomas (username, course) VALUES ($1,$2) ON CONFLICT DO NOTHING`, [username, mod.course]);
+      await c.query(`UPDATE sk2_uni_students SET status = 'formado' WHERE username = $1`, [username]);
+      const paid = await city.debit(c, 'universidade', UNI.DIPLOMA_REWARD, `Bolsa de formatura de ${p.name}`);
+      if (paid !== null) reward.money = UNI.DIPLOMA_REWARD;
+    }
+    player = (await c.query('UPDATE sk2_players SET xp = xp + $2, money = money + $3 WHERE username = $1 RETURNING *', [username, reward.xp, reward.money])).rows[0];
+  }
+  const review = g.review.map((r, i) => ({ ok: r, why: ok && r ? mod.quiz[i].why : '' }));
+  const msg = !ok ? `Você acertou ${g.correct} de ${g.total}. Releia a aula e tente de novo.`
+    : row.passed ? `Aprovado de novo (${g.correct}/${g.total}). Sem recompensa repetida.`
+      : `Aprovado (${g.correct}/${g.total})! +${reward.xp} XP${reward.discipline ? ` · disciplina concluída: ${reward.discipline}` : ''}${reward.diploma ? ` · DIPLOMA em ${reward.diploma}${reward.money ? ` e bolsa de ${brl(reward.money)}` : ''}` : ''}.`;
+  return { player, reload, event: { kind: ok ? 'quizOk' : 'quizFail', diploma: !!reward.diploma }, data: { result: { passed: ok, correct: g.correct, total: g.total, review, reward, repeat: !!row.passed } }, message: msg };
+});
+
+const liveOpen = (username, moduleId) => run(username, async (c, p, ctx) => {
+  if (ctx.role !== 'professor') return fail('Só professores com carteirinha válida abrem aula ao vivo.', 403);
+  if (!allowed(ctx, 'salas')) return denyZone(ctx, 'salas');
+  const mod = hasOwn(MODULE_BY_ID, moduleId) ? MODULE_BY_ID[moduleId] : null; if (!mod) return fail('Aula inválida.', 400);
+  if ((await c.query('SELECT 1 FROM sk2_uni_live WHERE professor = $1 AND closed_at IS NULL', [username])).rowCount) return fail('Você já tem uma aula aberta. Encerre-a primeiro.');
+  const id = crypto.randomUUID();
+  await c.query(`INSERT INTO sk2_uni_live (id, professor, professor_name, module_id, course, ends_at) VALUES ($1,$2,$3,$4,$5, now() + ($6::bigint * interval '1 millisecond'))`, [id, username, p.name, mod.id, mod.course, minutesMs(UNI.LIVE_MINUTES)]);
+  return { player: p, event: { kind: 'liveOpen' }, message: `Aula ao vivo aberta: ${mod.title}. Ela dura ${UNI.LIVE_MINUTES} minutos.` };
+});
+const liveJoin = (username, id) => run(username, async (c, p, ctx) => {
+  if (!UUID.test(String(id))) return fail('Aula inválida.', 400);
+  const live = (await c.query('SELECT id, module_id, course, ends_at, closed_at FROM sk2_uni_live WHERE id = $1 FOR UPDATE', [id])).rows[0];
+  if (!live || live.closed_at || epoch(live.ends_at) < Date.now()) return fail('Esta aula ao vivo já terminou.', 404);
+  const bad = needStudent(ctx, MODULE_BY_ID[live.module_id]); if (bad) return bad;
+  if (!moduleUnlocked(live.module_id, await passedModules(c, username))) return fail('Conclua a aula anterior antes de entrar nesta.');
+  const ins = await c.query('INSERT INTO sk2_uni_live_att (live_id, username) VALUES ($1,$2) ON CONFLICT DO NOTHING', [id, username]);
+  await c.query(`INSERT INTO sk2_uni_progress (username, module_id, started_at) VALUES ($1,$2, now() - ($3::bigint * interval '1 millisecond')) ON CONFLICT (username, module_id) DO UPDATE SET started_at = EXCLUDED.started_at`, [username, live.module_id, secondsMs(UNI.STUDY_SECONDS) + 1000]);
+  let player = p;
+  if (ins.rowCount) player = (await c.query('UPDATE sk2_players SET xp = xp + $2 WHERE username = $1 RETURNING *', [username, UNI.LIVE_JOIN_XP])).rows[0];
+  return { player, event: { kind: 'liveJoin' }, data: { open: live.module_id }, message: ins.rowCount ? `Você entrou na aula ao vivo (+${UNI.LIVE_JOIN_XP} XP). O tempo de estudo foi dispensado: faça a prova.` : 'Você já está nesta aula ao vivo.' };
+});
+const liveClose = (username, id) => run(username, async (c, p, ctx) => {
+  if (!UUID.test(String(id))) return fail('Aula inválida.', 400);
+  if (ctx.role !== 'professor') return fail('Só professores com carteirinha válida encerram aulas.', 403);
+  const live = (await c.query('SELECT id, professor, ends_at, closed_at FROM sk2_uni_live WHERE id = $1 AND professor = $2 FOR UPDATE', [id, username])).rows[0];
+  if (!live || live.closed_at) return fail('Esta aula já foi encerrada.', 404);
+  const left = epoch(live.ends_at) - Date.now(); if (left > 0) return fail(`A aula ainda está em andamento (${secondsLeft(left)} s).`);
+  const n = Number((await c.query('SELECT COUNT(*) AS n FROM sk2_uni_live_att WHERE live_id = $1', [id])).rows[0].n);
+  const paidToday = Number((await c.query(`SELECT COUNT(*) AS n FROM sk2_uni_live WHERE professor = $1 AND paid > 0 AND closed_at > ${ago(hoursMs(24))}`, [username])).rows[0].n);
+  let pay = livePay(n, paidToday), note = '';
+  if (pay > 0) { const ok = await city.debit(c, 'universidade', pay, `Aula ao vivo de ${p.name} (${Math.min(n, UNI.LIVE_PAY_MAX)} alunos)`); if (ok === null) { pay = 0; note = ' O tesouro está sem saldo para o pagamento.'; } }
+  else if (n > 0) note = ` Limite diário de ${UNI.LIVE_DAILY_PAID} aulas pagas atingido.`;
+  else note = ' Nenhum aluno compareceu.';
+  const player = (await c.query('UPDATE sk2_players SET money = money + $2, xp = xp + $3 WHERE username = $1 RETURNING *', [username, pay, n > 0 ? UNI.LIVE_HOST_XP : 0])).rows[0];
+  await c.query('UPDATE sk2_uni_live SET closed_at = now(), paid = $2 WHERE id = $1', [id, pay]);
+  return { player, event: { kind: 'liveClose', pay }, message: `Aula encerrada com ${n} aluno(s).${pay ? ` Pagamento: ${brl(pay)}.` : ''}${note}` };
+});
+
+const canteenBuy = (username, itemId) => run(username, async (c, p, ctx) => {
+  if (!hasOwn(CANTEEN_BY_ID, itemId)) return fail('Item inválido.', 400);
+  if (!allowed(ctx, 'cantina')) return denyZone(ctx, 'cantina');
+  const meta = (await c.query('SELECT canteen_at FROM sk2_uni_meta WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  const wait = meta && meta.canteen_at ? epoch(meta.canteen_at) + secondsMs(UNI.CANTEEN_COOLDOWN_S) - Date.now() : 0;
+  if (wait > 0) return fail(`Mastigue com calma: aguarde ${secondsLeft(wait)} s para pedir de novo.`);
+  const price = canteenPrice(itemId, ctx.role), it = CANTEEN_BY_ID[itemId];
+  if (Number(p.money) < price) return fail(`Saldo insuficiente: ${it.name} custa ${brl(price)}.`);
+  const st = await hospital.settle(c, p);
+  if (st.health >= 100) return fail('Sua saúde já está no máximo: guarde o dinheiro.');
+  const gain = Math.min(it.heal, 100 - st.health);
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, price])).rows[0];
+  await city.credit(c, 'universidade', price, `Cantina universitária: ${it.name}`);
+  await c.query('UPDATE sk2_hospital_patients SET health = $2, health_at = now() WHERE username = $1', [username, st.health + gain]);
+  await c.query('INSERT INTO sk2_uni_meta (username, canteen_at) VALUES ($1, now()) ON CONFLICT (username) DO UPDATE SET canteen_at = now()', [username]);
+  return { player, event: { kind: 'canteen', item: itemId }, message: `${it.name}: ${brl(price)}${DISCOUNT[ctx.role] ? ` (desconto de ${DISCOUNT[ctx.role]}%)` : ''} · +${gain} de saúde (agora ${st.health + gain}%).` };
+});
+
+/* ---------- rotas ---------- */
+function registerRoutes({ app, json, authUser, limited, userTries }) {
+  const guard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `uni:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações na Universidade. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] universidade:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a operação na Universidade.' });
+    }
+  };
+  const done = (res, r) => {
+    if (r.err) return res.status(r.status || 409).json({ err: r.err });
+    res.json({ ok: 1, player: db.pub(r.playerRow), university: r.university, data: r.data || null, event: r.event || null, message: r.message || '' });
+  };
+  const bad = (res, m) => res.status(400).json({ err: m });
+  app.get('/api/sk2/university', guard(async (_q, res, row) => { res.set('Cache-Control', 'no-store'); done(res, await summary(row.username)); }));
+  app.post('/api/sk2/university/pass', json, guard(async (req, res, row) => {
+    if (typeof req.body?.role !== 'string') return bad(res, 'Escolha o tipo de carteirinha.');
+    done(res, await issuePass(row.username, { role: req.body.role, purpose: typeof req.body.purpose === 'string' ? req.body.purpose : undefined }));
+  }));
+  app.post('/api/sk2/university/pass/return', json, guard(async (_q, res, row) => done(res, await returnPass(row.username))));
+  app.post('/api/sk2/university/vest/start', json, guard(async (_q, res, row) => done(res, await vestStart(row.username))));
+  app.post('/api/sk2/university/vest/submit', json, guard(async (req, res, row) => {
+    if (typeof req.body?.id !== 'string' || !Array.isArray(req.body?.answers)) return bad(res, 'Envie a prova e as respostas.');
+    done(res, await vestSubmit(row.username, req.body.id, req.body.answers));
+  }));
+  app.post('/api/sk2/university/enroll', json, guard(async (req, res, row) => {
+    if (typeof req.body?.course !== 'string') return bad(res, 'Escolha o curso.');
+    done(res, await enroll(row.username, req.body.course));
+  }));
+  app.post('/api/sk2/university/lesson/start', json, guard(async (req, res, row) => {
+    if (typeof req.body?.module !== 'string') return bad(res, 'Escolha a aula.');
+    done(res, await lessonStart(row.username, req.body.module));
+  }));
+  app.post('/api/sk2/university/lesson/submit', json, guard(async (req, res, row) => {
+    if (typeof req.body?.module !== 'string' || !Array.isArray(req.body?.answers)) return bad(res, 'Envie a aula e as respostas.');
+    done(res, await lessonSubmit(row.username, req.body.module, req.body.answers));
+  }));
+  app.post('/api/sk2/university/live/open', json, guard(async (req, res, row) => {
+    if (typeof req.body?.module !== 'string') return bad(res, 'Escolha a aula.');
+    done(res, await liveOpen(row.username, req.body.module));
+  }));
+  app.post('/api/sk2/university/live/join', json, guard(async (req, res, row) => done(res, await liveJoin(row.username, req.body?.id))));
+  app.post('/api/sk2/university/live/close', json, guard(async (req, res, row) => done(res, await liveClose(row.username, req.body?.id))));
+  app.post('/api/sk2/university/canteen', json, guard(async (req, res, row) => {
+    if (typeof req.body?.item !== 'string') return bad(res, 'Escolha o item.');
+    done(res, await canteenBuy(row.username, req.body.item));
+  }));
+}
+
+module.exports = {
+  UNI, ZONES, VISIT_PURPOSES, ROLE_ZONES, COURSES, MODULE_BY_ID, VEST_BANK, CANTEEN, DISCOUNT, init, registerRoutes,
+  summary, issuePass, returnPass, vestStart, vestSubmit, enroll, lessonStart, lessonSubmit, liveOpen, liveJoin, liveClose, canteenBuy,
+  // puras (testes)
+  passValid, zoneAccess, buildAccess, canteenPrice, grade, quizPassed, moduleUnlocked, courseStatus, pickExam, approvedCourses, livePay, buildQuestion, publicQuestion,
+};
