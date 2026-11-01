@@ -223,6 +223,35 @@ Endpoints autenticados: `GET /api/sk2/market`, `POST /api/sk2/market/checkout` (
 
 Limitações atuais: como nos outros prédios, o servidor não sabe em que corredor ou caixa o jogador está; as consultas ao PostgreSQL do Mercado têm testes com banco simulado em memória, mas ainda não foram exercitadas contra um banco real; o estoque da loja é ilimitado.
 
+## Universidade de Sorokiba
+
+A Universidade tem interior próprio de 56×30 tiles (campus com portaria, pátio, prédios e jardim) e **não é a Escola**: a Escola continua com o interior simples e aberto, e a Universidade controla quem entra, o que cada pessoa pode fazer e o que se aprende. Código: `sorokiba2-university.js`.
+
+**Portaria.** Um segurança (Sargento Cardoso) explica as regras e mostra a "Minha situação"; a recepção (Cláudia) emite a carteirinha, impressa com animação. Sem carteirinha as catracas ficam travadas (luz vermelha, som de recusa) e só a portaria é alcançável. Com carteirinha válida elas liberam (luz verde, bipe) e o crachá colorido aparece no peito do personagem e num selo no canto da tela.
+
+**Três carteirinhas:**
+
+- **Aluno**: exige matrícula ativa; vale 24 h; desconto de 20% na cantina.
+- **Professor**: exige estar contratado na carreira nova de Professor universitário (`university_professor`, Centro de Empregos, 600 XP e 3 de experiência, 2 vagas); vale 24 h; desconto de 10%.
+- **Visitante**: grátis, vale 2 h e exige declarar o motivo da visita, que decide as áreas liberadas: *vestibular* (secretaria, sala de provas, cantina), *matrícula* (secretaria, cantina), *evento* (auditório, cantina), *reunião* (secretaria, cantina) e *biblioteca* (só a biblioteca).
+
+**Áreas abertas e fechadas.** As portas dos prédios abrem ou ficam trancadas conforme a carteirinha, na tela e na colisão (portas trancadas mostram cadeado vermelho e, ao encostar, o motivo). Pátio e jardim são abertos a quem passou pelas catracas. Secretaria, biblioteca, salas de aula, laboratórios (só Computação e Engenharia Civil), auditório, cantina, Sala de Provas (só visitante de vestibular, ou professor), Sala dos Professores e Reitoria (só professores) seguem a matriz `zoneAccess`. O servidor devolve o mapa de acesso pronto, então o cliente não repete as regras.
+
+**Aprender:**
+
+- **Vestibular**: visitante com motivo vestibular, na Sala de Provas, paga R$ 30, recebe 8 questões sorteadas de um banco de 24 (Português, Matemática, Ciências, História e Geografia e Cidadania) e tem 8 minutos. A correção é no servidor, a nota fica registrada (a melhor vale) e há 3 provas por dia, com 3 minutos entre elas.
+- **Matrícula** na Secretaria (R$ 60), em cursos cuja nota de corte a sua melhor nota alcance: Administração e Pedagogia (corte 5), Ciência da Computação e Engenharia Civil (corte 6). Uma matrícula ativa por vez.
+- **Aulas**: cada curso tem 2 disciplinas e 4 aulas em sequência. A aula é um texto para ler (30 s de estudo) seguido de uma prova de 3 perguntas, com 2 acertos para aprovar. Quem passa vê a explicação de cada resposta. Aula nova dá 15 XP, disciplina concluída dá 40 XP e 4 créditos, e o curso completo dá o **diploma** (150 XP e uma bolsa de R$ 150 paga pelo tesouro, se houver saldo).
+- **Aula ao vivo**: o professor abre uma aula (3 min); os alunos do curso entram e dispensam o tempo de estudo (+5 XP); ao terminar, o professor encerra e recebe R$ 10 por aluno presente (até 5), até 3 aulas pagas por dia.
+
+**Cantina.** Cardápio de sete itens que devolvem saúde (mesmo relógio do Hospital), só para quem tem acesso à cantina. 30 s entre pedidos, e não vende se a saúde já está em 100. Pagamentos vão para o tesouro (`universidade` no extrato).
+
+**Sons e animações:** catraca (clique e bipe de liberado ou recusa), porta trancada (batida e bipe), carteirinha imprimindo, sino da universidade a cada poucos minutos (com aviso), giz no quadro, gongo e sino da prova, acerto e erro de prova, fanfarra de diploma, palmas distantes do auditório, fonte (água mais alta perto dela), sons de cantina e passos no piso. Fonte com jatos, folhas caindo, bandeiras ao vento, lousa com giz, telão do auditório, laboratório com bolhas e impressora 3D, câmeras da guarita, patos na lagoa e carteirinha com brilho holográfico.
+
+Endpoints autenticados: `GET /api/sk2/university` e `POST /api/sk2/university/...` com `pass`, `pass/return`, `vest/start`, `vest/submit`, `enroll`, `lesson/start`, `lesson/submit`, `live/open`, `live/join`, `live/close` e `canteen`. Tabelas: `sk2_uni_passes`, `sk2_uni_vest`, `sk2_uni_exams`, `sk2_uni_students`, `sk2_uni_progress`, `sk2_uni_diplomas`, `sk2_uni_live`, `sk2_uni_live_att` e `sk2_uni_meta`, criadas em `university.init()`. `SK2_UNI_TIME_SCALE=0.001` comprime validade, estudo, esperas e aula ao vivo para teste. O conteúdo das aulas e do vestibular está em `MODULES_RAW` e `VEST_RAW` e é fácil de ampliar.
+
+Limitações atuais: como nos outros prédios, o servidor não sabe em que sala o jogador está (a carteirinha e o papel são validados, mas não o lugar físico); a trava das portas e catracas é na tela; o SQL tem testes com banco simulado em memória, mas ainda não foi exercitado contra um PostgreSQL real.
+
 ## Testes
 
 ```sh
