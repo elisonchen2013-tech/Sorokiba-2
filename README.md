@@ -252,6 +252,38 @@ Endpoints autenticados: `GET /api/sk2/university` e `POST /api/sk2/university/..
 
 Limitações atuais: como nos outros prédios, o servidor não sabe em que sala o jogador está (a carteirinha e o papel são validados, mas não o lugar físico); a trava das portas e catracas é na tela; o SQL tem testes com banco simulado em memória, mas ainda não foi exercitado contra um PostgreSQL real.
 
+## Shopping de Sorokiba e Empresas
+
+O Shopping tem interior próprio de 52×30 tiles (corredor central com fonte e claraboia, praça de alimentação e **12 terrenos**) e é onde o jogador abre o seu negócio. Código: `sorokiba2-business.js`. Cada jogador administra **uma** loja. Os terrenos livres aparecem com fita zebrada, cones e uma placa com preço; as lojas compradas são desenhadas ao vivo no mapa, do jeito que o dono personalizou.
+
+**Terrenos.** 2 quiosques (R$ 900 e R$ 1.100), 4 lojas pequenas e médias de entrada e praça (R$ 1.900 a R$ 3.900), 4 médias de galeria (R$ 3.000 a R$ 4.200) e 2 grandes no átrio (R$ 7.000 e R$ 7.400). O preço depende do tamanho e do fluxo de clientes: átrio e entradas valem mais; cantos e a praça de alimentação, menos. O tamanho define o número de vagas de produto (3, 5, 7 ou 9). O dinheiro do terreno vai para o tesouro (`terreno` no extrato da Prefeitura).
+
+**Personalização (tudo escolhido na compra e editável depois):**
+
+- **Marca**: nome (3 a 22 caracteres), logotipo (12), cores (8 paletas), piso (mármore, madeira, xadrez ou concreto) e placa (neon, painel, madeira ou luminoso), com prévia ao vivo.
+- **Categoria** (fixa): Moda, Tecnologia, Livraria, Cafeteria, Floricultura, Brinquedos, Esportes ou Presentes, com 6 produtos cada.
+- **Produtos**: o dono escolhe os produtos de cada vaga, a qualidade (básico ou premium) e o preço (de 50% a 200% do preço de referência), e repõe o estoque pagando o atacado pela carteira ou pelo caixa da loja. A loja abre com 3 produtos e estoque inicial de cortesia.
+- **Decoração**: 6 lugares (vitrine, parede esquerda, parede direita, centro, balcão, entrada) e 3 a 4 itens por lugar. Cada item aumenta o apelo da loja, com teto de +45%.
+
+**Como a loja vende.** O servidor simula as "horas" de movimento sob demanda, ao abrir o painel ou quando outro jogador compra, com no máximo 24 horas de ausência e um sorteio fixo por loja e hora (consultar de novo não rende mais dinheiro). Os clientes dependem do fluxo do terreno, do tamanho, da categoria, do apelo (decoração, reputação e produtos premium) e da hora do dia. Cada cliente escolhe um produto com estoque, e o preço certo importa: barato demais vende muito e rende pouco; caro demais espanta. Cliente que chega e não encontra produto derruba a reputação. **Outros jogadores também compram** na vitrine (até 5 por vez): o valor vai para o caixa da loja e o item para a "sacola" do comprador; itens de comida curam pelo relógio de saúde do Hospital. Não dá para comprar da própria loja. Com os valores atuais, um terreno se paga em cerca de 2 a 3 semanas de jogo.
+
+**Painel da loja** (botão "Minha empresa" no Shopping ou a loja no mapa): *Resumo* (faturou hoje e ontem, últimos 7 dias com crescimento sobre os 7 anteriores, semana atual, total, lucro, retorno do terreno, reputação, avisos de estoque, **gráfico de faturamento, gastos e lucro dos últimos 14 dias** e **gráfico semanal de 8 semanas**), *Produtos*, *Decoração*, *Marca*, *Impostos* e *Caixa* (sacar para a carteira ou vender a loja).
+
+**Impostos da Prefeitura** (calendário semanal, tudo no servidor):
+
+- **Alvará de funcionamento**: fixo por semana, por tamanho (R$ 30, 50, 80 ou 120).
+- **Imposto predial**: 1,5% do valor do terreno por semana.
+- **ISS**: 5% do faturamento da semana.
+- As contas saem quando a semana fecha e **vencem em 3 dias**. Depois disso há **multa de 10%**, e com **7 dias de atraso a loja é suspensa** (sem vendas e com faixa na fachada) até as contas serem pagas. Na primeira semana, alvará e predial são proporcionais aos dias de loja.
+- O dono paga conta por conta ou tudo, pela carteira ou pelo caixa, e pode ligar o **pagamento automático pelo caixa**. O dinheiro vai para o tesouro (`alvara`, `iptu` e `iss` no extrato).
+- **Vender a loja** devolve 50% do terreno (se o tesouro tiver saldo) mais o caixa, e exige impostos em dia.
+
+**Sons e animações:** campainha de entrada, música ambiente suave, anúncios no alto-falante com as lojas reais do Shopping, fonte, passos no piso, chaves e fanfarra ao comprar o terreno, "ka-ching" na compra, carimbo ao pagar imposto, "tada" ao decorar, sinos ao abrir e fechar a loja e moedas quando chegam vendas; placas de neon que pulsam, TVs e balões das decorações, atendentes e clientes dentro das lojas, estantes que esvaziam conforme o estoque, selo "ESGOTADO", faixa de loja fechada ou suspensa e diretório animado.
+
+Endpoints autenticados: `GET /api/sk2/business` e `POST /api/sk2/business/...` com `buy`, `brand`, `products`, `restock`, `decor`, `open`, `autopay`, `withdraw`, `bills/pay`, `sell`, `shop/buy` e `bag/use`. Tabelas: `sk2_biz_stores`, `sk2_biz_days`, `sk2_biz_bills` e `sk2_biz_bag`, criadas em `business.init()`. `SK2_BIZ_TIME_SCALE=0.001` comprime a hora, o dia e a semana da loja para teste. Os números de economia estão em `BIZ`, `LOT_DEFS` e `CAT_RAW`.
+
+Limitações atuais: como nos outros prédios, o servidor não sabe em que lugar do Shopping o jogador está; o SQL tem testes com banco simulado em memória, mas ainda não foi exercitado contra um PostgreSQL real; não há funcionários nem concorrência entre lojas da mesma categoria; as vendas simuladas pelos "clientes do shopping" não saem de nenhuma conta, como os salários dos empregos.
+
 ## Testes
 
 ```sh
