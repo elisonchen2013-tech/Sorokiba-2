@@ -1,0 +1,389 @@
+'use strict';
+// Testes de COMPORTAMENTO das Empresas. O banco é simulado em memória só para as regras; as consultas SQL em si
+// precisam de um PostgreSQL real e não são exercitadas aqui.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const biz = require('../sorokiba2-business');
+const { BIZ, LOTS, LOT_BY_ID, CATEGORIES, PRODUCT_BY_ID, DECOR, DECOR_BY_ID, TICK_MS, DAY_MS, WEEK_MS } = biz;
+const read = name => fs.readFileSync(path.join(__dirname, '..', name), 'utf8');
+
+test('terrenos: 12 lotes sem sobreposição dentro do mapa, tamanhos coerentes e valor ligado ao fluxo', () => {
+  assert.equal(LOTS.length, 12); assert.equal(new Set(LOTS.map(l => l.id)).size, 12);
+  for (const l of LOTS) { assert.ok(l.x >= 0 && l.y >= 0 && l.x + l.w <= 52 && l.y + l.h <= 30, l.id); assert.equal(l.slots, biz.SIZES[l.size].slots); assert.ok(l.price > 0 && l.traffic > 0); }
+  for (const a of LOTS) for (const b of LOTS) if (a.id < b.id) assert.ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, `${a.id} sobrepõe ${b.id}`);
+  const by = s => LOTS.filter(l => l.size === s).map(l => l.price);
+  assert.ok(Math.max(...by('Q')) < Math.min(...by('G')), 'quiosque custa menos que loja grande');
+  const atrium = LOTS.filter(l => l.area === 'átrio'), plaza = LOTS.filter(l => l.area === 'praça');
+  assert.ok(Math.min(...atrium.map(l => l.price)) > Math.max(...plaza.map(l => l.price)), 'átrio custa mais que a praça');
+  assert.ok(Math.min(...atrium.map(l => l.traffic)) > Math.max(...plaza.map(l => l.traffic)), 'átrio tem mais fluxo');
+  assert.ok(new Set(LOTS.map(l => l.price)).size >= 10, 'preços variam de terreno para terreno');
+});
+
+test('catálogos: 8 categorias com 6 produtos, decoração por soquete e identidade visual válida', () => {
+  assert.equal(Object.keys(CATEGORIES).length, 8);
+  for (const c of Object.values(CATEGORIES)) { assert.equal(c.products.length, 6, c.id); for (const p of c.products) { assert.ok(p.ref > 0 && p.id.startsWith(c.id + '-')); assert.ok(p.pop >= 0.8 && p.pop <= 1.3); } }
+  assert.equal(Object.keys(PRODUCT_BY_ID).length, 48);
+  assert.ok(CATEGORIES.cafeteria.products.every(p => p.heal > 0), 'cafeteria vende comida que cura');
+  assert.ok(CATEGORIES.moda.products.every(p => p.heal === 0));
+  assert.deepEqual(Object.keys(DECOR).sort(), Object.keys(biz.SOCKETS).sort());
+  for (const [sock, items] of Object.entries(DECOR)) for (const i of items) { assert.ok(i.price > 0 && i.appeal > 0); assert.equal(DECOR_BY_ID[`${sock}:${i.id}`], i); }
+  assert.equal(biz.PALETTES.length, 8); biz.PALETTES.forEach((p, i) => assert.equal(p.id, i));
+});
+
+test('preço: o cliente compra mais barato e foge do caro; custo e faixa de preço seguem a referência', () => {
+  assert.equal(biz.priceFactor(10, 20), 1.35); assert.equal(biz.priceFactor(20, 20), 1);
+  assert.ok(biz.priceFactor(16, 20) > 1 && biz.priceFactor(16, 20) < 1.35);
+  assert.ok(biz.priceFactor(30, 20) < 1 && biz.priceFactor(30, 20) > biz.priceFactor(40, 20));
+  assert.equal(biz.priceFactor(200, 20), 0.12, 'piso de demanda');
+  const camiseta = PRODUCT_BY_ID['moda-camiseta'];
+  assert.equal(biz.unitCost(camiseta, 'b'), Math.round(35 * .45)); assert.ok(biz.unitCost(camiseta, 'p') > biz.unitCost(camiseta, 'b'));
+  assert.deepEqual(biz.priceRange(camiseta), { min: 18, max: 70 });
+  assert.equal(biz.unitCost({ ref: 1 }, 'b'), 1, 'custo nunca abaixo de R$ 1');
+});
+
+test('apelo: decoração soma até o teto, premium e reputação contam', () => {
+  assert.equal(biz.decorAppeal({}), 0); assert.equal(biz.decorAppeal({ vitrine: 'manequins' }), 4);
+  const all = { vitrine: 'neonvitrine', paredeE: 'neonopen', paredeD: 'tv', centro: 'mesa', balcao: 'caixamoderno', entrada: 'baloes' };
+  assert.equal(biz.decorAppeal(all), 6 + 5 + 7 + 4 + 3 + 4 + 0, 'a soma real passa de 29'); assert.equal(biz.decorAppeal(all), 29);
+  assert.equal(biz.decorAppeal({ vitrine: 'inexistente', fake: 'x' }), 0, 'item inválido não conta');
+  const store = { products: [{ id: 'moda-camiseta', q: 'b' }], decor: {}, reputation: 1 };
+  assert.equal(biz.appealOf(store), 1);
+  assert.ok(biz.appealOf({ ...store, decor: all }) > biz.appealOf(store));
+  assert.ok(biz.appealOf({ ...store, reputation: 1.4 }) > 1 && biz.appealOf({ ...store, reputation: .6 }) < 1);
+  assert.ok(biz.appealOf({ ...store, products: [{ id: 'moda-camiseta', q: 'p' }] }) > biz.appealOf(store));
+  assert.equal(biz.premiumShare([{ id: 'a', q: 'p' }, { id: 'b', q: 'b' }]), .5); assert.equal(biz.premiumShare([]), 0);
+  for (let t = 0; t < 48; t++) { const w = biz.hourWave(t); assert.ok(w >= .25 - 1e-9 && w <= 1 + 1e-9, 'hora ' + t); }
+  assert.ok(biz.hourWave(15) > biz.hourWave(3), 'tarde vende mais que madrugada');
+});
+
+const mkStore = (o = {}) => ({ id: 'loja-teste', category: 'moda', reputation: 1, decor: {}, products: CATEGORIES.moda.products.slice(0, 5).map(p => ({ id: p.id, price: p.ref, q: 'b', stock: 60, sold: 0 })), ...o });
+test('simulação: determinística, conserva estoque e dinheiro, e não vende sem estoque', () => {
+  const lot = LOT_BY_ID.N2, s = mkStore();
+  const a = biz.simulateTick(s, lot, 123456), b = biz.simulateTick(s, lot, 123456);
+  assert.deepEqual(a, b, 'mesma loja e mesma hora dão o mesmo resultado');
+  assert.deepEqual(s.products.map(p => p.stock), [60, 60, 60, 60, 60], 'não altera a loja original');
+  let rev = 0, units = 0, store = s;
+  for (let t = 0; t < 24 * 10; t++) { const r = biz.simulateTick(store, lot, t); store = { ...store, products: r.slots }; rev += r.revenue; units += r.units; }
+  const sold = store.products.reduce((n, p) => n + p.sold, 0), left = store.products.reduce((n, p) => n + p.stock, 0);
+  assert.equal(sold, units); assert.equal(left, 60 * 5 - units, 'cada unidade vendida sai do estoque');
+  assert.equal(rev, store.products.reduce((n, p) => n + p.sold * p.price, 0), 'receita = preço × unidades');
+  const empty = mkStore({ products: s.products.map(p => ({ ...p, stock: 0 })) });
+  let missed = 0, money = 0; for (let t = 0; t < 24 * 5; t++) { const r = biz.simulateTick(empty, lot, t); missed += r.missed; money += r.revenue; }
+  assert.equal(money, 0, 'sem estoque não há venda'); assert.ok(missed > 0, 'clientes que chegam e não encontram nada são contados');
+  const closed = biz.simulate(mkStore({ products: [] }), lot, 0, 10); assert.equal(closed.revenue, 0, 'sem produtos não vende');
+});
+
+test('simulação: no máximo 24 horas de ausência e agregação por dia', () => {
+  const lot = LOT_BY_ID.N3, s = mkStore({ products: CATEGORIES.moda.products.slice(0, 6).map(p => ({ id: p.id, price: p.ref, q: 'b', stock: 60, sold: 0 })) });
+  const from = 1000, to = from + 24 * 30, r = biz.simulate(s, lot, from, to);
+  assert.equal(r.ticks, BIZ.MAX_OFFLINE_TICKS, 'só as últimas 24 horas contam');
+  const sum = [...r.days.values()].reduce((n, d) => n + d.revenue, 0); assert.equal(sum, r.revenue);
+  assert.ok(r.days.size <= 2, 'um dia de ausência cabe em até 2 dias de calendário');
+  const short = biz.simulate(s, lot, to - 3, to); assert.equal(short.ticks, 3);
+  assert.equal(biz.simulate(s, lot, to, to).ticks, 0);
+  assert.ok(r.reputation >= BIZ.REP_MIN && r.reputation <= BIZ.REP_MAX);
+});
+
+test('economia: cada terreno se paga em semanas, o preço certo importa e a decoração compensa', () => {
+  const econ = (lot, cat, mult, q, decor, days = 30) => {
+    const c = CATEGORIES[cat], slots = c.products.slice(0, lot.slots).map(p => ({ id: p.id, price: Math.max(1, Math.round(p.ref * mult)), q, stock: 60, sold: 0 }));
+    let store = { id: 'e-' + lot.id + cat, category: cat, products: slots, reputation: 1, decor: decor || {} }, rev = 0, cogs = 0;
+    for (let t = 0; t < days * 24; t++) { const r = biz.simulateTick(store, lot, t); rev += r.revenue; r.slots.forEach(s => { const d = 60 - s.stock; if (d > 0) { cogs += biz.unitCost(PRODUCT_BY_ID[s.id], s.q) * d; s.stock = 60; } }); store = { ...store, products: r.slots }; }
+    return { rev: rev / days, cogs: cogs / days };
+  };
+  for (const lot of LOTS) {
+    const r = econ(lot, 'moda', 1, 'b'), tax = (lot.alvara + lot.price * BIZ.IPTU_PCT / 100 + r.rev * 7 * BIZ.ISS_PCT / 100) / 7, net = r.rev - r.cogs - tax, payback = lot.price / net;
+    assert.ok(net > 0, lot.id + ' dá lucro'); assert.ok(payback >= 8 && payback <= 45, `${lot.id}: retorno em ${payback.toFixed(1)} dias deve ficar entre 8 e 45`);
+  }
+  const m = x => { const r = econ(LOT_BY_ID.N2, 'moda', x, 'b'); return r.rev - r.cogs; };
+  assert.ok(m(1.5) > m(.6) * 2, 'preço muito baixo rende pouco'); assert.ok(m(1.5) > m(2), 'preço muito alto espanta clientes'); assert.ok(m(1.3) > m(1));
+  const mods = ['moda', 'tecnologia', 'livraria', 'cafeteria', 'floricultura', 'brinquedos', 'esportes', 'presentes'].map(c => { const r = econ(LOT_BY_ID.N2, c, 1, 'b'); return r.rev - r.cogs; });
+  assert.ok(Math.max(...mods) / Math.min(...mods) < 1.6, 'nenhuma categoria é muito melhor que as outras: ' + mods.map(Math.round));
+  const all = { vitrine: 'neonvitrine', paredeE: 'neonopen', paredeD: 'tv', centro: 'mesa', balcao: 'caixamoderno', entrada: 'baloes' };
+  const plain = econ(LOT_BY_ID.N2, 'moda', 1.2, 'b'), deco = econ(LOT_BY_ID.N2, 'moda', 1.2, 'b', all);
+  assert.ok(deco.rev > plain.rev * 1.15, 'decoração completa traz mais clientes');
+  const big = econ(LOT_BY_ID.N3, 'moda', 1, 'b').rev, small = econ(LOT_BY_ID.N1, 'moda', 1, 'b').rev; assert.ok(big > small * 1.5, 'terreno grande do átrio fatura bem mais');
+});
+
+test('impostos: alvará e predial proporcionais aos dias de loja, ISS sobre o faturamento, multa só depois do prazo', () => {
+  const lot = LOT_BY_ID.N2, W = 1000, ws = W * WEEK_MS;
+  const full = biz.weekBills(lot, 4200, ws - 5 * WEEK_MS, W, 1000), by = Object.fromEntries(full.map(b => [b.kind, b]));
+  assert.equal(by.alvara.amount, 80); assert.equal(by.iptu.amount, Math.round(4200 * .015)); assert.equal(by.iss.amount, 50);
+  assert.equal(by.alvara.due, ws + WEEK_MS + BIZ.BILL_DUE_DAYS * DAY_MS, 'vence 3 dias depois de fechar a semana');
+  const half = biz.weekBills(lot, 4200, ws + 3.5 * DAY_MS, W, 0);
+  assert.equal(half.find(b => b.kind === 'alvara').amount, 40, 'meia semana, meio alvará'); assert.equal(half.find(b => b.kind === 'iss'), undefined, 'sem faturamento não há ISS');
+  assert.equal(biz.weekBills(lot, 4200, ws + 6.99 * DAY_MS, W, 0).find(b => b.kind === 'alvara').amount, Math.round(80 / 7), 'mínimo de 1 dia');
+  const now = 5e12, ok = biz.billState({ amount: 80, fine: 0, dueAt: now + 1, paidAt: null }, now), late = biz.billState({ amount: 80, fine: 0, dueAt: now - 2 * DAY_MS, paidAt: null }, now);
+  assert.deepEqual([ok.overdue, ok.fine, ok.total], [false, 0, 80]); assert.deepEqual([late.overdue, late.fine, late.total, late.daysLate], [true, 8, 88, 2]);
+  assert.equal(biz.billState({ amount: 80, fine: 8, dueAt: now - DAY_MS, paidAt: now }, now).overdue, false, 'paga não está atrasada');
+  assert.equal(late.suspendAt, now - 2 * DAY_MS + BIZ.SUSPEND_AFTER_DAYS * DAY_MS);
+});
+
+test('marca e vitrine: validação de nome, escolhas, categoria, vagas, preço e qualidade', () => {
+  const ok = { name: '  Loja   Nova  ', logo: '⭐', palette: 2, floor: 'madeira', sign: 'neon' };
+  assert.deepEqual(biz.validateBrand(ok), { name: 'Loja Nova', logo: '⭐', palette: 2, floor: 'madeira', sign: 'neon' });
+  for (const bad of [{ ...ok, name: 'ab' }, { ...ok, name: '   ' }, { ...ok, name: '!!!' }, { ...ok, logo: '💩' }, { ...ok, palette: 8 }, { ...ok, palette: -1 }, { ...ok, palette: '2' }, { ...ok, floor: 'lava' }, { ...ok, sign: 'fogo' }, null]) assert.ok(biz.validateBrand(bad).err, JSON.stringify(bad));
+  assert.equal(biz.validateBrand({ ...ok, name: 'x'.repeat(80) }).name.length, BIZ.NAME_MAX); assert.equal(biz.validateBrand({ ...ok, name: '<b>Oi</b> loja' }).name.includes('<'), false, 'sem marcação HTML');
+  const lot = LOT_BY_ID.N1, ids = CATEGORIES.moda.products.map(p => p.id), slot = (i, o = {}) => ({ id: ids[i], price: PRODUCT_BY_ID[ids[i]].ref, q: 'b', ...o });
+  const v = biz.validateSlots('moda', lot, [slot(0), slot(1)], []); assert.ok(!v.err, v.err); assert.deepEqual(v.slots.map(s => s.stock), [0, 0]);
+  const cur = [{ id: ids[0], price: 35, q: 'b', stock: 12, sold: 4 }];
+  const keep = biz.validateSlots('moda', lot, [slot(0, { price: 40 })], cur); assert.equal(keep.slots[0].stock, 12); assert.equal(keep.slots[0].sold, 4); assert.equal(keep.slots[0].price, 40);
+  const errs = [[[], 'vazio'], [[slot(0), slot(0)], 'repetido'], [ids.slice(0, 6).map((_, i) => slot(i)), 'mais vagas que o terreno'], [[{ id: 'livraria-caneta', price: 8, q: 'b' }], 'outra categoria'], [[slot(0, { price: 1000 })], 'preço alto'], [[slot(0, { price: 1 })], 'preço baixo'],
+    [[slot(0, { price: 30.5 })], 'preço quebrado'], [[slot(0, { q: 'x' })], 'qualidade inválida'], [[{ id: '__proto__', price: 1, q: 'b' }], 'id perigoso'], [[null], 'nulo'], [[slot(1)], 'tirar produto com estoque'], [[slot(0, { q: 'p' })], 'trocar qualidade com estoque']];
+  for (const [input, why] of errs) assert.ok(biz.validateSlots('moda', lot, input, cur).err, why);
+});
+
+/* ---------- banco simulado em memória ---------- */
+function world(o = {}) {
+  const w = { players: { ana: { username: 'ana', name: 'Ana', money: 20000, xp: 0, role: 'cidadão', employment: {} }, bia: { username: 'bia', name: 'Bia', money: 5000, xp: 0, role: 'cidadão', employment: {} } },
+    stores: [], days: {}, bills: [], bag: {}, credits: [], debits: [], treasury: o.treasury ?? 100000, health: o.health ?? 60 };
+  const rows = r => ({ rows: r, rowCount: r.length }), now = () => Date.now();
+  const storeRow = s => ({ ...s, decor: JSON.parse(JSON.stringify(s.decor)), products: JSON.parse(JSON.stringify(s.products)) });
+  w.query = async (sql, p = []) => {
+    const q = sql.replace(/\s+/g, ' ').trim();
+    if (/^SELECT \* FROM sk2_players WHERE username = \$1/.test(q)) return rows(w.players[p[0]] ? [{ ...w.players[p[0]] }] : []);
+    if (/^SELECT \* FROM sk2_biz_stores WHERE owner = \$1 FOR UPDATE/.test(q)) return rows(w.stores.filter(s => s.owner === p[0]).map(storeRow));
+    if (/^SELECT \* FROM sk2_biz_stores WHERE id = \$1 FOR UPDATE/.test(q)) return rows(w.stores.filter(s => s.id === p[0]).map(storeRow));
+    if (/^SELECT \* FROM sk2_biz_stores$/.test(q)) return rows(w.stores.map(storeRow));
+    if (/^SELECT 1 FROM sk2_biz_stores WHERE lot = \$1/.test(q)) return rows(w.stores.filter(s => s.lot === p[0]).map(() => ({})));
+    if (/^UPDATE sk2_biz_stores SET name=\$2/.test(q)) { const s = w.stores.find(x => x.id === p[0]); Object.assign(s, { name: p[1], logo: p[2], palette: p[3], floor: p[4], sign: p[5], decor: JSON.parse(p[6]), products: JSON.parse(p[7]), cash: p[8], last_tick: p[9], billed_week: p[10], status: p[11], reputation: p[12], autopay: p[13] }); return rows([]); }
+    if (/^INSERT INTO sk2_biz_stores/.test(q)) { w.stores.push({ id: p[0], lot: p[1], owner: p[2], owner_name: p[3], name: p[4], category: p[5], logo: p[6], palette: p[7], floor: p[8], sign: p[9], decor: {}, products: JSON.parse(p[10]), cash: 0, price_paid: p[11], bought_at: p[12], last_tick: p[13], billed_week: p[14], status: 'aberta', reputation: 1, autopay: false }); return rows([]); }
+    if (/^DELETE FROM sk2_biz_stores/.test(q)) { w.stores = w.stores.filter(s => s.id !== p[0]); return rows([]); }
+    if (/^INSERT INTO sk2_biz_days/.test(q)) { const k = p[0] + ':' + p[1], d = w.days[k] || (w.days[k] = { store: p[0], day: p[1], revenue: 0, spent: 0, units: 0, customers: 0, missed: 0 }); d.revenue += p[2]; d.spent += p[3]; d.units += p[4]; d.customers += p[5]; d.missed += p[6]; return rows([]); }
+    if (/^SELECT COALESCE\(SUM\(revenue\),0\) AS r FROM sk2_biz_days WHERE store_id = \$1 AND day >= \$2 AND day < \$3/.test(q)) return rows([{ r: Object.values(w.days).filter(d => d.store === p[0] && d.day >= p[1] && d.day < p[2]).reduce((n, d) => n + d.revenue, 0) }]);
+    if (/^SELECT day, revenue, spent, units, customers, missed FROM sk2_biz_days/.test(q)) return rows(Object.values(w.days).filter(d => d.store === p[0] && d.day > p[1]).sort((a, b) => a.day - b.day));
+    if (/^SELECT COALESCE\(SUM\(revenue\),0\) AS r, COALESCE\(SUM\(spent\),0\) AS s/.test(q)) { const ds = Object.values(w.days).filter(d => d.store === p[0]); return rows([{ r: ds.reduce((n, d) => n + d.revenue, 0), s: ds.reduce((n, d) => n + d.spent, 0), u: ds.reduce((n, d) => n + d.units, 0), c: ds.reduce((n, d) => n + d.customers, 0) }]); }
+    if (/^INSERT INTO sk2_biz_bills/.test(q)) { if (w.bills.some(b => b.store === p[1] && b.week === p[2] && b.kind === p[3])) return { rows: [], rowCount: 0 }; w.bills.push({ id: p[0], store: p[1], week: p[2], kind: p[3], amount: p[4], fine: 0, due: p[5], paid: null, paid_day: null }); return { rows: [], rowCount: 1 }; }
+    if (/^SELECT id, week, kind, amount, fine, due_at FROM sk2_biz_bills WHERE store_id = \$1 AND paid_at IS NULL/.test(q)) return rows(w.bills.filter(b => b.store === p[0] && !b.paid).sort((a, b) => a.due - b.due || a.kind.localeCompare(b.kind)).map(b => ({ id: b.id, week: b.week, kind: b.kind, amount: b.amount, fine: b.fine, due_at: b.due })));
+    if (/^SELECT id, kind, amount, fine, due_at FROM sk2_biz_bills WHERE store_id = \$1 AND paid_at IS NULL/.test(q)) return rows(w.bills.filter(b => b.store === p[0] && !b.paid).sort((a, b) => a.due - b.due || a.kind.localeCompare(b.kind)).map(b => ({ id: b.id, kind: b.kind, amount: b.amount, fine: b.fine, due_at: b.due })));
+    if (/^SELECT id, week, kind, amount, fine, due_at, paid_at, paid_day FROM sk2_biz_bills/.test(q)) return rows(w.bills.filter(b => b.store === p[0]).sort((a, b) => b.week - a.week).map(b => ({ id: b.id, week: b.week, kind: b.kind, amount: b.amount, fine: b.fine, due_at: b.due, paid_at: b.paid, paid_day: b.paid_day })));
+    if (/^UPDATE sk2_biz_bills SET fine = \$2 WHERE id = \$1/.test(q)) { w.bills.find(b => b.id === p[0]).fine = p[1]; return rows([]); }
+    if (/^UPDATE sk2_biz_bills SET paid_at = now\(\)/.test(q)) { const b = w.bills.find(x => x.id === p[0]); b.paid = now(); b.paid_day = p[1]; b.fine = p[2]; return rows([]); }
+    if (/^SELECT 1 FROM sk2_biz_bills WHERE store_id = \$1 AND paid_at IS NULL AND due_at/.test(q)) return rows(w.bills.filter(b => b.store === p[0] && !b.paid && b.due + p[1] < now()).map(() => ({})));
+    if (/^SELECT 1 FROM sk2_biz_bills WHERE store_id = \$1 AND paid_at IS NULL/.test(q)) return rows(w.bills.filter(b => b.store === p[0] && !b.paid).map(() => ({})));
+    if (/^SELECT item_id, qty FROM sk2_biz_bag WHERE username = \$1 AND qty > 0/.test(q)) return rows(Object.entries(w.bag[p[0]] || {}).filter(([, n]) => n > 0).map(([item_id, qty]) => ({ item_id, qty })));
+    if (/^SELECT qty FROM sk2_biz_bag WHERE username = \$1 AND item_id = \$2/.test(q)) { const n = (w.bag[p[0]] || {})[p[1]]; return rows(n === undefined ? [] : [{ qty: n }]); }
+    if (/^INSERT INTO sk2_biz_bag/.test(q)) { (w.bag[p[0]] = w.bag[p[0]] || {})[p[1]] = ((w.bag[p[0]] || {})[p[1]] || 0) + p[2]; return rows([]); }
+    if (/^UPDATE sk2_biz_bag SET qty = qty - 1/.test(q)) { w.bag[p[0]][p[1]] -= 1; return rows([]); }
+    if (/^UPDATE sk2_players SET money = money - \$2/.test(q)) { w.players[p[0]].money -= p[1]; return rows([{ ...w.players[p[0]] }]); }
+    if (/^UPDATE sk2_players SET money = money \+ \$2/.test(q)) { w.players[p[0]].money += p[1]; return rows([{ ...w.players[p[0]] }]); }
+    if (/^UPDATE sk2_hospital_patients SET health/.test(q)) { w.health = p[1]; return rows([]); }
+    throw new Error('SQL inesperado no teste: ' + q.slice(0, 100));
+  };
+  return w;
+}
+async function inWorld(w, fn) {
+  const db = require('../sorokiba2-db'), city = require('../sorokiba2-city'), hospital = require('../sorokiba2-hospital');
+  const orig = { tx: db.withTx, credit: city.credit, debit: city.debit, settle: hospital.settle };
+  db.withTx = async f => f({ query: w.query });
+  city.credit = async (_c, kind, amount, note) => { w.credits.push({ kind, amount, note }); w.treasury += amount; return w.treasury; };
+  city.debit = async (_c, kind, amount, note) => { if (w.treasury < amount) return null; w.treasury -= amount; w.debits.push({ kind, amount, note }); return w.treasury; };
+  hospital.settle = async () => ({ health: w.health });
+  try { return await fn(); } finally { db.withTx = orig.tx; city.credit = orig.credit; city.debit = orig.debit; hospital.settle = orig.settle; }
+}
+const brand = (o = {}) => ({ lot: 'N2', name: 'Moda Sorokiba', category: 'moda', logo: '💎', palette: 2, floor: 'madeira', sign: 'neon', ...o });
+async function withStore(w, user = 'ana', input = {}) { const r = await inWorld(w, () => biz.buyLot(user, brand(input))); assert.ok(!r.err, r.err); return w.stores.find(s => s.owner === user); }
+
+test('terreno: compra com personalização, abre com estoque de cortesia e o valor vai para o tesouro', async () => {
+  const w = world(), r = await inWorld(w, () => biz.buyLot('ana', brand()));
+  assert.ok(!r.err, r.err); const s = w.stores[0], lot = LOT_BY_ID.N2;
+  assert.equal(w.players.ana.money, 20000 - lot.price); assert.deepEqual(w.credits[0].kind, 'terreno'); assert.equal(w.credits[0].amount, lot.price);
+  assert.equal(s.lot, 'N2'); assert.equal(s.owner, 'ana'); assert.equal(s.name, 'Moda Sorokiba'); assert.equal(s.category, 'moda'); assert.equal(s.price_paid, lot.price); assert.equal(s.status, 'aberta');
+  assert.equal(s.products.length, BIZ.STARTER_SLOTS); assert.ok(s.products.every(p => p.stock === BIZ.STARTER_STOCK && p.price === PRODUCT_BY_ID[p.id].ref), 'estoque inicial e preço de referência');
+  assert.equal(s.last_tick, biz.tickOf(Date.now()), 'não rende venda de antes de abrir'); assert.equal(s.billed_week, biz.weekOf(Date.now()) - 1);
+  assert.equal(r.business.mine.name, 'Moda Sorokiba'); assert.equal(r.business.lots.find(l => l.id === 'N2').mine, true); assert.equal(r.business.lots.find(l => l.id === 'N2').store.owner, 'Ana');
+  assert.equal(r.business.lots.filter(l => l.store).length, 1);
+});
+
+test('terreno: um negócio por jogador, lote vendido some do mercado e erros de validação não cobram', async () => {
+  const w = world(); await withStore(w);
+  assert.match((await inWorld(w, () => biz.buyLot('ana', brand({ lot: 'N4' })))).err, /já tem uma loja/);
+  const taken = await inWorld(w, () => biz.buyLot('bia', brand({ lot: 'N2' }))); assert.match(taken.err, /já foi vendido/); assert.equal(w.players.bia.money, 5000);
+  for (const [bad, status] of [[{ lot: 'ZZ' }, 400], [{ lot: '__proto__' }, 400], [{ name: 'x' }, 400], [{ category: 'armas' }, 400], [{ logo: '💩' }, 400], [{ sign: 'fogo' }, 400]]) { const r = await inWorld(w, () => biz.buyLot('bia', brand({ lot: 'S5', ...bad }))); assert.equal(r.status, status, JSON.stringify(bad)); }
+  assert.equal(w.players.bia.money, 5000); assert.equal(w.stores.length, 1);
+  w.players.bia.money = 100; assert.match((await inWorld(w, () => biz.buyLot('bia', brand({ lot: 'S5' })))).err, /Saldo insuficiente/); assert.equal(w.stores.length, 1);
+  w.players.bia.money = 5000; const ok = await inWorld(w, () => biz.buyLot('bia', brand({ lot: 'S5', name: 'Cantinho do Café', category: 'cafeteria' }))); assert.ok(!ok.err); assert.equal(ok.business.lots.filter(l => l.store).length, 2);
+});
+
+test('vendas sob demanda: horas passadas rendem, repetir a consulta não rende mais e a ausência é limitada', async () => {
+  const w = world(), s = await withStore(w, 'ana', { lot: 'N3' });
+  s.products.forEach(p => { p.stock = 60; }); s.last_tick -= 10;
+  const a = await inWorld(w, () => biz.summary('ana')); assert.ok(!a.err); const st = w.stores[0];
+  assert.ok(a.settled.revenue >= 0); assert.equal(st.cash, a.settled.revenue); assert.equal(st.last_tick, biz.tickOf(Date.now()));
+  const sold = st.products.reduce((n, p) => n + p.sold, 0), left = st.products.reduce((n, p) => n + p.stock, 0); assert.equal(left, 60 * 3 - sold, 'estoque desceu o que vendeu');
+  const again = await inWorld(w, () => biz.summary('ana')); assert.equal(again.settled.revenue, 0, 'consultar de novo na mesma hora não rende mais'); assert.equal(w.stores[0].cash, st.cash);
+  const day = Object.values(w.days).reduce((n, d) => n + d.revenue, 0); assert.equal(day, st.cash, 'o gráfico diário bate com o caixa');
+  w.stores[0].last_tick -= 24 * 40; w.stores[0].products.forEach(p => { p.stock = 60; });
+  const far = await inWorld(w, () => biz.summary('ana')); const ticks = Object.values(w.days).reduce((n, d) => n + d.customers, 0); assert.ok(far.settled.revenue < 60 * 3 * 130, 'ausência de 40 dias não rende 40 dias de vendas'); assert.ok(ticks > 0);
+  const closed = world(); const cs = await withStore(closed, 'ana'); cs.status = 'fechada'; cs.last_tick -= 24; await inWorld(closed, () => biz.summary('ana')); assert.equal(closed.stores[0].cash, 0, 'loja fechada não vende');
+});
+
+test('impostos semanais: contas geradas ao fechar cada semana; loja esquecida por 15 dias já nasce suspensa', async () => {
+  const w = world(), s = await withStore(w, 'ana'); const now = Date.now(), W = biz.weekOf(now), lot = LOT_BY_ID.N2;
+  s.bought_at = now - 30 * DAY_MS; s.billed_week = W - 4; s.last_tick = biz.tickOf(now) - 1; s.products.forEach(p => { p.stock = 0; });
+  const r = await inWorld(w, () => biz.summary('ana'));
+  assert.deepEqual([...new Set(w.bills.map(b => b.week))].sort(), [W - 3, W - 2, W - 1], 'uma conta por semana já fechada, nunca a semana em curso');
+  assert.equal(r.settled.bills, 6, 'alvará e predial em 3 semanas (sem faturamento, sem ISS)'); assert.equal(w.stores[0].billed_week, W - 1);
+  const full = w.bills.find(b => b.week === W - 2 && b.kind === 'alvara'); assert.equal(full.amount, lot.alvara, 'semana inteira = alvará cheio');
+  assert.equal(w.bills.find(b => b.week === W - 2 && b.kind === 'iptu').amount, Math.round(lot.price * BIZ.IPTU_PCT / 100));
+  assert.equal(w.stores[0].status, 'suspensa', 'a conta mais antiga já passou de 7 dias de atraso'); assert.equal(r.settled.suspended, true);
+  const again = await inWorld(w, () => biz.summary('ana')); assert.equal(again.settled.bills, 0, 'não gera as mesmas contas duas vezes'); assert.equal(w.bills.length, 6);
+});
+
+test('impostos: multa de 10% depois do prazo, suspensão com 7 dias de atraso e reabertura ao pagar tudo', async () => {
+  const w = world(), s = await withStore(w, 'ana'); const now = Date.now(), W = biz.weekOf(now);
+  s.bought_at = now - 12 * DAY_MS; s.billed_week = W - 2; s.last_tick = biz.tickOf(now) - 1; s.products.forEach(p => { p.stock = 0; });
+  await inWorld(w, () => biz.summary('ana')); assert.ok(w.bills.length >= 2 && w.bills.every(b => b.week === W - 1));
+  w.bills.forEach(b => { b.due = now + DAY_MS; }); w.stores[0].status = 'aberta';
+  const ok = await inWorld(w, () => biz.summary('ana')); assert.equal(w.stores[0].status, 'aberta'); assert.ok(w.bills.every(b => b.fine === 0), 'dentro do prazo não há multa'); assert.ok(ok.business.mine.openTotal > 0);
+  w.bills.forEach(b => { b.due = now - 2 * DAY_MS; });
+  const late = await inWorld(w, () => biz.summary('ana')); assert.ok(w.bills.every(b => b.fine === Math.round(b.amount * BIZ.FINE_PCT / 100)), 'multa de 10%'); assert.equal(w.stores[0].status, 'aberta', 'ainda não suspende');
+  assert.ok(late.business.mine.bills.some(b => b.overdue && b.fine > 0));
+  w.bills.forEach(b => { b.due = now - 8 * DAY_MS; });
+  const susp = await inWorld(w, () => biz.summary('ana')); assert.equal(w.stores[0].status, 'suspensa'); assert.equal(susp.settled.suspended, true);
+  assert.match((await inWorld(w, () => biz.setOpen('ana', true))).err, /suspensa/);
+  assert.match((await inWorld(w, () => biz.sellStore('ana'))).err, /impostos/, 'não vende com impostos em aberto');
+  const before = w.players.ana.money, total = w.bills.reduce((n, b) => n + b.amount + b.fine, 0), paid = await inWorld(w, () => biz.payBills('ana', { all: true, from: 'carteira' }));
+  assert.ok(!paid.err, paid.err); assert.equal(w.players.ana.money, before - total); assert.equal(w.stores[0].status, 'aberta'); assert.ok(w.bills.every(b => b.paid)); assert.match(paid.message, /reaberta/);
+  const kindsPaid = new Set(w.credits.filter(c => c.kind !== 'terreno').map(c => c.kind)); assert.ok(kindsPaid.has('alvara') && kindsPaid.has('iptu'), 'o dinheiro vai para o tesouro nas categorias certas');
+});
+
+test('impostos: ISS sai do faturamento da semana e o pagamento automático usa o caixa', async () => {
+  const w = world(), s = await withStore(w, 'ana', { lot: 'N3' }); const now = Date.now(), W = biz.weekOf(now), lastWeek = W - 1;
+  s.bought_at = now - 20 * DAY_MS; s.billed_week = lastWeek - 1; s.last_tick = biz.tickOf(now); s.products.forEach(p => { p.stock = 0; }); s.cash = 5000;
+  w.days['x:1'] = { store: s.id, day: lastWeek * 7 + 2, revenue: 1000, spent: 0, units: 10, customers: 10, missed: 0 };
+  s.autopay = true; await inWorld(w, () => biz.summary('ana'));
+  const iss = w.bills.find(b => b.week === lastWeek && b.kind === 'iss'); assert.equal(iss.amount, Math.round(1000 * BIZ.ISS_PCT / 100)); assert.ok(iss.paid, 'pagou sozinho');
+  assert.ok(w.bills.every(b => b.paid), 'todas pagas pelo caixa'); assert.ok(w.stores[0].cash < 5000); assert.equal(w.players.ana.money, 20000 - LOT_BY_ID.N3.price, 'a carteira não foi tocada');
+  const poor = world(), ps = await withStore(poor, 'ana'); ps.bought_at = now - 15 * DAY_MS; ps.billed_week = biz.weekOf(ps.bought_at) - 1; ps.last_tick = biz.tickOf(now); ps.products.forEach(p => { p.stock = 0; }); ps.cash = 5; ps.autopay = true;
+  await inWorld(poor, () => biz.summary('ana')); assert.ok(poor.bills.length > 0 && poor.bills.every(b => !b.paid), 'sem saldo no caixa nada é pago');
+});
+
+test('pagar contas: carteira ou caixa, uma por vez, ids inválidos e saldo insuficiente', async () => {
+  const w = world(), s = await withStore(w); const now = Date.now();
+  w.bills.push({ id: '11111111-1111-4111-8111-111111111111', store: s.id, week: 1, kind: 'alvara', amount: 80, fine: 0, due: now + DAY_MS, paid: null, paid_day: null }, { id: '22222222-2222-4222-8222-222222222222', store: s.id, week: 1, kind: 'iptu', amount: 63, fine: 0, due: now + DAY_MS, paid: null, paid_day: null });
+  assert.equal((await inWorld(w, () => biz.payBills('ana', { ids: ['x'] }))).status, 400); assert.equal((await inWorld(w, () => biz.payBills('ana', {}))).status, 400);
+  const one = await inWorld(w, () => biz.payBills('ana', { ids: ['11111111-1111-4111-8111-111111111111'], from: 'carteira' })); assert.ok(!one.err, one.err); assert.equal(w.bills.filter(b => b.paid).length, 1); assert.match(one.message, /Faltam 1/);
+  w.players.ana.money = 10; assert.match((await inWorld(w, () => biz.payBills('ana', { all: true, from: 'carteira' }))).err, /Saldo insuficiente/);
+  w.stores[0].cash = 10; assert.match((await inWorld(w, () => biz.payBills('ana', { all: true, from: 'caixa' }))).err, /caixa/);
+  w.stores[0].cash = 500; const cash = await inWorld(w, () => biz.payBills('ana', { all: true, from: 'caixa' })); assert.ok(!cash.err, cash.err); assert.equal(w.stores[0].cash, 500 - 63); assert.equal(w.players.ana.money, 10, 'pagou pelo caixa, não pela carteira');
+  assert.match((await inWorld(w, () => biz.payBills('ana', { all: true }))).err, /Não há contas/);
+});
+
+test('vitrine e reposição: salvar produtos, repor pela carteira ou pelo caixa e custo no atacado', async () => {
+  const w = world(), s = await withStore(w), ids = CATEGORIES.moda.products.map(p => p.id); s.last_tick = biz.tickOf(Date.now());
+  const price = PRODUCT_BY_ID[ids[0]].ref;
+  const save = await inWorld(w, () => biz.setProducts('ana', [{ id: ids[0], price: price + 5, q: 'b' }, { id: ids[1], price: PRODUCT_BY_ID[ids[1]].ref, q: 'b' }, { id: ids[2], price: PRODUCT_BY_ID[ids[2]].ref, q: 'b' }, { id: ids[3], price: 30, q: 'p' }]));
+  assert.ok(!save.err, save.err); assert.equal(w.stores[0].products.length, 4); assert.equal(w.stores[0].products[0].price, price + 5); assert.equal(w.stores[0].products[0].stock, BIZ.STARTER_STOCK, 'estoque mantido');
+  assert.equal((await inWorld(w, () => biz.setProducts('ana', [{ id: ids[0], price: 9999, q: 'b' }]))).status, 400);
+  const cost = biz.unitCost(PRODUCT_BY_ID[ids[3]], 'p') * 10, before = w.players.ana.money, r = await inWorld(w, () => biz.restock('ana', { slot: 3, units: 10, from: 'carteira' }));
+  assert.ok(!r.err, r.err); assert.equal(w.players.ana.money, before - cost); assert.equal(w.stores[0].products[3].stock, 10);
+  assert.ok(Object.values(w.days).some(d => d.spent === cost), 'a reposição entra nos gastos do dia');
+  w.stores[0].cash = 1; assert.match((await inWorld(w, () => biz.restock('ana', { slot: 0, units: 5, from: 'caixa' }))).err, /caixa/); w.stores[0].cash = 1000;
+  const fc = await inWorld(w, () => biz.restock('ana', { slot: 0, units: 5, from: 'caixa' })); assert.ok(!fc.err); assert.equal(w.stores[0].cash, 1000 - biz.unitCost(PRODUCT_BY_ID[ids[0]], 'b') * 5); assert.equal(w.players.ana.money, before - cost, 'carteira intacta');
+  for (const bad of [{ slot: 9, units: 5 }, { slot: 0, units: 0 }, { slot: 0, units: 31 }, { slot: 0, units: 1.5 }, { slot: 0, units: 55 }, { slot: 0, units: 50 }]) assert.ok((await inWorld(w, () => biz.restock('ana', bad))).err, JSON.stringify(bad));
+  w.players.ana.money = 1; assert.match((await inWorld(w, () => biz.restock('ana', { slot: 0, units: 5 }))).err, /Saldo insuficiente/);
+  assert.equal((await inWorld(world(), () => biz.restock('ana', { slot: 0, units: 5 }))).status, 404, 'sem loja');
+});
+
+test('decoração, marca, abrir e fechar, caixa e pagamento automático', async () => {
+  const w = world(), s = await withStore(w); s.last_tick = biz.tickOf(Date.now());
+  const d = await inWorld(w, () => biz.buyDecor('ana', { socket: 'vitrine', item: 'neonvitrine' })); assert.ok(!d.err, d.err); assert.equal(w.stores[0].decor.vitrine, 'neonvitrine'); assert.equal(w.players.ana.money, 20000 - LOT_BY_ID.N2.price - DECOR_BY_ID['vitrine:neonvitrine'].price);
+  assert.match((await inWorld(w, () => biz.buyDecor('ana', { socket: 'vitrine', item: 'neonvitrine' }))).err, /já está/);
+  assert.equal((await inWorld(w, () => biz.buyDecor('ana', { socket: 'vitrine', item: 'tv' }))).status, 400, 'item de outro soquete'); assert.equal((await inWorld(w, () => biz.buyDecor('ana', { socket: 'teto', item: 'x' }))).status, 400);
+  const rm = await inWorld(w, () => biz.buyDecor('ana', { socket: 'vitrine', item: null })); assert.ok(!rm.err); assert.equal(w.stores[0].decor.vitrine, undefined);
+  w.stores[0].cash = 100; assert.match((await inWorld(w, () => biz.buyDecor('ana', { socket: 'paredeD', item: 'tv', from: 'caixa' }))).err, /caixa/);
+  w.stores[0].cash = 1000; assert.ok(!(await inWorld(w, () => biz.buyDecor('ana', { socket: 'paredeD', item: 'tv', from: 'caixa' }))).err); assert.equal(w.stores[0].cash, 1000 - 220);
+  const b = await inWorld(w, () => biz.saveBrand('ana', { name: 'Nova Marca', logo: '🔥', palette: 5, floor: 'xadrez', sign: 'luminoso' })); assert.ok(!b.err); assert.equal(w.stores[0].name, 'Nova Marca'); assert.equal(w.stores[0].category, 'moda', 'a categoria não muda');
+  assert.equal((await inWorld(w, () => biz.saveBrand('ana', { name: 'ab' }))).status, 400);
+  const close = await inWorld(w, () => biz.setOpen('ana', false)); assert.equal(w.stores[0].status, 'fechada'); assert.ok(!close.err);
+  assert.equal((await inWorld(w, () => biz.setOpen('ana', 'sim'))).status, 400); assert.ok(!(await inWorld(w, () => biz.setOpen('ana', true))).err); assert.equal(w.stores[0].status, 'aberta');
+  assert.ok(!(await inWorld(w, () => biz.setAutopay('ana', true))).err); assert.equal(w.stores[0].autopay, true); assert.equal((await inWorld(w, () => biz.setAutopay('ana', 1))).status, 400);
+  w.stores[0].cash = 300; const m = w.players.ana.money; assert.ok(!(await inWorld(w, () => biz.withdraw('ana', 120))).err); assert.equal(w.players.ana.money, m + 120); assert.equal(w.stores[0].cash, 180);
+  for (const bad of [0, -5, 1.5, '10', 999999]) assert.ok((await inWorld(w, () => biz.withdraw('ana', bad))).err, String(bad));
+});
+
+test('vender a loja: devolve 50% do terreno mais o caixa, libera o lote e depende do tesouro', async () => {
+  const w = world(), s = await withStore(w); s.last_tick = biz.tickOf(Date.now()); s.cash = 700;
+  const before = w.players.ana.money, r = await inWorld(w, () => biz.sellStore('ana')); assert.ok(!r.err, r.err);
+  assert.equal(w.players.ana.money, before + LOT_BY_ID.N2.price / 2 + 700); assert.equal(w.stores.length, 0); assert.equal(w.debits.at(-1).amount, LOT_BY_ID.N2.price / 2);
+  assert.equal(r.business.lots.find(l => l.id === 'N2').store, null, 'lote volta a ficar disponível'); assert.equal(r.business.me.hasStore, false);
+  const again = await withStore(w, 'bia', { lot: 'N2', name: 'Outra Loja' }); assert.equal(again.owner, 'bia', 'outro jogador pode comprar o mesmo lote');
+  const broke = world({ treasury: 0 }); const bs = await withStore(broke); broke.treasury = 0; bs.last_tick = biz.tickOf(Date.now());
+  assert.match((await inWorld(broke, () => biz.sellStore('ana'))).err, /tesouro/); assert.equal(broke.stores.length, 1);
+});
+
+test('compra na vitrine: dinheiro vai para o caixa da loja, item para a sacola, sem comprar da própria loja', async () => {
+  const w = world(), s = await withStore(w); s.last_tick = biz.tickOf(Date.now()); s.products.forEach(p => { p.stock = 20; }); const pid = s.products[0].id, price = s.products[0].price;
+  const r = await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 2 })); assert.ok(!r.err, r.err);
+  assert.equal(w.players.bia.money, 5000 - price * 2); assert.equal(w.stores[0].cash, price * 2, 'caixa da loja, não a carteira da dona'); assert.equal(w.players.ana.money, 20000 - LOT_BY_ID.N2.price, 'a carteira da dona não muda');
+  assert.equal(w.stores[0].products[0].stock, 18); assert.equal(w.stores[0].products[0].sold, 2); assert.equal(w.bag.bia[pid], 2); assert.ok(w.stores[0].reputation > 1);
+  assert.equal(Object.values(w.days).reduce((n, d) => n + d.revenue, 0), price * 2, 'entra no faturamento do dia'); assert.equal(r.business.bag[0].qty, 2);
+  assert.match((await inWorld(w, () => biz.shopBuy('ana', { store: s.id, product: pid, qty: 1 }))).err, /própria loja/);
+  assert.equal((await inWorld(w, () => biz.shopBuy('bia', { store: 'x', product: pid }))).status, 400); assert.equal((await inWorld(w, () => biz.shopBuy('bia', { store: '99999999-9999-4999-8999-999999999999', product: pid }))).status, 404);
+  assert.equal((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 0 }))).status, 400); assert.equal((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 6 }))).status, 400);
+  assert.equal((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: 'moda-inexistente', qty: 1 }))).status, 404);
+  w.stores[0].products[0].stock = 1; assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 3 }))).err, /Só restam 1/); w.stores[0].products[0].stock = 0; assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 1 }))).err, /esgotado/i);
+  w.stores[0].products[0].stock = 20; w.players.bia.money = 3; assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 1 }))).err, /Saldo insuficiente/); w.players.bia.money = 5000;
+  w.bag.bia[pid] = BIZ.BAG_MAX - 1; assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid, qty: 2 }))).err, /sacola/); w.bag.bia[pid] = 2;
+  w.stores[0].status = 'fechada'; assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid }))).err, /fechada/);
+  w.stores[0].status = 'aberta'; w.bills.push({ id: '33333333-3333-4333-8333-333333333333', store: s.id, week: 1, kind: 'alvara', amount: 80, fine: 8, due: Date.now() - 9 * DAY_MS, paid: null, paid_day: null });
+  assert.match((await inWorld(w, () => biz.shopBuy('bia', { store: s.id, product: pid }))).err, /suspensa/, 'conta com mais de 7 dias de atraso suspende a loja, e ninguém compra');
+});
+
+test('sacola: só comida cura, respeita o teto de 100 e gasta uma unidade', async () => {
+  const w = world({ health: 60 }); w.bag.bia = { 'cafeteria-bolo': 2, 'moda-camiseta': 1 };
+  const r = await inWorld(w, () => biz.useItem('bia', 'cafeteria-bolo')); assert.ok(!r.err, r.err); assert.equal(w.health, 65); assert.equal(w.bag.bia['cafeteria-bolo'], 1); assert.match(r.message, /\+5 de saúde/);
+  assert.match((await inWorld(w, () => biz.useItem('bia', 'moda-camiseta'))).err, /não é de comer/); assert.equal((await inWorld(w, () => biz.useItem('bia', 'inventado'))).status, 400);
+  assert.match((await inWorld(w, () => biz.useItem('bia', 'cafeteria-sanduiche'))).err, /não tem/);
+  w.health = 98; await inWorld(w, () => biz.useItem('bia', 'cafeteria-bolo')); assert.equal(w.health, 100); w.bag.bia['cafeteria-bolo'] = 1; assert.match((await inWorld(w, () => biz.useItem('bia', 'cafeteria-bolo'))).err, /máximo/);
+});
+
+test('painel do dono: faturamento, gráfico de 14 dias, 8 semanas, crescimento e impostos previstos', async () => {
+  const w = world(), s = await withStore(w), now = Date.now(), today = biz.dayOf(now); s.last_tick = biz.tickOf(now); s.bought_at = now - 30 * DAY_MS; s.billed_week = biz.weekOf(now) - 1; s.products.forEach(p => { p.stock = 0; });
+  for (let i = 0; i < 14; i++) w.days['d' + i] = { store: s.id, day: today - 13 + i, revenue: i < 7 ? 100 : 150, spent: 20, units: 5, customers: 8, missed: 1 };
+  const r = await inWorld(w, () => biz.summary('ana')), m = r.business.mine, k = m.kpis;
+  assert.equal(m.series.length, 14); assert.equal(m.series[13].revenue, 150); assert.equal(m.series[0].revenue, 100); assert.equal(m.weeks.length, 8);
+  assert.equal(k.today, 150); assert.equal(k.yesterday, 150); assert.equal(k.last7, 150 * 7); assert.equal(k.prev7, 100 * 7 + 0 === 700 ? 150 * 0 + (k.prev7) : k.prev7);
+  assert.ok(k.growth === null || Number.isInteger(k.growth)); assert.equal(k.lifetime, 7 * 100 + 7 * 150); assert.equal(k.spentLife, 14 * 20);
+  assert.equal(k.profitLife, k.lifetime - k.spentLife - k.taxesPaid); assert.equal(k.roi, Math.round(k.profitLife / LOT_BY_ID.N2.price * 100));
+  assert.equal(m.upcoming.length >= 2, true, 'prévia das contas da semana'); assert.ok(m.upcoming.every(b => b.dueAt > b.issueAt));
+  assert.equal(m.pricePaid, LOT_BY_ID.N2.price); assert.deepEqual(Object.keys(m.brand), ['name', 'logo', 'palette', 'floor', 'sign']);
+  const pub = r.business.lots.find(l => l.id === 'N2').store; assert.equal(pub.cash, undefined, 'dados privados não vazam na vitrine pública'); assert.equal(pub.pricePaid, undefined);
+  const other = await inWorld(w, () => biz.summary('bia')); assert.equal(other.business.mine, null, 'outro jogador não vê o painel privado'); assert.equal(other.business.me.hasStore, false);
+});
+
+function mountRoutes(authUser, limited = () => false) {
+  const routes = {};
+  const app = { get: (p, ...h) => { routes['GET ' + p] = h[h.length - 1]; }, post: (p, ...h) => { routes['POST ' + p] = h[h.length - 1]; } };
+  biz.registerRoutes({ app, json: (_q, _s, n) => n && n(), authUser, limited, userTries: new Map() });
+  return routes;
+}
+const call = async (handler, body = {}) => {
+  const res = { code: 200, body: null, headersSent: false, status(c) { this.code = c; return this; }, json(b) { this.body = b; this.headersSent = true; return this; }, set() { return this; } };
+  await handler({ body, params: {}, headers: {}, query: {} }, res); return res;
+};
+test('rotas: exigem sessão, recusam corpo malformado e limitam ações por minuto', async () => {
+  const all = ['GET /api/sk2/business', 'POST /api/sk2/business/buy', 'POST /api/sk2/business/brand', 'POST /api/sk2/business/products', 'POST /api/sk2/business/restock', 'POST /api/sk2/business/decor', 'POST /api/sk2/business/open',
+    'POST /api/sk2/business/autopay', 'POST /api/sk2/business/withdraw', 'POST /api/sk2/business/bills/pay', 'POST /api/sk2/business/sell', 'POST /api/sk2/business/shop/buy', 'POST /api/sk2/business/bag/use'];
+  const anon = mountRoutes(async () => null); for (const r of all) { assert.equal(typeof anon[r], 'function', r); assert.equal((await call(anon[r])).code, 401, r); }
+  const user = mountRoutes(async () => ({ username: 'ana', name: 'Ana' }));
+  for (const [route, body] of [['POST /api/sk2/business/buy', null], ['POST /api/sk2/business/buy', []], ['POST /api/sk2/business/brand', 'x'], ['POST /api/sk2/business/products', {}], ['POST /api/sk2/business/products', { slots: 'a' }], ['POST /api/sk2/business/restock', []], ['POST /api/sk2/business/decor', null],
+    ['POST /api/sk2/business/bills/pay', []], ['POST /api/sk2/business/shop/buy', null], ['POST /api/sk2/business/bag/use', {}]]) assert.equal((await call(user[route], body)).code, 400, route + ' ' + JSON.stringify(body));
+  assert.equal((await call(mountRoutes(async () => ({ username: 'ana' }), () => true)['POST /api/sk2/business/withdraw'], { amount: 5 })).code, 429);
+});
+
+test('ligação: servidor (init e rotas), Prefeitura (extrato) e cliente (Shopping, painel, gráficos, sons)', () => {
+  const server = read('sorokiba2-server.js');
+  assert.match(server, /require\('\.\/sorokiba2-business'\)/); assert.match(server, /\.then\(\(\) => business\.init\(\)\)/); assert.match(server, /business\.registerRoutes\(\{/);
+  const html = read('sorokiba2.html');
+  assert.match(html, /n\.includes\('shopping'\)\)family='mall'/); assert.match(html, /mall:\[52,30,'mall-zip'\]/); assert.match(html, /shape==='mall-zip'\)\{renderMallZip\(t\)/);
+  assert.match(html, /id="bizPanel"/); assert.match(html, /id="bizChip"/); assert.match(html, /API\+'\/business'\+path/); assert.match(html, /data-bzchart="days"/); assert.match(html, /data-bzchart="weeks"/);
+  assert.match(html, /mallEnter\(\)/); assert.match(html, /mallLeave\(\)/); assert.match(html, /function mallSync\(room\)/);
+  assert.match(html, /terreno:'Terrenos do Shopping',alvara:'Alvará de lojas',iptu:'Imposto predial de lojas',iss:'ISS sobre vendas de lojas'/);
+  assert.match(html, /n\.includes\('mercado'\)\)family='grocery'/, 'o Mercado continua com o seu interior');
+  const names = [...html.matchAll(/(?:^|\n)(?:async )?function\s+([A-Za-z_$][\w$]*)/g)].map(m => m[1]), dup = names.filter((n, i) => names.indexOf(n) !== i && n !== 'task');
+  assert.deepEqual([...new Set(dup)], [], 'nenhuma função global declarada duas vezes (uma sobrescreveria a outra)');
+});
