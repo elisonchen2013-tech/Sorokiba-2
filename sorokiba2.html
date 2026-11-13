@@ -611,6 +611,104 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 #uniPanel button:focus-visible,#uniPanel select:focus-visible,#uniPanel input:focus-visible,.uniChip:focus-visible{outline:3px solid #1d2540;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){.unPass:not(.none)::after{animation:none}}
 @media(max-width:560px){.unList li{flex-wrap:wrap}.unPass{max-width:none}}
+/* ---------- Empresas / Shopping ---------- */
+#bizPanel{position:fixed;z-index:42;left:50%;top:50%;transform:translate(-50%,-50%);width:min(980px,96vw);max-height:92vh;overflow:auto;padding:clamp(14px,3vw,24px);padding-top:clamp(18px,3.2vw,28px);border:1px solid #35d0c466;border-radius:16px;background:linear-gradient(160deg,#101a2e 0%,#0a1020 100%);box-shadow:0 24px 80px #000d,inset 0 0 0 1px #f2b84b22;color:#eaf0f7;overscroll-behavior:contain;display:flex;flex-direction:column}
+#bizPanel[hidden]{display:none}
+#bizPanel::before{content:"";flex:none;display:block;height:6px;margin:calc(-1 * clamp(18px,3.2vw,28px)) calc(-1 * clamp(14px,3vw,24px)) clamp(12px,2vw,18px);border-radius:15px 15px 0 0;background:linear-gradient(90deg,#c06c84,#f2b84b,#35d0c4,#5b7fe8)}
+.bzHead{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:10px;border-bottom:1px solid #35d0c444}
+.bzKicker{margin:0 0 3px;color:#35d0c4;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.bzHead h2{margin:0;color:#ffe9b0;font-size:clamp(21px,4vw,29px)}
+.bzHead p:not(.bzKicker){margin:4px 0 0;color:#a9b8cc;font-size:13px}
+#bizPanel button{font:inherit;cursor:pointer;text-shadow:none}
+#bizClose{border:1px solid #ffffff33;border-radius:9px;padding:8px 12px;background:#ffffff10;color:#eaf0f7}
+.bzTabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}.bzTabs[hidden]{display:none}
+.bzTabs button{border:1px solid #35d0c477;border-radius:9px;padding:8px 13px;background:transparent;color:#bff3ea;font-weight:600}
+.bzTabs button[aria-selected=true]{background:#f2b84b;color:#14182a;border-color:#f2b84b}
+.bzMsg{min-height:20px;margin:8px 0;color:#bfeadf;font-size:13px}.bzMsg.err{color:#ffb9ad}
+#bizBody{overflow:auto;min-height:0}
+.bzKpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0 10px}
+.bzKpi{padding:10px 12px;border:1px solid #ffffff1c;border-radius:10px;background:#ffffff08}
+.bzKpi span{display:block;color:#a9b8cc;font-size:12px}
+.bzKpi strong{display:block;margin-top:3px;color:#f2b84b;font-size:clamp(16px,3vw,21px);font-variant-numeric:tabular-nums}
+.bzKpi small{display:block;margin-top:2px;color:#8fa1b8;font-size:11px}
+.bzKpi.up small{color:#7ee8a8}.bzKpi.down small{color:#ff9d92}
+.up{color:#7ee8a8}.down{color:#ff9d92}
+.bzCard{padding:14px;border:1px solid #ffffff1c;border-radius:12px;background:#ffffff08;margin-bottom:10px}
+.bzCard h3{margin:0 0 8px;color:#ffe9b0;font-size:16px}
+.bzCard h4{margin:0 0 6px;color:#bff3ea;font-size:13px}
+.bzHint{margin:0 0 10px;color:#aab8cb;font-size:12.5px;line-height:1.5}
+.bzSmall{color:#8fa1b8;font-weight:400}
+.bzCard label{display:block;margin:9px 0 5px;color:#d9e1ec;font-size:13px}
+.bzCard input[type=text],.bzCard input[type=number],.bzCard select{width:100%;max-width:520px;box-sizing:border-box;padding:9px 11px;border:1px solid #35d0c499;border-radius:9px;background:#0a1020;color:#fff;font:inherit;font-size:16px}
+.bzCard input[type=range]{width:100%;max-width:340px;accent-color:#f2b84b;padding:0;border:0;background:transparent}
+.bzCard label.bzCheck{display:flex;align-items:center;gap:8px;margin:10px 0 0}
+.bzCard label.bzCheck input{width:auto;accent-color:#35d0c4}
+.bzActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.bzActions button,.bzList button,.bzProd button,.bzStatus button{border:0;border-radius:9px;padding:10px 16px;background:linear-gradient(90deg,#f2b84b,#ffd887);color:#14182a;font-weight:800}
+#bizPanel button.alt{background:#ffffff14;color:#eaf0f7;border:1px solid #ffffff33}
+#bizPanel button.sm{padding:5px 10px;font-size:12px}
+#bizPanel button.danger{background:#d9534f;color:#fff}
+#bizPanel button:disabled{opacity:.45;cursor:not-allowed}
+.bzList{list-style:none;margin:0;padding:0}
+.bzList li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dotted #ffffff30}
+.bzList small{display:block;margin-top:2px;color:#93a5bd;font-size:12px}
+.bzRight{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.bzList button{padding:6px 12px;font-size:13px}
+.bzTag{padding:3px 10px;border-radius:99px;background:#ffffff14;font-size:12px;white-space:nowrap}
+.bzTag.ok{background:#3fae6330;color:#8fe0b4}.bzTag.bad{background:#d9534f30;color:#ffb3ae}
+.bzAlert{padding:12px 14px;border:1px solid #d9534f;border-radius:10px;background:#d9534f22;color:#ffd0cb;margin-bottom:10px}
+.bzNote{padding:18px;text-align:center;color:#bccbdd}
+.bzCount{font-variant-numeric:tabular-nums}
+.bzTwo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bzGrid6{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:420px}
+.bzPick{padding:8px 0;border:1px solid #ffffff2a;border-radius:9px;background:#ffffff0c;font-size:20px}
+.bzPick.on{border-color:#f2b84b;background:#f2b84b22}
+.bzSwatches{display:flex;gap:8px;flex-wrap:wrap}
+.bzSw{display:flex;width:50px;height:32px;padding:0;border:2px solid #ffffff33;border-radius:9px;overflow:hidden}
+.bzSw i{flex:1;display:block}.bzSw i:first-child{background:var(--a)}.bzSw i:last-child{background:var(--b)}
+.bzSw.on{border-color:#f2b84b;box-shadow:0 0 0 2px #f2b84b55}
+.bzCats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.bzCat{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid #ffffff2a;border-radius:10px;background:#ffffff0c;color:#eaf0f7}
+.bzCat span{font-size:24px}.bzCat.on{border-color:#35d0c4;background:#35d0c422}
+.bzMap{position:relative;width:100%;aspect-ratio:52/30;margin:4px 0 12px;border:1px solid #ffffff22;border-radius:12px;background:repeating-linear-gradient(45deg,#1a2540,#1a2540 10px,#16203a 10px,#16203a 20px);overflow:hidden}
+.bzConc{position:absolute;left:0;right:0;top:30%;height:40%;display:grid;place-items:center;color:#ffffff33;font-weight:800;letter-spacing:.3em;text-transform:uppercase;font-size:12px;border-block:1px dashed #ffffff22}
+.bzLotBtn{position:absolute;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;border:2px solid #ffffff44;border-radius:8px;color:#fff;overflow:hidden}
+.bzLotBtn.free{background:#1f6a4455;border-color:#5cf0a899}.bzLotBtn.taken{background:#4a5568aa}.bzLotBtn.mine{background:#c9a22788;border-color:#f2b84b}
+.bzLotBtn.sel{outline:3px solid #fff;outline-offset:-2px}
+.bzLotBtn b{font-size:clamp(11px,1.8vw,15px)}.bzLotBtn small{font-size:clamp(8px,1.3vw,11px);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bzPrev{margin:12px 0;padding:12px;border:1px solid #ffffff22;border-radius:12px;max-width:420px}
+.bzPrev small{display:block;margin-top:8px;color:#a9b8cc}
+.bzPrev.floor-marmore{background:repeating-conic-gradient(#eeeae0 0 25%,#e2ddcf 0 50%) 0 0/24px 24px}
+.bzPrev.floor-madeira{background:repeating-linear-gradient(90deg,#b88a5a 0 18px,#a67848 18px 20px)}
+.bzPrev.floor-xadrez{background:repeating-conic-gradient(#f6f6f6 0 25%,#c8d0d8 0 50%) 0 0/24px 24px}
+.bzPrev.floor-concreto{background:#b9b4a8}
+.bzPrev small{background:#0a1020cc;padding:4px 8px;border-radius:6px;width:fit-content}
+.bzSign{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--a);color:var(--b);border:2px solid var(--b);font-size:18px;font-weight:900}
+.bzSign.sign-neon b{text-shadow:0 0 6px var(--b),0 0 14px var(--b)}
+.bzSign.sign-madeira{background:#7a5232;color:#f4e6c8;border-color:#4a2f1a}
+.bzSign.sign-luminoso{background:#f7f4ec;color:var(--a);border-color:var(--a);box-shadow:0 0 18px #fff9}
+.bzShelf{display:flex;gap:8px;justify-content:center;margin-top:10px;padding:8px;border-radius:8px;background:var(--a);font-size:22px}
+.bzProds{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.bzProd{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px;border:1px solid #ffffff22;border-radius:12px;background:#ffffff08;text-align:center}
+.bzIco{font-size:32px}.bzPrice{color:#f2b84b;font-size:17px;font-weight:800}
+.bzStatus{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.bzChart{display:block;width:100%;height:220px}
+.bzSlot{padding:12px;border:1px solid #ffffff1c;border-radius:10px;background:#0a102066;margin-bottom:10px}
+.bzSlotHead{display:flex;justify-content:space-between;align-items:center}
+.bzPriceRow{display:flex;gap:10px;align-items:center}.bzPriceRow input[type=number]{max-width:120px}
+.bzStock{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding-top:8px;border-top:1px dotted #ffffff30;font-size:13px}
+.bzBtns{display:flex;gap:6px;flex-wrap:wrap}
+.bzFrom select{max-width:340px}
+.bzSock{margin-bottom:12px}
+.bzDecor{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.bzDec{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid #ffffff2a;border-radius:10px;background:#ffffff0c;color:#eaf0f7;text-align:center}
+.bzDec span{font-size:24px}.bzDec small{color:#a9b8cc}.bzDec.on{border-color:#35d0c4;background:#35d0c422}.bzDec.rm{border-style:dashed}
+.bzDanger{border-color:#d9534f66}
+.bizChip{position:fixed;z-index:41;right:16px;bottom:calc(20px + env(safe-area-inset-bottom,0px));padding:11px 16px;border:2px solid #fff;border-radius:999px;background:#16427a;color:#fff;font:inherit;font-weight:800;box-shadow:0 4px 0 #0a1f3a,0 8px 24px #0008;cursor:pointer}
+.bizChip[hidden]{display:none}.bizChip.bad{background:#8a2d3a}
+#bizPanel.busy button{pointer-events:none;opacity:.6}
+#bizPanel button:focus-visible,#bizPanel input:focus-visible,#bizPanel select:focus-visible,.bizChip:focus-visible{outline:2px solid #f2c14b;outline-offset:2px}
+@media(max-width:600px){.bzTwo{grid-template-columns:1fr}.bzGrid6{grid-template-columns:repeat(4,1fr)}.bzList li{flex-wrap:wrap}}
 </style>
 <canvas id="cv"></canvas><div id="visualFx" aria-hidden="true"></div>
 <div id="login">
@@ -671,6 +769,8 @@ body.game-on #hud{animation:hudAppear .42s cubic-bezier(.2,.8,.25,1) both}
 <button id="mkChip" class="mkChip" type="button" hidden aria-label="Abrir carrinho de compras">🛒 0</button>
 <section id="uniPanel" hidden role="dialog" aria-labelledby="uniTitle"><header class="unHead"><div><p class="unKicker">Universidade de Sorokiba</p><h2 id="uniTitle">Universidade</h2><p id="uniWho"></p></div><button id="uniClose" type="button" aria-label="Fechar Universidade">Fechar</button></header><nav id="uniTabs" class="unTabs" role="tablist" aria-label="Seções" hidden></nav><p id="uniMsg" class="unMsg" aria-live="polite"></p><div id="uniBody"></div></section>
 <button id="uniChip" class="uniChip none" type="button" hidden aria-label="Ver minha carteirinha">🪪 Sem carteirinha</button>
+<section id="bizPanel" hidden role="dialog" aria-labelledby="bizTitle"><header class="bzHead"><div><p class="bzKicker">Shopping de Sorokiba · Empresas</p><h2 id="bizTitle">Shopping</h2><p id="bizWho"></p></div><button id="bizClose" type="button" aria-label="Fechar painel das Empresas">Fechar</button></header><nav id="bizTabs" class="bzTabs" role="tablist" aria-label="Seções da loja" hidden></nav><p id="bizMsg" class="bzMsg" aria-live="polite"></p><div id="bizBody"></div></section>
+<button id="bizChip" class="bizChip" type="button" hidden aria-label="Abrir minha empresa">🏪 Abrir uma empresa</button>
 <div id="hospChip" class="hospChip" hidden aria-live="polite"></div><button id="hospGuideBtn" class="hospGuideBtn" type="button" hidden>Guia: ligado</button>
 <div id="tip" hidden></div><div id="dlg" hidden></div><button id="bE" hidden aria-label="Interagir">E</button><div id="mobileControls" hidden aria-label="Controles para toque"><div id="moveStick" role="application" aria-label="Joystick virtual de movimento"><div id="moveStickKnob"></div><span id="moveStickLabel">MOVER</span></div></div><div id="rotatePrompt" hidden role="dialog" aria-modal="true" aria-labelledby="rotateTitle"><div class="rotateCard"><div class="rotatePhoneStage"><div class="rotatePhone"></div><div class="rotateArrow">↻</div></div><h2 id="rotateTitle">Jogue na horizontal</h2><p>Vire o celular ou tablet de lado para aproveitar melhor a cidade e os controles.</p><button id="rotateRetry" type="button">Tentar girar a tela</button><small>Se ela não girar sozinha, ative a rotação automática do aparelho e vire-o na horizontal.</small></div></div><button id="leaveRoom" hidden>← Voltar à cidade</button><aside id="condoScenePanel" hidden><b>Sorokiba Tower</b><span>Térreo · recepção e áreas comuns</span><div><button id="condoSceneExit">🚪 Sair do prédio</button><button id="condoSceneElevator">🛗 Elevador</button></div></aside>
 <section id="cwPanel" hidden></section><section id="cwElev" hidden aria-label="Elevador da Sorokiba Tower"></section><div id="cwInv" hidden role="status"></div><div id="cwToast" hidden role="status"></div>
@@ -1408,6 +1508,7 @@ function makeInterior(building,floor=1){
  if(n.includes('centro de empregos')||n.includes('carreiras'))family='employment';
  else if(n.includes('hospital'))family='hospital';
  else if(n.includes('mercado'))family='grocery';
+ else if(n.includes('shopping'))family='mall';
  else if(['mercado','supermercado','loja','padaria','farmácia','shopping','lavanderia'].some(s=>n.includes(s)))family='market';
  else if(n.includes('banco'))family='bank';
  else if(n.includes('prefeitura'))family='cityhall';
@@ -1430,6 +1531,7 @@ function makeInterior(building,floor=1){
   police:['#cfdde3','#8aa0ac','#35506a','#2d455d','#d9a239','Segurança e justiça'],
   grocery:['#f6eedb','#cdbf9f','#ece6d6','#e2dbc8','#2bb3a3','Compras e ofertas'],
   university:['#efe6d2','#c9b995','#d8cdb4','#cfc3a8','#7b2d3a','Ensino superior'],
+  mall:['#f3ead9','#cbbd9a','#efe9dc','#e4ddcc','#c06c84','Lojas e empresas'],
   restaurant:['#f0d8b8','#be9d7b','#b99470','#c9a783','#d2691e','Salão e balcão'],
   cinema:['#484a61','#292d43','#40435c','#494c66','#c06c84','Bilheteria e sala de exibição'],
   library:['#e6dcc7','#b9a98c','#b9aa8d','#cbbc9f','#8b7355','Leitura e consulta'],
@@ -1473,6 +1575,8 @@ function makeInterior(building,floor=1){
   marketZones().forEach(o=>zones.push(o));
  }else if(family==='university'){
   universityZones().forEach(o=>zones.push(o));
+ }else if(family==='mall'){
+  mallZones().forEach(o=>zones.push(o));
   }else if(family==='restaurant'){
   add('counter',4.6,1.05,3,.85,22,'#74452e','#d59b55','#472c20');add('table',2.2,3.3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
   add('table',6,4.1,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');add('table',9,3,1.2,1,13,'#8c5c39','#c18a55','#5b3b28');
@@ -1594,7 +1698,7 @@ function makeInterior(building,floor=1){
   z('Recepção',6,2.2,'Área de recepção e orientação dos visitantes.');z('Atendimento',3,5.2,'Área para conversar com a equipe do estabelecimento.');z('Informações',9.5,2,'Área de informações e avisos.');
  }
  const dimensions={
-  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],grocery:[40,24,'market-zip'],university:[56,30,'uni-zip'],
+  market:[18,12,'market-aisles'],hospital:[34,22,'hospital-zip'],bank:[16,11,'bank-hall'],cityhall:[40,24,'cityhall-zip'],police:[46,26,'police-zip'],grocery:[40,24,'market-zip'],university:[56,30,'uni-zip'],mall:[52,30,'mall-zip'],
   restaurant:[17,12,'dining-room'],cinema:[22,14,'auditorium'],library:[17,12,'reading-hall'],sport:[22,15,'sports-hall'],
   workshop:[20,13,'industrial-bay'],church:[16,14,'chapel'],condo:[26,16,'condo-ground'],home:[18,14,'apartment'],school:[20,14,'school-wing'],office:[16,12,'office-suite'],employment:[22,16,'career-center']
  }[family];
@@ -1627,8 +1731,9 @@ function makeInterior(building,floor=1){
   if(family==='police'){room.items=policeCollision();room.dividers=PDZ.walls.concat(PDZ.cellWalls).map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
   if(family==='grocery'){room.items=marketCollision();room.dividers=MKZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:13}}
   if(family==='university'){room.items=unCollision();room.dividers=UNZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:15}}
+  if(family==='mall'){room.items=mallCollision();room.dividers=MLZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:15}}
   if(family==='hospital'){room.items=hospitalCollisionItems();room.dividers=HZ.walls.map(([axis,pos,from,to])=>({axis,pos,from,to}));room.exit={x:.9,y:7.5}}
-  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police'||family==='grocery'||family==='university',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
+  const flat=family==='condo'||family==='hospital'||family==='cityhall'||family==='police'||family==='grocery'||family==='university'||family==='mall',sx=flat?1:room.width/12,sy=flat?1:room.depth/8;
  for(const o of room.items){o.x*=sx;o.w*=sx;o.y*=sy;o.d*=sy}
  for(const z of room.zones){z.x*=sx;z.y*=sy;const p=findRoomSpot(room,z.x,z.y);if(p){z.x=p.x;z.y=p.y}}
  const crowd={
@@ -1639,6 +1744,7 @@ function makeInterior(building,floor=1){
    police:policeCrowd(),
    grocery:marketCrowd(),
    university:universityCrowd(),
+   mall:mallCrowd(),
   restaurant:[['Davi','Garçom',6,2,'staff','#bd6540','#b77950','#29252a'],['Cliente','Cliente',4,5.5,'visitor','#6886bd','#e1b991','#443027'],['Lia','Cliente',8.4,5.7,'visitor','#d17e99','#bd855f','#32251e']],
   cinema:[['Nina','Bilheteira',6,2,'staff','#5f496f','#d7ad8d','#292a42'],['Espectador','Cliente',1.5,6.3,'visitor','#5c7fb2','#d4a078','#382d25'],['Espectadora','Cliente',10.2,6.4,'visitor','#b8708c','#e2b69a','#2b252a']],
   library:[['Clara','Bibliotecária',6.2,2,'staff','#7b6549','#d7a780','#32251c'],['Leitor','Visitante',4.3,6.2,'visitor','#6882a1','#c8946b','#32261e'],['Estudante','Visitante',7.8,6.2,'visitor','#72956e','#e0b58f','#2c2520']],
@@ -1655,7 +1761,7 @@ function makeInterior(building,floor=1){
   const sp=family==='hospital'?3.2:1,route=kind==='visitor'?[[x,y],[x+.65*sp,y-.35*sp],[x+.3*sp,y+.35*sp],[x,y]]:[];
   const start=findRoomSpot(room,x*sx,y*sy)||{x:room.width/2,y:room.depth-.9};
   room.people.push({name,role,kind,staff:kind==='staff',x:start.x,y:start.y,face:0,shirt,skin,hair,phase:R()*9,wait:1+R()*4,
-   dialogue:family==='police'?policeLine(name,role):family==='grocery'?mkLine(name,role):family==='university'?unLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
+   dialogue:family==='police'?policeLine(name,role):family==='grocery'?mkLine(name,role):family==='university'?unLine(name,role):family==='mall'?mallLine(name,role):(family==='employment'&&role==='Recrutador')?'Olá! Sou Daniel, recrutador. Posso revisar seu currículo e explicar os requisitos antes de você iniciar a entrevista.':
     (family==='employment'&&role==='Entrevistadora')?'Olá! Sou Carla, responsável pelas entrevistas. Selecione uma candidatura para iniciar as perguntas da profissão.':
     (family==='employment'&&role==='Orientadora profissional')?'Olá! Sou Renata. Posso ajudar você a entender os requisitos de XP e as habilidades necessárias para cada carreira.':
     (family==='employment'&&role==='Recepcionista')?'Bem-vindo ao Centro de Empregos. Consulte o painel de vagas ou fale com o recrutador para começar.':
@@ -1667,21 +1773,22 @@ function makeInterior(building,floor=1){
  }
  if(family==='grocery')marketSetup(room);
  if(family==='university')unRoutes(room);
+ if(family==='mall')mallRoutes(room);
  return room;
 }
 function enterBuilding(building){
  interior={building,room:makeInterior(building),returnX:px,returnY:py,returnD:pd};
- const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'||interior.room.family==='grocery'?{x:1.25,y:13}:interior.room.family==='university'?{x:1.25,y:15}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
+ const entry=interior.room.family==='cityhall'?{x:1.25,y:12}:interior.room.family==='police'||interior.room.family==='grocery'?{x:1.25,y:13}:interior.room.family==='university'||interior.room.family==='mall'?{x:1.25,y:15}:interior.room.family==='condo'||interior.room.family==='hospital'?{x:1.25,y:7.5}:{x:interior.room.width/2,y:interior.room.depth-1.15};const start=findRoomSpot(interior.room,entry.x,entry.y);ipx=start?.x??entry.x;ipy=start?.y??entry.y;
  pd=0;pf=0;near=null;open=false;$('dlg').hidden=true;const condoScene=interior.room.family==='condo';$('leaveRoom').hidden=condoScene;$('condoScenePanel').hidden=!condoScene;$('mm').hidden=true;$('mp').hidden=true;omap(false);
  if(condoScene){interior.room.net='ground';cwHidePanels();cwPanels();cwNet('ground',ipx,ipy)}
- if(interior.room.family==='grocery')marketEnter();else if(interior.room.family==='university')universityEnter();else{tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75)}
+ if(interior.room.family==='grocery')marketEnter();else if(interior.room.family==='university')universityEnter();else if(interior.room.family==='mall')mallEnter();else{tone(480,.12,'sine',.07);setTimeout(()=>tone(660,.09,'sine',.045),75)}
  if(building.n==='✚ Hospital')completeMission('hospital_visit','building:✚ Hospital');
  if(building.n==='Biblioteca')completeMission('library_visit','building:Biblioteca');
  if(interior.room.family==='cityhall')cityStartPoll();
  if(interior.room.family==='police')policeStartPoll();
 }
 function leaveInterior(){
- if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();if(interior.room&&interior.room.family==='grocery')marketLeave();if(interior.room&&interior.room.family==='university')universityLeave();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
+ if(!interior)return;closeBankPanel();closeHospitalPanel();closeCityPanel();cityStopPoll();closePolicePanel();policeStopPoll();if(interior.room&&interior.room.family==='grocery')marketLeave();if(interior.room&&interior.room.family==='university')universityLeave();if(interior.room&&interior.room.family==='mall')mallLeave();hospUiHide();const old=interior;interior=null;px=old.returnX;py=old.returnY;pd=old.returnD;cwHidePanels();RP.clear();if(old.room&&old.room.net&&ws&&ws.readyState===1)ws.send(JSON.stringify({t:'room',r:'city',x:+px.toFixed(2),y:+py.toFixed(2)}));near=null;open=false;$('dlg').hidden=true;$('leaveRoom').hidden=true;$('condoScenePanel').hidden=true;$('mm').hidden=false;$('mp').hidden=false;tone(390,.09,'sine',.06);save();
 }
 $('leaveRoom').onclick=leaveInterior;
 $('condoSceneExit').onclick=leaveInterior;
@@ -3063,6 +3170,206 @@ function renderUniZip(t){
  c.setTransform(1,0,0,1,0,0);
 }
 
+/* ---------- SHOPPING DE SOROKIBA: terrenos, lojas personalizadas desenhadas ao vivo, animações e sons ---------- */
+const MLZ={
+ w:52,h:30,entrance:[13,17],
+ walls:[['v',9,0,9],['v',19,0,9],['v',31,0,9],['v',41,0,9],['v',9,21,30],['v',19,21,30],['v',31,21,30],['v',41,21,30]],
+ dec:[['ufountain',24,13],['ubench',20,10.4],['ubench',30.4,10.4],['ubench',20,18.8],['ubench',30.4,18.8],['plant',9.6,10],['plant',9.6,19.4],['plant',40.4,10],['plant',40.4,19.4],
+  ['mltable',43,11],['mltable',46.6,11],['mltable',43,16.4],['mltable',46.6,16.4],['mldirectory',1.6,9.4],['mldesk',3,18],['vending',50.8,10],['vending',50.8,19.4],['ubench',1.8,20.4]]
+};
+const ML_NORTH=l=>l.y===0, ML_KIOSK=l=>l.size==='Q', ML_ROLE_SITE={'Corretora':'lots'};
+const ML_PAL=[['#16427a','#f2b84b'],['#1d8a7c','#f5efe3'],['#7b2d3a','#c9a227'],['#20222c','#ff5d8f'],['#e8742a','#ffffff'],['#5b3a9a','#7ee8c3'],['#2f6b3a','#c99a5b'],['#3a4252','#35d0c4']];
+const FLOOR_UI={marmore:['#eeeae0','#e2ddcf'],madeira:['#b88a5a','#a67848'],xadrez:['#f6f6f6','#c8d0d8'],concreto:['#b9b4a8','#aaa598']};
+const mallPal=s=>ML_PAL[s&&s.palette>=0&&s.palette<ML_PAL.length?s.palette:0];
+const mlHue=id=>{let h=0;for(let i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;return h%360};
+const mlProdColor=(id,l=52)=>'hsl('+mlHue(id)+',68%,'+l+'%)';
+const MALL_STORE_LINES={'Corretora':'Sou a Bia, corretora do Shopping. Cada terreno tem um preço e um fluxo de clientes: o átrio rende mais, os cantos custam menos. Escolha o seu!','Segurança':'Shopping seguro e organizado. Lojas fecham sem aviso quando os impostos atrasam, então fique de olho no painel.','Cliente':'Adoro passear por aqui! Tem loja nova toda semana, dizem que os donos são jogadores.','Faxineiro':'Piso brilhando! Se a sua loja for a mais bonita, o pessoal volta sempre.'};
+const mallLine=(name,role)=>MALL_STORE_LINES[role]||('Olá! Sou '+name+', do Shopping.');
+function mallCrowd(){return[
+ ['Bia','Corretora',3.6,17.2,'staff','#16427a','#d2a17d','#2a1f1c'],
+ ['Reinaldo','Segurança',2.4,12.6,'visitor','#1f2a44','#b77a55','#1f1f26'],
+ ['Cliente','Cliente',14,12,'visitor','#c27b9a','#d7a981','#2f2924'],['Cliente','Cliente',34,16,'visitor','#65a19b','#a87857','#292421'],['Cliente','Cliente',26,19.6,'visitor','#d9a441','#d69b72','#422a21'],['Cliente','Cliente',44,13.4,'visitor','#8c87b4','#e1b991','#2e2a27'],
+ ['Zeca','Faxineiro',22,10.4,'visitor','#4a8f5a','#c28f6a','#23232b']]}
+const ML_STAFF={Bia:{f:1,gl:1,pn:'#2a3550'},Reinaldo:{hat:'#1f2a44',pn:'#1a2236'},Cliente:{pn:'#3a3f4a'},Zeca:{hat:'#4a8f5a',pn:'#3a3f4a'}};
+function mallRoutes(room){
+ const R={Reinaldo:[[2.4,12.6],[2.4,17.2],[8,17],[8,12.6]],Zeca:[[22,10.4],[34,10.4],[34,19.6],[22,19.6]]};let n=0;const cl=[[[12,12],[24,10.6],[36,10.8],[36,19.6],[12,19.6]],[[34,16],[44,13.4],[44,18.6],[28,19.4],[28,12]],[[26,19.6],[16,19.8],[14,11.4],[26,11]],[[44,13.4],[40,12],[40,19],[46,19]]];
+ room.people.forEach(p=>{const r=R[p.name]||(p.name==='Cliente'?cl[n++%cl.length]:null);if(r){p.route=r.map(([x,y])=>findRoomSpot(room,x,y)).filter(Boolean);p.routeIndex=1}});
+}
+/* --- geometria das lojas (a mesma para qualquer dono; o conteúdo vem do estado) --- */
+function mlGeom(l){
+ const north=ML_NORTH(l),kiosk=ML_KIOSK(l),front=north?l.y+l.h:l.y,backY=north?l.y+.25:l.y+l.h-1.45;
+ if(kiosk)return{kiosk:true,north,front,cx:l.x+l.w/2,counter:{x:l.x+.3,y:l.y+.5,w:l.w-.6,d:1.2},shelves:[],tables:[],zone:{x:l.x+l.w/2,y:l.y+l.h+.9},clerk:{x:l.x+l.w/2,y:l.y+.25},sockets:mlKioskSock(l)};
+ const n=Math.min(l.slots||5,Math.floor((l.w-.8)/1.5)),sx0=l.x+(l.w-n*1.5)/2,counterW=3.2,cy=north?l.y+3.1:l.y+l.h-4.3;
+ return{kiosk:false,north,front,cx:l.x+l.w/2,backY,shelves:Array.from({length:n},(_,i)=>({x:sx0+i*1.5,y:backY,w:1.3,d:1.1})),
+  counter:{x:l.x+(l.w-counterW)/2,y:cy,w:counterW,d:1},tables:[{x:l.x+1.1,y:north?l.y+5.7:l.y+l.h-7.1,w:2.1,d:1.2},{x:l.x+l.w-3.2,y:north?l.y+5.7:l.y+l.h-7.1,w:2.1,d:1.2}],
+  zone:{x:l.x+l.w/2,y:north?cy+1+1.5:cy-1.5},clerk:{x:l.x+l.w/2,y:north?cy-.9:cy+1.9},
+  sockets:{vitrine:{x:l.x+.9,y:north?l.y+l.h-1.1:l.y+1.1},paredeE:{x:l.x+.55,y:north?l.y+2.4:l.y+l.h-2.4},paredeD:{x:l.x+l.w-.55,y:north?l.y+2.4:l.y+l.h-2.4},centro:{x:l.x+l.w/2,y:north?l.y+6.4:l.y+l.h-6.2},balcao:{x:l.x+l.w/2,y:cy+.5},entrada:{x:l.x+l.w/2,y:north?l.y+l.h-.9:l.y+.9}}};
+}
+function mlKioskSock(l){return{vitrine:{x:l.x+.7,y:l.y+l.h-.4},paredeE:{x:l.x+.2,y:l.y+1.6},paredeD:{x:l.x+l.w-.2,y:l.y+1.6},centro:{x:l.x+l.w/2,y:l.y+1.6},balcao:{x:l.x+l.w/2,y:l.y+1},entrada:{x:l.x+l.w/2,y:l.y+l.h+.2}}}
+const ML_LOTS=()=>(typeof bizState==='object'&&bizState&&bizState.lots)||[];
+/* --- estado do mundo, sons e relógio --- */
+const mlS={sig:'',nextPA:0,nextNote:0,noteI:0,lastStep:0,ready:false};
+const bizSfx={
+ chime(){if(!unOk())return;[659,784,988].forEach((f,i)=>setTimeout(()=>tone(f,.5,'sine',.06),i*140))},
+ keys(){if(!unOk())return;for(let i=0;i<5;i++)setTimeout(()=>{burst(4200+Math.random()*1800,.05,.06);tone(1700+i*140,.08,'triangle',.035)},i*85);setTimeout(()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.45,'triangle',.07),i*120))},480)},
+ coin(){if(!unOk())return;tone(1568,.1,'sine',.07);setTimeout(()=>tone(2093,.25,'sine',.06),90)},
+ register(){if(!unOk())return;burst(2400,.05,.09);tone(1568,.45,'sine',.07);setTimeout(()=>tone(2093,.6,'sine',.06),70);setTimeout(()=>tone(3136,.5,'sine',.04),140)},
+ stamp(){if(!unOk())return;burst(300,.12,.12);tone(120,.15,'square',.06);setTimeout(()=>{burst(1800,.05,.05);tone(880,.2,'sine',.05)},170)},
+ tada(){if(!unOk())return;[392,523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.3,'triangle',.06),i*90))},
+ open(){if(!unOk())return;tone(1318,.5,'sine',.07);setTimeout(()=>tone(1760,.7,'sine',.06),150)},
+ close(){if(!unOk())return;tone(784,.3,'sine',.05);setTimeout(()=>tone(523,.5,'sine',.05),150)},
+ pa(){if(!unOk())return;[880,1109,1319].forEach((f,i)=>setTimeout(()=>tone(f,.4,'sine',.06),i*200))},
+ bag(){if(!unOk())return;for(let i=0;i<6;i++)setTimeout(()=>burst(2500+Math.random()*2000,.06,.045),i*60+Math.random()*30)},
+ buzz(){if(!unOk())return;tone(150,.22,'sawtooth',.05);setTimeout(()=>tone(130,.2,'sawtooth',.05),130)}
+};
+function mallEnter(){const n=unNow();mlS.sig='';mlS.ready=false;mlS.nextPA=n+60+R()*40;mlS.nextNote=n+1;mlS.noteI=0;bizSfx.chime();mallStartPoll();bizChipUpdate()}
+function mallLeave(){unSfx.fountOff();closeBizPanel();mallStopPoll();$('bizChip').hidden=true}
+function mallTick(t){
+ const n=unNow();
+ // música ambiente suave e anúncios com as lojas reais
+ if(unOk()&&n>mlS.nextNote){const sc=[523,587,659,784,880,1046,784,659];tone(sc[(mlS.noteI++)%sc.length]*(mlS.noteI%16<8?1:.75),.55,'sine',.011);mlS.nextNote=n+.62+(mlS.noteI%4===3?.3:0)}
+ if(n>mlS.nextPA){mlS.nextPA=n+90+R()*70;bizSfx.pa();const open=ML_LOTS().filter(l=>l.store&&l.store.status==='aberta');const m=open.length?'Atenção, clientes! Visitem a '+open[(R()*open.length)|0].store.name+' no Shopping.':'Atenção, clientes! Temos terrenos disponíveis no Shopping de Sorokiba.';setTimeout(()=>toast('📢 '+m),900)}
+ unSfx.fountOn(Math.max(0,1-Math.hypot(ipx-26,ipy-15)/16)*.03);
+ if(pf>0&&n-mlS.lastStep>.36){mlS.lastStep=n;burst(3200,.03,.03)}
+}
+// Recalcula colisão e rótulos das zonas quando o estado das lojas muda.
+function mallSync(room){
+ if(!room||room.family!=='mall')return;
+ const sig=ML_LOTS().map(l=>l.id+':'+(l.store?l.store.id:'-')).join('|');
+ if(sig===mlS.sig&&mlS.ready)return;mlS.sig=sig;mlS.ready=true;
+ room.items=mallCollision();
+ room.zones.forEach(z=>{if(!z.lotId)return;const l=ML_LOTS().find(x=>x.id===z.lotId);if(!l)return;z.label=l.store?(l.mine?'Minha loja · '+l.store.name:l.store.name):'Terreno '+l.id+' · R$ '+Number(l.price).toLocaleString('pt-BR')})
+}
+/* --- móveis do corredor --- */
+Object.assign(HZ_SEAT,{mltable:{n:2,label:'Mesa'}});
+Object.assign(DEC,{
+ mltable:{s:[2.2,1.6],p:[[.7,.5,.8,.6,0,18,'#6b4528','#8a5a35'],[.2,.1,1.8,1.4,18,21,'#f4efe3','#ffffff']],
+  f:(c,x,y,t)=>{const q=P(x+1.1,y+.8,24);c.fillStyle='#ef476f';c.fillRect(q[0]-3,q[1]-5,6,7);c.fillStyle='#ffd166';c.fillRect(q[0]+3,q[1]-3,5,5)}},
+ mldirectory:{s:[1.4,1],p:[[.1,.4,.1,.3,0,50,'#2a2f3a','#3a4252'],[1.2,.4,.1,.3,0,50,'#2a2f3a','#3a4252'],[.05,.3,1.3,.4,50,80,'#10192b','#10192b']],
+  f:(c,x,y,t)=>{const s=P(x+.7,y+.74,66);c.fillStyle='#06141a';c.fillRect(s[0]-27,s[1]-12,54,24);c.fillStyle='#42f5d4';c.font='bold 6px sans-serif';c.textAlign='center';c.fillText('LOJAS',s[0],s[1]-4);const ls=ML_LOTS().filter(l=>l.store),k=ls.length?(((t/2.4)|0)%ls.length):0;c.fillStyle='#ffd166';c.font='bold 5.2px sans-serif';c.fillText(ls.length?ls[k].store.name.slice(0,16):'Terrenos à venda',s[0],s[1]+5);c.fillStyle='rgba(66,245,212,.35)';c.fillRect(s[0]-27,s[1]-12+((t*14)%24),54,1.4)}},
+ mldesk:{s:[3,1.4],p:[[.05,.1,2.9,1.2,0,26,'#16427a','#2a5a9a'],[0,.05,3,1.3,26,29,'#f2b84b','#ffd887']],
+  f:(c,x,y,t)=>{const s=P(x+1.5,y+1.42,52);c.fillStyle='#16294a';c.fillRect(s[0]-30,s[1]-8,60,14);c.fillStyle='#ffe9b0';c.font='bold 7px sans-serif';c.textAlign='center';c.fillText('IMOBILIÁRIA',s[0],s[1]+2);const q=P(x+2.6,y+1.42,18);c.fillStyle=((t*1.5)|0)%2?'#42f5d4':'#1f6f63';c.fillRect(q[0]-3,q[1]-2,6,3)}}
+});
+function mallCollision(){
+ const solids=[],add=(x,y,w,d)=>solids.push({x:x+.31,y:y+.3,w:Math.max(.1,w-.62),d:Math.max(.1,d-.6),h:0,solid:true});
+ MLZ.dec.forEach(([name,x,y])=>{const s=DEC[name]?.s||[1,1];add(x,y,s[0],s[1])});
+ ML_LOTS().forEach(l=>{if(!l.store)return;const g=mlGeom(l);add(g.counter.x,g.counter.y,g.counter.w,g.counter.d);g.shelves.forEach(s=>add(s.x,s.y,s.w,s.d));g.tables.forEach(t=>add(t.x,t.y,t.w,t.d))});
+ return solids;
+}
+function mallZones(){
+ const zs=[],go=(label,x,y,fn,extra={})=>zs.push({label,x,y,r:1,desc:'',action:fn,...extra});
+ go('Imobiliária do Shopping',3.2,16.2,()=>openBizPanel('lots'));
+ go('Diretório de lojas',2.2,11,()=>openBizPanel('lots'));
+ go('Minha sacola',1.4,16.4,()=>openBizPanel('bag'));
+ go('Fonte do Shopping',26,18.2,()=>toast('⛲ A fonte do átrio: ponto de encontro do Shopping.'));
+ go('Praça de alimentação',46,14.2,()=>toast('🍽️ Praça de alimentação: sente-se e descanse.'));
+ LOTS_UI().forEach(l=>{const g=mlGeom(l);go('Terreno '+l.id,g.zone.x,g.zone.y,()=>bizLotAction(l.id),{lotId:l.id})});
+ MLZ.dec.forEach(([name,x,y])=>{const cfg=HZ_SEAT[name];if(cfg){const sz=DEC[name].s;for(let k=0;k<cfg.n;k++){const sx=x+(k+.5)*sz[0]/cfg.n,sy=y+sz[1]*.58;zs.push({label:cfg.label,x:sx,y:y+sz[1]+.35,r:.7,desc:'',seat:{x:sx,y:sy},action(){hospSitAt(this)}})}}});
+ return zs;
+}
+// Terrenos conhecidos antes de o estado do servidor chegar (mesmos 12 do servidor).
+function LOTS_UI(){return[['N1',1,0,8,9,'P'],['N2',9,0,10,9,'M'],['N3',19,0,12,9,'G'],['N4',31,0,10,9,'M'],['N5',41,0,11,9,'M'],['S1',1,21,8,9,'P'],['S2',9,21,10,9,'M'],['S3',19,21,12,9,'G'],['S4',31,21,10,9,'M'],['S5',41,21,11,9,'P'],['K1',13,13,4,3,'Q'],['K2',35,14,4,3,'Q']].map(([id,x,y,w,h,size])=>({id,x,y,w,h,size,slots:{Q:3,P:5,M:7,G:9}[size]}))}
+/* --- desenho de uma loja --- */
+function mlDrawDecorItem(c,item,pos,t,sockId){
+ const q=P(pos.x,pos.y,sockId==='paredeE'||sockId==='paredeD'?44:sockId==='balcao'?30:sockId==='entrada'?10:12);
+ c.save();c.textAlign='center';
+ const glow=['neonvitrine','neonopen','tv','luminaria','musica'].includes(item.id);
+ if(glow){const g=c.createRadialGradient(q[0],q[1]-6,1,q[0],q[1]-6,26);const col=item.id==='tv'?'120,200,255':item.id==='musica'?'255,120,200':'255,200,90';g.addColorStop(0,'rgba('+col+','+(.35+.15*Math.sin(t*5))+')');g.addColorStop(1,'rgba('+col+',0)');c.fillStyle=g;c.beginPath();c.arc(q[0],q[1]-6,26,0,7);c.fill()}
+ let dy=0;if(item.id==='baloes')dy=Math.sin(t*1.6)*2.5;
+ c.font=(sockId==='centro'||sockId==='vitrine'?20:16)+'px sans-serif';c.fillText(item.icon,q[0],q[1]+dy);
+ if(item.id==='musica'){for(let i=0;i<3;i++){const ph=(t*.8+i/3)%1;c.globalAlpha=1-ph;c.font='9px sans-serif';c.fillText('♪',q[0]+6+i*3,q[1]-12-ph*22)}c.globalAlpha=1}
+ c.restore();
+}
+function mlDrawSign(c,l,st,t){
+ const g=mlGeom(l),pal=mallPal(st),fy=g.front,x1=l.x+.35,x2=l.x+l.w-.35,z1=ML_KIOSK(l)?64:72,z2=ML_KIOSK(l)?84:96,mx=(x1+x2)/2;
+ const pts=[P(x1,fy,z2),P(x2,fy,z2),P(x2,fy,z1),P(x1,fy,z1)];
+ if(!st){poly(c,pts,'#d9d4c6');c.strokeStyle='#8a8374';c.lineWidth=1.6;c.stroke();wtxt('x','TERRENO '+l.id,mx,fy,z2-5,'bold 7px sans-serif','#7b2d3a');if(l.price)wtxt('x','R$ '+Number(l.price).toLocaleString('pt-BR')+' · '+(l.sizeLabel||''),mx,fy,z1+6,'5.4px sans-serif','#3a3a44');return}
+ const style=st.sign;
+ if(style==='madeira'){poly(c,pts,'#7a5232');c.strokeStyle='#4a2f1a';c.lineWidth=2;c.stroke();for(let i=1;i<4;i++)ln(c,P(x1,fy,z1+(z2-z1)*i/4),P(x2,fy,z1+(z2-z1)*i/4))}
+ else if(style==='luminoso'){poly(c,pts,'#f7f4ec');c.strokeStyle=pal[0];c.lineWidth=2.4;c.stroke();const q=P(mx,fy,z1+(z2-z1)/2),gr=c.createRadialGradient(q[0],q[1],2,q[0],q[1],(x2-x1)*14);gr.addColorStop(0,'rgba(255,250,220,.3)');gr.addColorStop(1,'rgba(255,250,220,0)');c.fillStyle=gr;c.beginPath();c.ellipse(q[0],q[1],(x2-x1)*15,22,0,0,7);c.fill()}
+ else{poly(c,pts,pal[0]);c.strokeStyle=pal[1];c.lineWidth=2;c.stroke()}
+ const txtCol=style==='madeira'?'#f4e6c8':style==='luminoso'?pal[0]:pal[1],font='bold '+(ML_KIOSK(l)?6.4:Math.min(9,l.w*.9))+'px sans-serif';
+ const name=st.logo+' '+st.name;
+ if(style==='neon'){c.save();c.shadowColor=pal[1];c.shadowBlur=6+4*Math.sin(t*3+l.x);wtxt('x',name,mx,fy,z1+(z2-z1)/2-3,font,txtCol);c.restore()}
+ else wtxt('x',name,mx,fy,z1+(z2-z1)/2-3,font,txtCol);
+ const open=st.status==='aberta',tag=open?'ABERTO':st.status==='suspensa'?'SUSPENSA':'FECHADO',q2=P(x2-.1,fy,z1-1);
+ c.fillStyle=open?'#1f7a46':st.status==='suspensa'?'#8a2d3a':'#6a6a74';c.fillRect(q2[0]-24,q2[1]-4,26,10);c.fillStyle='#fff';c.font='bold 5.6px sans-serif';c.textAlign='center';c.fillText(tag,q2[0]-11,q2[1]+3.6);
+}
+function mlStoreItems(l,st,V,t){
+ const g=mlGeom(l),pal=mallPal(st),slots=st.products,sock=g.sockets;
+ // balcão (nos quiosques, os produtos ficam em cima dele)
+ const cb=g.counter;V.push({k:cb.x+cb.y+(cb.w+cb.d)/2,f:()=>{box(c,cb.x,cb.y,cb.w,cb.d,0,g.kiosk?24:22,pal[0],pal[1]);box(c,cb.x-.05,cb.y-.05,cb.w+.1,cb.d+.1,g.kiosk?24:22,g.kiosk?27:25,'#f4efe3','#ffffff');
+  if(g.kiosk)slots.forEach((sl,i)=>{if(sl&&sl.id&&sl.stock>0){const col=mlProdColor(sl.id,sl.q==='p'?44:56);for(let k=0;k<Math.min(3,Math.ceil(sl.stock/10));k++){const q=P(cb.x+.5+i*1.1+k*.18,cb.y+.4+k*.12,28+k*5);c.fillStyle=col;c.fillRect(q[0]-5,q[1]-6,10,8)}}});
+  const q=P(cb.x+cb.w*.75,cb.y+cb.d*.5,g.kiosk?31:29);c.fillStyle='#222a37';c.fillRect(q[0]-5,q[1]-5,10,7);c.fillStyle=((t*2+l.x)|0)%2?'#42f5d4':'#1f6f63';c.fillRect(q[0]-3,q[1]-3,6,2);
+  if(st.decor.balcao){const it=bizDecorItem('balcao',st.decor.balcao);if(it)mlDrawDecorItem(c,it,{x:cb.x+cb.w*.2,y:cb.y+cb.d*.5},t,'balcao')}}});
+ // estantes com os produtos (cubos coloridos conforme o estoque)
+ g.shelves.forEach((sh,i)=>{const sl=slots[i];V.push({k:sh.x+sh.y+(sh.w+sh.d)/2,f:()=>{
+  box(c,sh.x,sh.y,sh.w,sh.d,0,58,pal[0],'#eef2f5');
+  [14,30,46].forEach(z=>poly(c,[P(sh.x+.05,sh.y+sh.d+.01,z),P(sh.x+sh.w-.05,sh.y+sh.d+.01,z),P(sh.x+sh.w-.05,sh.y+sh.d+.01,z-1.6),P(sh.x+.05,sh.y+sh.d+.01,z-1.6)],pal[1]));
+  if(sl&&sl.id){const n=Math.min(9,Math.ceil(sl.stock/7)),col=mlProdColor(sl.id,sl.q==='p'?44:56);for(let k=0;k<n;k++){const row=(k/3)|0,cx=sh.x+.15+(k%3)*.36,z=15+row*16;poly(c,[P(cx,sh.y+sh.d+.02,z+9),P(cx+.3,sh.y+sh.d+.02,z+9),P(cx+.3,sh.y+sh.d+.02,z),P(cx,sh.y+sh.d+.02,z)],col);if(sl.q==='p')poly(c,[P(cx+.02,sh.y+sh.d+.02,z+9),P(cx+.28,sh.y+sh.d+.02,z+9),P(cx+.28,sh.y+sh.d+.02,z+7),P(cx+.02,sh.y+sh.d+.02,z+7)],'rgba(255,230,140,.9)')}
+   if(sl.stock<=0){const q=P(sh.x+sh.w/2,sh.y+sh.d+.02,34);c.fillStyle='#e63946';c.font='bold 8px sans-serif';c.textAlign='center';c.fillText('ESGOTADO',q[0],q[1])}
+   const tg=P(sh.x+sh.w/2,sh.y+sh.d+.02,8);c.fillStyle='#fffaf0';c.fillRect(tg[0]-8,tg[1]-4,16,7);c.fillStyle='#16294a';c.font='bold 5px sans-serif';c.textAlign='center';c.fillText('R$'+sl.price,tg[0],tg[1]+1.4)}}})});
+ // mesas expositoras para as vagas que sobraram
+ g.tables.forEach((tb,j)=>V.push({k:tb.x+tb.y+(tb.w+tb.d)/2,f:()=>{box(c,tb.x,tb.y,tb.w,tb.d,0,15,pal[1],'#f4efe3');
+  for(let m=0;m<2;m++){const sl=slots[g.shelves.length+j*2+m];if(sl&&sl.id){const col=mlProdColor(sl.id,sl.q==='p'?44:56);for(let k=0;k<Math.min(4,Math.ceil(sl.stock/10));k++){const q=P(tb.x+.4+m*1+(k%2)*.3,tb.y+.4+((k/2)|0)*.3,18+((k/2)|0)*5);c.fillStyle=col;c.fillRect(q[0]-5,q[1]-6,10,8)}}}}}));
+ // decoração nos soquetes
+ Object.entries(st.decor||{}).forEach(([sk,id])=>{if(sk==='balcao')return;const it=bizDecorItem(sk,id),pos=sock[sk];if(it&&pos)V.push({k:pos.x+pos.y+.3,f:()=>mlDrawDecorItem(c,it,pos,t,sk)})});
+ // atendente e clientes da loja
+ const cl=g.clerk;V.push({k:cl.x+cl.y,f:()=>{const q=P(cl.x,cl.y);person(c,q[0],q[1],g.north?0:1,0,pal[0],'#d9a981','#2b1b12',{f:(l.x%2)===0,st:0,pn:'#2a2f45',dr:0,hat:0,gl:false})}});
+ if(st.status==='aberta'&&slots.some(s=>s&&s.stock>0)&&!g.kiosk){const cnt=Math.min(2,1+((l.x+((t/9)|0))%2));for(let k=0;k<cnt;k++){const ph=t*.35+k*2.4+l.x,a={x:l.x+2+((Math.sin(ph)+1)/2)*(l.w-4),y:g.north?l.y+4.6+Math.cos(ph*.7)*.7:l.y+l.h-5.8+Math.cos(ph*.7)*.7};V.push({k:a.x+a.y,f:()=>{const q=P(a.x,a.y);person(c,q[0],q[1],Math.sin(ph)>0?3:2,((t*4)|0)%4,['#e07a5f','#81b29a','#f2cc8f','#3d405b'][(k+l.x)%4],'#d9a981','#2b1b12',{f:k%2===0,st:k%2===0?2:0,pn:'#3a3f4a',dr:0,hat:0,gl:false})}})}}
+}
+function mlDrawFreeLot(c,l,t){
+ const g=mlGeom(l),y=g.front,x1=l.x+.2,x2=l.x+l.w-.2;
+ for(let i=0;i<Math.floor((x2-x1)/.6);i++){const a=x1+i*.6;poly(c,[P(a,y,10),P(a+.3,y,10),P(a+.3,y,6),P(a,y,6)],'#f2b84b');poly(c,[P(a+.3,y,10),P(a+.6,y,10),P(a+.6,y,6),P(a+.3,y,6)],'#20222c')}
+ [x1,x2].forEach(cx=>{const q=P(cx,y,0);c.fillStyle='#ff7a1a';c.beginPath();c.moveTo(q[0],q[1]-14);c.lineTo(q[0]-5,q[1]);c.lineTo(q[0]+5,q[1]);c.closePath();c.fill();c.fillStyle='#fff';c.fillRect(q[0]-3,q[1]-8,6,2)});
+}
+/* --- renderização --- */
+function renderMallZip(t){
+ const pl=MLZ,TOP=96;mallTick(t);mallSync(interior.room);
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#1a1830');bg.addColorStop(1,'#0c0b18');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const Za=Z*1.1,target=P(ipx,ipy,20);interior.zipCamera??={x:target[0],y:target[1]};interior.zipCamera.x+=(target[0]-interior.zipCamera.x)*.14;interior.zipCamera.y+=(target[1]-interior.zipCamera.y)*.14;const cc=interior.zipCamera;
+ c.setTransform(Za,0,0,Za,Math.round(W/2-cc.x*Za),Math.round(H/2+8-cc.y*Za));c.imageSmoothingEnabled=false;
+ // piso: corredor de mármore, terrenos livres e lojas com o piso escolhido
+ const lots=ML_LOTS(),lotMap=lots.length?lots:LOTS_UI();
+ for(let y=0;y<pl.h;y++)for(let x=0;x<pl.w;x++){let col=(x+y)%2?'#efe9dc':'#e4ddcc';const l=lotMap.find(q=>x>=q.x&&x<q.x+q.w&&y>=q.y&&y<q.y+q.h);
+  if(l){const st=l.store;if(st){const f=FLOOR_UI[st.floor]||FLOOR_UI.marmore;col=(x+y)%2?f[0]:f[1]}else col=(x+y)%2?'#cfc8b8':'#c5bead'}
+  else if(y>=9&&y<21&&(y===9||y===20||x<9))col=(x+y)%2?'#e9e1cf':'#ded5c0';
+  poly(c,[P(x,y),P(x+1,y),P(x+1,y+1),P(x,y+1)],col)}
+ // tapete central do corredor e brasão do Shopping
+ poly(c,[P(10,13.4),P(52,13.4),P(52,16.6),P(10,16.6)],'rgba(123,45,58,.18)');for(let x=10;x<52;x+=2)poly(c,[P(x,14.9),P(x+1,14.9),P(x+1,15.1),P(x,15.1)],'rgba(201,162,39,.5)');
+ {const s=P(4.5,15);[[1.6,'#c06c84'],[1.25,'#fff9ee'],[.85,'#16294a'],[.45,'#f2b84b']].forEach(([r,col])=>{c.fillStyle=col;c.beginPath();c.ellipse(s[0],s[1],45*r,22.5*r,0,0,7);c.fill()});c.fillStyle='#fff9ee';c.font='bold 7px sans-serif';c.textAlign='center';c.fillText('SHOPPING',s[0],s[1]+2.4)}
+ // raios de luz do átrio (claraboia)
+ for(let i=0;i<3;i++){const q=P(21+i*5,15),a=.05+.04*Math.sin(t*.8+i);c.fillStyle='rgba(255,246,210,'+a+')';c.beginPath();c.ellipse(q[0],q[1],70,34,0,0,7);c.fill()}
+ const V=[],INT='#f3ead9',INTS='#cbbd9a';
+ const band=(axis,pos,u)=>{const F=(a,z)=>axis==='x'?P(u+a,pos,z):P(pos,u+a,z);poly(c,[F(0,6),F(1,6),F(1,0),F(0,0)],'rgba(30,20,30,.4)')};
+ const northLot=i=>lotMap.find(l=>l.y===0&&i>=l.x&&i<l.x+l.w&&l.size!=='Q');
+ const wN=i=>{box(c,i,-.14,1,.14,0,TOP,INT,INTS);band('x',0,i);const l=northLot(i),st=l&&l.store;
+  if(l){const pal=st?mallPal(st):['#bdb7a8','#a9a393'];poly(c,[P(i,.02,66),P(i+1,.02,66),P(i+1,.02,0),P(i,.02,0)],pal[0]);poly(c,[P(i,.02,46),P(i+1,.02,46),P(i+1,.02,41),P(i,.02,41)],pal[1]);
+   if(st)for(let k=0;k<2;k++)poly(c,[P(i+.25,.02,36-k*14),P(i+.75,.02,36-k*14),P(i+.75,.02,30-k*14),P(i+.25,.02,30-k*14)],'rgba(255,255,255,.1)')}};
+ const ent=j=>j>=pl.entrance[0]&&j<pl.entrance[1];
+ const wW=j=>{box(c,-.14,j,.14,1,0,TOP,INT,INTS);if(ent(j)){poly(c,[P(0,j+.04,76),P(0,j+.96,76),P(0,j+.96,0),P(0,j+.04,0)],'rgba(150,215,245,.5)');c.strokeStyle='#c06c84';c.lineWidth=2;c.stroke();ln(c,P(0,j+.5,76),P(0,j+.5,0))}else{band('y',0,j);if(j%3===1&&(j<9||j>20)){poly(c,[P(0,j+.14,86),P(0,j+.86,86),P(0,j+.86,52),P(0,j+.14,52)],'#7fb8d0');c.strokeStyle='#7b2d3a';c.lineWidth=1.4;c.stroke()}}};
+ for(let i=0;i<pl.w;i++)V.push({k:i+.43,f:()=>wN(i)});for(let j=0;j<pl.h;j++)V.push({k:j+.43,f:()=>wW(j)});
+ // viseira da entrada
+ V.push({k:15.6,f:()=>{const a=pl.entrance[0],b=pl.entrance[1];poly(c,[P(0,a,96),P(0,b,96),P(0,b,78),P(0,a,78)],'#c06c84');c.strokeStyle='#fff9ee';c.lineWidth=1.6;c.stroke();c.save();c.shadowColor='#ffd1e0';c.shadowBlur=5+3*Math.sin(t*3);wtxt('y','SHOPPING DE SOROKIBA',0,(a+b)/2,84,'bold 6px sans-serif','#fff9ee');c.restore()}});
+ // divisórias entre terrenos (baixas, para ver as lojas)
+ pl.walls.forEach(([axis,pos,from,to])=>{for(let u=from;u<to;u++)V.push({k:pos+u+.5,f:()=>{box(c,pos-.06,u,.12,1,0,56,'#e8dfca','#cbbd9a');band('y',pos+.06,u)}})});
+ // terrenos e lojas
+ lotMap.forEach(l=>{const st=l.store;
+  if(!st){V.push({k:l.x+l.y+l.w+l.h-1,f:()=>{mlDrawFreeLot(c,l,t);mlDrawSign(c,l,null,t)}});
+   if(ML_KIOSK(l))V.push({k:l.x+l.y+(l.w+l.h)/2,f:()=>box(c,l.x+.3,l.y+.4,l.w-.6,l.h-.8,0,12,'#8a8374','#bdb7a8')})}
+  else{mlStoreItems(l,st,V,t);V.push({k:l.x+l.y+l.w+l.h-1,f:()=>mlDrawSign(c,l,st,t)});
+   if(st.status!=='aberta')V.push({k:l.x+l.y+l.w+l.h-1.5,f:()=>{const g=mlGeom(l),y=g.front;poly(c,[P(l.x+.2,y,40),P(l.x+l.w-.2,y,40),P(l.x+l.w-.2,y,34),P(l.x+.2,y,34)],st.status==='suspensa'?'#b3262e':'#6a6a74');wtxt('x',st.status==='suspensa'?'SUSPENSA PELA PREFEITURA':'FECHADO',l.x+l.w/2,y,34.5,'bold 5px sans-serif','#fff')}})}});
+ pl.dec.forEach(([name,x,y])=>{const d=DEC[name]?.s||[1,1],key=x+y+(d[0]+d[1])/2;V.push({k:key,f:()=>drawDec(c,name,x,y,t)})});
+ const med=interior.med,sat=!!interior.seat;
+ interior.room.people.forEach(p=>V.push({k:p.x+p.y,f:()=>{const q=P(p.x,p.y),o=ML_STAFF[p.name]||{};person(c,q[0],q[1],p.face,p.walkFrame,p.shirt,p.skin,p.hair,{f:!!o.f,st:o.f?2:0,pn:o.pn||'#2a2f45',dr:0,hat:o.hat||0,gl:!!o.gl});if(p.role==='Cliente'||p.role==='Faxineiro'){const b=P(p.x+.3,p.y+.2,12);c.fillStyle=['#e07a5f','#3d405b','#81b29a'][(p.x|0)%3];c.fillRect(b[0]-4,b[1]-6,8,10)}}}));
+ V.push({k:ipx+ipy+(sat?1.3:0),f:()=>{const q=P(ipx,ipy,sat?9:0);person(c,q[0],q[1],pd,pf|0,user.col,user.skin,user.hr||'#2b1b12',(med&&med.sit)||sat?{...myO,seated:true}:myO)}});
+ V.sort((a,b)=>a.k-b.k).forEach(o=>o.f());
+ hospDrawNear();
+ c.font='bold 10px sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000b';const label=(user.role==='prefeito'?'👑 ':'')+user.name,q=P(ipx,ipy,44+(sat?9:0));c.strokeText(label,q[0],q[1]);c.fillStyle=user.role==='prefeito'?'#F2B84B':'#F5EFE3';c.fillText(label,q[0],q[1]);
+ interior.room.people.forEach(p=>{if(p.role==='Cliente')return;const q=P(p.x,p.y,44);c.font='bold 9px sans-serif';c.strokeText(p.name,q[0],q[1]);c.fillStyle='#ffe9b0';c.fillText(p.name,q[0],q[1])});
+ c.setTransform(1,0,0,1,0,0);
+}
+
 function renderInterior(t,h){
  if(interior.room.shape==='condo-scene'){cwRender(t,h);return}
  if(interior.room.shape==='condo-ground'){renderCondoZip(t);return}
@@ -3071,6 +3378,7 @@ function renderInterior(t,h){
    if(interior.room.shape==='police-zip'){renderPoliceZip(t);return}
    if(interior.room.shape==='market-zip'){renderMarketZip(t);return}
    if(interior.room.shape==='uni-zip'){renderUniZip(t);return}
+   if(interior.room.shape==='mall-zip'){renderMallZip(t);return}
  c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#10192a');bg.addColorStop(1,'#26394b');c.fillStyle=bg;c.fillRect(0,0,W,H);
  const room=interior.room,w=room.width,d=room.depth;
@@ -3195,6 +3503,7 @@ function act(){
     if(interior.room.family==='police'&&POLICE_ROLE_SITE[near.o.role]){openPolicePanel(POLICE_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='grocery'&&MK_ROLE_SITE[near.o.role]){const r=MK_ROLE_SITE[near.o.role];openMarketPanel(r[0],r[1]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='university'&&UN_ROLE_SITE[near.o.role]){openUniPanel(UN_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
+    if(interior.room.family==='mall'&&ML_ROLE_SITE[near.o.role]){openBizPanel(ML_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='hospital'&&HOSP_ROLE_SITE[near.o.role]){openHospitalPanel(HOSP_ROLE_SITE[near.o.role]);tone(640,.09,'sine',.06);return}
     if(interior.room.family==='bank'&&(near.o.role==='Caixa'||near.o.role==='Gerente')){openBankPanel(near.o.role==='Gerente'?'loan':'account');tone(640,.09,'sine',.06);return}
     if(interior.room.family==='employment'&&(near.o.role==='Recrutador'||near.o.role==='Entrevistadora'||near.o.role==='Orientadora profissional'||near.o.role==='Recepcionista')){loadCareers(near.o.role);tone(640,.09,'sine',.06);return}
@@ -3219,8 +3528,8 @@ addEventListener('keydown',e=>{
  if(target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))return;
  if(mode!=='game'||document.activeElement===$('ch'))return;
  const k=e.key.toLowerCase();
- const panelOpen=!$('uniPanel').hidden||!$('marketPanel').hidden||!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
- if(panelOpen){if(k==='escape'){if(!$('uniPanel').hidden){closeUniPanel()}else if(!$('marketPanel').hidden){closeMarketPanel()}else if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
+ const panelOpen=!$('bizPanel').hidden||!$('uniPanel').hidden||!$('marketPanel').hidden||!$('policePanel').hidden||!$('cityPanel').hidden||!$('hospitalPanel').hidden||!$('bankPanel').hidden||!$('careerPanel').hidden||!$('interviewPanel').hidden||!$('workPanel').hidden||!$('icecreamMenu').hidden||!$('condoPanel').hidden||!$('cwElev').hidden||!$('fm').hidden;
+ if(panelOpen){if(k==='escape'){if(!$('bizPanel').hidden){closeBizPanel()}else if(!$('uniPanel').hidden){closeUniPanel()}else if(!$('marketPanel').hidden){closeMarketPanel()}else if(!$('policePanel').hidden){closePolicePanel()}else if(!$('cityPanel').hidden){closeCityPanel()}else if(!$('hospitalPanel').hidden){closeHospitalPanel()}else if(!$('bankPanel').hidden){closeBankPanel()}else if(!$('cwElev').hidden){cwCloseElev()}else if(!$('condoPanel').hidden){closeCondoPanel()}else if(!$('icecreamMenu').hidden)$('icecreamMenu').hidden=true;else if(!$('interviewPanel').hidden)$('interviewPanel').hidden=true;else if(!$('workPanel').hidden)$('workPanel').hidden=true;else if(!$('careerPanel').hidden)$('careerPanel').hidden=true;else omap(false);e.preventDefault()}return}
  if(k==='enter'){openChat();e.preventDefault();return}
  if(k==='m'&&!interior){omap(!fmO);return}
  if(k==='e'||k===' '){act();e.preventDefault()}
@@ -4301,7 +4610,7 @@ if(isNew){if(db[k])return say('Esse usuário já existe');const fm=!db['#mayor']
 else{const a=db[k];if(!a||a.h!==hs(p))return say('Usuário ou senha incorretos');start(a)}};
 function start(a){user=a;myO=oOf(a);if(token||user)conn();$('mp').hidden=false;$('mm').hidden=false;aud();tone(523,.15,'sine',.08);setTimeout(()=>tone(784,.2,'sine',.08),120);px=a.x;py=a.y;if(!(px>0&&px<MW&&py>0&&py<MH&&!hit(px,py))){px=27.5;py=14.5}pd=0;mode='game';document.body.classList.add('game-on');gs=performance.now();$('login').hidden=true;$('hud').hidden=false;$('hn').textContent=a.name;$('hr').textContent=a.role=='prefeito'?'👑 Prefeito':'Cidadão';$('mayorControlsBtn').hidden=a.role!=='prefeito';$('mayorPanel').hidden=true;
 syncDeviceControls();const p=P(px,py,16);cam.x=p[0];cam.y=p[1];$('p').value='';setTimeout(hospitalPing,3000)}
-$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;$('marketPanel').hidden=true;$('mkChip').hidden=true;$('uniPanel').hidden=true;$('uniChip').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
+$('out').onclick=()=>{save();fetch(API+'/logout',{method:'POST'}).catch(()=>{});if(ws){const w=ws;ws=null;w.close()}token=null;user=null;RP.clear();ON=0;myBub=null;$('cl').textContent='';$('ch').hidden=true;$('cb').hidden=true;$('icecreamMenu').hidden=true;$('mayorControlsBtn').hidden=true;$('mayorPanel').hidden=true;$('careerPanel').hidden=true;$('interviewPanel').hidden=true;$('workPanel').hidden=true;$('condoPanel').hidden=true;$('bankPanel').hidden=true;$('hospitalPanel').hidden=true;$('cityPanel').hidden=true;$('policePanel').hidden=true;$('marketPanel').hidden=true;$('mkChip').hidden=true;$('uniPanel').hidden=true;$('uniChip').hidden=true;$('bizPanel').hidden=true;$('bizChip').hidden=true;mode='menu';document.body.classList.remove('game-on');$('login').hidden=false;['hud','tip','dlg','bE','mm','mp','mobileControls','rotatePrompt'].forEach(i=>$(i).hidden=true);stickVector=null;stickPointer=null;resetStick();omap(false);open=false;leaveLoginFullscreen()};
 async function restoreSession(){try{const x=await fetch(API+'/session');if(!x.ok)return;const j=await x.json();if(j.player)start(j.player)}catch(e){}}
 
 /* ---------- HOSPITAL: painel do paciente ---------- */
@@ -4520,7 +4829,7 @@ const CITY_SITES={
  plenary:{title:'Plenário da Câmara',who:'Câmara Municipal',office:'vereador',tabs:[['laws','Votações'],['dash','Painel']]}
 };
 const CITY_JOBS={hospital_reception:'Recepção hospitalar',library_assistant:'Biblioteca',mechanic:'Mecânica',restaurant_server:'Restaurante',electrician:'Eletricista',courier:'Entregador',fastfood_counter:'Fast-food',teacher_assistant:'Escola',police_officer:'Delegacia',market_cashier:'Supermercado',university_professor:'Universidade'};
-const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança',mercado:'Compras no Mercado',universidade:'Universidade (taxas e cantina)'};
+const CITY_LEDGER={tarifa:'Tarifa bancária',hospital:'Hospital',auxilio:'Auxílio pago',salario:'Salário de cargo',dotacao:'Dotação inicial',multa:'Multas (Delegacia)',certidao:'Certidões (Delegacia)',seguranca:'Recompensa de segurança',mercado:'Compras no Mercado',universidade:'Universidade (taxas e cantina)',terreno:'Terrenos do Shopping',alvara:'Alvará de lojas',iptu:'Imposto predial de lojas',iss:'ISS sobre vendas de lojas'};
 const cityNow=()=>Date.now()+cityOffset;
 const cityMoney=v=>'R$ '+Number(v||0).toLocaleString('pt-BR');
 const cityCompact=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':a>=1e3?(v/1e3).toFixed(1).replace('.',',')+' mil':String(Math.round(v))};
@@ -5255,6 +5564,260 @@ $('uniBody').onclick=e=>{
  else if(a==='submitexam'){const ans=uniAnswers('ue',uniExam.questions.length);if(!ans){uniSay('Responda todas as questões antes de entregar.',true);unSfx.gateDeny();return}uniAct('/vest/submit',{id:uniExam.id,answers:ans},d=>{uniExamResult=d.data.result})}
  else if(a==='doneexam'){uniExamResult=null;uniExam=null;renderUni()}
  else if(a==='buy')uniAct('/canteen',{item:id});
+};
+/* ---------- EMPRESAS: painel (terrenos, compra, vitrine e painel do dono com gráficos e impostos) ---------- */
+let bizLastView='',bizState=null,bizSite='lots',bizTab='resumo',bizBusy=false,bizReq=0,bizOffset=0,bizTimer=0,bizPoll=0,bizReloaded=false,bizLotSel=null,bizStoreSel=null,bizFrom='carteira',bizSlotsDraft=null;
+let bizDraft={name:'',category:'moda',logo:'🛍️',palette:0,floor:'marmore',sign:'neon'};
+const BIZ_TABS=[['resumo','Resumo'],['produtos','Produtos'],['decoracao','Decoração'],['marca','Marca'],['impostos','Impostos'],['caixa','Caixa']];
+const bizNowMs=()=>Date.now()+bizOffset;
+const bzCount=until=>'<b class="bzCount" data-until="'+until+'">'+cityWait(until-bizNowMs())+'</b>';
+const bzM=v=>cityMoney(v);
+const bzPct=v=>(v>0?'+':'')+v+'%';
+const bizMine=()=>bizState&&bizState.mine;
+const bizLot=id=>bizState&&bizState.lots.find(l=>l.id===id);
+function bizDecorItem(sock,id){const d=bizState&&bizState.catalog&&bizState.catalog.decor[sock];return d?d.find(i=>i.id===id)||null:null}
+const bizProd=id=>{if(!bizState)return null;for(const c of bizState.catalog.categories){const p=c.products.find(x=>x.id===id);if(p)return p}return null};
+async function bizRequest(path,body){
+ const controller=typeof AbortController==='function'?new AbortController():null,timer=setTimeout(()=>controller&&controller.abort(),15000);
+ try{const headers=body?{'Content-Type':'application/json'}:{};if(token)headers.Authorization='Bearer '+token;
+  const r=await fetch(API+'/business'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,...(controller?{signal:controller.signal}:{})});
+  const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.err||'Não foi possível falar com as Empresas.');return data;
+ }catch(e){if(e.name==='AbortError')throw new Error('As Empresas demoraram para responder. Tente novamente.');throw e}finally{clearTimeout(timer)}
+}
+function bizApply(d){
+ if(d.player){user=d.player;$('hm').textContent=user.money}
+ if(d.business){bizState=d.business;bizOffset=bizState.serverNow-Date.now();bizReloaded=false;bizSlotsDraft=null;if(interior&&interior.room.family==='mall')mallSync(interior.room);bizChipUpdate()}
+ if(d.sales&&d.sales.revenue>0){bizSfx.coin();toast('💰 Vendas desde a sua última visita: '+bzM(d.sales.revenue)+' ('+d.sales.units+' item(ns), '+d.sales.customers+' cliente(s)).')}
+ if(d.settled&&d.settled.bills)toast('🏛️ A Prefeitura emitiu '+d.settled.bills+' conta(s) nova(s) da sua loja.');
+ if(d.settled&&d.settled.suspended)toast('⛔ Sua loja foi suspensa por impostos atrasados.');
+}
+function bizSay(text,bad){const e=$('bizMsg');if(!e)return;e.textContent=text||'';e.classList.toggle('err',!!bad)}
+function bizChipUpdate(){
+ const chip=$('bizChip');if(!chip)return;const inMall=!!interior&&interior.room.family==='mall';chip.hidden=!inMall;if(!inMall)return;
+ const m=bizMine();chip.textContent=m?'🏪 '+m.name+' · caixa '+bzM(m.cash):'🏪 Abrir uma empresa';chip.className='bizChip'+(m&&m.status==='suspensa'?' bad':'')
+}
+function bizEvent(ev){
+ if(!ev)return;
+ const k=ev.kind;if(k==='buyLot')bizSfx.keys();else if(k==='shopBuy'){bizSfx.register();setTimeout(bizSfx.bag,380)}else if(k==='decor'||k==='brand'||k==='products')bizSfx.tada();else if(k==='tax')bizSfx.stamp();
+ else if(k==='open')bizSfx.open();else if(k==='close'||k==='sell')bizSfx.close();else if(k==='withdraw')bizSfx.coin();else if(k==='restock')bizSfx.bag();else if(k==='eat')mkSfx.eat();
+}
+/* ---------- blocos de interface ---------- */
+const stars=n=>'★'.repeat(Math.max(1,Math.round(n)))+'☆'.repeat(Math.max(0,5-Math.round(n)));
+const SIGN_LABEL={neon:'Neon',painel:'Painel',madeira:'Madeira',luminoso:'Luminoso'},FLOOR_LABEL={marmore:'Mármore',madeira:'Madeira',xadrez:'Xadrez',concreto:'Concreto'};
+function bzPreview(d){
+ const pal=bizState.catalog.palettes[d.palette]||bizState.catalog.palettes[0],cat=bizState.catalog.categories.find(c=>c.id===d.category)||bizState.catalog.categories[0];
+ return '<div class="bzPrev floor-'+d.floor+'"><div class="bzSign sign-'+d.sign+'" style="--a:'+pal.a+';--b:'+pal.b+'"><span>'+esc(d.logo)+'</span><b>'+esc(d.name||'Nome da loja')+'</b></div><div class="bzShelf" style="--a:'+pal.a+';--b:'+pal.b+'">'+cat.products.slice(0,5).map(p=>'<i title="'+esc(p.name)+'">'+p.icon+'</i>').join('')+'</div><small>'+esc(cat.name)+' · piso '+FLOOR_LABEL[d.floor]+' · placa '+SIGN_LABEL[d.sign]+'</small></div>';
+}
+function bzPickers(d,idp){
+ const c=bizState.catalog;
+ return '<label for="'+idp+'Name">Nome da loja <small class="bzSmall">3 a 22 caracteres</small></label><input id="'+idp+'Name" type="text" maxlength="22" value="'+esc(d.name)+'" autocomplete="off">'
+  +'<label>Logotipo</label><div class="bzGrid6" role="radiogroup" aria-label="Logotipo">'+c.logos.map(l=>'<button type="button" class="bzPick'+(d.logo===l?' on':'')+'" data-bz="logo" data-v="'+l+'" aria-pressed="'+(d.logo===l)+'">'+l+'</button>').join('')+'</div>'
+  +'<label>Cores</label><div class="bzSwatches" role="radiogroup" aria-label="Cores">'+c.palettes.map(p=>'<button type="button" class="bzSw'+(d.palette===p.id?' on':'')+'" style="--a:'+p.a+';--b:'+p.b+'" data-bz="palette" data-v="'+p.id+'" aria-pressed="'+(d.palette===p.id)+'" title="'+esc(p.name)+'"><i></i><i></i></button>').join('')+'</div>'
+  +'<div class="bzTwo"><div><label for="'+idp+'Floor">Piso</label><select id="'+idp+'Floor" data-bz="floorsel">'+c.floors.map(f=>'<option value="'+f+'"'+(d.floor===f?' selected':'')+'>'+FLOOR_LABEL[f]+'</option>').join('')+'</select></div><div><label for="'+idp+'Sign">Placa</label><select id="'+idp+'Sign" data-bz="signsel">'+c.signs.map(f=>'<option value="'+f+'"'+(d.sign===f?' selected':'')+'>'+SIGN_LABEL[f]+'</option>').join('')+'</select></div></div>';
+}
+function bzMiniMap(){
+ const lots=bizState.lots;
+ return '<div class="bzMap" role="group" aria-label="Mapa do Shopping"><div class="bzConc">Corredor</div>'+lots.map(l=>'<button type="button" class="bzLotBtn '+(l.mine?'mine':l.store?'taken':'free')+(bizLotSel===l.id?' sel':'')+'" style="left:'+(l.x/52*100)+'%;top:'+(l.y/30*100)+'%;width:'+(l.w/52*100)+'%;height:'+(l.h/30*100)+'%" data-bz="pick" data-id="'+l.id+'" aria-label="Terreno '+l.id+'"><b>'+l.id+'</b><small>'+(l.store?esc(l.store.name):bzM(l.price))+'</small></button>').join('')+'</div>';
+}
+function vLots(){
+ const s=bizState,sel=bizLot(bizLotSel)||null,has=s.me.hasStore;
+ let detail='<p class="bzHint">Toque num terreno do mapa para ver os detalhes. Terrenos do átrio e das entradas têm mais clientes e custam mais.</p>';
+ if(sel){const free=!sel.store;detail='<div class="bzCard"><h3>Terreno '+sel.id+' · '+esc(sel.name)+'</h3><ul class="bzList"><li><span>Tamanho</span><b>'+esc(sel.sizeLabel)+' · '+sel.slots+' vagas de produto</b></li><li><span>Fluxo de clientes</span><b>'+stars(sel.traffic)+'</b></li><li><span>Região</span><b>'+esc(sel.area)+'</b></li><li><span>Preço do terreno</span><b>'+bzM(sel.price)+'</b></li><li><span>Impostos por semana (fixos)</span><b>'+bzM(sel.alvara+sel.iptuWeek)+' <small>alvará '+bzM(sel.alvara)+' + predial '+bzM(sel.iptuWeek)+'</small></b></li></ul><p class="bzHint">Mais o ISS de '+s.constants.ISS_PCT+'% sobre o faturamento da semana.</p>'
+   +(free?(has?'<p class="bzHint">Você já administra uma loja. Cada jogador tem um negócio.</p>':'<div class="bzActions"><button type="button" data-bz="choose" data-id="'+sel.id+'">Escolher este terreno</button></div>'):'<p class="bzHint">'+(sel.mine?'Esta é a sua loja.':'Loja '+esc(sel.store.name)+', de '+esc(sel.store.owner)+'.')+'</p><div class="bzActions"><button type="button" data-bz="visit" data-id="'+sel.store.id+'">'+(sel.mine?'Gerenciar a minha loja':'Visitar a loja')+'</button></div>')+'</div>'}
+ return bzMiniMap()+detail;
+}
+function vBuy(){
+ const s=bizState,lot=bizLot(bizLotSel);if(!lot)return '<div class="bzNote">Escolha um terreno primeiro.</div>';
+ const cats=s.catalog.categories;
+ return '<div class="bzCard"><h3>Abrir uma loja no terreno '+lot.id+' · '+esc(lot.sizeLabel)+'</h3><p class="bzHint">'+bzM(lot.price)+' pelo terreno. Por semana: alvará '+bzM(lot.alvara)+', imposto predial '+bzM(lot.iptuWeek)+' e ISS de '+s.constants.ISS_PCT+'% sobre o faturamento. A loja abre com um estoque inicial de cortesia.</p>'
+  +'<label>Categoria (não dá para mudar depois)</label><div class="bzCats">'+cats.map(c=>'<button type="button" class="bzCat'+(bizDraft.category===c.id?' on':'')+'" data-bz="cat" data-v="'+c.id+'" aria-pressed="'+(bizDraft.category===c.id)+'"><span>'+c.icon+'</span><b>'+esc(c.name)+'</b></button>').join('')+'</div>'
+  +bzPickers(bizDraft,'bzB')+bzPreview(bizDraft)
+  +'<div class="bzActions"><button type="button" data-bz="buylot">Comprar terreno · '+bzM(lot.price)+'</button><button type="button" class="alt" data-bz="tolots">Voltar ao mapa</button></div></div>';
+}
+function vBizShop(){
+ const s=bizState,l=s.lots.find(x=>x.store&&x.store.id===bizStoreSel);if(!l)return '<div class="bzNote">Loja não encontrada.</div>';
+ const st=l.store,cat=s.catalog.categories.find(c=>c.id===st.category);
+ return bzPreview({name:st.name,logo:st.logo,palette:st.palette,floor:st.floor,sign:st.sign,category:st.category})
+  +'<div class="bzCard"><h3>'+esc(st.name)+' <span class="bzTag '+(st.status==='aberta'?'ok':'bad')+'">'+(st.status==='aberta'?'Aberta':st.status==='suspensa'?'Suspensa':'Fechada')+'</span></h3><p class="bzHint">Dono(a): '+esc(st.owner)+' · reputação '+stars(st.reputation*3.3)+' · terreno '+l.id+'</p>'
+  +(l.mine?'<div class="bzActions"><button type="button" data-bz="manage">Gerenciar a minha loja</button></div>':'')
+  +(st.status!=='aberta'?'<p class="bzHint">A loja não está atendendo agora.</p>':'<div class="bzProds">'+st.products.map(p=>{const pr=cat.products.find(x=>x.id===p.id);return pr?'<div class="bzProd"><span class="bzIco">'+pr.icon+'</span><b>'+esc(pr.name)+'</b><small>'+(p.q==='p'?'Premium':'Básico')+(pr.heal?' · +'+pr.heal+' saúde':'')+'</small><div class="bzPrice">'+bzM(p.price)+'</div><small>'+(p.stock>0?p.stock+' em estoque':'Esgotado')+'</small>'+(l.mine?'':'<button type="button" data-bz="shopbuy" data-store="'+st.id+'" data-id="'+p.id+'"'+(p.stock>0?'':' disabled')+'>Comprar</button>')+'</div>':''}).join('')+'</div>')+'</div>';
+}
+function vBag(){
+ const s=bizState;
+ return '<div class="bzCard"><h3>Minha sacola do Shopping</h3>'+(s.bag.length?'<ul class="bzList">'+s.bag.map(b=>{const p=bizProd(b.id);return p?'<li><span>'+p.icon+' <b>'+esc(p.name)+'</b><small>'+b.qty+' na sacola'+(p.heal?' · +'+p.heal+' saúde':'')+'</small></span>'+(p.heal?'<button type="button" data-bz="use" data-id="'+b.id+'">Usar</button>':'')+'</li>':''}).join('')+'</ul>':'<p class="bzHint">Sua sacola está vazia. Compre nas lojas dos outros jogadores!</p>')+'</div>';
+}
+/* ---------- painel do dono ---------- */
+const bzDayLabel=d=>bizState.time.dayMs===86400000?new Date(d*86400000).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'d'+(d-bizState.mine.series[13].day);
+function bzKpi(l,v,h,cls){return '<div class="bzKpi '+(cls||'')+'"><span>'+l+'</span><strong>'+v+'</strong>'+(h?'<small>'+h+'</small>':'')+'</div>'}
+function vResumo(){
+ const m=bizMine(),k=m.kpis,lowStock=m.products.filter(p=>p.stock<=3),open=m.status==='aberta';
+ return '<div class="bzStatus"><span class="bzTag '+(open?'ok':m.status==='suspensa'?'bad':'')+'">'+(open?'Loja aberta':m.status==='suspensa'?'Loja suspensa':'Loja fechada')+'</span>'+(m.status!=='suspensa'?'<button type="button" class="alt" data-bz="toggleopen" data-open="'+(!open)+'">'+(open?'Fechar a loja':'Abrir a loja')+'</button>':'<small>Pague as contas atrasadas na aba Impostos para reabrir.</small>')+'</div>'
+  +'<div class="bzKpis">'+bzKpi('Faturou hoje',bzM(k.today),'Ontem '+bzM(k.yesterday))+bzKpi('Últimos 7 dias',bzM(k.last7),k.growth===null?'Sem semana anterior':'Crescimento '+bzPct(k.growth)+' vs. 7 dias antes',k.growth!==null&&k.growth<0?'down':'up')+bzKpi('Semana atual',bzM(k.week),'Base do ISS ('+bizState.constants.ISS_PCT+'%)')+bzKpi('Faturamento total',bzM(k.lifetime),k.unitsLife+' itens vendidos')+bzKpi('Lucro total',bzM(k.profitLife),'Retorno do terreno '+bzPct(k.roi),k.profitLife<0?'down':'up')+bzKpi('Caixa da loja',bzM(m.cash),'Reputação '+m.reputation.toFixed(2)+' · apelo ×'+m.appeal.toFixed(2))+'</div>'
+  +'<div class="bzCard"><h3>Faturamento dos últimos 14 dias</h3><canvas class="bzChart" data-bzchart="days" role="img" aria-label="Gráfico de faturamento diário e lucro"></canvas></div>'
+  +'<div class="bzCard"><h3>Crescimento por semana (8 semanas)</h3><canvas class="bzChart" data-bzchart="weeks" role="img" aria-label="Gráfico semanal de faturamento, impostos e lucro"></canvas></div>'
+  +'<div class="bzCard"><h3>Avisos</h3><ul class="bzList">'+(lowStock.length?lowStock.map(p=>'<li><span>⚠️ Estoque baixo: <b>'+esc((bizProd(p.id)||{}).name||p.id)+'</b> ('+p.stock+')</span><button type="button" class="alt" data-bz="gotab" data-v="produtos">Repor</button></li>').join(''):'<li><span>✅ Estoque em dia.</span></li>')+(m.openTotal?'<li><span>🏛️ Você tem <b>'+bzM(m.openTotal)+'</b> em impostos em aberto.</span><button type="button" class="alt" data-bz="gotab" data-v="impostos">Ver contas</button></li>':'')+'<li><span>Clientes esperados por hora: <b>'+k.expectedPerHour+'</b> (média do terreno × apelo da loja)</span></li></ul></div>';
+}
+function bzSlotRow(sl,i,m,cat){
+ const used=new Set(bizSlotsDraft.map(x=>x.id)),prods=cat.products;
+ const opts=prods.filter(p=>p.id===sl.id||!used.has(p.id)).map(p=>'<option value="'+p.id+'"'+(p.id===sl.id?' selected':'')+'>'+p.icon+' '+esc(p.name)+' (ref. '+bzM(p.ref)+')</option>').join('');
+ const pr=prods.find(p=>p.id===sl.id)||prods[0],cost=sl.q==='p'?pr.costP:pr.costB,margin=sl.price-cost;
+ const cur=m.products.find(p=>p.id===sl.id);
+ return '<div class="bzSlot"><div class="bzSlotHead"><b>Vaga '+(i+1)+'</b><button type="button" class="alt sm" data-bz="slotdel" data-i="'+i+'" aria-label="Remover vaga '+(i+1)+'">Remover</button></div>'
+  +'<div class="bzTwo"><div><label>Produto</label><select data-bz="slotprod" data-i="'+i+'">'+opts+'</select></div><div><label>Qualidade</label><select data-bz="slotq" data-i="'+i+'"><option value="b"'+(sl.q==='b'?' selected':'')+'>Básico (custo '+bzM(pr.costB)+')</option><option value="p"'+(sl.q==='p'?' selected':'')+'>Premium (custo '+bzM(pr.costP)+')</option></select></div></div>'
+  +'<label>Preço de venda <small class="bzSmall">de '+bzM(pr.min)+' a '+bzM(pr.max)+' · referência '+bzM(pr.ref)+'</small></label><div class="bzPriceRow"><input type="range" min="'+pr.min+'" max="'+pr.max+'" value="'+sl.price+'" data-bz="slotrange" data-i="'+i+'" aria-label="Preço"><input type="number" min="'+pr.min+'" max="'+pr.max+'" value="'+sl.price+'" data-bz="slotprice" data-i="'+i+'"></div>'
+  +'<p class="bzHint">Custo '+bzM(cost)+' · margem por unidade <b class="'+(margin>0?'up':'down')+'">'+bzM(margin)+'</b>'+(sl.price>pr.ref*1.4?' · preço alto afasta clientes':sl.price<pr.ref*.8?' · preço baixo vende mais, mas rende pouco':'')+'</p>'
+  +(cur?'<div class="bzStock"><span>Estoque <b>'+cur.stock+'</b> · vendidos '+cur.sold+'</span><span class="bzBtns">'+[5,10,30].map(n=>'<button type="button" class="alt sm" data-bz="restock" data-i="'+m.products.findIndex(p=>p.id===sl.id)+'" data-n="'+n+'">+'+n+' ('+bzM(cost*n)+')</button>').join('')+'</span></div>':'<p class="bzHint">Salve a vitrine para poder repor este produto.</p>')+'</div>';
+}
+function vProdutos(){
+ const m=bizMine(),lot=bizLot(m.lot),cat=bizState.catalog.categories.find(c=>c.id===m.category);
+ if(!bizSlotsDraft)bizSlotsDraft=m.products.map(p=>({id:p.id,price:p.price,q:p.q}));
+ return '<div class="bzCard"><h3>Vitrine · '+esc(cat.name)+' <small class="bzSmall">'+bizSlotsDraft.length+' de '+lot.slots+' vagas</small></h3><p class="bzHint">Defina os produtos, a qualidade e os preços. Pague a reposição pela carteira ou pelo caixa da loja. Para tirar um produto, zere o estoque antes.</p>'
+  +'<div class="bzFrom"><label for="bzFromSel">Pagar reposição e decoração com</label><select id="bzFromSel" data-bz="fromsel"><option value="carteira"'+(bizFrom==='carteira'?' selected':'')+'>Minha carteira ('+bzM(bizState.me.money)+')</option><option value="caixa"'+(bizFrom==='caixa'?' selected':'')+'>Caixa da loja ('+bzM(m.cash)+')</option></select></div>'
+  +bizSlotsDraft.map((sl,i)=>bzSlotRow(sl,i,m,cat)).join('')
+  +'<div class="bzActions">'+(bizSlotsDraft.length<lot.slots?'<button type="button" class="alt" data-bz="slotadd">+ Adicionar produto</button>':'')+'<button type="button" data-bz="saveslots">Salvar vitrine</button></div></div>';
+}
+function vDecoracao(){
+ const m=bizMine(),c=bizState.catalog;
+ return '<div class="bzCard"><h3>Decoração da loja</h3><p class="bzHint">Cada item aumenta o apelo da loja (e traz mais clientes). O bônus total tem teto de '+bizState.constants.DECOR_APPEAL_CAP+'%. Apelo de decoração agora: <b>+'+m.decorAppeal+'%</b>. Pagamento: '+(bizFrom==='caixa'?'caixa da loja':'carteira')+' (mude na aba Produtos).</p>'
+  +Object.entries(c.sockets).map(([sk,label])=>'<div class="bzSock"><h4>'+esc(label)+'</h4><div class="bzDecor">'+c.decor[sk].map(i=>'<button type="button" class="bzDec'+(m.decor[sk]===i.id?' on':'')+'" data-bz="decor" data-sk="'+sk+'" data-id="'+i.id+'" aria-pressed="'+(m.decor[sk]===i.id)+'"><span>'+i.icon+'</span><b>'+esc(i.name)+'</b><small>'+(m.decor[sk]===i.id?'Instalado':bzM(i.price)+' · +'+i.appeal+'%')+'</small></button>').join('')+(m.decor[sk]?'<button type="button" class="bzDec rm" data-bz="decor" data-sk="'+sk+'" data-id=""><span>🗑️</span><b>Remover</b></button>':'')+'</div></div>').join('')+'</div>';
+}
+function vMarca(){
+ const m=bizMine(),d=bizDraft;
+ return '<div class="bzCard"><h3>Marca da loja</h3>'+bzPickers(d,'bzM')+bzPreview(d)+'<div class="bzActions"><button type="button" data-bz="savebrand">Salvar marca</button></div></div>';
+}
+function billRow(b){
+ return '<li><span><b>'+esc(b.label)+'</b><small>Semana '+b.week+(b.paidAt?' · paga':b.overdue?' · venceu':' · vence em '+bzCount(b.dueAt))+(b.overdue?' · <span class="down">atrasada '+b.daysLate+' d (multa '+bzM(b.fine)+')</span>':'')+'</small></span><span class="bzRight"><b>'+bzM(b.total)+'</b>'+(b.paidAt?'<span class="bzTag ok">Paga</span>':'<button type="button" data-bz="paybill" data-id="'+b.id+'">Pagar</button>')+'</span></li>';
+}
+function vImpostos(){
+ const m=bizMine(),open=m.bills.filter(b=>!b.paidAt),paid=m.bills.filter(b=>b.paidAt),c=bizState.constants,k=m.kpis;
+ return (m.status==='suspensa'?'<div class="bzAlert" role="alert">⛔ Sua loja está <b>suspensa</b>: há contas com mais de '+c.SUSPEND_AFTER_DAYS+' dias de atraso. Pague tudo para reabrir.</div>':'')
+  +'<div class="bzKpis">'+bzKpi('Em aberto',bzM(m.openTotal),open.length+' conta(s)',open.length?'down':'up')+bzKpi('Já pagos à Prefeitura',bzM(k.taxesPaid),'desde que abriu')+bzKpi('Próxima emissão',bzCount(bizState.time.nextWeekAt),'semana '+(bizState.time.week+1))+'</div>'
+  +'<div class="bzCard"><h3>Contas em aberto</h3>'+(open.length?'<ul class="bzList">'+open.map(billRow).join('')+'</ul><div class="bzActions"><button type="button" data-bz="payall" data-from="carteira">Pagar tudo com a carteira</button><button type="button" class="alt" data-bz="payall" data-from="caixa">Pagar tudo com o caixa</button></div>':'<p class="bzHint">Nenhuma conta em aberto. Tudo em dia!</p>')
+  +'<label class="bzCheck"><input id="bzAuto" type="checkbox" data-bz="autopay"'+(m.autopay?' checked':'')+'> Pagamento automático pelo caixa (quando houver saldo)</label></div>'
+  +'<div class="bzCard"><h3>O que você paga à Prefeitura</h3><ul class="bzList"><li><span><b>Alvará de funcionamento</b><small>Fixo por semana, conforme o tamanho do terreno</small></span><b>'+bzM(bizLot(m.lot).alvara)+'</b></li><li><span><b>Imposto predial</b><small>'+c.IPTU_PCT+'% do valor do terreno por semana</small></span><b>'+bzM(bizLot(m.lot).iptuWeek)+'</b></li><li><span><b>ISS</b><small>'+c.ISS_PCT+'% do faturamento da semana</small></span><b>'+bzM(Math.round(k.week*c.ISS_PCT/100))+' <small>até agora</small></b></li></ul>'
+  +'<p class="bzHint">As contas da semana saem quando ela fecha e vencem em '+c.BILL_DUE_DAYS+' dias. Depois do vencimento há multa de '+c.FINE_PCT+'%, e com '+c.SUSPEND_AFTER_DAYS+' dias de atraso a loja é suspensa. Na primeira semana, alvará e predial são proporcionais aos dias de loja.</p></div>'
+  +(paid.length?'<div class="bzCard"><h3>Contas pagas</h3><ul class="bzList">'+paid.map(billRow).join('')+'</ul></div>':'');
+}
+function vCaixa(){
+ const m=bizMine();
+ return '<div class="bzKpis">'+bzKpi('Caixa da loja',bzM(m.cash),'vendas ficam aqui até você sacar')+bzKpi('Sua carteira',bzM(bizState.me.money))+'</div>'
+  +'<div class="bzCard"><h3>Sacar do caixa</h3><label for="bzWd">Valor</label><input id="bzWd" type="number" min="1" max="'+m.cash+'" value="'+Math.min(m.cash,100)+'"><div class="bzActions"><button type="button" data-bz="withdraw"'+(m.cash>0?'':' disabled')+'>Sacar para a carteira</button><button type="button" class="alt" data-bz="withdrawall"'+(m.cash>0?'':' disabled')+'>Sacar tudo</button></div></div>'
+  +'<div class="bzCard bzDanger"><h3>Vender a loja</h3><p class="bzHint">Você recebe '+bizState.constants.SELL_BACK_PCT+'% do valor do terreno ('+bzM(Math.floor(m.pricePaid*bizState.constants.SELL_BACK_PCT/100))+') mais o dinheiro do caixa. O estoque e a decoração são perdidos, e é preciso estar com todos os impostos em dia.</p><div class="bzActions"><button type="button" class="danger" data-bz="sell">Vender a loja</button></div></div>';
+}
+function bzDrawCharts(){
+ const m=bizMine();if(!m||$('bizPanel').hidden)return;
+ document.querySelectorAll('#bizPanel canvas[data-bzchart]').forEach(cv=>{
+  const {g,w,h}=cityPrep(cv),kind=cv.dataset.bzchart,pad={l:44,r:10,t:18,b:24},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;g.font='11px sans-serif';
+  const rows=kind==='days'?m.series.map(d=>({label:bzDayLabel(d.day),a:d.revenue,b:d.spent+d.taxes,c:d.revenue-d.spent-d.taxes})):m.weeks.map((x,i)=>({label:i===7?'atual':'S-'+(7-i),a:x.revenue,b:x.taxes,c:x.profit}));
+  const hi=Math.max(10,...rows.map(r=>Math.max(r.a,r.b,r.c))),lo=Math.min(0,...rows.map(r=>r.c)),span=hi-lo||1,Y=v=>pad.t+ph*(1-(v-lo)/span);
+  g.strokeStyle='rgba(255,255,255,.09)';g.fillStyle='#9fb2c4';g.textAlign='right';
+  for(let i=0;i<=4;i++){const v=lo+span*i/4,y=Y(v);g.beginPath();g.moveTo(pad.l,y);g.lineTo(w-pad.r,y);g.stroke();g.fillText('R$'+Math.round(v),pad.l-5,y+4)}
+  if(lo<0){g.strokeStyle='rgba(255,255,255,.35)';g.beginPath();g.moveTo(pad.l,Y(0));g.lineTo(w-pad.r,Y(0));g.stroke()}
+  const bw=Math.max(4,pw/rows.length*.34);
+  rows.forEach((r,i)=>{const x=pad.l+pw*(i+.5)/rows.length;
+   g.fillStyle='#35d0c4';g.fillRect(x-bw-1,Y(Math.max(0,r.a)),bw,Math.max(1,Y(0)-Y(Math.max(0,r.a))));
+   g.fillStyle='#e07a5f';g.fillRect(x+1,Y(Math.max(0,r.b)),bw,Math.max(1,Y(0)-Y(Math.max(0,r.b))));
+   g.fillStyle='#9fb2c4';g.textAlign='center';if(rows.length<=8||i%2===0)g.fillText(r.label,x,h-7)});
+  g.strokeStyle='#f2b84b';g.lineWidth=2.2;g.beginPath();rows.forEach((r,i)=>{const x=pad.l+pw*(i+.5)/rows.length,y=Y(r.c);i?g.lineTo(x,y):g.moveTo(x,y)});g.stroke();g.lineWidth=1;g.fillStyle='#f2b84b';rows.forEach((r,i)=>{g.beginPath();g.arc(pad.l+pw*(i+.5)/rows.length,Y(r.c),2.6,0,7);g.fill()});
+  g.textAlign='left';g.fillStyle='#35d0c4';g.fillRect(pad.l+4,3,9,9);g.fillStyle='#e6eef5';g.fillText('Faturamento',pad.l+17,11);g.fillStyle='#e07a5f';g.fillRect(pad.l+104,3,9,9);g.fillStyle='#e6eef5';g.fillText(kind==='days'?'Gastos + impostos':'Impostos',pad.l+117,11);g.fillStyle='#f2b84b';g.fillRect(pad.l+226,5,14,3);g.fillStyle='#e6eef5';g.fillText('Lucro',pad.l+245,11);
+ });
+}
+function renderBiz(){
+ const nav=$('bizTabs');let tabs=[],title='Shopping de Sorokiba',who='Empresas e terrenos';
+ if(bizSite==='manage'&&bizState&&bizMine()){tabs=BIZ_TABS;title=bizMine().name;who='Painel da loja · terreno '+bizMine().lot}
+ else if(bizSite==='lots'){title='Imobiliária do Shopping';who='Corretora Bia · terrenos para lojas'}
+ else if(bizSite==='buy'){title='Abrir uma loja';who='Compra de terreno e personalização'}
+ else if(bizSite==='shop'){title='Vitrine';who='Compre na loja de outro jogador'}
+ else if(bizSite==='bag'){title='Minha sacola';who='Itens comprados nas lojas'}
+ $('bizTitle').textContent=title;$('bizWho').textContent=who;
+ nav.hidden=!tabs.length;nav.innerHTML=tabs.map(t=>'<button type="button" role="tab" data-bztab="'+t[0]+'" aria-selected="'+(t[0]===bizTab)+'">'+t[1]+'</button>').join('');
+ const body=$('bizBody');if(!bizState){body.innerHTML='<div class="bzNote">Carregando…</div>';return}
+ const view=bizSite+':'+bizTab+':'+bizLotSel+':'+bizStoreSel,keep=view===bizLastView?body.scrollTop:0;bizLastView=view;
+ let html;
+ if(bizSite==='manage'&&bizMine())html=({resumo:vResumo,produtos:vProdutos,decoracao:vDecoracao,marca:vMarca,impostos:vImpostos,caixa:vCaixa}[bizTab]||vResumo)();
+ else html=({lots:vLots,buy:vBuy,shop:vBizShop,bag:vBag}[bizSite]||vLots)();
+ body.innerHTML=html;body.scrollTop=keep;bzDrawCharts();
+}
+async function bizLoad(silent){
+ const id=++bizReq;
+ try{const d=await bizRequest('');if(id!==bizReq)return;bizApply(d);if(!$('bizPanel').hidden){if(!silent)bizSay('');renderBiz()}}
+ catch(e){if(id!==bizReq||$('bizPanel').hidden)return;if(!bizState)$('bizBody').innerHTML='<div class="bzNote" role="alert">'+esc(e.message)+'<div class="bzActions" style="justify-content:center"><button type="button" data-bz="retry">Tentar novamente</button></div></div>'}
+}
+function openBizPanel(site,arg){
+ if(!interior||interior.room.family!=='mall')return;
+ bizSite=site;bizSlotsDraft=null;if(site==='buy')bizLotSel=arg||bizLotSel;if(site==='shop')bizStoreSel=arg||bizStoreSel;if(site==='manage')bizTab=arg||'resumo';if(site==='lots'&&arg)bizLotSel=arg;
+ open=true;$('dlg').hidden=true;bizSay('');$('bizPanel').hidden=false;renderBiz();bizLoad();
+ clearInterval(bizTimer);bizTimer=setInterval(bizTick,1000);
+}
+function closeBizPanel(){bizReq++;clearInterval(bizTimer);bizTimer=0;if($('bizPanel').hidden)return;$('bizPanel').hidden=true;open=false}
+// Clique no terreno do mapa 3D: loja de outro jogador abre a vitrine, a minha abre o painel, terreno livre abre a compra.
+function bizLotAction(id){
+ const l=bizLot(id);if(!bizState){openBizPanel('lots',id);return}
+ if(!l||!l.store)openBizPanel('lots',id);else if(l.mine)openBizPanel('manage','resumo');else openBizPanel('shop',l.store.id);
+}
+function mallStartPoll(){clearInterval(bizPoll);bizLoad(true);bizPoll=setInterval(()=>{if(interior&&interior.room.family==='mall'&&$('bizPanel').hidden)bizLoad(true)},40000)}
+function mallStopPoll(){clearInterval(bizPoll);bizPoll=0}
+function bizTick(){
+ if($('bizPanel').hidden||!bizState)return;let expired=false;
+ document.querySelectorAll('#bizPanel .bzCount').forEach(e=>{const left=Number(e.dataset.until)-bizNowMs();e.textContent=cityWait(left);if(left<=0)expired=true});
+ if(expired&&!bizReloaded&&!bizBusy){bizReloaded=true;bizLoad(true)}
+}
+async function bizAct(path,body,onOk){
+ if(bizBusy)return;bizBusy=true;bizReq++;$('bizPanel').classList.add('busy');
+ try{const d=await bizRequest(path,body);bizApply(d);if(onOk)onOk(d);bizEvent(d.event);renderBiz();bizSay(d.message||'Pronto.');return d}
+ catch(e){bizSay(e.message,true);bizSfx.buzz()}
+ finally{bizBusy=false;$('bizPanel').classList.remove('busy')}
+}
+/* ---------- eventos ---------- */
+function bzReadDraft(prefix,d){const n=$(prefix+'Name');if(n)d.name=n.value}
+function bzSyncSlots(){/* mantém o rascunho das vagas igual ao que está na tela */
+ document.querySelectorAll('#bizBody [data-bz=slotprice]').forEach(el=>{const i=Number(el.dataset.i);if(bizSlotsDraft&&bizSlotsDraft[i]){const v=parseInt(el.value,10);if(Number.isInteger(v))bizSlotsDraft[i].price=v}})
+}
+$('bizClose').onclick=closeBizPanel;
+$('bizChip').onclick=()=>{if(!$('bizPanel').hidden){closeBizPanel();return}if(bizMine())openBizPanel('manage','resumo');else openBizPanel('lots')};
+$('bizTabs').onclick=e=>{const b=e.target.closest('[data-bztab]');if(!b||bizBusy)return;bzSyncSlots();bizTab=b.dataset.bztab;bizSay('');if(bizTab==='marca'&&bizMine()){const m=bizMine();bizDraft={...bizDraft,...m.brand}}renderBiz()};
+$('bizBody').addEventListener('input',e=>{
+ const t=e.target;
+ if(t.id==='bzBName'||t.id==='bzMName'){bizDraft.name=t.value;const p=document.querySelector('#bizBody .bzPrev b');if(p)p.textContent=t.value||'Nome da loja';return}
+ if(t.dataset.bz==='slotrange'||t.dataset.bz==='slotprice'){const i=Number(t.dataset.i),v=parseInt(t.value,10);if(bizSlotsDraft&&bizSlotsDraft[i]&&Number.isInteger(v)){bizSlotsDraft[i].price=v;const row=t.closest('.bzSlot'),other=row.querySelector(t.dataset.bz==='slotrange'?'[data-bz=slotprice]':'[data-bz=slotrange]');if(other)other.value=v}}
+});
+$('bizBody').addEventListener('change',e=>{
+ const t=e.target,a=t.dataset.bz;if(!a)return;
+ if(a==='floorsel'){bizDraft.floor=t.value;renderBiz()}else if(a==='signsel'){bizDraft.sign=t.value;renderBiz()}
+ else if(a==='fromsel'){bizFrom=t.value}
+ else if(a==='slotprod'){const i=Number(t.dataset.i);bzSyncSlots();const pr=bizProd(t.value);bizSlotsDraft[i]={id:t.value,price:pr.ref,q:bizSlotsDraft[i].q};renderBiz()}
+ else if(a==='slotq'){const i=Number(t.dataset.i);bzSyncSlots();bizSlotsDraft[i].q=t.value;renderBiz()}
+ else if(a==='slotprice'||a==='slotrange'){const i=Number(t.dataset.i),pr=bizProd(bizSlotsDraft[i].id),v=Math.min(pr.max,Math.max(pr.min,parseInt(t.value,10)||pr.ref));bizSlotsDraft[i].price=v;renderBiz()}
+ else if(a==='autopay')bizAct('/autopay',{on:t.checked});
+});
+$('bizBody').onclick=e=>{
+ const b=e.target.closest('[data-bz]');if(!b||b.disabled||['floorsel','signsel','fromsel','slotprod','slotq','slotrange','slotprice','autopay'].includes(b.dataset.bz))return;
+ const a=b.dataset.bz,id=b.dataset.id,v=b.dataset.v;
+ if(a==='retry')bizLoad();
+ else if(a==='pick'){bizLotSel=id;renderBiz()}
+ else if(a==='choose'){bizDraft={...bizDraft,name:bizDraft.name};bizSite='buy';bizLotSel=id;renderBiz()}
+ else if(a==='tolots'){bizSite='lots';renderBiz()}
+ else if(a==='visit'){const l=bizState.lots.find(x=>x.store&&x.store.id===id);if(l&&l.mine){bizSite='manage';bizTab='resumo'}else{bizSite='shop';bizStoreSel=id}renderBiz()}
+ else if(a==='manage'){bizSite='manage';bizTab='resumo';renderBiz()}
+ else if(a==='logo'){bzReadDraft(bizSite==='buy'?'bzB':'bzM',bizDraft);bizDraft.logo=v;renderBiz()}
+ else if(a==='palette'){bzReadDraft(bizSite==='buy'?'bzB':'bzM',bizDraft);bizDraft.palette=Number(v);renderBiz()}
+ else if(a==='cat'){bzReadDraft('bzB',bizDraft);bizDraft.category=v;renderBiz()}
+ else if(a==='buylot'){bzReadDraft('bzB',bizDraft);bizAct('/buy',{lot:bizLotSel,name:bizDraft.name,category:bizDraft.category,logo:bizDraft.logo,palette:bizDraft.palette,floor:bizDraft.floor,sign:bizDraft.sign},()=>{bizSite='manage';bizTab='resumo'})}
+ else if(a==='savebrand'){bzReadDraft('bzM',bizDraft);bizAct('/brand',{name:bizDraft.name,logo:bizDraft.logo,palette:bizDraft.palette,floor:bizDraft.floor,sign:bizDraft.sign})}
+ else if(a==='gotab'){bzSyncSlots();bizTab=v;renderBiz()}
+ else if(a==='toggleopen')bizAct('/open',{open:b.dataset.open==='true'});
+ else if(a==='slotadd'){bzSyncSlots();const m=bizMine(),cat=bizState.catalog.categories.find(c=>c.id===m.category),used=new Set(bizSlotsDraft.map(x=>x.id)),pr=cat.products.find(p=>!used.has(p.id));if(pr){bizSlotsDraft.push({id:pr.id,price:pr.ref,q:'b'});renderBiz()}}
+ else if(a==='slotdel'){bzSyncSlots();bizSlotsDraft.splice(Number(b.dataset.i),1);renderBiz()}
+ else if(a==='saveslots'){bzSyncSlots();bizAct('/products',{slots:bizSlotsDraft})}
+ else if(a==='restock'){bzSyncSlots();bizAct('/restock',{slot:Number(b.dataset.i),units:Number(b.dataset.n),from:bizFrom})}
+ else if(a==='decor')bizAct('/decor',{socket:b.dataset.sk,item:id===''?null:id,from:bizFrom});
+ else if(a==='paybill')bizAct('/bills/pay',{ids:[id],from:'carteira'});
+ else if(a==='payall')bizAct('/bills/pay',{all:true,from:b.dataset.from});
+ else if(a==='withdraw'){const amt=parseInt(($('bzWd')||{}).value,10);bizAct('/withdraw',{amount:amt})}
+ else if(a==='withdrawall')bizAct('/withdraw',{amount:bizMine().cash});
+ else if(a==='sell'){if(confirm('Vender a loja e liberar o terreno? Esta ação não pode ser desfeita.'))bizAct('/sell',{},()=>{bizSite='lots'})}
+ else if(a==='shopbuy')bizAct('/shop/buy',{store:b.dataset.store,product:id,qty:1});
+ else if(a==='use')bizAct('/bag/use',{item:id});
 };
 /* ---------- BANCO ---------- */
 const BANK_FEE_BP=200,BANK_FEE_MIN=1;
