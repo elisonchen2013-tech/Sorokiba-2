@@ -12,6 +12,7 @@ const city = require('./sorokiba2-city');
 const police = require('./sorokiba2-police');
 const market = require('./sorokiba2-market');
 const university = require('./sorokiba2-university');
+const business = require('./sorokiba2-business');
 
 const MW = 96, MH = 84, MAX_PLAYERS = 60;
 const MAX_CONNECTIONS = 120, MAX_CONNECTIONS_PER_IP = 8;
@@ -174,7 +175,7 @@ const publicTask = task => ({ id: task.id, type: task.task_type, prompt: task.ta
 async function attachSorokiba2(app, server, opt = {}) {
   if (opt.pool) db.setPool(opt.pool);
   const htmlFile = opt.htmlFile || path.join(__dirname, 'sorokiba2.html');
-  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => market.init()).then(() => university.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura, Delegacia, Mercado e Universidade de Sorokiba prontos'));
+  const initPromise = db.init().then(() => bank.init()).then(() => hospital.init()).then(() => city.init()).then(() => police.init()).then(() => market.init()).then(() => university.init()).then(() => business.init()).then(() => console.log('[sk2] banco de dados, Banco, Hospital, Prefeitura, Delegacia, Mercado, Universidade e Empresas de Sorokiba prontos'));
 
   /* ---------- páginas e contas ---------- */
   const json = express.json({ limit: '8kb' });
@@ -429,6 +430,8 @@ async function attachSorokiba2(app, server, opt = {}) {
   market.registerRoutes({ app, json, authUser, limited, userTries });
   // Universidade: carteirinha na portaria, áreas abertas e fechadas, vestibular, cursos, aula ao vivo e cantina.
   university.registerRoutes({ app, json, authUser, limited, userTries });
+  // Empresas: terrenos e lojas no Shopping, painel de faturamento e impostos semanais da Prefeitura.
+  business.registerRoutes({ app, json, authUser, limited, userTries });
   app.post('/api/sk2/mission/complete', json, async (req, res) => {
     const mission = MISSIONS[req.body?.id];
     if (!mission || req.body?.event !== mission.event) return res.status(400).json({ err: 'Objetivo de missão inválido' });
