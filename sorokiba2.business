@@ -1,0 +1,473 @@
+'use strict';
+// Sorokiba 2 – Empresas. O jogador compra um terreno no Shopping, monta a loja (marca, produtos, preços, decoração),
+// acompanha o painel (faturamento, crescimento, impostos) e paga a Prefeitura. Como nos outros prédios, quem decide
+// preço, venda e imposto é o servidor, em transação.
+//
+//   • 12 terrenos com preço e fluxo de clientes diferentes (átrio e entrada valem mais; cantos e praça de alimentação, menos);
+//   • vendas simuladas sob demanda: ao abrir o painel (ou ao outro jogador comprar), o servidor calcula as "horas" que passaram,
+//     com no máximo 24 de ausência, usando sorteio fixo por loja e hora (repetir a consulta não rende mais dinheiro);
+//   • outros jogadores também compram na vitrine, e o valor vai para o caixa da loja;
+//   • impostos semanais da Prefeitura: alvará (por tamanho), imposto predial (% do terreno) e ISS (% do faturamento da semana);
+//     prazo de 3 dias, multa de 10% e suspensão da loja depois de 7 dias de atraso;
+//   • um negócio por jogador; vender a loja devolve 50% do terreno (se o tesouro tiver saldo) e exige impostos em dia.
+const crypto = require('crypto');
+const db = require('./sorokiba2-db');
+const city = require('./sorokiba2-city');
+const hospital = require('./sorokiba2-hospital');
+
+// SK2_BIZ_TIME_SCALE=0.001 comprime a "hora", o dia e a semana da loja para testar. Em produção: 1 (hora real; semana de 7 dias).
+const SCALE = (() => { const n = Number(process.env.SK2_BIZ_TIME_SCALE); return n > 0 && n <= 1 ? n : 1; })();
+const TICK_MS = Math.max(1000, Math.round(3600e3 * SCALE));
+const DAY_MS = TICK_MS * 24, WEEK_MS = DAY_MS * 7;
+
+const BIZ = Object.freeze({
+  MAX_OFFLINE_TICKS: 24, STARTER_STOCK: 6, STARTER_SLOTS: 3,
+  NAME_MIN: 3, NAME_MAX: 22, PRICE_MIN_PCT: 50, PRICE_MAX_PCT: 200,
+  STOCK_MAX: 60, RESTOCK_MAX: 30, COST_BASE_PCT: 45, QUALITY_COST: { b: 1, p: 1.35 }, QUALITY_APPEAL: { b: 1, p: 1.3 },
+  DECOR_APPEAL_CAP: 45, REP_MIN: 0.5, REP_MAX: 1.5,
+  BILL_DUE_DAYS: 3, FINE_PCT: 10, SUSPEND_AFTER_DAYS: 7, IPTU_PCT: 1.5, ISS_PCT: 5, SELL_BACK_PCT: 50,
+  BUY_QTY_MAX: 5, BAG_MAX: 30,
+  CUSTOMER_SCALE: 0.12, SIZE_FACTOR: { Q: 0.6, P: 0.75, M: 1.2, G: 1.6 },
+  // categorias de itens baratos atraem mais clientes; as de itens caros, menos (a receita por dia fica na mesma ordem de grandeza)
+  DEMAND: { moda: 1, tecnologia: 0.85, livraria: 2.2, cafeteria: 5.2, floricultura: 1.6, brinquedos: 1.3, esportes: 0.8, presentes: 2.4 },
+});
+const SIZES = Object.freeze({ Q: { label: 'Quiosque', slots: 3, alvara: 30 }, P: { label: 'Loja pequena', slots: 5, alvara: 50 }, M: { label: 'Loja média', slots: 7, alvara: 80 }, G: { label: 'Loja grande', slots: 9, alvara: 120 } });
+// x, y, w, h = posição no mapa do Shopping (em tiles); traffic = clientes por hora (média); price = valor do terreno.
+const LOT_DEFS = [
+  ['N1', 'Entrada Norte', 'P', 1, 0, 8, 9, 3.6, 2600, 'entrada'], ['N2', 'Galeria Norte 1', 'M', 9, 0, 10, 9, 3.4, 4200, 'galeria'], ['N3', 'Átrio Norte', 'G', 19, 0, 12, 9, 4.2, 7400, 'átrio'],
+  ['N4', 'Galeria Norte 2', 'M', 31, 0, 10, 9, 3.0, 3900, 'galeria'], ['N5', 'Praça Norte', 'M', 41, 0, 11, 9, 2.2, 3000, 'praça'],
+  ['S1', 'Entrada Sul', 'P', 1, 21, 8, 9, 3.4, 2400, 'entrada'], ['S2', 'Galeria Sul 1', 'M', 9, 21, 10, 9, 3.2, 4000, 'galeria'], ['S3', 'Átrio Sul', 'G', 19, 21, 12, 9, 4.0, 7000, 'átrio'],
+  ['S4', 'Galeria Sul 2', 'M', 31, 21, 10, 9, 2.8, 3600, 'galeria'], ['S5', 'Praça Sul', 'P', 41, 21, 11, 9, 2.0, 1900, 'praça'],
+  ['K1', 'Quiosque do Chafariz', 'Q', 13, 13, 4, 3, 2.2, 1100, 'corredor'], ['K2', 'Quiosque da Praça', 'Q', 35, 14, 4, 3, 1.8, 900, 'corredor'],
+];
+const LOTS = Object.freeze(LOT_DEFS.map(([id, name, size, x, y, w, h, traffic, price, area]) => Object.freeze({ id, name, size, x, y, w, h, traffic, price, area, slots: SIZES[size].slots, alvara: SIZES[size].alvara })));
+const LOT_BY_ID = Object.freeze(Object.fromEntries(LOTS.map(l => [l.id, l])));
+
+const CAT_RAW = {
+  moda: ['Moda', '👕', [['camiseta', 'Camiseta', '👕', 35], ['jeans', 'Calça jeans', '👖', 70], ['tenis', 'Tênis', '👟', 90], ['bone', 'Boné', '🧢', 25], ['jaqueta', 'Jaqueta', '🧥', 120], ['meias', 'Meias', '🧦', 12]]],
+  tecnologia: ['Tecnologia', '🎧', [['fone', 'Fone de ouvido', '🎧', 60], ['carregador', 'Carregador', '🔌', 30], ['mouse', 'Mouse', '🖱️', 40], ['teclado', 'Teclado', '⌨️', 80], ['caixasom', 'Caixa de som', '🔊', 110], ['capinha', 'Capinha de celular', '📱', 20]]],
+  livraria: ['Livraria', '📚', [['romance', 'Romance', '📖', 38], ['hq', 'Revista em quadrinhos', '🦸', 22], ['dicionario', 'Dicionário', '📘', 45], ['caderno', 'Caderno', '📓', 18], ['caneta', 'Caneta', '🖊️', 8], ['mapa', 'Mapa-múndi', '🗺️', 15]]],
+  cafeteria: ['Cafeteria', '☕', [['cafe', 'Café', '☕', 5, 2], ['cappuccino', 'Cappuccino', '🥛', 9, 3], ['croissant', 'Croissant', '🥐', 8, 4], ['bolo', 'Fatia de bolo', '🍰', 12, 5], ['sanduiche', 'Sanduíche', '🥪', 15, 6], ['suco', 'Suco natural', '🧃', 8, 3]]],
+  floricultura: ['Floricultura', '💐', [['rosa', 'Rosa', '🌹', 15], ['buque', 'Buquê', '💐', 45], ['orquidea', 'Orquídea', '🪻', 60], ['suculenta', 'Suculenta', '🌵', 18], ['girassol', 'Girassol', '🌻', 20], ['vaso', 'Vaso decorado', '🪴', 25]]],
+  brinquedos: ['Brinquedos', '🧸', [['boneco', 'Boneco', '🪆', 40], ['quebra', 'Quebra-cabeça', '🧩', 35], ['carrinho', 'Carrinho', '🚗', 18], ['bola', 'Bola', '⚽', 22], ['pelucia', 'Pelúcia', '🧸', 45], ['tabuleiro', 'Jogo de tabuleiro', '🎲', 75]]],
+  esportes: ['Esportes', '🏀', [['bolafut', 'Bola de futebol', '⚽', 60], ['raquete', 'Raquete', '🏸', 85], ['garrafa', 'Garrafa térmica', '🧴', 25], ['corrida', 'Tênis de corrida', '👟', 130], ['luvas', 'Luvas', '🧤', 30], ['mochila', 'Mochila', '🎒', 70]]],
+  presentes: ['Presentes', '🎁', [['caneca', 'Caneca', '☕', 22], ['vela', 'Vela aromática', '🕯️', 28], ['retrato', 'Porta-retrato', '🖼️', 30], ['cartao', 'Cartão', '💌', 6], ['chaveiro', 'Chaveiro', '🔑', 10], ['caixa', 'Caixa de presente', '🎁', 35]]],
+};
+const CATEGORIES = Object.freeze(Object.fromEntries(Object.entries(CAT_RAW).map(([cid, [name, icon, items]]) => [cid, Object.freeze({ id: cid, name, icon, products: Object.freeze(items.map(([id, pname, picon, ref, heal = 0], i) => Object.freeze({ id: `${cid}-${id}`, cat: cid, name: pname, icon: picon, ref, heal, pop: Math.round((0.8 + ((i * 37 + cid.length * 11) % 5) * 0.1) * 100) / 100 }))) })])));
+const PRODUCT_BY_ID = Object.freeze(Object.fromEntries(Object.values(CATEGORIES).flatMap(c => c.products.map(p => [p.id, p]))));
+const SOCKETS = Object.freeze({ vitrine: 'Vitrine', paredeE: 'Parede esquerda', paredeD: 'Parede direita', centro: 'Centro da loja', balcao: 'Balcão', entrada: 'Entrada' });
+const DECOR_RAW = {
+  vitrine: [['manequins', 'Manequins', '🧍', 120, 4], ['neonvitrine', 'Vitrine com neon', '✨', 180, 6], ['pilha', 'Pilha de destaque', '📦', 60, 2]],
+  paredeE: [['quadro', 'Quadro', '🖼️', 60, 2], ['prateleira', 'Prateleira decorativa', '🪵', 90, 3], ['neonopen', 'Neon "OPEN"', '💡', 140, 5], ['relogio', 'Relógio de parede', '🕒', 50, 1]],
+  paredeD: [['poster', 'Pôster', '🎞️', 60, 2], ['tv', 'TV de ofertas', '📺', 220, 7], ['espelho', 'Espelho grande', '🪞', 110, 3]],
+  centro: [['tapete', 'Tapete', '🟥', 80, 3], ['mesa', 'Mesa expositora', '🛍️', 150, 4], ['plantagrande', 'Planta grande', '🌳', 70, 2], ['sofa', 'Sofá de espera', '🛋️', 160, 4]],
+  balcao: [['caixamoderno', 'Caixa registradora moderna', '🧾', 130, 3], ['vasoflor', 'Vaso de flores', '🌷', 30, 1], ['luminaria', 'Luminária', '🔆', 60, 2]],
+  entrada: [['capacho', 'Capacho de boas-vindas', '🚪', 40, 1], ['plantaentrada', 'Planta de entrada', '🪴', 60, 2], ['baloes', 'Arco de balões', '🎈', 110, 4], ['musica', 'Caixa de som ambiente', '🎵', 100, 3]],
+};
+const DECOR = Object.freeze(Object.fromEntries(Object.entries(DECOR_RAW).map(([sock, items]) => [sock, Object.freeze(items.map(([id, name, icon, price, appeal]) => Object.freeze({ id, name, icon, price, appeal })))])));
+const DECOR_BY_ID = Object.freeze(Object.fromEntries(Object.entries(DECOR).flatMap(([sock, items]) => items.map(i => [`${sock}:${i.id}`, i]))));
+const PALETTES = Object.freeze([
+  { id: 0, name: 'Azul e âmbar', a: '#16427a', b: '#f2b84b' }, { id: 1, name: 'Verde-água e creme', a: '#1d8a7c', b: '#f5efe3' }, { id: 2, name: 'Bordô e dourado', a: '#7b2d3a', b: '#c9a227' },
+  { id: 3, name: 'Preto e rosa', a: '#20222c', b: '#ff5d8f' }, { id: 4, name: 'Laranja e branco', a: '#e8742a', b: '#ffffff' }, { id: 5, name: 'Roxo e menta', a: '#5b3a9a', b: '#7ee8c3' },
+  { id: 6, name: 'Verde e madeira', a: '#2f6b3a', b: '#c99a5b' }, { id: 7, name: 'Grafite e turquesa', a: '#3a4252', b: '#35d0c4' },
+]);
+const FLOORS = Object.freeze(['marmore', 'madeira', 'xadrez', 'concreto']);
+const SIGNS = Object.freeze(['neon', 'painel', 'madeira', 'luminoso']);
+const LOGOS = Object.freeze(['🛍️', '⭐', '🌟', '🔥', '🍀', '🦋', '🌈', '🚀', '💎', '🐢', '🌻', '🎯']);
+
+/* ---------- funções puras (testadas em test/business.test.js) ---------- */
+const brl = n => 'R$ ' + Number(n).toLocaleString('pt-BR');
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+const hasOwn = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const epoch = d => (d ? new Date(d).getTime() : null);
+const tickOf = ms => Math.floor(ms / TICK_MS), dayOf = ms => Math.floor(ms / DAY_MS), weekOf = ms => Math.floor(ms / WEEK_MS);
+function mulberry32(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const unitCost = (product, q) => Math.max(1, Math.round(product.ref * BIZ.COST_BASE_PCT / 100 * (BIZ.QUALITY_COST[q] || 1)));
+const priceRange = product => ({ min: Math.max(1, Math.ceil(product.ref * BIZ.PRICE_MIN_PCT / 100)), max: Math.floor(product.ref * BIZ.PRICE_MAX_PCT / 100) });
+// Quanto o preço afasta o cliente: 1,35 muito barato, 1,0 no preço de referência, perto de 0 em dobro do preço.
+function priceFactor(price, ref) {
+  const r = price / ref;
+  if (r <= 0.6) return 1.35;
+  if (r <= 1) return 1.35 - (r - 0.6) * 0.875;
+  return Math.max(0.12, 1 - (r - 1) * 0.88);
+}
+const decorAppeal = decor => Math.min(BIZ.DECOR_APPEAL_CAP, Object.entries(decor || {}).reduce((s, [sock, id]) => s + (DECOR_BY_ID[`${sock}:${id}`]?.appeal || 0), 0));
+function premiumShare(slots) { const act = (slots || []).filter(s => s && s.id); return act.length ? act.filter(s => s.q === 'p').length / act.length : 0; }
+const appealOf = store => 1 + decorAppeal(store.decor) / 100 + (Number(store.reputation || 1) - 1) * 0.5 + premiumShare(store.products) * 0.1;
+const hourWave = tick => 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(2 * Math.PI * ((((tick % 24) + 24) % 24) - 9) / 24));
+// Uma "hora" de movimento. Sorteio fixo por loja e hora: repetir a conta dá sempre o mesmo resultado.
+function simulateTick(store, lot, tick) {
+  const rnd = mulberry32(hashStr(store.id + ':' + tick)), slots = store.products.map(s => (s ? { ...s } : s));
+  const E = lot.traffic * BIZ.SIZE_FACTOR[lot.size] * (BIZ.DEMAND[store.category] || 1) * BIZ.CUSTOMER_SCALE * appealOf(store) * hourWave(tick), customers = Math.floor(E) + (rnd() < E - Math.floor(E) ? 1 : 0);
+  let revenue = 0, units = 0, missed = 0, left = 0;
+  for (let c = 0; c < customers; c++) {
+    const live = slots.map((s, i) => ({ s, i })).filter(({ s }) => s && s.id && s.stock > 0);
+    if (!live.length) { missed++; continue; }
+    const w = live.map(({ s }) => { const p = PRODUCT_BY_ID[s.id]; return p.pop * priceFactor(s.price, p.ref) * (BIZ.QUALITY_APPEAL[s.q] || 1); }), tot = w.reduce((a, b) => a + b, 0);
+    let pick = rnd() * tot, k = 0; while (k < w.length - 1 && pick > w[k]) { pick -= w[k]; k++; }
+    const slot = live[k].s, pf = priceFactor(slot.price, PRODUCT_BY_ID[slot.id].ref);
+    if (rnd() > clamp(0.25 + 0.5 * pf, 0.1, 0.9)) { left++; continue; }
+    const n = Math.min(rnd() < 0.35 ? 2 : 1, slot.stock);
+    slot.stock -= n; slot.sold = (slot.sold || 0) + n; revenue += n * slot.price; units += n;
+  }
+  return { customers, revenue, units, missed, left, slots };
+}
+// Roda várias horas e agrega por dia. A reputação sobe com cliente atendido e cai quando falta produto.
+function simulate(store, lot, fromTick, toTick, cap = BIZ.MAX_OFFLINE_TICKS) {
+  const days = new Map();
+  let slots = store.products, rep = Number(store.reputation || 1), revenue = 0;
+  const start = Math.max(fromTick + 1, toTick - cap + 1);
+  for (let t = start; t <= toTick; t++) {
+    const r = simulateTick({ ...store, products: slots, reputation: rep }, lot, t);
+    slots = r.slots;
+    const d = dayOf(t * TICK_MS), cur = days.get(d) || { revenue: 0, units: 0, customers: 0, missed: 0 };
+    cur.revenue += r.revenue; cur.units += r.units; cur.customers += r.customers; cur.missed += r.missed; days.set(d, cur);
+    revenue += r.revenue;
+    if (r.customers > 0) rep = clamp(rep + (r.units / r.customers - 0.45) * 0.02 - r.missed / r.customers * 0.015, BIZ.REP_MIN, BIZ.REP_MAX);
+  }
+  return { days, products: slots, reputation: Math.round(rep * 1000) / 1000, revenue, ticks: Math.max(0, toTick - start + 1) };
+}
+// Valores da semana: alvará e imposto predial proporcionais aos dias em que a loja existiu; ISS sobre o faturamento.
+function weekBills(lot, pricePaid, boughtAt, week, weekRevenue) {
+  const ws = week * WEEK_MS, we = ws + WEEK_MS, from = Math.max(ws, boughtAt), owned = clamp((we - from) / DAY_MS, 1, 7), f = owned / 7;
+  const due = we + BIZ.BILL_DUE_DAYS * DAY_MS;
+  return [{ kind: 'alvara', amount: Math.max(1, Math.round(lot.alvara * f)), due }, { kind: 'iptu', amount: Math.max(1, Math.round(pricePaid * BIZ.IPTU_PCT / 100 * f)), due },
+    { kind: 'iss', amount: Math.round(Math.max(0, weekRevenue) * BIZ.ISS_PCT / 100), due }].filter(b => b.amount > 0);
+}
+const billState = (bill, now) => {
+  const overdue = !bill.paidAt && Number(bill.dueAt) < now, fine = bill.fine || (overdue ? Math.round(bill.amount * BIZ.FINE_PCT / 100) : 0);
+  return { overdue, fine, total: bill.amount + fine, suspendAt: Number(bill.dueAt) + BIZ.SUSPEND_AFTER_DAYS * DAY_MS, daysLate: overdue ? Math.floor((now - Number(bill.dueAt)) / DAY_MS) : 0 };
+};
+function validateBrand(b) {
+  const name = clean(b && b.name, BIZ.NAME_MAX);
+  if (name.length < BIZ.NAME_MIN) return { err: `O nome da loja precisa de pelo menos ${BIZ.NAME_MIN} letras.` };
+  if (!/[\p{L}\p{N}]/u.test(name)) return { err: 'O nome da loja precisa de letras ou números.' };
+  const logo = LOGOS.includes(b.logo) ? b.logo : null, palette = Number.isInteger(b.palette) && b.palette >= 0 && b.palette < PALETTES.length ? b.palette : null;
+  if (logo === null || palette === null || !FLOORS.includes(b.floor) || !SIGNS.includes(b.sign)) return { err: 'Escolha o logotipo, as cores, o piso e a placa da loja.' };
+  return { name, logo, palette, floor: b.floor, sign: b.sign };
+}
+// Confere os produtos escolhidos: só da categoria da loja, no limite de vagas do terreno e preço dentro da faixa.
+function validateSlots(category, lot, input, current = []) {
+  if (!Array.isArray(input) || !input.length) return { err: 'Escolha pelo menos um produto.' };
+  if (input.length > lot.slots) return { err: `Este terreno tem ${lot.slots} vagas de produto.` };
+  const seen = new Set(), out = [];
+  for (const s of input) {
+    const p = s && hasOwn(PRODUCT_BY_ID, s.id) ? PRODUCT_BY_ID[s.id] : null;
+    if (!p || p.cat !== category) return { err: 'Há um produto que não é da categoria da loja.' };
+    if (seen.has(p.id)) return { err: 'Não repita o mesmo produto em duas vagas.' };
+    seen.add(p.id);
+    if (!Number.isInteger(s.price)) return { err: 'O preço precisa ser um número inteiro.' };
+    const r = priceRange(p); if (s.price < r.min || s.price > r.max) return { err: `${p.name}: o preço vai de ${brl(r.min)} a ${brl(r.max)}.` };
+    if (s.q !== 'b' && s.q !== 'p') return { err: 'Escolha a qualidade do produto.' };
+    const old = current.find(c => c && c.id === p.id);
+    if (old && old.stock > 0 && old.q !== s.q) return { err: `${p.name}: só dá para mudar a qualidade com o estoque zerado.` };
+    out.push({ id: p.id, price: s.price, q: s.q, stock: old ? old.stock : 0, sold: old ? old.sold || 0 : 0 });
+  }
+  const dropped = current.filter(c => c && c.id && !seen.has(c.id) && c.stock > 0);
+  if (dropped.length) return { err: `Venda ou zere o estoque antes de tirar ${PRODUCT_BY_ID[dropped[0].id]?.name || 'o produto'} da loja.` };
+  return { slots: out };
+}
+const lotView = l => ({ id: l.id, name: l.name, size: l.size, sizeLabel: SIZES[l.size].label, x: l.x, y: l.y, w: l.w, h: l.h, traffic: l.traffic, price: l.price, area: l.area, slots: l.slots, alvara: l.alvara, iptuWeek: Math.round(l.price * BIZ.IPTU_PCT / 100) });
+
+/* ---------- banco de dados ---------- */
+async function init() {
+  await db.query(`CREATE TABLE IF NOT EXISTS sk2_biz_stores (
+    id UUID PRIMARY KEY, lot TEXT NOT NULL UNIQUE, owner TEXT NOT NULL UNIQUE REFERENCES sk2_players(username) ON DELETE CASCADE, owner_name TEXT NOT NULL,
+    name TEXT NOT NULL, category TEXT NOT NULL, logo TEXT NOT NULL, palette INT NOT NULL, floor TEXT NOT NULL, sign TEXT NOT NULL,
+    decor JSONB NOT NULL DEFAULT '{}', products JSONB NOT NULL DEFAULT '[]', cash INT NOT NULL DEFAULT 0 CHECK (cash >= 0), price_paid INT NOT NULL,
+    bought_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_tick BIGINT NOT NULL, billed_week BIGINT NOT NULL, status TEXT NOT NULL DEFAULT 'aberta' CHECK (status IN ('aberta','fechada','suspensa')),
+    reputation REAL NOT NULL DEFAULT 1, autopay BOOLEAN NOT NULL DEFAULT false);
+  CREATE TABLE IF NOT EXISTS sk2_biz_days (
+    store_id UUID NOT NULL REFERENCES sk2_biz_stores(id) ON DELETE CASCADE, day BIGINT NOT NULL, revenue INT NOT NULL DEFAULT 0, spent INT NOT NULL DEFAULT 0,
+    units INT NOT NULL DEFAULT 0, customers INT NOT NULL DEFAULT 0, missed INT NOT NULL DEFAULT 0, PRIMARY KEY (store_id, day));
+  CREATE TABLE IF NOT EXISTS sk2_biz_bills (
+    id UUID PRIMARY KEY, store_id UUID NOT NULL REFERENCES sk2_biz_stores(id) ON DELETE CASCADE, week BIGINT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('alvara','iptu','iss')),
+    amount INT NOT NULL, fine INT NOT NULL DEFAULT 0, due_at TIMESTAMPTZ NOT NULL, paid_at TIMESTAMPTZ, paid_day BIGINT, UNIQUE (store_id, week, kind));
+  CREATE INDEX IF NOT EXISTS sk2_biz_bills_store ON sk2_biz_bills(store_id, paid_at);
+  CREATE TABLE IF NOT EXISTS sk2_biz_bag (
+    username TEXT NOT NULL REFERENCES sk2_players(username) ON DELETE CASCADE, item_id TEXT NOT NULL, qty INT NOT NULL CHECK (qty >= 0), PRIMARY KEY (username, item_id));`);
+}
+const fail = (err, status = 409) => ({ err, status });
+const parseJson = (v, d) => (typeof v === 'string' ? (() => { try { return JSON.parse(v); } catch { return d; } })() : v ?? d);
+const toStore = r => r && ({ id: r.id, lot: r.lot, owner: r.owner, ownerName: r.owner_name, name: r.name, category: r.category, logo: r.logo, palette: r.palette, floor: r.floor, sign: r.sign,
+  decor: parseJson(r.decor, {}), products: parseJson(r.products, []), cash: r.cash, pricePaid: r.price_paid, boughtAt: epoch(r.bought_at), lastTick: Number(r.last_tick), billedWeek: Number(r.billed_week),
+  status: r.status, reputation: Number(r.reputation), autopay: !!r.autopay });
+const saveStore = (c, s) => c.query(`UPDATE sk2_biz_stores SET name=$2, logo=$3, palette=$4, floor=$5, sign=$6, decor=$7::jsonb, products=$8::jsonb, cash=$9, last_tick=$10, billed_week=$11, status=$12, reputation=$13, autopay=$14 WHERE id=$1`,
+  [s.id, s.name, s.logo, s.palette, s.floor, s.sign, JSON.stringify(s.decor), JSON.stringify(s.products), s.cash, s.lastTick, s.billedWeek, s.status, s.reputation, s.autopay]);
+const addDay = (c, storeId, day, d) => c.query(`INSERT INTO sk2_biz_days (store_id, day, revenue, spent, units, customers, missed) VALUES ($1,$2,$3,$4,$5,$6,$7)
+  ON CONFLICT (store_id, day) DO UPDATE SET revenue = sk2_biz_days.revenue + EXCLUDED.revenue, spent = sk2_biz_days.spent + EXCLUDED.spent, units = sk2_biz_days.units + EXCLUDED.units,
+  customers = sk2_biz_days.customers + EXCLUDED.customers, missed = sk2_biz_days.missed + EXCLUDED.missed`, [storeId, day, d.revenue || 0, d.spent || 0, d.units || 0, d.customers || 0, d.missed || 0]);
+const ledgerKind = k => ({ alvara: 'alvara', iptu: 'iptu', iss: 'iss' }[k]);
+const BILL_LABEL = { alvara: 'Alvará de funcionamento', iptu: 'Imposto predial', iss: 'ISS sobre as vendas' };
+async function payBillRow(c, store, row, source, player) {
+  const total = row.amount + row.fine;
+  if (source === 'caixa') { if (store.cash < total) return false; store.cash -= total; }
+  else { if (Number(player.money) < total) return false; player.money = Number(player.money) - total; await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1', [player.username, total]); }
+  await c.query('UPDATE sk2_biz_bills SET paid_at = now(), paid_day = $2, fine = $3 WHERE id = $1', [row.id, dayOf(Date.now()), row.fine]);
+  await city.credit(c, ledgerKind(row.kind), total, `${BILL_LABEL[row.kind]} de ${store.name}`);
+  return true;
+}
+// Atualiza a loja até agora: vendas das horas passadas, contas das semanas fechadas, multas e suspensão.
+async function settleStore(c, store, now = Date.now(), player = null) {
+  const lot = LOT_BY_ID[store.lot], out = { revenue: 0, units: 0, customers: 0, bills: 0, suspended: false, reopened: false };
+  const toTick = tickOf(now);
+  if (store.status === 'aberta' && toTick > store.lastTick) {
+    const sim = simulate(store, lot, store.lastTick, toTick);
+    store.products = sim.products; store.reputation = sim.reputation; store.cash += sim.revenue; out.revenue = sim.revenue;
+    for (const [day, d] of sim.days) { await addDay(c, store.id, day, d); out.units += d.units; out.customers += d.customers; }
+  }
+  store.lastTick = Math.max(store.lastTick, toTick);
+  const W = weekOf(now), firstWeek = Math.max(store.billedWeek + 1, weekOf(store.boughtAt));
+  for (let w = firstWeek; w < W; w++) {
+    const rev = Number((await c.query('SELECT COALESCE(SUM(revenue),0) AS r FROM sk2_biz_days WHERE store_id = $1 AND day >= $2 AND day < $3', [store.id, w * 7, w * 7 + 7])).rows[0].r);
+    for (const b of weekBills(lot, store.pricePaid, store.boughtAt, w, rev)) {
+      const id = crypto.randomUUID();
+      const ins = await c.query('INSERT INTO sk2_biz_bills (id, store_id, week, kind, amount, due_at) VALUES ($1,$2,$3,$4,$5, to_timestamp($6::double precision / 1000)) ON CONFLICT DO NOTHING', [id, store.id, w, b.kind, b.amount, b.due]);
+      if (ins.rowCount) out.bills++;
+    }
+    store.billedWeek = w;
+  }
+  const open = (await c.query('SELECT id, week, kind, amount, fine, due_at FROM sk2_biz_bills WHERE store_id = $1 AND paid_at IS NULL ORDER BY due_at, kind FOR UPDATE', [store.id])).rows
+    .map(r => ({ id: r.id, week: Number(r.week), kind: r.kind, amount: r.amount, fine: r.fine, dueAt: epoch(r.due_at) }));
+  let late = false;
+  for (const b of open) {
+    if (store.autopay && store.cash >= b.amount + (b.fine || 0) && !(b.dueAt < now && !b.fine)) { if (await payBillRow(c, store, b, 'caixa', player)) { b.paid = true; continue; } }
+    if (b.dueAt < now) {
+      if (!b.fine) { b.fine = Math.round(b.amount * BIZ.FINE_PCT / 100); await c.query('UPDATE sk2_biz_bills SET fine = $2 WHERE id = $1', [b.id, b.fine]); }
+      if (store.autopay && store.cash >= b.amount + b.fine) { if (await payBillRow(c, store, b, 'caixa', player)) { b.paid = true; continue; } }
+      if (now > b.dueAt + BIZ.SUSPEND_AFTER_DAYS * DAY_MS) late = true;
+    }
+  }
+  if (late && store.status !== 'suspensa') { store.status = 'suspensa'; out.suspended = true; }
+  else if (!late && store.status === 'suspensa') { store.status = 'aberta'; out.reopened = true; }
+  await saveStore(c, store);
+  return out;
+}
+
+/* ---------- leitura (painéis) ---------- */
+const publicStore = (s, now) => s && ({ id: s.id, lot: s.lot, owner: s.ownerName, name: s.name, category: s.category, logo: s.logo, palette: s.palette, floor: s.floor, sign: s.sign, decor: s.decor, status: s.status,
+  reputation: s.reputation, products: s.products.filter(p => p && p.id).map(p => ({ id: p.id, price: p.price, q: p.q, stock: p.stock })), appeal: Math.round(appealOf(s) * 100) / 100 });
+async function ownerView(c, s, now) {
+  const lot = LOT_BY_ID[s.lot], today = dayOf(now);
+  const days = (await c.query('SELECT day, revenue, spent, units, customers, missed FROM sk2_biz_days WHERE store_id = $1 AND day > $2 ORDER BY day', [s.id, today - 60])).rows
+    .map(d => ({ day: Number(d.day), revenue: d.revenue, spent: d.spent, units: d.units, customers: d.customers, missed: d.missed }));
+  const byDay = new Map(days.map(d => [d.day, d]));
+  const bills = (await c.query('SELECT id, week, kind, amount, fine, due_at, paid_at, paid_day FROM sk2_biz_bills WHERE store_id = $1 ORDER BY week DESC, kind LIMIT 60', [s.id])).rows
+    .map(b => { const row = { id: b.id, week: Number(b.week), kind: b.kind, label: BILL_LABEL[b.kind], amount: b.amount, fine: b.fine, dueAt: epoch(b.due_at), paidAt: epoch(b.paid_at), paidDay: b.paid_day === null ? null : Number(b.paid_day) }; return { ...row, ...billState(row, now) }; });
+  const taxPaidByDay = new Map(); for (const b of bills) if (b.paidAt) taxPaidByDay.set(b.paidDay, (taxPaidByDay.get(b.paidDay) || 0) + b.amount + b.fine);
+  const series = Array.from({ length: 14 }, (_, i) => { const d = today - 13 + i, r = byDay.get(d) || {}; return { day: d, revenue: r.revenue || 0, spent: r.spent || 0, customers: r.customers || 0, units: r.units || 0, missed: r.missed || 0, taxes: taxPaidByDay.get(d) || 0 }; });
+  const sum = (a, b) => days.filter(d => d.day >= a && d.day <= b).reduce((t, d) => t + d.revenue, 0);
+  const W = weekOf(now), weeks = Array.from({ length: 8 }, (_, i) => { const w = W - 7 + i, rev = sum(w * 7, w * 7 + 6), spent = days.filter(d => d.day >= w * 7 && d.day < w * 7 + 7).reduce((t, d) => t + d.spent, 0), taxes = bills.filter(b => b.week === w).reduce((t, b) => t + b.amount, 0); return { week: w, revenue: rev, spent, taxes, profit: rev - spent - taxes }; });
+  const life = (await c.query('SELECT COALESCE(SUM(revenue),0) AS r, COALESCE(SUM(spent),0) AS s, COALESCE(SUM(units),0) AS u, COALESCE(SUM(customers),0) AS c FROM sk2_biz_days WHERE store_id = $1', [s.id])).rows[0];
+  const taxesPaid = bills.filter(b => b.paidAt).reduce((t, b) => t + b.amount + b.fine, 0), open = bills.filter(b => !b.paidAt);
+  const thisWeek = sum(W * 7, W * 7 + 6), prev7 = sum(today - 13, today - 7), last7 = sum(today - 6, today);
+  const upcoming = weekBills(lot, s.pricePaid, s.boughtAt, W, thisWeek).map(b => ({ kind: b.kind, label: BILL_LABEL[b.kind], amount: b.amount, issueAt: (W + 1) * WEEK_MS, dueAt: b.due }));
+  return { id: s.id, lot: s.lot, name: s.name, category: s.category, status: s.status, cash: s.cash, autopay: s.autopay, reputation: s.reputation, appeal: Math.round(appealOf(s) * 100) / 100, decorAppeal: decorAppeal(s.decor), boughtAt: s.boughtAt, pricePaid: s.pricePaid,
+    brand: { name: s.name, logo: s.logo, palette: s.palette, floor: s.floor, sign: s.sign }, decor: s.decor,
+    products: s.products.filter(p => p && p.id).map(p => { const pr = PRODUCT_BY_ID[p.id]; return { id: p.id, price: p.price, q: p.q, stock: p.stock, sold: p.sold || 0, cost: unitCost(pr, p.q), ref: pr.ref }; }),
+    kpis: { today: byDay.get(today)?.revenue || 0, yesterday: byDay.get(today - 1)?.revenue || 0, last7, prev7, growth: prev7 > 0 ? Math.round((last7 - prev7) / prev7 * 100) : null, week: thisWeek, lifetime: Number(life.r), spentLife: Number(life.s), unitsLife: Number(life.u), customersLife: Number(life.c),
+      taxesPaid, profitLife: Number(life.r) - Number(life.s) - taxesPaid, roi: s.pricePaid ? Math.round((Number(life.r) - Number(life.s) - taxesPaid) / s.pricePaid * 100) : 0,
+      expectedPerHour: Math.round(lot.traffic * BIZ.SIZE_FACTOR[lot.size] * (BIZ.DEMAND[s.category] || 1) * BIZ.CUSTOMER_SCALE * appealOf(s) * 100) / 100 },
+    series, weeks, bills: open.concat(bills.filter(b => b.paidAt).slice(0, 12)), openTotal: open.reduce((t, b) => t + b.total, 0), upcoming };
+}
+async function snapshot(c, row, now = Date.now()) {
+  const stores = (await c.query('SELECT * FROM sk2_biz_stores')).rows.map(toStore);
+  const mine = stores.find(s => s.owner === row.username) || null;
+  const bag = (await c.query('SELECT item_id, qty FROM sk2_biz_bag WHERE username = $1 AND qty > 0 ORDER BY item_id', [row.username])).rows.map(b => ({ id: b.item_id, qty: b.qty }));
+  const lots = LOTS.map(l => { const s = stores.find(x => x.lot === l.id); return { ...lotView(l), store: publicStore(s, now) || null, mine: !!s && s.owner === row.username }; });
+  return {
+    serverNow: now, me: { username: row.username, name: row.name, money: Number(row.money) || 0, hasStore: !!mine }, lots, mine: mine ? await ownerView(c, mine, now) : null, bag,
+    time: { tickMs: TICK_MS, dayMs: DAY_MS, weekMs: WEEK_MS, week: weekOf(now), nextWeekAt: (weekOf(now) + 1) * WEEK_MS },
+    catalog: { categories: Object.values(CATEGORIES).map(cat => ({ id: cat.id, name: cat.name, icon: cat.icon, products: cat.products.map(p => ({ id: p.id, name: p.name, icon: p.icon, ref: p.ref, heal: p.heal, min: priceRange(p).min, max: priceRange(p).max, costB: unitCost(p, 'b'), costP: unitCost(p, 'p') })) })),
+      sockets: SOCKETS, decor: DECOR, palettes: PALETTES, floors: FLOORS, signs: SIGNS, logos: LOGOS, sizes: SIZES },
+    constants: { ...BIZ },
+  };
+}
+// own = false: quem compra na vitrine de outro jogador não trava a própria loja (evita travas cruzadas entre dois donos).
+const run = (username, fn, { own = true } = {}) => db.withTx(async c => {
+  const locked = (await c.query('SELECT * FROM sk2_players WHERE username = $1 FOR UPDATE', [username])).rows[0];
+  if (!locked) return fail('Jogador não encontrado', 404);
+  let store = null, settled = null;
+  if (own) {
+    const r = (await c.query('SELECT * FROM sk2_biz_stores WHERE owner = $1 FOR UPDATE', [username])).rows[0];
+    if (r) { store = toStore(r); settled = await settleStore(c, store, Date.now(), locked); }
+  }
+  const out = await fn(c, locked, store, settled);
+  if (out.err) return out;
+  const player = out.player || locked;
+  if (store && out.touched) await saveStore(c, store);
+  return { ...out, playerRow: player, business: await snapshot(c, player), settled };
+}, { own });
+const summary = username => run(username, (_c, p) => ({ player: p }));
+const fresh = async (c, username) => (await c.query('SELECT * FROM sk2_players WHERE username = $1', [username])).rows[0];
+
+/* ---------- operações ---------- */
+const buyLot = (username, input) => run(username, async (c, p, store) => {
+  if (store) return fail('Você já tem uma loja. Cada jogador administra um negócio.');
+  const lot = hasOwn(LOT_BY_ID, input?.lot) ? LOT_BY_ID[input.lot] : null; if (!lot) return fail('Terreno inválido.', 400);
+  const brand = validateBrand(input); if (brand.err) return fail(brand.err, 400);
+  if (!hasOwn(CATEGORIES, input.category)) return fail('Escolha a categoria da loja.', 400);
+  if (Number(p.money) < lot.price) return fail(`Saldo insuficiente: o terreno ${lot.id} custa ${brl(lot.price)}.`);
+  if ((await c.query('SELECT 1 FROM sk2_biz_stores WHERE lot = $1', [lot.id])).rowCount) return fail('Este terreno já foi vendido.');
+  const now = Date.now(), cat = CATEGORIES[input.category];
+  const slots = cat.products.slice(0, Math.min(BIZ.STARTER_SLOTS, lot.slots)).map(pr => ({ id: pr.id, price: pr.ref, q: 'b', stock: BIZ.STARTER_STOCK, sold: 0 }));
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, lot.price])).rows[0];
+  await city.credit(c, 'terreno', lot.price, `Terreno ${lot.id} no Shopping: ${brand.name}`);
+  await c.query(`INSERT INTO sk2_biz_stores (id, lot, owner, owner_name, name, category, logo, palette, floor, sign, products, price_paid, bought_at, last_tick, billed_week)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12, to_timestamp($13::double precision / 1000), $14, $15)`,
+    [crypto.randomUUID(), lot.id, username, p.name, brand.name, input.category, brand.logo, brand.palette, brand.floor, brand.sign, JSON.stringify(slots), lot.price, now, tickOf(now), weekOf(now) - 1]);
+  return { player, event: { kind: 'buyLot', lot: lot.id }, message: `Terreno ${lot.id} comprado por ${brl(lot.price)}! A ${brand.name} abriu com um estoque inicial de cortesia.` };
+});
+const saveBrand = (username, input) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  const brand = validateBrand(input); if (brand.err) return fail(brand.err, 400);
+  Object.assign(store, brand); return { player: p, touched: true, event: { kind: 'brand' }, message: 'Marca da loja atualizada.' };
+});
+const setProducts = (username, slotsIn) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  const v = validateSlots(store.category, LOT_BY_ID[store.lot], slotsIn, store.products); if (v.err) return fail(v.err, 400);
+  store.products = v.slots; return { player: p, touched: true, event: { kind: 'products' }, message: 'Vitrine atualizada.' };
+});
+const restock = (username, input) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  const slot = store.products[input?.slot], units = input?.units;
+  if (!slot || !slot.id) return fail('Escolha o produto.', 400);
+  if (!Number.isInteger(units) || units < 1 || units > BIZ.RESTOCK_MAX) return fail(`Peça de 1 a ${BIZ.RESTOCK_MAX} unidades por vez.`, 400);
+  if (slot.stock + units > BIZ.STOCK_MAX) return fail(`O estoque de cada produto vai até ${BIZ.STOCK_MAX} unidades.`);
+  const cost = unitCost(PRODUCT_BY_ID[slot.id], slot.q) * units, fromCash = input.from === 'caixa';
+  if (fromCash) { if (store.cash < cost) return fail(`O caixa da loja não cobre ${brl(cost)}.`); store.cash -= cost; }
+  else { if (Number(p.money) < cost) return fail(`Saldo insuficiente: o lote custa ${brl(cost)}.`); await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1', [username, cost]); p = await fresh(c, username); }
+  slot.stock += units; await addDay(c, store.id, dayOf(Date.now()), { spent: cost });
+  return { player: p, touched: true, event: { kind: 'restock' }, message: `+${units} ${PRODUCT_BY_ID[slot.id].name} no estoque (${brl(cost)}).` };
+});
+const buyDecor = (username, input) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  if (!hasOwn(SOCKETS, input?.socket)) return fail('Escolha o lugar da decoração.', 400);
+  if (input.item === null || input.item === '') { delete store.decor[input.socket]; return { player: p, touched: true, event: { kind: 'decor' }, message: 'Decoração removida.' }; }
+  const item = hasOwn(DECOR_BY_ID, `${input.socket}:${input.item}`) ? DECOR_BY_ID[`${input.socket}:${input.item}`] : null; if (!item) return fail('Item de decoração inválido.', 400);
+  if (store.decor[input.socket] === item.id) return fail('Este item já está na loja.');
+  const fromCash = input.from === 'caixa';
+  if (fromCash) { if (store.cash < item.price) return fail(`O caixa da loja não cobre ${brl(item.price)}.`); store.cash -= item.price; }
+  else { if (Number(p.money) < item.price) return fail(`Saldo insuficiente: ${item.name} custa ${brl(item.price)}.`); await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1', [username, item.price]); p = await fresh(c, username); }
+  store.decor[input.socket] = item.id; await addDay(c, store.id, dayOf(Date.now()), { spent: item.price });
+  return { player: p, touched: true, event: { kind: 'decor' }, message: `${item.name} instalado (${brl(item.price)}).` };
+});
+const setOpen = (username, open) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  if (typeof open !== 'boolean') return fail('Pedido inválido.', 400);
+  if (store.status === 'suspensa') return fail('A loja está suspensa por impostos atrasados. Pague as contas para reabrir.');
+  store.status = open ? 'aberta' : 'fechada'; if (open) store.lastTick = tickOf(Date.now());
+  return { player: p, touched: true, event: { kind: open ? 'open' : 'close' }, message: open ? 'Loja aberta! Os clientes já podem entrar.' : 'Loja fechada: sem clientes até você reabrir.' };
+});
+const setAutopay = (username, on) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  if (typeof on !== 'boolean') return fail('Pedido inválido.', 400);
+  store.autopay = on; return { player: p, touched: true, message: on ? 'Pagamento automático ligado: os impostos saem do caixa quando houver saldo.' : 'Pagamento automático desligado.' };
+});
+const withdraw = (username, amount) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  if (!Number.isInteger(amount) || amount < 1) return fail('Informe um valor inteiro.', 400);
+  if (store.cash < amount) return fail(`O caixa da loja tem só ${brl(store.cash)}.`);
+  store.cash -= amount; const player = (await c.query('UPDATE sk2_players SET money = money + $2 WHERE username = $1 RETURNING *', [username, amount])).rows[0];
+  return { player, touched: true, event: { kind: 'withdraw' }, message: `${brl(amount)} sacados do caixa para a sua carteira.` };
+});
+const payBills = (username, input) => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  const rows = (await c.query('SELECT id, kind, amount, fine, due_at FROM sk2_biz_bills WHERE store_id = $1 AND paid_at IS NULL ORDER BY due_at, kind FOR UPDATE', [store.id])).rows.map(r => ({ id: r.id, kind: r.kind, amount: r.amount, fine: r.fine, dueAt: epoch(r.due_at) }));
+  let pick = rows;
+  if (Array.isArray(input?.ids)) { if (input.ids.some(i => !UUID.test(String(i)))) return fail('Conta inválida.', 400); pick = rows.filter(r => input.ids.includes(r.id)); }
+  else if (input?.all !== true) return fail('Escolha quais contas pagar.', 400);
+  if (!pick.length) return fail('Não há contas em aberto para pagar.');
+  const source = input.from === 'caixa' ? 'caixa' : 'carteira', player = { ...p, money: Number(p.money) };
+  let paid = 0, total = 0;
+  for (const r of pick) { const t = r.amount + r.fine; if (await payBillRow(c, store, r, source, player)) { paid++; total += t; } else break; }
+  if (!paid) return fail(source === 'caixa' ? 'O caixa da loja não cobre a conta.' : `Saldo insuficiente para a conta de ${brl(pick[0].amount + pick[0].fine)}.`);
+  const left = rows.length - paid, reopened = store.status === 'suspensa' && !(await c.query('SELECT 1 FROM sk2_biz_bills WHERE store_id = $1 AND paid_at IS NULL AND due_at + ($2::bigint * interval \'1 millisecond\') < now()', [store.id, BIZ.SUSPEND_AFTER_DAYS * DAY_MS])).rowCount;
+  if (reopened) store.status = 'aberta';
+  return { player: source === 'caixa' ? p : await fresh(c, username), touched: true, event: { kind: 'tax', total }, message: `${paid} conta(s) paga(s): ${brl(total)} para a Prefeitura.${left ? ` Faltam ${left}.` : ' Tudo em dia!'}${reopened ? ' A loja foi reaberta.' : ''}` };
+});
+const sellStore = username => run(username, async (c, p, store) => {
+  if (!store) return fail('Você ainda não tem uma loja.', 404);
+  if ((await c.query('SELECT 1 FROM sk2_biz_bills WHERE store_id = $1 AND paid_at IS NULL', [store.id])).rowCount) return fail('Pague todos os impostos antes de vender a loja.');
+  const refund = Math.floor(store.pricePaid * BIZ.SELL_BACK_PCT / 100), got = await city.debit(c, 'terreno', refund, `Recompra do terreno ${store.lot}`);
+  if (got === null) return fail('O tesouro da cidade está sem saldo para recomprar o terreno agora.');
+  const total = refund + store.cash;
+  const player = (await c.query('UPDATE sk2_players SET money = money + $2 WHERE username = $1 RETURNING *', [username, total])).rows[0];
+  await c.query('DELETE FROM sk2_biz_stores WHERE id = $1', [store.id]);
+  return { player, event: { kind: 'sell' }, message: `Loja vendida. Você recebeu ${brl(refund)} do terreno e ${brl(store.cash)} do caixa.` };
+});
+// Compra de outro jogador na vitrine: o dinheiro vai para o caixa da loja e o item para a sacola do comprador.
+const shopBuy = (username, input) => run(username, async (c, p) => {
+  if (!UUID.test(String(input?.store))) return fail('Loja inválida.', 400);
+  const qty = input?.qty ?? 1; if (!Number.isInteger(qty) || qty < 1 || qty > BIZ.BUY_QTY_MAX) return fail(`Compre de 1 a ${BIZ.BUY_QTY_MAX} unidades por vez.`, 400);
+  const r = (await c.query('SELECT * FROM sk2_biz_stores WHERE id = $1 FOR UPDATE', [input.store])).rows[0]; if (!r) return fail('Loja não encontrada.', 404);
+  const s = toStore(r); if (s.owner === username) return fail('Você não pode comprar da própria loja.');
+  await settleStore(c, s, Date.now(), null);
+  if (s.status !== 'aberta') { await saveStore(c, s); return fail(s.status === 'suspensa' ? 'Esta loja está suspensa.' : 'Esta loja está fechada agora.'); }
+  const slot = s.products.find(x => x && x.id === input.product); if (!slot) return fail('Produto não encontrado nesta loja.', 404);
+  if (slot.stock < qty) { await saveStore(c, s); return fail(slot.stock ? `Só restam ${slot.stock} unidade(s).` : 'Produto esgotado.'); }
+  const total = slot.price * qty; if (Number(p.money) < total) { await saveStore(c, s); return fail(`Saldo insuficiente: ${brl(total)}.`); }
+  const bag = Number((await c.query('SELECT qty FROM sk2_biz_bag WHERE username = $1 AND item_id = $2 FOR UPDATE', [username, slot.id])).rows[0]?.qty || 0);
+  if (bag + qty > BIZ.BAG_MAX) { await saveStore(c, s); return fail(`Sua sacola comporta até ${BIZ.BAG_MAX} unidades de cada item.`); }
+  const player = (await c.query('UPDATE sk2_players SET money = money - $2 WHERE username = $1 RETURNING *', [username, total])).rows[0];
+  slot.stock -= qty; slot.sold = (slot.sold || 0) + qty; s.cash += total; s.reputation = clamp(s.reputation + 0.004 * qty, BIZ.REP_MIN, BIZ.REP_MAX);
+  await addDay(c, s.id, dayOf(Date.now()), { revenue: total, units: qty, customers: 1 }); await saveStore(c, s);
+  await c.query('INSERT INTO sk2_biz_bag (username, item_id, qty) VALUES ($1,$2,$3) ON CONFLICT (username, item_id) DO UPDATE SET qty = sk2_biz_bag.qty + EXCLUDED.qty', [username, slot.id, qty]);
+  return { player, event: { kind: 'shopBuy' }, message: `${qty}× ${PRODUCT_BY_ID[slot.id].name} da ${s.name}: ${brl(total)}. Veja na sua sacola.` };
+}, { own: false });
+const useItem = (username, itemId) => run(username, async (c, p) => {
+  if (!hasOwn(PRODUCT_BY_ID, itemId)) return fail('Item inválido.', 400);
+  const pr = PRODUCT_BY_ID[itemId]; if (!(pr.heal > 0)) return fail(`${pr.name} não é de comer: guarde na sacola.`);
+  const row = (await c.query('SELECT qty FROM sk2_biz_bag WHERE username = $1 AND item_id = $2 FOR UPDATE', [username, itemId])).rows[0];
+  if (!row || row.qty < 1) return fail('Você não tem este item na sacola.');
+  const st = await hospital.settle(c, p); if (st.health >= 100) return fail('Sua saúde já está no máximo.');
+  const gain = Math.min(pr.heal, 100 - st.health);
+  await c.query('UPDATE sk2_hospital_patients SET health = $2, health_at = now() WHERE username = $1', [username, st.health + gain]);
+  await c.query('UPDATE sk2_biz_bag SET qty = qty - 1 WHERE username = $1 AND item_id = $2', [username, itemId]);
+  return { player: p, event: { kind: 'eat' }, message: `${pr.name}: +${gain} de saúde (agora ${st.health + gain}%).` };
+}, { own: false });
+
+/* ---------- rotas ---------- */
+function registerRoutes({ app, json, authUser, limited, userTries }) {
+  const guard = fn => async (req, res) => {
+    try {
+      const row = await authUser(req);
+      if (!row) return res.status(401).json({ err: 'Sessão expirada' });
+      if (limited(userTries, `biz:${row.username}`, 60)) return res.status(429).json({ err: 'Muitas ações nas Empresas. Aguarde um minuto.' });
+      await fn(req, res, row);
+    } catch (e) {
+      console.error('[sk2] empresas:', e.message);
+      if (!res.headersSent) res.status(500).json({ err: 'Não foi possível concluir a operação da empresa.' });
+    }
+  };
+  const done = (res, r) => {
+    if (r.err) return res.status(r.status || 409).json({ err: r.err });
+    const sold = r.settled && r.settled.revenue > 0 ? { revenue: r.settled.revenue, units: r.settled.units, customers: r.settled.customers } : null;
+    res.json({ ok: 1, player: db.pub(r.playerRow), business: r.business, event: r.event || null, sales: sold, settled: r.settled ? { bills: r.settled.bills, suspended: r.settled.suspended, reopened: r.settled.reopened } : null, message: r.message || '' });
+  };
+  const bad = (res, m) => res.status(400).json({ err: m });
+  const obj = b => b && typeof b === 'object' && !Array.isArray(b);
+  app.get('/api/sk2/business', guard(async (_q, res, row) => { res.set('Cache-Control', 'no-store'); done(res, await summary(row.username)); }));
+  app.post('/api/sk2/business/buy', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Dados da loja inválidos.'); done(res, await buyLot(row.username, req.body)); }));
+  app.post('/api/sk2/business/brand', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Dados da marca inválidos.'); done(res, await saveBrand(row.username, req.body)); }));
+  app.post('/api/sk2/business/products', json, guard(async (req, res, row) => { if (!Array.isArray(req.body?.slots)) return bad(res, 'Envie os produtos da loja.'); done(res, await setProducts(row.username, req.body.slots)); }));
+  app.post('/api/sk2/business/restock', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Pedido inválido.'); done(res, await restock(row.username, req.body)); }));
+  app.post('/api/sk2/business/decor', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Pedido inválido.'); done(res, await buyDecor(row.username, req.body)); }));
+  app.post('/api/sk2/business/open', json, guard(async (req, res, row) => done(res, await setOpen(row.username, req.body?.open))));
+  app.post('/api/sk2/business/autopay', json, guard(async (req, res, row) => done(res, await setAutopay(row.username, req.body?.on))));
+  app.post('/api/sk2/business/withdraw', json, guard(async (req, res, row) => done(res, await withdraw(row.username, req.body?.amount))));
+  app.post('/api/sk2/business/bills/pay', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Pedido inválido.'); done(res, await payBills(row.username, req.body)); }));
+  app.post('/api/sk2/business/sell', json, guard(async (_q, res, row) => done(res, await sellStore(row.username))));
+  app.post('/api/sk2/business/shop/buy', json, guard(async (req, res, row) => { if (!obj(req.body)) return bad(res, 'Pedido inválido.'); done(res, await shopBuy(row.username, req.body)); }));
+  app.post('/api/sk2/business/bag/use', json, guard(async (req, res, row) => { if (typeof req.body?.item !== 'string') return bad(res, 'Escolha o item.'); done(res, await useItem(row.username, req.body.item)); }));
+}
+
+module.exports = {
+  BIZ, SIZES, LOTS, LOT_BY_ID, CATEGORIES, PRODUCT_BY_ID, SOCKETS, DECOR, DECOR_BY_ID, PALETTES, FLOORS, SIGNS, LOGOS, TICK_MS, DAY_MS, WEEK_MS,
+  init, registerRoutes, summary, buyLot, saveBrand, setProducts, restock, buyDecor, setOpen, setAutopay, withdraw, payBills, sellStore, shopBuy, useItem,
+  // puras (testes)
+  unitCost, priceRange, priceFactor, decorAppeal, premiumShare, appealOf, hourWave, simulateTick, simulate, weekBills, billState, validateBrand, validateSlots, lotView, tickOf, dayOf, weekOf, mulberry32, hashStr,
+};
